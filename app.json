@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "puzzle-wwq",
-    "slug": "puzzle-wwq",
+    "name": "Word Wheel Quest",
+    "slug": "word-wheel-quest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0f0e17"
     },
     "ios": {
       "supportsTablet": true
