@@ -10,7 +10,7 @@ import Animated, {
   Easing,
   interpolate,
 } from 'react-native-reanimated';
-import { Sparkles, Grid3x3 } from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 import { COLORS, SCREENS } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -94,7 +94,7 @@ export default function HomeScreen({ navigate }) {
       <View style={styles.header}>
         <Text style={styles.kicker}>PUZZLE COLLECTION</Text>
         <Text style={styles.title}>Word Wheel Quest</Text>
-        <Text style={styles.tagline}>Swipe letters. Slide blocks. Master both.</Text>
+        <Text style={styles.tagline}>Swipe letters. Find every word.</Text>
       </View>
 
       <View style={styles.menuStack}>
@@ -104,13 +104,6 @@ export default function HomeScreen({ navigate }) {
           icon={Sparkles}
           glowColor={COLORS.primaryGlow}
           onPress={() => navigate(SCREENS.WORD_WHEEL)}
-        />
-        <MenuButton
-          title="Block Jam"
-          subtitle="Slide the red block to the exit"
-          icon={Grid3x3}
-          glowColor={COLORS.accentGlow}
-          onPress={() => navigate(SCREENS.BLOCK_JAM)}
         />
       </View>
 

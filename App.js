@@ -7,7 +7,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SCREENS, COLORS } from './constants/theme';
 import HomeScreen from './screens/HomeScreen';
 import WordWheel from './components/WordWheel';
-import BlockGrid from './components/BlockGrid';
 
 /**
  * Navigation router — screen switching is driven by local `currentScreen` state.
@@ -32,17 +31,6 @@ export default function App() {
             style={styles.screen}
           >
             <WordWheel navigate={navigate} />
-          </Animated.View>
-        );
-      case SCREENS.BLOCK_JAM:
-        return (
-          <Animated.View
-            key="block-jam"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
-            style={styles.screen}
-          >
-            <BlockGrid navigate={navigate} />
           </Animated.View>
         );
       case SCREENS.HOME:

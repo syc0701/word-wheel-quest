@@ -17,5 +17,4 @@ export const COLORS = {
 export const SCREENS = {
   HOME: 'HOME',
   WORD_WHEEL: 'WORD_WHEEL',
-  BLOCK_JAM: 'BLOCK_JAM',
 };
