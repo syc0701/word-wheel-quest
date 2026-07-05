@@ -15,9 +15,9 @@
     "clean": "rm -rf ios/build node_modules/.cache .expo dist web-build",
     "clean:ios-cache": "npm run kill-ios-simulator; rm -rf ios/build ios/Pods ios/Podfile.lock node_modules/.cache",
     "clean:all": "npm run clean && npm run clean:ios-cache",
-    "fastlane:install": "cd ios && bundle install",
-    "metadata:ios": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && bundle exec fastlane metadata",
-    "upload:ios:metadata": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && bundle exec fastlane metadata_and_screenshots --verbose"
+    "fastlane:install": "brew list fastlane >/dev/null 2>&1 || brew install fastlane; brew upgrade fastlane 2>/dev/null || true",
+    "metadata:ios": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && fastlane metadata",
+    "upload:ios:metadata": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && fastlane metadata_and_screenshots --verbose"
   },
   "dependencies": {
     "expo": "~53.0.27",

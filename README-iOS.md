@@ -50,6 +50,12 @@ First upload: build number **1**, version **1.0.0**.
 
 Metadata lives in `ios/fastlane/metadata/` (description, keywords, promotional text, URLs).
 
+**Promotional text not showing?**
+- In **App Store Connect**: App → **Distribution** → **iOS App** → version **1.0** → click **English (Canada)** under **App Store Version Information** (primary locale — not App Information).
+- On **apps.apple.com**: promotional text only appears after the app is **live** — not on a pre-release preview.
+- Debug: `cd ios && set -a && . ./fastlane/asc_api_key.env && set +a && fastlane verify_metadata` — prints what ASC actually stored.
+- Re-run `npm run metadata:ios` — upload now verifies promotional text saved and fails loudly if not.
+
 ### Troubleshooting metadata upload
 
 **`No data` on first upload** — fastlane deliver crashes when App Review contact does not exist yet in App Store Connect. This project pre-creates it automatically; you still need `asc_review_contact.env` with real contact info. If it persists, upload one build from Xcode first so version `1.0.0` exists in ASC.
@@ -66,7 +72,7 @@ Metadata lives in `ios/fastlane/metadata/` (description, keywords, promotional t
 cp ios/fastlane/asc_review_contact.env.example ios/fastlane/asc_review_contact.env
 # Edit: first name, last name, email, phone with country code (+1 ...)
 
-npm run fastlane:install
+npm run fastlane:install   # Homebrew fastlane (no Bundler / no sudo)
 ```
 
 ### Upload text only
@@ -77,24 +83,24 @@ npm run metadata:ios
 
 ### Upload text + screenshots
 
-Add PNGs under `ios/fastlane/screenshots/en-US/` (see `screenshots/README.txt`), then:
+Add PNGs under `ios/fastlane/screenshots/en-CA/` (primary locale; see `screenshots/README.txt`), then:
 
 ```bash
 npm run upload:ios:metadata
 ```
 
-### Metadata summary (en-US)
+### Metadata summary (en-CA — primary locale)
 
 | Field | Content |
 | --- | --- |
 | **Name** | Word Wheel Quest |
-| **Subtitle** | Crossword Meets Word Wheel |
-| **Promotional text** | Swipe the letter wheel to spell answers into themed crossword grids… |
+| **Subtitle** | Simple, Relaxing Word Connect |
+| **Promotional text** | Spin the wheel, connect the letters… |
 | **Keywords** | word,crossword,wheel,puzzle,vocabulary,brain,clues,grid,spelling,wordgame,teatime,relax |
 | **Category** | Games / Word |
-| **Privacy URL** | Set in App Store Connect → App Information |
+| **Privacy URL** | https://www.puzzleinteract.com/legal/word_wheel_quest#privacy |
 
-Edit files in `ios/fastlane/metadata/en-US/` and re-run `npm run metadata:ios`.
+Edit files in `ios/fastlane/metadata/en-CA/` and re-run `npm run metadata:ios`.
 
 ## 4. Complete listing in App Store Connect
 

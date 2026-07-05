@@ -123,7 +123,116 @@ def ensure_app_store_review_detail!
   UI.success("App Store review detail created")
 end
 
-def deliver_options(skip_screenshots:)
+ASC_LOCALE = "en-CA"
+
+def read_metadata_txt(*parts)
+  path = File.join(__dir__, "metadata", *parts)
+  return nil unless File.exist?(path)
+
+  content = File.read(path).strip
+  content.empty? ? nil : content
+end
+
+# Push listing text directly via App Store Connect API so it always lands.
+def upload_listing_text_metadata!(locale: ASC_LOCALE)
+  load_asc_api_key
+  require "spaceship/connect_api"
+
+  app = Spaceship::ConnectAPI::App.find("com.puzint.wordwheel.app")
+  UI.user_error!("App com.puzint.wordwheel.app not found in App Store Connect") unless app
+
+  platform = Spaceship::ConnectAPI::Platform::IOS
+  version = app.get_edit_app_store_version(platform: platform)
+  unless version
+    UI.user_error!(
+      "No editable App Store version found. Upload at least one build from Xcode first."
+    )
+  end
+
+  app_info = app.fetch_edit_app_info
+  UI.user_error!("No editable App Info found in App Store Connect") unless app_info
+
+  info_loc = app_info.get_app_info_localizations.find { |l| l.locale == locale }
+
+  if info_loc
+    info_attrs = {}
+    name = read_metadata_txt(locale, "name.txt")
+    subtitle = read_metadata_txt(locale, "subtitle.txt")
+    privacy = read_metadata_txt(locale, "privacy_url.txt")
+    info_attrs["name"] = name if name
+    info_attrs["subtitle"] = subtitle if subtitle
+    info_attrs["privacy_policy_url"] = privacy if privacy
+
+    unless info_attrs.empty?
+      UI.message("Uploading App Info (#{locale}): #{info_attrs.keys.join(', ')}")
+      info_loc.update(attributes: info_attrs)
+    end
+  else
+    UI.important(
+      "No #{locale} App Info localization in App Store Connect — skipping name/subtitle. " \
+      "Add English (Canada) under App Information in ASC if missing."
+    )
+  end
+
+  version_loc = version.get_app_store_version_localizations.find { |l| l.locale == locale }
+  version_loc ||= version.create_app_store_version_localization(attributes: { locale: locale })
+
+  version_attrs = {}
+  {
+    "description.txt" => "description",
+    "keywords.txt" => "keywords",
+    "support_url.txt" => "support_url",
+    "marketing_url.txt" => "marketing_url",
+    "release_notes.txt" => "whats_new"
+  }.each do |file, api_key|
+    val = read_metadata_txt(locale, file)
+    version_attrs[api_key] = val if val
+  end
+
+  version_count = Spaceship::ConnectAPI.get_app_store_versions(
+    app_id: app.id,
+    filter: { platform: platform },
+    limit: 2
+  ).count
+  if version_count == 1
+    version_attrs.delete("whats_new")
+    UI.message("Skipping release_notes (first App Store version)")
+  end
+
+  UI.user_error!("No version metadata files found for #{locale}") if version_attrs.empty? && read_metadata_txt(locale, "promotional_text.txt").nil?
+
+  unless version_attrs.empty?
+    UI.message("Uploading version localization (#{locale}): #{version_attrs.keys.join(', ')}")
+    version_loc.update(attributes: version_attrs)
+  end
+
+  promo = read_metadata_txt(locale, "promotional_text.txt")
+  if promo
+    UI.message("Uploading promotional text (#{promo.length} chars)...")
+    version_loc.update(attributes: { promotional_text: promo })
+
+    sleep(2)
+    refreshed = Spaceship::ConnectAPI::AppStoreVersionLocalization.get(
+      app_store_version_localization_id: version_loc.id
+    ).first
+    stored = refreshed.promotional_text.to_s.strip
+    if stored.empty?
+      UI.user_error!(
+        "promotional_text did not save on App Store Connect. " \
+        "Open ASC → Distribution → iOS App → 1.0 → English (Canada) → Promotional Text and paste manually, " \
+        "or check API key has Admin/App Manager role."
+      )
+    end
+    UI.success("Verified promotional_text on ASC (#{stored.length} chars)")
+  end
+
+  UI.success("Listing text uploaded (#{locale})")
+
+  copyright = read_metadata_txt("copyright.txt")
+  version.update(attributes: { "copyright" => copyright }) if copyright
+end
+
+def deliver_options(skip_screenshots:, skip_metadata: true)
   {
     api_key: load_asc_api_key,
     app_identifier: "com.puzint.wordwheel.app",
@@ -133,7 +242,7 @@ def deliver_options(skip_screenshots:)
     screenshots_path: File.join(__dir__, "screenshots"),
     skip_binary_upload: true,
     skip_screenshots: skip_screenshots,
-    skip_metadata: false,
+    skip_metadata: skip_metadata,
     force: true,
     run_precheck_before_submit: false,
     precheck_include_in_app_purchases: false,
@@ -149,13 +258,38 @@ platform :ios do
     ensure_app_store_review_detail!
   end
 
+  desc "Read back listing text from App Store Connect (debug)"
+  lane :verify_metadata do
+    load_asc_api_key
+    require "spaceship/connect_api"
+
+    app = Spaceship::ConnectAPI::App.find("com.puzint.wordwheel.app")
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    loc = version.get_app_store_version_localizations.find { |l| l.locale == ASC_LOCALE }
+
+    if loc.nil?
+      UI.user_error!("No #{ASC_LOCALE} version localization on ASC for #{version.version_string}")
+    end
+
+    fresh = Spaceship::ConnectAPI::AppStoreVersionLocalization.get(
+      app_store_version_localization_id: loc.id
+    ).first
+
+    UI.message("Version: #{version.version_string}")
+    UI.message("Description (#{fresh.description.to_s.length} chars): #{fresh.description.to_s[0..80]}...")
+    UI.message("Promotional text (#{fresh.promotional_text.to_s.length} chars): #{fresh.promotional_text.to_s}")
+    UI.message("Keywords: #{fresh.keywords}")
+  end
+
   desc "Upload App Store text metadata only (description, keywords, URLs, etc.)"
   lane :metadata do
+    upload_listing_text_metadata!
     deliver(**deliver_options(skip_screenshots: true))
   end
 
   desc "Upload metadata and screenshots from fastlane/screenshots/"
   lane :metadata_and_screenshots do
+    upload_listing_text_metadata!
     screenshot_count = Dir.glob(File.join(__dir__, "screenshots", "**", "*.png")).length
     UI.user_error!("No PNGs in ios/fastlane/screenshots/<locale>/ — add screenshots first.") if screenshot_count.zero?
 

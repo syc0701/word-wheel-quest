@@ -15,6 +15,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
+### ios verify_metadata
+
+```sh
+[bundle exec] fastlane ios verify_metadata
+```
+
+Read back listing text from App Store Connect (debug)
+
 ### ios metadata
 
 ```sh

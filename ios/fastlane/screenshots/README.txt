@@ -3,7 +3,7 @@
 Place PNG files here before running `npm run upload:ios:metadata`:
 
 ```
-ios/fastlane/screenshots/en-US/
+ios/fastlane/screenshots/en-CA/
   iPhone 15 Pro Max-01.png   (6.7" — required)
   iPhone 15 Pro Max-02.png
   iPhone 15 Pro Max-03.png
