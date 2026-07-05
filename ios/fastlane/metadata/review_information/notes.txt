@@ -1,0 +1,9 @@
+Word Wheel Quest is a crossword-style word puzzle. Tap a numbered cell to read its clue, then connect letters on the circular wheel to spell the answer into the grid. No login is required for basic play.
+
+Test notes:
+• Open any puzzle (e.g. "Morning Teatime Ritual").
+• Tap numbered cells for clues.
+• Select letters on the wheel to form words.
+• Hint and shuffle buttons are available in the play screen.
+
+Support: https://www.puzzleinteract.com/support/word_wheel_quest

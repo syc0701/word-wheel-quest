@@ -1,0 +1,164 @@
+# Word Wheel Quest — App Store metadata upload (Deliver)
+# Requires:
+#   ios/fastlane/asc_api_key.env
+#   ios/fastlane/asc_review_contact.env  (required for first metadata upload)
+
+default_platform(:ios)
+
+def load_asc_api_key
+  key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+  key_path = File.expand_path(key_path, __dir__) unless File.absolute_path?(key_path)
+
+  app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+    key_filepath: key_path,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+def sync_review_info_from_env!
+  email = ENV["ASC_REVIEW_EMAIL"].to_s.strip
+  first = ENV["ASC_REVIEW_FIRST_NAME"].to_s.strip
+  last = ENV["ASC_REVIEW_LAST_NAME"].to_s.strip
+  phone = ENV["ASC_REVIEW_PHONE"].to_s.strip
+
+  if [email, first, last, phone].any?(&:empty?) || email.include?("example.com")
+    UI.user_error!(
+      "Missing App Review contact. Copy ios/fastlane/asc_review_contact.env.example to " \
+      "asc_review_contact.env and set first name, last name, email, and phone (+country code)."
+    )
+  end
+
+  review_dir = File.join(__dir__, "metadata", "review_information")
+  FileUtils.mkdir_p(review_dir)
+  File.write(File.join(review_dir, "first_name.txt"), first)
+  File.write(File.join(review_dir, "last_name.txt"), last)
+  File.write(File.join(review_dir, "phone_number.txt"), phone)
+  File.write(File.join(review_dir, "email_address.txt"), email)
+end
+
+def review_contact_hash
+  notes_path = File.join(__dir__, "metadata", "review_information", "notes.txt")
+  notes = File.exist?(notes_path) ? File.read(notes_path).strip : ""
+
+  {
+    first_name: ENV["ASC_REVIEW_FIRST_NAME"].to_s.strip,
+    last_name: ENV["ASC_REVIEW_LAST_NAME"].to_s.strip,
+    phone_number: ENV["ASC_REVIEW_PHONE"].to_s.strip,
+    email_address: ENV["ASC_REVIEW_EMAIL"].to_s.strip,
+    notes: notes
+  }
+end
+
+# fastlane deliver crashes with "No data" on new apps when review detail does not exist yet
+# (review_attachment_file always fetches it — see fastlane/fastlane#20538).
+def patch_deliver_review_attachment_crash!
+  require "deliver/upload_metadata"
+
+  patched = Deliver::UploadMetadata.instance_variable_get(:@wwq_review_attachment_patched)
+  return if patched
+
+  Deliver::UploadMetadata.prepend(Module.new do
+    def review_attachment_file(version)
+      if options[:app_review_attachment_file]
+        super
+        return
+      end
+
+      detail = begin
+        version.fetch_app_store_review_detail
+      rescue StandardError
+        nil
+      end
+
+      unless detail
+        UI.message("No App Store review detail yet — skipping review attachment step")
+        return
+      end
+
+      super
+    end
+  end)
+
+  Deliver::UploadMetadata.instance_variable_set(:@wwq_review_attachment_patched, true)
+end
+
+def ensure_app_store_review_detail!
+  load_asc_api_key
+
+  require "spaceship/connect_api"
+
+  app = Spaceship::ConnectAPI::App.find("com.puzint.wordwheel.app")
+  UI.user_error!("App com.puzint.wordwheel.app not found in App Store Connect") unless app
+
+  version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+  unless version
+    UI.user_error!(
+      "No editable App Store version found. Upload at least one build from Xcode first " \
+      "(Product → Archive → Distribute) so version 1.0.0 exists in App Store Connect."
+    )
+  end
+
+  detail = begin
+    version.fetch_app_store_review_detail
+  rescue StandardError
+    nil
+  end
+  return if detail
+
+  contact = review_contact_hash
+  attributes = {
+    "contact_first_name" => contact[:first_name],
+    "contact_last_name" => contact[:last_name],
+    "contact_phone" => contact[:phone_number],
+    "contact_email" => contact[:email_address],
+    "demo_account_required" => false
+  }
+  attributes["notes"] = contact[:notes] unless contact[:notes].empty?
+
+  UI.message("Creating App Store review detail (first-time setup)...")
+  version.create_app_store_review_detail(attributes: attributes)
+  UI.success("App Store review detail created")
+end
+
+def deliver_options(skip_screenshots:)
+  {
+    api_key: load_asc_api_key,
+    app_identifier: "com.puzint.wordwheel.app",
+    app_version: "1.0.0",
+    app_review_information: review_contact_hash,
+    metadata_path: File.join(__dir__, "metadata"),
+    screenshots_path: File.join(__dir__, "screenshots"),
+    skip_binary_upload: true,
+    skip_screenshots: skip_screenshots,
+    skip_metadata: false,
+    force: true,
+    run_precheck_before_submit: false,
+    precheck_include_in_app_purchases: false,
+    submit_for_review: false,
+    automatic_release: true
+  }
+end
+
+platform :ios do
+  before_all do
+    sync_review_info_from_env!
+    patch_deliver_review_attachment_crash!
+    ensure_app_store_review_detail!
+  end
+
+  desc "Upload App Store text metadata only (description, keywords, URLs, etc.)"
+  lane :metadata do
+    deliver(**deliver_options(skip_screenshots: true))
+  end
+
+  desc "Upload metadata and screenshots from fastlane/screenshots/"
+  lane :metadata_and_screenshots do
+    screenshot_count = Dir.glob(File.join(__dir__, "screenshots", "**", "*.png")).length
+    UI.user_error!("No PNGs in ios/fastlane/screenshots/<locale>/ — add screenshots first.") if screenshot_count.zero?
+
+    deliver(**deliver_options(skip_screenshots: false))
+  end
+end

@@ -46,25 +46,65 @@ npm run xcode:ios
 
 First upload: build number **1**, version **1.0.0**.
 
-## 3. Complete listing in App Store Connect
+## 3. Upload App Store metadata (Fastlane)
+
+Metadata lives in `ios/fastlane/metadata/` (description, keywords, promotional text, URLs).
+
+### Troubleshooting metadata upload
+
+**`No data` on first upload** — fastlane deliver crashes when App Review contact does not exist yet in App Store Connect. This project pre-creates it automatically; you still need `asc_review_contact.env` with real contact info. If it persists, upload one build from Xcode first so version `1.0.0` exists in ASC.
+
+**Phone number in env file** — quote values with spaces: `ASC_REVIEW_PHONE="+1 514 661 0394"`
+
+### One-time setup
+
+```bash
+# API key (Issuer ID already set in asc_api_key.env)
+# Edit ios/fastlane/asc_api_key.env if needed
+
+# App Review contact — REQUIRED (fixes fastlane "No data" on first upload)
+cp ios/fastlane/asc_review_contact.env.example ios/fastlane/asc_review_contact.env
+# Edit: first name, last name, email, phone with country code (+1 ...)
+
+npm run fastlane:install
+```
+
+### Upload text only
+
+```bash
+npm run metadata:ios
+```
+
+### Upload text + screenshots
+
+Add PNGs under `ios/fastlane/screenshots/en-US/` (see `screenshots/README.txt`), then:
+
+```bash
+npm run upload:ios:metadata
+```
+
+### Metadata summary (en-US)
+
+| Field | Content |
+| --- | --- |
+| **Name** | Word Wheel Quest |
+| **Subtitle** | Crossword Meets Word Wheel |
+| **Promotional text** | Swipe the letter wheel to spell answers into themed crossword grids… |
+| **Keywords** | word,crossword,wheel,puzzle,vocabulary,brain,clues,grid,spelling,wordgame,teatime,relax |
+| **Category** | Games / Word |
+| **Privacy URL** | Set in App Store Connect → App Information |
+
+Edit files in `ios/fastlane/metadata/en-US/` and re-run `npm run metadata:ios`.
+
+## 4. Complete listing in App Store Connect
 
 After build shows **Ready to Submit** (~10–30 min):
 
 1. **App Store** tab → version **1.0**
-2. **Build** → select build **1**
-3. Fill required fields:
-
-| Field | Value |
-| --- | --- |
-| Support URL | https://www.puzzleinteract.com/support/word_wheel_quest |
-| Marketing URL | https://www.puzzleinteract.com/marketing/word_wheel_quest |
-| Privacy Policy | https://www.puzzleinteract.com/legal/word_wheel_quest#privacy |
-| Screenshots | iPhone 6.7" required (min 3) |
-| Description | App description |
-| Keywords | e.g. word, puzzle, wheel |
-| Copyright | © 2026 Puzzle Interact |
-
-4. **Add for Review**
+2. **Build** → select your uploaded build
+3. Confirm metadata uploaded (or fill any remaining fields)
+4. **Privacy Policy URL**: https://www.puzzleinteract.com/legal/word_wheel_quest#privacy
+5. **Add for Review**
 
 ## Re-upload (new binary)
 
