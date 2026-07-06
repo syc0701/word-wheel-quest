@@ -1,0 +1,142 @@
+{
+  "identifier" : "WWQ00001",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.99",
+      "familyShareable" : false,
+      "internalID" : "A0010001",
+      "localizations" : [
+        {
+          "description" : "Adds 300 coins to player balance",
+          "displayName" : "300 Coins",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "word_wheel_coins_small",
+      "referenceName" : "300 Coins",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "2.49",
+      "familyShareable" : false,
+      "internalID" : "A0010002",
+      "localizations" : [
+        {
+          "description" : "Adds 1,000 coins to player balance",
+          "displayName" : "1,000 Coins",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "word_wheel_coins_large",
+      "referenceName" : "1,000 Coins",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "2.99",
+      "familyShareable" : false,
+      "internalID" : "A0010003",
+      "localizations" : [
+        {
+          "description" : "Unlocks the Master Quest levels",
+          "displayName" : "Master Quest",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "word_wheel_pack_hard",
+      "referenceName" : "Master Quest",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "A0010004",
+      "localizations" : [
+        {
+          "description" : "Unlocks the Classic Challenge levels",
+          "displayName" : "Classic Challenge",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "word_wheel_pack_medium",
+      "referenceName" : "Classic Challenge",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "internalID" : "A0010005",
+      "localizations" : [
+        {
+          "description" : "Unlocks the Starter Fun Bundle levels",
+          "displayName" : "Starter Fun Bundle",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "word_wheel_pack_starter",
+      "referenceName" : "Starter Fun Bundle",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

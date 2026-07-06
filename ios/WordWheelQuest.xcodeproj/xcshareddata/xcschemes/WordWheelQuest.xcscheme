@@ -60,6 +60,10 @@
             ReferencedContainer = "container:WordWheelQuest.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <StoreKitConfigurationFileReference
+         identifier = "WWQ00001"
+         path = "WordWheelQuest/Products.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

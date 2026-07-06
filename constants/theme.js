@@ -17,4 +17,7 @@ export const COLORS = {
 export const SCREENS = {
   HOME: 'HOME',
   WORD_WHEEL: 'WORD_WHEEL',
+  SETTINGS: 'SETTINGS',
+  SHOP: 'SHOP',
+  WEBVIEW: 'WEBVIEW',
 };

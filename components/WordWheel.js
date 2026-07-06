@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
   runOnJS,
 } from 'react-native-reanimated';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, CheckCircle2, Settings } from 'lucide-react-native';
 import { COLORS, SCREENS } from '../constants/theme';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -250,6 +250,9 @@ export default function WordWheel({ navigate }) {
         <Text style={styles.levelLabel}>
           Level {levelIndex + 1} / {LEVELS.length}
         </Text>
+        <Pressable style={styles.settingsBtn} onPress={() => navigate(SCREENS.SETTINGS)}>
+          <Settings color={COLORS.text} size={22} />
+        </Pressable>
       </View>
 
       {/* Preview box — shows the swiped letter chain */}
@@ -345,10 +348,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: COLORS.surface,
   },
+  settingsBtn: {
+    padding: 8,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    marginLeft: 'auto',
+  },
   levelLabel: {
     color: COLORS.textMuted,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
+    flex: 1,
   },
   previewBox: {
     marginHorizontal: 24,

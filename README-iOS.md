@@ -7,6 +7,45 @@
 | Apple ID | `6787691583` |
 | App Store URL | https://apps.apple.com/app/id6787691583 |
 
+## Architecture (not SwiftUI)
+
+This app does **not** use SwiftUI for its UI.
+
+| Layer | Technology |
+| --- | --- |
+| **App UI** | **React Native** (JavaScript) — `App.js`, `components/WordWheel.js`, `screens/` |
+| **Framework** | **Expo SDK 53** |
+| **Native iOS shell** | **UIKit** — `ios/WordWheelQuest/AppDelegate.swift` hosts the React Native bridge |
+
+Swift appears only in the thin Expo bootstrap (`AppDelegate.swift`, `UIWindow`, `ExpoAppDelegate`). Gameplay, navigation, shop, and styling are React components. Edit UI in the repo root `.js` files, then run `npm run run:ios` — no SwiftUI views to change in Xcode for normal feature work.
+
+## In-app purchases (RevenueCat)
+
+RevenueCat **default** offering — configured in `constants/store.js` with iOS API key. Purchases use `react-native-purchases` (no entitlement IDs).
+
+| RevenueCat package | App Store product ID | Display name |
+| --- | --- | --- |
+| `coins_large` | `word_wheel_coins_large` | 1,000 Coins |
+| `coins_small` | `word_wheel_coins_small` | 300 Coins |
+| `bundle_master` | `word_wheel_pack_hard` | Master Quest |
+| `bundle_classic` | `word_wheel_pack_medium` | Classic Challenge |
+| `bundle_starter` | `word_wheel_pack_starter` | Starter Fun Bundle |
+
+**In-app:** Play screen → ⚙ Settings → Shop (RevenueCat) or Help & legal (WebView with `?platform=app`).
+
+After adding native modules (`react-native-purchases`, `react-native-webview`), rebuild native project:
+
+```bash
+npm run run:ios:sync
+```
+
+Legal WebView URLs (also in `constants/store.js`):
+
+- Marketing: https://www.puzzleinteract.com/marketing/word_wheel_quest?platform=app
+- Privacy: https://www.puzzleinteract.com/legal/word_wheel_quest#privacy?platform=app
+- Terms: https://www.puzzleinteract.com/legal/word_wheel_quest#terms?platform=app
+- Support: https://www.puzzleinteract.com/support/word_wheel_quest?platform=app
+
 ## 1. Generate native iOS project
 
 ```bash
