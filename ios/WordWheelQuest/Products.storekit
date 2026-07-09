@@ -40,7 +40,7 @@
       "internalID" : "A0010003",
       "localizations" : [
         {
-          "description" : "Unlocks the Master Quest levels",
+          "description" : "Adds coins to player balance",
           "displayName" : "Master Quest",
           "locale" : "en_US"
         }
@@ -55,7 +55,7 @@
       "internalID" : "A0010004",
       "localizations" : [
         {
-          "description" : "Unlocks the Classic Challenge levels",
+          "description" : "Adds coins to player balance",
           "displayName" : "Classic Challenge",
           "locale" : "en_US"
         }
@@ -70,7 +70,7 @@
       "internalID" : "A0010005",
       "localizations" : [
         {
-          "description" : "Unlocks the Starter Fun Bundle levels",
+          "description" : "Adds coins to player balance",
           "displayName" : "Starter Fun Bundle",
           "locale" : "en_US"
         }

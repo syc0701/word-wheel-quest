@@ -29,7 +29,7 @@ export default function SettingsScreen({ navigate }) {
         <MenuRow
           icon={ShoppingBag}
           label="In-app purchases"
-          subtitle="Coins and level packs"
+          subtitle="Buy coins and bundles"
           onPress={() => navigate(SCREENS.SHOP)}
         />
 
