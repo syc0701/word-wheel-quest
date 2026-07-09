@@ -6,6 +6,10 @@
 Encoding.default_external = Encoding::UTF_8
 Encoding.default_internal = Encoding::UTF_8
 
+FASTLANE_DIR = File.expand_path(__dir__)
+SCREENSHOTS_PATH = File.join(FASTLANE_DIR, "screenshots")
+METADATA_PATH = File.join(FASTLANE_DIR, "metadata")
+
 default_platform(:ios)
 
 def read_utf8_file(path)
@@ -243,8 +247,8 @@ def deliver_options(skip_screenshots:, skip_metadata: true, include_review_info:
     api_key: load_asc_api_key,
     app_identifier: "com.puzint.wordwheel.app",
     app_version: "1.0.0",
-    metadata_path: File.join(__dir__, "metadata"),
-    screenshots_path: File.join(__dir__, "screenshots"),
+    metadata_path: METADATA_PATH,
+    screenshots_path: SCREENSHOTS_PATH,
     skip_binary_upload: true,
     skip_screenshots: skip_screenshots,
     skip_metadata: skip_metadata,
@@ -269,7 +273,7 @@ def prepare_metadata_upload!
 end
 
 def log_screenshot_inventory!
-  root = File.join(__dir__, "screenshots")
+  root = SCREENSHOTS_PATH
   by_locale = Hash.new { |h, k| h[k] = { count: 0, devices: Hash.new(0) } }
 
   Dir.glob(File.join(root, "*", "*.png"), File::FNM_CASEFOLD).each do |path|
@@ -307,8 +311,29 @@ def log_screenshot_inventory!
   )
 end
 
+def verify_deliver_will_collect_screenshots!(options)
+  require "deliver/upload_screenshots"
+
+  path = options[:screenshots_path]
+  on_disk = Dir.glob(File.join(path, "**", "*.png"), File::FNM_CASEFOLD).length
+  collected = Deliver::UploadScreenshots.new.collect_screenshots(options)
+
+  UI.message("Deliver screenshots_path: #{path}")
+  UI.message("PNG files on disk: #{on_disk}")
+  UI.message("Screenshots deliver will upload: #{collected.length}")
+
+  if collected.empty?
+    UI.user_error!(
+      "deliver collected 0 screenshots (found #{on_disk} PNGs on disk). " \
+      "Run fastlane from ios/fastlane or check screenshot paths."
+    )
+  end
+
+  collected.length
+end
+
 def mirror_en_us_screenshots_to_en_ca
-  root = File.join(__dir__, "screenshots")
+  root = SCREENSHOTS_PATH
   src = File.join(root, "en-US")
   dest = File.join(root, "en-CA")
   return unless File.directory?(src)
@@ -368,7 +393,9 @@ platform :ios do
     mirror_en_us_screenshots_to_en_ca
     log_screenshot_inventory!
 
-    deliver(**deliver_options(skip_screenshots: false, include_review_info: false))
+    options = deliver_options(skip_screenshots: false, include_review_info: false)
+    verify_deliver_will_collect_screenshots!(options)
+    deliver(**options)
   end
 
   desc "Upload metadata and screenshots from fastlane/screenshots/"
@@ -378,6 +405,8 @@ platform :ios do
     mirror_en_us_screenshots_to_en_ca
     log_screenshot_inventory!
 
-    deliver(**deliver_options(skip_screenshots: false))
+    options = deliver_options(skip_screenshots: false)
+    verify_deliver_will_collect_screenshots!(options)
+    deliver(**options)
   end
 end
