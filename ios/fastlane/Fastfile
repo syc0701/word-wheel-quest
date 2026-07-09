@@ -3,7 +3,17 @@
 #   ios/fastlane/asc_api_key.env
 #   ios/fastlane/asc_review_contact.env  (required for first metadata upload)
 
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
+
 default_platform(:ios)
+
+def read_utf8_file(path)
+  return nil unless File.exist?(path)
+
+  content = File.read(path, encoding: 'UTF-8').strip
+  content.empty? ? nil : content
+end
 
 def load_asc_api_key
   key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"]
@@ -41,7 +51,7 @@ end
 
 def review_contact_hash
   notes_path = File.join(__dir__, "metadata", "review_information", "notes.txt")
-  notes = File.exist?(notes_path) ? File.read(notes_path).strip : ""
+  notes = read_utf8_file(notes_path) || ""
 
   {
     first_name: ENV["ASC_REVIEW_FIRST_NAME"].to_s.strip,
@@ -126,11 +136,7 @@ end
 ASC_LOCALE = "en-CA"
 
 def read_metadata_txt(*parts)
-  path = File.join(__dir__, "metadata", *parts)
-  return nil unless File.exist?(path)
-
-  content = File.read(path).strip
-  content.empty? ? nil : content
+  read_utf8_file(File.join(__dir__, "metadata", *parts))
 end
 
 # Push listing text directly via App Store Connect API so it always lands.
@@ -232,23 +238,73 @@ def upload_listing_text_metadata!(locale: ASC_LOCALE)
   version.update(attributes: { "copyright" => copyright }) if copyright
 end
 
-def deliver_options(skip_screenshots:, skip_metadata: true)
-  {
+def deliver_options(skip_screenshots:, skip_metadata: true, include_review_info: true)
+  options = {
     api_key: load_asc_api_key,
     app_identifier: "com.puzint.wordwheel.app",
     app_version: "1.0.0",
-    app_review_information: review_contact_hash,
     metadata_path: File.join(__dir__, "metadata"),
     screenshots_path: File.join(__dir__, "screenshots"),
     skip_binary_upload: true,
     skip_screenshots: skip_screenshots,
     skip_metadata: skip_metadata,
     force: true,
+    overwrite_screenshots: true,
     run_precheck_before_submit: false,
     precheck_include_in_app_purchases: false,
     submit_for_review: false,
     automatic_release: true
   }
+
+  if include_review_info
+    options[:app_review_information] = review_contact_hash
+  end
+
+  options
+end
+
+def prepare_metadata_upload!
+  sync_review_info_from_env!
+  ensure_app_store_review_detail!
+end
+
+def log_screenshot_inventory!
+  root = File.join(__dir__, "screenshots")
+  by_locale = Hash.new { |h, k| h[k] = { count: 0, devices: Hash.new(0) } }
+
+  Dir.glob(File.join(root, "*", "*.png"), File::FNM_CASEFOLD).each do |path|
+    locale = File.basename(File.dirname(path))
+    by_locale[locale][:count] += 1
+    device = File.basename(path).split("-", 2).first
+    by_locale[locale][:devices][device] += 1
+  end
+
+  if by_locale.empty?
+    UI.user_error!(
+      "No PNGs in ios/fastlane/screenshots/<locale>/ — run:\n" \
+      "  npm run screenshots:ios:faster\n" \
+      "  npm run screenshots:ios:check"
+    )
+  end
+
+  UI.message("Screenshot inventory (#{by_locale.values.sum { |v| v[:count] }} files):")
+  by_locale.sort.each do |locale, info|
+    devices = info[:devices].map { |name, count| "#{name} (#{count})" }.join(", ")
+    UI.message("  #{locale}: #{info[:count]} — #{devices}")
+  end
+
+  en_ca = by_locale["en-CA"]
+  iphone_count = en_ca ? en_ca[:devices].select { |k, _| k.start_with?("iPhone") }.values.sum : 0
+  if iphone_count < 3
+    UI.user_error!(
+      "en-CA needs at least 3 iPhone screenshots. Run: npm run screenshots:ios:faster"
+    )
+  end
+
+  UI.important(
+    "In App Store Connect: Distribution → iOS App → 1.0 → English (Canada) → " \
+    "iPhone 6.7\" / iPad 13\" screenshot slots"
+  )
 end
 
 def mirror_en_us_screenshots_to_en_ca
@@ -274,9 +330,7 @@ end
 
 platform :ios do
   before_all do
-    sync_review_info_from_env!
     patch_deliver_review_attachment_crash!
-    ensure_app_store_review_detail!
   end
 
   desc "Read back listing text from App Store Connect (debug)"
@@ -304,6 +358,7 @@ platform :ios do
 
   desc "Upload App Store text metadata only (description, keywords, URLs, etc.)"
   lane :metadata do
+    prepare_metadata_upload!
     upload_listing_text_metadata!
     deliver(**deliver_options(skip_screenshots: true))
   end
@@ -311,18 +366,17 @@ platform :ios do
   desc "Upload screenshots only from fastlane/screenshots/ (no listing text)"
   lane :screenshots do
     mirror_en_us_screenshots_to_en_ca
-    screenshot_count = Dir.glob(File.join(__dir__, "screenshots", "**", "*.png")).length
-    UI.user_error!("No PNGs in ios/fastlane/screenshots/<locale>/ — run npm run screenshots:ios first.") if screenshot_count.zero?
+    log_screenshot_inventory!
 
-    deliver(**deliver_options(skip_screenshots: false))
+    deliver(**deliver_options(skip_screenshots: false, include_review_info: false))
   end
 
   desc "Upload metadata and screenshots from fastlane/screenshots/"
   lane :metadata_and_screenshots do
+    prepare_metadata_upload!
     upload_listing_text_metadata!
     mirror_en_us_screenshots_to_en_ca
-    screenshot_count = Dir.glob(File.join(__dir__, "screenshots", "**", "*.png")).length
-    UI.user_error!("No PNGs in ios/fastlane/screenshots/<locale>/ — add screenshots first.") if screenshot_count.zero?
+    log_screenshot_inventory!
 
     deliver(**deliver_options(skip_screenshots: false))
   end

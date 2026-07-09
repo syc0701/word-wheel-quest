@@ -7,15 +7,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SCREENS, COLORS } from './constants/theme';
 import { configurePurchases } from './services/purchases';
 import HomeScreen from './screens/HomeScreen';
+import PlayScreen from './screens/PlayScreen';
+import DailyScreen from './screens/DailyScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import ShopScreen from './screens/ShopScreen';
 import WebViewScreen from './screens/WebViewScreen';
-import WordWheel from './components/WordWheel';
+import SignInScreen from './screens/SignInScreen';
 
-/**
- * Navigation router — screen switching is driven by local route state.
- * Pass optional `params` as the second argument to `navigate`.
- */
 export default function App() {
   const [route, setRoute] = useState({ screen: SCREENS.HOME, params: {} });
 
@@ -28,16 +26,30 @@ export default function App() {
   }, []);
 
   const renderScreen = () => {
-    switch (route.screen) {
-      case SCREENS.WORD_WHEEL:
+    const { screen, params } = route;
+
+    switch (screen) {
+      case SCREENS.PLAY:
+      case SCREENS.DAILY_PLAY:
         return (
           <Animated.View
-            key="word-wheel"
+            key={`play-${params.mode}-${params.date ?? 'journey'}`}
             entering={SlideInRight.duration(350).springify()}
             exiting={SlideOutLeft.duration(250)}
             style={styles.screen}
           >
-            <WordWheel navigate={navigate} />
+            <PlayScreen navigate={navigate} routeParams={params} />
+          </Animated.View>
+        );
+      case SCREENS.DAILY:
+        return (
+          <Animated.View
+            key="daily"
+            entering={SlideInRight.duration(350).springify()}
+            exiting={SlideOutLeft.duration(250)}
+            style={styles.screen}
+          >
+            <DailyScreen navigate={navigate} routeParams={params} />
           </Animated.View>
         );
       case SCREENS.SETTINGS:
@@ -48,7 +60,7 @@ export default function App() {
             exiting={SlideOutLeft.duration(250)}
             style={styles.screen}
           >
-            <SettingsScreen navigate={navigate} />
+            <SettingsScreen navigate={navigate} routeParams={params} />
           </Animated.View>
         );
       case SCREENS.SHOP:
@@ -59,21 +71,32 @@ export default function App() {
             exiting={SlideOutLeft.duration(250)}
             style={styles.screen}
           >
-            <ShopScreen navigate={navigate} />
+            <ShopScreen navigate={navigate} routeParams={params} />
+          </Animated.View>
+        );
+      case SCREENS.SIGN_IN:
+        return (
+          <Animated.View
+            key="sign-in"
+            entering={SlideInRight.duration(350).springify()}
+            exiting={SlideOutLeft.duration(250)}
+            style={styles.screen}
+          >
+            <SignInScreen navigate={navigate} routeParams={params} />
           </Animated.View>
         );
       case SCREENS.WEBVIEW:
         return (
           <Animated.View
-            key={`webview-${route.params?.url ?? 'page'}`}
+            key={`webview-${params?.url ?? 'page'}`}
             entering={SlideInRight.duration(350).springify()}
             exiting={SlideOutLeft.duration(250)}
             style={styles.screen}
           >
             <WebViewScreen
               navigate={navigate}
-              routeParams={route.params}
-              backScreen={route.params?.backScreen ?? SCREENS.SETTINGS}
+              routeParams={params}
+              backScreen={params?.backScreen ?? SCREENS.SETTINGS}
             />
           </Animated.View>
         );

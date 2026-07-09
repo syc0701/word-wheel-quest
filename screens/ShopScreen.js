@@ -5,7 +5,10 @@ import { ShoppingBag } from 'lucide-react-native';
 import ScreenHeader from '../components/ScreenHeader';
 import { COLORS, SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, REVENUECAT_OFFERING } from '../constants/store';
-import { getDefaultOffering, purchasePackage, restorePurchases } from '../services/purchases';
+import { getDefaultOffering, purchasePackage, readPurchaseTransactionId, restorePurchases } from '../services/purchases';
+import CreditApi from '../lib/creditApi';
+import { isLoggedIn } from '../lib/auth';
+import { APP_STORE } from '../constants/store';
 
 function ProductRow({ name, description, priceLabel, purchasing, onBuy }) {
   return (
@@ -32,7 +35,8 @@ function ProductRow({ name, description, priceLabel, purchasing, onBuy }) {
   );
 }
 
-export default function ShopScreen({ navigate }) {
+export default function ShopScreen({ navigate, routeParams = {} }) {
+  const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
@@ -65,7 +69,20 @@ export default function ShopScreen({ navigate }) {
 
     setPurchasingId(meta.packageId);
     try {
-      await purchasePackage(rcPackage);
+      const purchaseResult = await purchasePackage(rcPackage);
+      const authed = await isLoggedIn();
+      if (authed) {
+        await CreditApi.verifyIapPurchase({
+          appCode: APP_STORE.appSiteId,
+          productId: rcPackage.product.identifier,
+          transactionId: readPurchaseTransactionId(purchaseResult),
+          rawPayload: {
+            platform: 'apple',
+            storeProductId: rcPackage.product.identifier,
+            packageKey: meta.packageId,
+          },
+        });
+      }
       Alert.alert('Thank you!', `${meta.name} purchased successfully.`);
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
@@ -89,7 +106,7 @@ export default function ShopScreen({ navigate }) {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Shop" onBack={() => navigate(SCREENS.SETTINGS)} />
+      <ScreenHeader title="Shop" onBack={() => navigate(backScreen, routeParams)} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.subtitle}>{REVENUECAT_OFFERING.displayName}</Text>

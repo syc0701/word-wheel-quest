@@ -1,201 +1,274 @@
-import { useEffect } from 'react';
-import { StyleSheet, Text, View, Pressable, Dimensions } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  withSpring,
-  Easing,
-  interpolate,
-} from 'react-native-reanimated';
-import { Sparkles } from 'lucide-react-native';
-import { COLORS, SCREENS } from '../constants/theme';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { Settings } from 'lucide-react-native';
+import GradientBackground from '../components/GradientBackground';
+import WordWheelApi from '../lib/api';
+import { resolveWordWheelGridSize } from '../lib/constants';
+import { parseWords } from '../lib/gridReveal';
+import { SCREENS, WW, PLAY_MODE } from '../constants/theme';
 
-const { width } = Dimensions.get('window');
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-/**
- * Pulsing ambient glow behind a menu button.
- */
-function GlowOrb({ color, size, style }) {
-  const pulse = useSharedValue(0);
-
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 2200, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      false
-    );
-  }, [pulse]);
-
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(pulse.value, [0, 1], [0.25, 0.65]),
-    transform: [{ scale: interpolate(pulse.value, [0, 1], [0.92, 1.08]) }],
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        styles.glowOrb,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: color },
-        glowStyle,
-        style,
-      ]}
-    />
-  );
-}
-
-/**
- * Large stylized menu button with scale-up press feedback.
- */
-function MenuButton({ title, subtitle, icon: Icon, glowColor, onPress }) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(1.04, { damping: 12, stiffness: 280 });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 14, stiffness: 320 });
-  };
-
-  return (
-    <View style={styles.menuButtonWrap}>
-      <GlowOrb color={glowColor} size={width * 0.55} style={styles.glowBehind} />
-      <AnimatedPressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={[styles.menuButton, animatedStyle]}
-      >
-        <View style={[styles.iconCircle, { borderColor: glowColor }]}>
-          <Icon color={COLORS.text} size={36} strokeWidth={1.8} />
-        </View>
-        <Text style={styles.menuTitle}>{title}</Text>
-        <Text style={styles.menuSubtitle}>{subtitle}</Text>
-      </AnimatedPressable>
-    </View>
-  );
+function resolveJourneyLevel(puzzle) {
+  if (puzzle?.mainJourneyLevel != null && Number.isFinite(Number(puzzle.mainJourneyLevel))) {
+    return Number(puzzle.mainJourneyLevel);
+  }
+  if (puzzle?.puzzleLevel != null && Number.isFinite(Number(puzzle.puzzleLevel))) {
+    return Number(puzzle.puzzleLevel);
+  }
+  return null;
 }
 
 export default function HomeScreen({ navigate }) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [puzzle, setPuzzle] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const data = await WordWheelApi.fetchNext();
+        if (data?.code === 'NO_DATA') {
+          if (!cancelled) setError('No word wheel puzzle available yet.');
+          return;
+        }
+        if (!cancelled) setPuzzle(data);
+      } catch (e) {
+        if (!cancelled) setError(e?.message || 'Failed to load puzzle');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const words = useMemo(() => parseWords(puzzle?.wordsInUse), [puzzle]);
+  const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
+  const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <GradientBackground variant="home">
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.kicker}>PUZZLE COLLECTION</Text>
         <Text style={styles.title}>Word Wheel Quest</Text>
         <Text style={styles.tagline}>Swipe letters. Find every word.</Text>
-      </View>
 
-      <View style={styles.menuStack}>
-        <MenuButton
-          title="Word Wheel"
-          subtitle="Connect letters in the circle"
-          icon={Sparkles}
-          glowColor={COLORS.primaryGlow}
-          onPress={() => navigate(SCREENS.WORD_WHEEL)}
-        />
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.cardMode}>Season Journey</Text>
 
-      <Text style={styles.footer}>Ready to play — no login required</Text>
-    </View>
+          {loading ? (
+            <ActivityIndicator color={WW.accent} style={styles.cardLoader} />
+          ) : error ? (
+            <Text style={styles.cardError}>{error}</Text>
+          ) : puzzle ? (
+            <>
+              {journeyLevel != null && (
+                <Text style={styles.levelHero}>Level {journeyLevel}</Text>
+              )}
+              <Text style={styles.puzzleTitle}>{puzzle.title}</Text>
+              <Text style={styles.puzzleMeta}>
+                {words.length} words · {gridSize}×{gridSize} grid
+                {puzzle.season ? ` · ${puzzle.season.replace(/_/g, ' ')}` : ''}
+              </Text>
+            </>
+          ) : null}
+
+          <Text style={styles.cardRange}>Levels 1 → 1000</Text>
+        </View>
+
+        <Pressable
+          style={[styles.primaryBtn, !puzzle && styles.primaryBtnDisabled]}
+          disabled={!puzzle}
+          onPress={() => navigate(SCREENS.PLAY, { mode: PLAY_MODE.JOURNEY })}
+        >
+          <Text style={styles.primaryBtnText}>Play</Text>
+        </Pressable>
+
+        <Text style={styles.footer}>
+          Progress is saved on this device. Sign in once to move guest progress to your account.
+        </Text>
+
+        <View style={styles.dailySection}>
+          <Text style={styles.dailyHint}>Today&apos;s bonus puzzle — separate from the season journey</Text>
+          <View style={styles.dailyRow}>
+            <Pressable style={styles.outlineBtn} onPress={() => navigate(SCREENS.DAILY)}>
+              <Text style={styles.outlineBtnText}>Daily Puzzle</Text>
+            </Pressable>
+            <Pressable
+              style={styles.settingsBtn}
+              onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
+              hitSlop={8}
+            >
+              <Settings color={WW.accent} size={22} strokeWidth={1.8} />
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
+    </GradientBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+  scroll: {
+    flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 64,
     paddingBottom: 32,
-  },
-  header: {
     alignItems: 'center',
-    marginBottom: 36,
   },
   kicker: {
-    color: COLORS.accent,
+    color: WW.accent,
     fontSize: 12,
     letterSpacing: 4,
     fontWeight: '700',
     marginBottom: 10,
   },
   title: {
-    color: COLORS.text,
-    fontSize: 36,
+    color: WW.text,
+    fontSize: 32,
     fontWeight: '800',
     textAlign: 'center',
-    letterSpacing: 0.5,
   },
   tagline: {
-    color: COLORS.textMuted,
+    color: WW.textSecondary,
     fontSize: 15,
     marginTop: 10,
+    marginBottom: 28,
     textAlign: 'center',
   },
-  menuStack: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 28,
-  },
-  menuButtonWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glowBehind: {
-    position: 'absolute',
-  },
-  glowOrb: {
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 30,
-    elevation: 12,
-  },
-  menuButton: {
-    width: width - 48,
-    backgroundColor: COLORS.surface,
-    borderRadius: 24,
+  card: {
+    width: '100%',
+    maxWidth: 320,
+    backgroundColor: WW.surface,
+    borderRadius: 20,
     paddingVertical: 28,
     paddingHorizontal: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.surfaceLight,
+    borderColor: WW.border,
+    marginBottom: 24,
   },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.surfaceLight,
-    marginBottom: 14,
-  },
-  menuTitle: {
-    color: COLORS.text,
-    fontSize: 22,
+  cardMode: {
+    color: WW.accent,
+    fontSize: 11,
     fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 12,
   },
-  menuSubtitle: {
-    color: COLORS.textMuted,
+  levelHero: {
+    color: WW.text,
+    fontSize: 40,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+  },
+  cardLoader: {
+    marginVertical: 24,
+  },
+  cardError: {
+    color: '#dc2626',
+    fontSize: 14,
+    textAlign: 'center',
+    marginVertical: 16,
+    lineHeight: 20,
+  },
+  cardRange: {
+    color: WW.textMuted,
+    fontSize: 12,
+    marginTop: 16,
+  },
+  puzzleTitle: {
+    color: WW.text,
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  puzzleMeta: {
+    color: WW.textSecondary,
     fontSize: 14,
     marginTop: 6,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  primaryBtn: {
+    backgroundColor: WW.accent,
+    paddingHorizontal: 48,
+    paddingVertical: 14,
+    borderRadius: 14,
+    minWidth: 200,
+    alignItems: 'center',
+  },
+  primaryBtnDisabled: {
+    opacity: 0.5,
+  },
+  primaryBtnText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
   },
   footer: {
+    color: WW.textMuted,
+    fontSize: 12,
     textAlign: 'center',
-    color: COLORS.textMuted,
-    fontSize: 13,
+    marginTop: 24,
+    lineHeight: 18,
+    maxWidth: 300,
+  },
+  dailySection: {
+    width: '100%',
+    marginTop: 28,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: WW.border,
+    alignItems: 'center',
+  },
+  dailyHint: {
+    color: WW.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  dailyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+    maxWidth: 320,
+  },
+  outlineBtn: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: WW.accent,
+    borderRadius: 14,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  settingsBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: WW.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: WW.surface,
+  },
+  outlineBtnText: {
+    color: WW.accent,
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

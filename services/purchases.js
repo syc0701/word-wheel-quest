@@ -16,8 +16,18 @@ export async function getDefaultOffering() {
 }
 
 export async function purchasePackage(rcPackage) {
-  const { customerInfo } = await Purchases.purchasePackage(rcPackage);
-  return customerInfo;
+  const result = await Purchases.purchasePackage(rcPackage);
+  return result;
+}
+
+export function readPurchaseTransactionId(purchaseResult) {
+  const tx =
+    purchaseResult?.transaction?.transactionIdentifier
+    ?? purchaseResult?.transactionIdentifier
+    ?? purchaseResult?.customerInfo?.originalPurchaseDate
+    ?? null;
+  if (tx) return String(tx);
+  return `rc-${Date.now()}`;
 }
 
 export async function restorePurchases() {
