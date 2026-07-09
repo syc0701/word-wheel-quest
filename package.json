@@ -17,7 +17,12 @@
     "clean:all": "npm run clean && npm run clean:ios-cache",
     "fastlane:install": "brew list fastlane >/dev/null 2>&1 || brew install fastlane; brew upgrade fastlane 2>/dev/null || true",
     "metadata:ios": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && fastlane metadata",
-    "upload:ios:metadata": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && fastlane metadata_and_screenshots --verbose"
+    "upload:ios:screenshots": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && fastlane screenshots --verbose",
+    "upload:ios:metadata": "cd ios && set -a && . ./fastlane/asc_api_key.env && { [ -f ./fastlane/asc_review_contact.env ] && . ./fastlane/asc_review_contact.env || true; } && set +a && fastlane metadata_and_screenshots --verbose",
+    "screenshots:ios": "node scripts/capture-screenshots.js",
+    "screenshots:ios:faster": "SNAPSHOT_LANGUAGES=en-US node scripts/capture-screenshots.js",
+    "screenshots:ios:install": "npm install && npx playwright install chromium",
+    "screenshots:view": "node scripts/view-screenshots.js"
   },
   "dependencies": {
     "expo": "~53.0.27",
@@ -33,7 +38,8 @@
     "react-native-webview": "13.13.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "playwright": "^1.52.0"
   },
   "private": true
 }

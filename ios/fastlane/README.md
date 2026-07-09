@@ -31,6 +31,14 @@ Read back listing text from App Store Connect (debug)
 
 Upload App Store text metadata only (description, keywords, URLs, etc.)
 
+### ios screenshots
+
+```sh
+[bundle exec] fastlane ios screenshots
+```
+
+Upload screenshots only from fastlane/screenshots/ (no listing text)
+
 ### ios metadata_and_screenshots
 
 ```sh

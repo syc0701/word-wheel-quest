@@ -251,6 +251,27 @@ def deliver_options(skip_screenshots:, skip_metadata: true)
   }
 end
 
+def mirror_en_us_screenshots_to_en_ca
+  root = File.join(__dir__, "screenshots")
+  src = File.join(root, "en-US")
+  dest = File.join(root, "en-CA")
+  return unless File.directory?(src)
+
+  pngs = Dir.glob(File.join(src, "*.png"), File::FNM_CASEFOLD)
+  return if pngs.empty?
+
+  FileUtils.mkdir_p(dest)
+  copied = 0
+  pngs.each do |src_path|
+    dest_path = File.join(dest, File.basename(src_path))
+    next if File.file?(dest_path) && File.mtime(dest_path) >= File.mtime(src_path)
+
+    FileUtils.cp(src_path, dest_path)
+    copied += 1
+  end
+  UI.success("English (Canada): #{copied} screenshot(s) mirrored en-US → en-CA") if copied.positive?
+end
+
 platform :ios do
   before_all do
     sync_review_info_from_env!
@@ -287,9 +308,19 @@ platform :ios do
     deliver(**deliver_options(skip_screenshots: true))
   end
 
+  desc "Upload screenshots only from fastlane/screenshots/ (no listing text)"
+  lane :screenshots do
+    mirror_en_us_screenshots_to_en_ca
+    screenshot_count = Dir.glob(File.join(__dir__, "screenshots", "**", "*.png")).length
+    UI.user_error!("No PNGs in ios/fastlane/screenshots/<locale>/ — run npm run screenshots:ios first.") if screenshot_count.zero?
+
+    deliver(**deliver_options(skip_screenshots: false))
+  end
+
   desc "Upload metadata and screenshots from fastlane/screenshots/"
   lane :metadata_and_screenshots do
     upload_listing_text_metadata!
+    mirror_en_us_screenshots_to_en_ca
     screenshot_count = Dir.glob(File.join(__dir__, "screenshots", "**", "*.png")).length
     UI.user_error!("No PNGs in ios/fastlane/screenshots/<locale>/ — add screenshots first.") if screenshot_count.zero?
 

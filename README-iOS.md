@@ -83,6 +83,8 @@ npm run xcode:ios
 4. **Product → Archive**
 5. **Distribute App → App Store Connect → Upload**
 
+**Hermes dSYM warning (Xcode 16+):** If upload shows “Upload Symbols Failed” for `hermes.framework`, clean and re-archive. The project includes a **Generate Hermes dSYM** build phase (after Embed Pods Frameworks) that creates the missing symbols file automatically.
+
 First upload: build number **1**, version **1.0.0**.
 
 ## 3. Upload App Store metadata (Fastlane)

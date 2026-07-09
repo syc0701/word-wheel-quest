@@ -50,6 +50,30 @@ target 'WordWheelQuest' do
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
 
+    # Ensure Hermes dSYM build phase exists (App Store upload / Xcode 16+).
+    app_project_path = File.join(__dir__, 'WordWheelQuest.xcodeproj')
+    if File.exist?(app_project_path)
+      require 'xcodeproj'
+      project = Xcodeproj::Project.open(app_project_path)
+      target = project.targets.find { |t| t.product_type == 'com.apple.product-type.application' }
+      if target
+        phase_name = 'Generate Hermes dSYM'
+        unless target.shell_script_build_phases.any? { |p| p.name == phase_name }
+          phase = target.new_shell_script_build_phase(phase_name)
+          phase.shell_script = "bash \"${PROJECT_DIR}/scripts/generate-hermes-dsym.sh\"\n"
+          phase.input_paths = ['${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework/hermes']
+          phase.output_paths = ['${DWARF_DSYM_FOLDER_PATH}/hermes.framework.dSYM']
+          embed = target.shell_script_build_phases.find { |p| p.name == '[CP] Embed Pods Frameworks' }
+          if embed
+            phases = target.build_phases
+            phases.delete(phase)
+            phases.insert(phases.index(embed) + 1, phase)
+          end
+          project.save
+        end
+      end
+    end
+
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
     installer.target_installation_results.pod_target_installation_results
