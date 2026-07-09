@@ -234,6 +234,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   const handleCellPress = useCallback(
     (row, col) => {
+      setSelectedIndices([]);
       const matches = findWordsAtCell(puzzle?.filledCoordinates, row, col, cellWordNumbers);
       if (matches.length > 0) setSelectedWord(matches[0].word);
     },

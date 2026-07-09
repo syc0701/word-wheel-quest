@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import { Platform } from 'react-native';
 import {
   AuthenticationDetails,
@@ -18,6 +19,12 @@ const userPool = new CognitoUserPool({
   ClientId: COGNITO_MOBILE_CLIENT_ID,
 });
 
+if (__DEV__ && typeof global.crypto?.getRandomValues !== 'function') {
+  console.warn(
+    '[SignIn] crypto.getRandomValues is missing — restart Metro with npm run run:metro and avoid Remote JS Debugging.'
+  );
+}
+
 export function getSignInErrorKey(error) {
   const name = error?.name || error?.code || error?.__type || '';
   const normalized = String(name).replace(/^com\.amazonaws\.cognito\.idp\.model\./, '');
@@ -35,7 +42,8 @@ export function getSignInErrorKey(error) {
 const ERROR_MESSAGES = {
   'user-not-found':
     'No account found for this email. If you signed up with Google or Apple on the website, use Sign in with Apple here.',
-  'wrong-password': 'Incorrect password. Try again or reset your password on puzzleinteract.com.',
+  'wrong-password':
+    'Incorrect password, or this account uses Google/Apple sign-in from the website. Try Sign in with Apple, or reset your password at puzzleinteract.com.',
   'user-not-confirmed': 'Please confirm your email before signing in.',
   'password-reset-required': 'You must reset your password before signing in.',
   'invalid-input': 'Enter your email and password.',
@@ -50,14 +58,14 @@ export function signInErrorMessage(errorKey) {
 
 function logSignInFailure(context) {
   if (!__DEV__) return;
-  const { username, errorKey, error } = context;
+  const { username, errorKey, error, clientId } = context;
   console.warn('[SignIn]', {
     username: username ? `${username.slice(0, 3)}…@${username.split('@')[1] ?? '?'}` : '(empty)',
+    clientId,
     errorKey,
     name: error?.name ?? error?.__type,
     code: error?.code,
     message: error?.message,
-    clientId: COGNITO_MOBILE_CLIENT_ID,
     userPoolId: COGNITO_USER_POOL_ID,
   });
 }
@@ -140,6 +148,7 @@ export async function loginWithPassword(email, password) {
       lastError = error;
       logSignInFailure({
         username: candidates[i],
+        clientId: COGNITO_MOBILE_CLIENT_ID,
         errorKey: getSignInErrorKey(error),
         error,
       });
