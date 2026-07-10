@@ -45,7 +45,9 @@ import { PLAY_MODE, SCREENS, WW } from '../constants/theme';
 
 const CLUE_PLACEHOLDER = 'Tap a numbered cell to see the clue';
 const LEVEL_TOAST_MS = 2200;
-const { width: SCREEN_W } = Dimensions.get('window');
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+/** Keep wheel + helm handles clear of the home indicator. */
+const WHEEL_SIZE = Math.min(SCREEN_W - 120, Math.max(200, SCREEN_H * 0.28), 260);
 
 export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
@@ -600,7 +602,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             selectedIndices={selectedIndices}
             onSelectionChange={setSelectedIndices}
             onDragEnd={handleDragEnd}
-            wheelSize={Math.min(SCREEN_W - 120, 280)}
+            wheelSize={WHEEL_SIZE}
           />
 
           <View style={styles.sideTools}>
@@ -641,7 +643,7 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 16,
     paddingTop: 52,
-    paddingBottom: 32,
+    paddingBottom: 48,
   },
   centered: {
     flex: 1,
