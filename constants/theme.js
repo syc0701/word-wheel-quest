@@ -30,6 +30,10 @@ export const WW = {
   accentDark: '#4f46e5',
   accentSoft: 'rgba(255, 255, 255, 0.55)',
   accentRing: 'rgba(99, 102, 241, 0.35)',
+  /** Word wheel connection lines — high contrast on play gradient */
+  wheelLine: '#db2777',
+  wheelLineDark: '#be185d',
+  wheelLineGlow: 'rgba(219, 39, 119, 0.45)',
   success: '#16a34a',
   successSoft: '#dcfce7',
   successText: '#14532d',

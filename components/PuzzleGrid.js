@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { RevealCell, WordRevealBurst } from '../effect';
 import { WW } from '../constants/theme';
 
 const GAP = 4;
@@ -11,11 +12,35 @@ export default function PuzzleGrid({
   cellWordNumbers,
   selectedWordCells,
   hintOnlyCells,
+  celebratingCellKeys,
+  celebrateOrder = [],
+  celebrateMode = 'new',
+  revealBurstId = 0,
   onCellPress,
 }) {
   const [gridWidth, setGridWidth] = useState(0);
   const cellSize =
     gridWidth > 0 ? (gridWidth - GAP * (gridSize - 1)) / gridSize : 0;
+
+  const celebrating = celebratingCellKeys instanceof Set ? celebratingCellKeys : new Set();
+
+  const burstOrigins = useMemo(() => {
+    if (!cellSize || celebrating.size === 0) return [];
+    return [...celebrating].map((key) => {
+      const [row, col] = key.split(',').map(Number);
+      return {
+        key,
+        x: col * (cellSize + GAP) + cellSize / 2,
+        y: row * (cellSize + GAP) + cellSize / 2,
+      };
+    });
+  }, [celebratingCellKeys, cellSize, celebrating.size]);
+
+  const orderIndex = useMemo(() => {
+    const map = new Map();
+    celebrateOrder.forEach((key, i) => map.set(key, i));
+    return map;
+  }, [celebrateOrder]);
 
   const cells = [];
   for (let row = 0; row < gridSize; row += 1) {
@@ -27,6 +52,7 @@ export default function PuzzleGrid({
       const isHintRevealed = isRevealed && hintOnlyCells.has(cellKey);
       const isSelected = selectedWordCells.has(cellKey);
       const wordNumber = cellWordNumbers.get(cellKey);
+      const isCelebrating = celebrating.has(cellKey);
 
       if (!isPuzzleCell) {
         cells.push(
@@ -37,6 +63,25 @@ export default function PuzzleGrid({
               styles.cellInactive,
               cellSize > 0 && { width: cellSize, height: cellSize },
             ]}
+          />
+        );
+        continue;
+      }
+
+      if (isCelebrating && cellSize > 0) {
+        cells.push(
+          <RevealCell
+            key={cellKey}
+            size={cellSize}
+            letter={letter}
+            wordNumber={wordNumber}
+            isHint={isHintRevealed}
+            isSelected={isSelected}
+            celebrate
+            mode={celebrateMode}
+            pulseKey={revealBurstId}
+            celebrateDelay={(orderIndex.get(cellKey) ?? 0) * 55}
+            onPress={() => onCellPress(row, col)}
           />
         );
         continue;
@@ -87,6 +132,9 @@ export default function PuzzleGrid({
         ]}
       >
         {cells}
+        {celebrateMode === 'new' ? (
+          <WordRevealBurst origins={burstOrigins} burstId={revealBurstId} />
+        ) : null}
       </View>
     </View>
   );
@@ -101,6 +149,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: GAP,
+    position: 'relative',
+    overflow: 'visible',
   },
   cell: {
     alignItems: 'center',

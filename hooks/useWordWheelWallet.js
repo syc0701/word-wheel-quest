@@ -1,15 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CreditApi from '../lib/creditApi';
-import { isLoggedIn } from '../lib/auth';
-import { fetchUserInfo, resolveWordWheelQuestCoins, ensureUserAfterSignup } from '../lib/userApi';
+import { getAuthTokenClaims, isLoggedIn } from '../lib/auth';
+import {
+  fetchUserInfo,
+  normalizeCloudUserPayload,
+  resolveAccountLabel,
+  resolveWordWheelQuestCoins,
+  ensureUserAfterSignup,
+  summarizeUserIdentity,
+} from '../lib/userApi';
 
 export const WORD_WHEEL_LOW_CREDITS_BALANCE = 10;
-export const WORD_WHEEL_LOW_HINT_POINTS_BALANCE = 5;
+export const WORD_WHEEL_LOW_HINT_POINTS_BALANCE = 1;
 
 export default function useWordWheelWallet() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [creditBalance, setCreditBalance] = useState(0);
   const [lifetimePoints, setLifetimePoints] = useState(0);
+  const [accountLabel, setAccountLabel] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -26,20 +34,36 @@ export default function useWordWheelWallet() {
       if (!authed) {
         setCreditBalance(0);
         setLifetimePoints(0);
+        setAccountLabel('');
         return;
       }
 
-      const [balanceResult, userInfo] = await Promise.all([
-        CreditApi.fetchBalance().catch(() => ({ creditBalance: 0 })),
-        fetchUserInfo().catch(() => null),
-      ]);
+      const claims = await getAuthTokenClaims().catch(() => null);
+      let userInfo = await fetchUserInfo().catch(() => null);
+      let cloudUser = normalizeCloudUserPayload(userInfo);
 
-      if (userInfo?.cloudUser) {
-        await ensureUserAfterSignup();
+      if (!cloudUser) {
+        await ensureUserAfterSignup(claims);
+        userInfo = await fetchUserInfo().catch(() => null);
+        cloudUser = normalizeCloudUserPayload(userInfo);
+      } else {
+        await ensureUserAfterSignup(claims);
+      }
+
+      const label = resolveAccountLabel(cloudUser, claims);
+      const coins = resolveWordWheelQuestCoins(cloudUser);
+      const balanceResult = await CreditApi.fetchBalance().catch(() => ({ creditBalance: 0 }));
+
+      if (__DEV__) {
+        console.log('[Wallet] user identity', summarizeUserIdentity(cloudUser, claims));
+        console.log('[Wallet] raw JWT claims', claims);
+        console.log('[Wallet] /home/user payload', userInfo);
+        console.log('[Wallet] puzzle coins', coins, cloudUser?.puzzleCoins);
       }
 
       setCreditBalance(balanceResult.creditBalance);
-      setLifetimePoints(resolveWordWheelQuestCoins(userInfo?.cloudUser));
+      setLifetimePoints(coins);
+      setAccountLabel(label);
     } catch (err) {
       setError(err?.message || 'Failed to load wallet');
     } finally {
@@ -61,6 +85,12 @@ export default function useWordWheelWallet() {
     return result;
   }, []);
 
+  /** Spend puzzle coins locally (server balance refreshes on next profile fetch). */
+  const spendLifetimePoints = useCallback((amount) => {
+    const n = Math.max(0, Number(amount) || 0);
+    setLifetimePoints((prev) => Math.max(0, prev - n));
+  }, []);
+
   const showCreditPurchase = loggedIn && creditBalance < WORD_WHEEL_LOW_CREDITS_BALANCE;
   const showPointPurchase = loggedIn && lifetimePoints < WORD_WHEEL_LOW_HINT_POINTS_BALANCE;
 
@@ -69,6 +99,7 @@ export default function useWordWheelWallet() {
       loggedIn,
       creditBalance,
       lifetimePoints,
+      accountLabel,
       loading,
       refreshing,
       error,
@@ -76,11 +107,13 @@ export default function useWordWheelWallet() {
       showPointPurchase,
       refresh,
       consumeHintCredits,
+      spendLifetimePoints,
     }),
     [
       loggedIn,
       creditBalance,
       lifetimePoints,
+      accountLabel,
       loading,
       refreshing,
       error,
@@ -88,6 +121,7 @@ export default function useWordWheelWallet() {
       showPointPurchase,
       refresh,
       consumeHintCredits,
+      spendLifetimePoints,
     ]
   );
 }

@@ -33,7 +33,7 @@ export default function App() {
       case SCREENS.DAILY_PLAY:
         return (
           <Animated.View
-            key={`play-${params.mode}-${params.date ?? 'journey'}`}
+            key={`play-${params.mode}-${params.date ?? 'journey'}-${params.t ?? 0}`}
             entering={SlideInRight.duration(350).springify()}
             exiting={SlideOutLeft.duration(250)}
             style={styles.screen}

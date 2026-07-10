@@ -7,21 +7,32 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Settings } from 'lucide-react-native';
+import { Calendar, Settings } from 'lucide-react-native';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
-import { resolveWordWheelGridSize } from '../lib/constants';
 import { parseWords } from '../lib/gridReveal';
+import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, WW, PLAY_MODE } from '../constants/theme';
 
-function resolveJourneyLevel(puzzle) {
-  if (puzzle?.mainJourneyLevel != null && Number.isFinite(Number(puzzle.mainJourneyLevel))) {
-    return Number(puzzle.mainJourneyLevel);
-  }
-  if (puzzle?.puzzleLevel != null && Number.isFinite(Number(puzzle.puzzleLevel))) {
-    return Number(puzzle.puzzleLevel);
-  }
-  return null;
+function logHomePuzzle(data, source) {
+  const wordsInUse = data?.wordsInUse;
+  console.log('[Home] fetchNext', {
+    source,
+    code: data?.code,
+    message: data?.message,
+    id: data?.id,
+    title: data?.title,
+    wordsInUse: typeof wordsInUse === 'string' ? wordsInUse.slice(0, 120) : wordsInUse,
+    wordsParsed: parseWords(wordsInUse).length,
+    wordsTotal: data?.wordsTotal,
+    detailsWordCount: data?.details?.wordCount,
+    resolvedWordCount: data?.id ? resolvePuzzleWordCount(data) : 0,
+    mainJourneyLevel: data?.mainJourneyLevel,
+    puzzleLevel: data?.puzzleLevel,
+    season: data?.season,
+    playMode: data?.playMode,
+    gridSize: data?.gridSize,
+  });
 }
 
 export default function HomeScreen({ navigate }) {
@@ -36,8 +47,23 @@ export default function HomeScreen({ navigate }) {
       setError('');
       try {
         const data = await WordWheelApi.fetchNext();
+        logHomePuzzle(data, 'api');
         if (data?.code === 'NO_DATA') {
           if (!cancelled) setError('No word wheel puzzle available yet.');
+          return;
+        }
+        if (data?.code === 'FAILURE') {
+          if (!cancelled) {
+            setPuzzle(null);
+            setError(data?.message || 'Could not load the next puzzle.');
+          }
+          return;
+        }
+        if (!data?.id) {
+          if (!cancelled) {
+            setPuzzle(null);
+            setError('Next puzzle response was missing puzzle data.');
+          }
           return;
         }
         if (!cancelled) setPuzzle(data);
@@ -52,9 +78,12 @@ export default function HomeScreen({ navigate }) {
     };
   }, []);
 
-  const words = useMemo(() => parseWords(puzzle?.wordsInUse), [puzzle]);
-  const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
+
+  useEffect(() => {
+    if (!puzzle) return;
+    logHomePuzzle(puzzle, 'render');
+  }, [puzzle]);
 
   return (
     <GradientBackground variant="home">
@@ -76,14 +105,8 @@ export default function HomeScreen({ navigate }) {
                 <Text style={styles.levelHero}>Level {journeyLevel}</Text>
               )}
               <Text style={styles.puzzleTitle}>{puzzle.title}</Text>
-              <Text style={styles.puzzleMeta}>
-                {words.length} words · {gridSize}×{gridSize} grid
-                {puzzle.season ? ` · ${puzzle.season.replace(/_/g, ' ')}` : ''}
-              </Text>
             </>
           ) : null}
-
-          <Text style={styles.cardRange}>Levels 1 → 1000</Text>
         </View>
 
         <Pressable
@@ -101,12 +124,18 @@ export default function HomeScreen({ navigate }) {
         <View style={styles.dailySection}>
           <Text style={styles.dailyHint}>Today&apos;s bonus puzzle — separate from the season journey</Text>
           <View style={styles.dailyRow}>
-            <Pressable style={styles.outlineBtn} onPress={() => navigate(SCREENS.DAILY)}>
-              <Text style={styles.outlineBtnText}>Daily Puzzle</Text>
+            <Pressable
+              style={styles.iconBtn}
+              onPress={() => navigate(SCREENS.DAILY)}
+              accessibilityLabel="Daily Puzzle"
+              hitSlop={8}
+            >
+              <Calendar color={WW.accent} size={22} strokeWidth={1.8} />
             </Pressable>
             <Pressable
-              style={styles.settingsBtn}
+              style={styles.iconBtn}
               onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
+              accessibilityLabel="Settings"
               hitSlop={8}
             >
               <Settings color={WW.accent} size={22} strokeWidth={1.8} />
@@ -148,12 +177,14 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    maxWidth: 320,
+    maxWidth: 340,
+    minHeight: 220,
     backgroundColor: WW.surface,
-    borderRadius: 20,
-    paddingVertical: 28,
-    paddingHorizontal: 24,
+    borderRadius: 24,
+    paddingVertical: 48,
+    paddingHorizontal: 28,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: WW.border,
     marginBottom: 24,
@@ -164,11 +195,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 2,
     textTransform: 'uppercase',
-    marginBottom: 12,
+    marginBottom: 20,
   },
   levelHero: {
     color: WW.text,
-    fontSize: 40,
+    fontSize: 48,
     fontWeight: '800',
     letterSpacing: -0.5,
     textAlign: 'center',
@@ -183,24 +214,12 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     lineHeight: 20,
   },
-  cardRange: {
-    color: WW.textMuted,
-    fontSize: 12,
-    marginTop: 16,
-  },
   puzzleTitle: {
-    color: WW.text,
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  puzzleMeta: {
     color: WW.textSecondary,
     fontSize: 14,
-    marginTop: 6,
+    fontWeight: '500',
+    marginTop: 12,
     textAlign: 'center',
-    lineHeight: 20,
   },
   primaryBtn: {
     backgroundColor: WW.accent,
@@ -243,20 +262,10 @@ const styles = StyleSheet.create({
   dailyRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 10,
-    width: '100%',
-    maxWidth: 320,
   },
-  outlineBtn: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: WW.accent,
-    borderRadius: 14,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  settingsBtn: {
+  iconBtn: {
     width: 48,
     height: 48,
     borderRadius: 14,
@@ -265,10 +274,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: WW.surface,
-  },
-  outlineBtnText: {
-    color: WW.accent,
-    fontSize: 16,
-    fontWeight: '700',
   },
 });

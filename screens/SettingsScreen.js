@@ -95,9 +95,17 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 suffix=" credits"
               />
               <Text style={styles.walletHint}>
-                Hints cost 5 coins (or credits when coins run out).
+                Hints cost 1 coin per letter (or credits when coins run out).
               </Text>
             </View>
+            {wallet.accountLabel ? (
+              <View style={styles.accountBlock}>
+                <Text style={styles.accountCaption}>Signed in as</Text>
+                <Text style={styles.accountLabel} numberOfLines={2}>
+                  {wallet.accountLabel}
+                </Text>
+              </View>
+            ) : null}
             <MenuRow icon={LogOut} label="Sign out" onPress={handleSignOut} />
           </>
         ) : (
@@ -190,6 +198,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     lineHeight: 18,
+  },
+  accountBlock: {
+    marginBottom: 12,
+    marginHorizontal: 4,
+  },
+  accountCaption: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  accountLabel: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '800',
+    lineHeight: 22,
   },
   row: {
     flexDirection: 'row',

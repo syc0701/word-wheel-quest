@@ -1,49 +1,62 @@
+import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { WW } from '../constants/theme';
+
+const COMPLIMENT_POOL = [
+  'Good job!',
+  'Nice work!',
+  'Well done!',
+  'Awesome!',
+  'Brilliant!',
+  'You nailed it!',
+  'Great solve!',
+  'Fantastic!',
+  'Impressive!',
+  'Way to go!',
+];
+
+function pickCompliment() {
+  return COMPLIMENT_POOL[Math.floor(Math.random() * COMPLIMENT_POOL.length)];
+}
 
 export default function WordWheelCompleteDialog({
   visible,
   onClose,
+  onNext,
   durationLabel,
-  coinsEarned,
   hintCoinsSpent = 0,
-  totalPuzzleCoins,
-  wordCount,
 }) {
+  const [title, setTitle] = useState(COMPLIMENT_POOL[0]);
+
+  useEffect(() => {
+    if (visible) setTitle(pickCompliment());
+  }, [visible]);
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={styles.title}>Puzzle complete!</Text>
+          <Text style={styles.title}>{title}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>Time</Text>
               <Text style={styles.statValue}>{durationLabel || '—'}</Text>
             </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>Coins</Text>
-              <Text style={[styles.statValue, styles.coinsValue]}>{coinsEarned ?? 0}</Text>
-            </View>
           </View>
-
-          {wordCount != null && (
-            <Text style={styles.meta}>
-              {wordCount} word{wordCount === 1 ? '' : 's'} found
-            </Text>
-          )}
 
           {hintCoinsSpent > 0 && (
             <Text style={styles.metaSmall}>Hints used: −{hintCoinsSpent} coins</Text>
           )}
 
-          {totalPuzzleCoins != null && totalPuzzleCoins > 0 && (
-            <Text style={styles.metaSmall}>Lifetime total: {totalPuzzleCoins} coins</Text>
-          )}
-
-          <Pressable style={styles.continueBtn} onPress={onClose}>
-            <Text style={styles.continueText}>Continue</Text>
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable style={styles.closeBtn} onPress={onClose}>
+              <Text style={styles.closeText}>Close</Text>
+            </Pressable>
+            <Pressable style={styles.nextBtn} onPress={onNext || onClose}>
+              <Text style={styles.nextText}>Next</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </Modal>
@@ -98,30 +111,41 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: WW.textOnSurface,
   },
-  coinsValue: {
-    color: '#059669',
-  },
-  meta: {
-    textAlign: 'center',
-    color: 'rgba(15, 61, 54, 0.72)',
-    fontSize: 14,
-    marginBottom: 6,
-  },
   metaSmall: {
     textAlign: 'center',
     color: 'rgba(15, 61, 54, 0.65)',
     fontSize: 12,
     marginBottom: 4,
   },
-  continueBtn: {
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
     marginTop: 20,
+  },
+  closeBtn: {
+    flex: 1,
+    borderRadius: 12,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(5, 150, 105, 0.45)',
+    backgroundColor: '#fff',
+  },
+  closeText: {
+    color: '#059669',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  nextBtn: {
+    flex: 1,
     backgroundColor: '#059669',
     borderRadius: 12,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  continueText: {
+  nextText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',

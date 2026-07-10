@@ -21,6 +21,12 @@ import {
 } from '../lib/montrealCalendar';
 import { PLAY_MODE, SCREENS, WW } from '../constants/theme';
 
+function formatDifficulty(level) {
+  const raw = String(level || '').trim();
+  if (!raw) return '';
+  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+}
+
 function buildMonthDays(year, month, minYmd, maxYmd) {
   const first = new Date(Date.UTC(year, month - 1, 1));
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -99,6 +105,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
 
   const words = useMemo(() => parseWords(puzzle?.wordsInUse), [puzzle]);
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
+  const puzzleCompleted = Boolean(puzzle?.completed);
   const isToday = selectedDate === todayYmd;
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
@@ -189,13 +196,26 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             <ActivityIndicator color={WW.accent} style={{ marginVertical: 16 }} />
           ) : puzzle ? (
             <>
-              <Text style={styles.puzzleTitle}>{puzzle.title}</Text>
+              {puzzleCompleted ? (
+                <View style={styles.completedChip}>
+                  <Text style={styles.completedChipText}>Completed</Text>
+                </View>
+              ) : null}
+              <View style={styles.titleRow}>
+                {puzzle.difficultyLevel ? (
+                  <View style={styles.difficultyChip}>
+                    <Text style={styles.difficultyChipText}>
+                      {formatDifficulty(puzzle.difficultyLevel)}
+                    </Text>
+                  </View>
+                ) : null}
+                <Text style={styles.puzzleTitle} numberOfLines={2}>
+                  {puzzle.title}
+                </Text>
+              </View>
               <Text style={styles.puzzleMeta}>
                 {words.length} words · {gridSize}×{gridSize} grid
               </Text>
-              {puzzle.dailyDayNumber != null && (
-                <Text style={styles.dailyNum}>Daily #{puzzle.dailyDayNumber}</Text>
-              )}
             </>
           ) : (
             <Text style={styles.puzzleMeta}>{error || 'No puzzle for this date.'}</Text>
@@ -207,7 +227,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           disabled={!puzzle?.id || loading}
           onPress={() => navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate })}
         >
-          <Text style={styles.primaryBtnText}>Play</Text>
+          <Text style={styles.primaryBtnText}>{puzzleCompleted ? 'Replay' : 'Play'}</Text>
         </Pressable>
       </ScrollView>
     </GradientBackground>
@@ -356,21 +376,54 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   puzzleTitle: {
+    flexShrink: 1,
     color: WW.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
-    textAlign: 'center',
+    textAlign: 'left',
   },
   puzzleMeta: {
     color: WW.textSecondary,
     fontSize: 14,
-    marginTop: 6,
+    marginTop: 10,
     textAlign: 'center',
   },
-  dailyNum: {
-    color: WW.textMuted,
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    maxWidth: '100%',
+  },
+  completedChip: {
+    backgroundColor: WW.successSoft,
+    borderWidth: 1,
+    borderColor: 'rgba(22, 163, 74, 0.35)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 10,
+  },
+  completedChipText: {
+    color: WW.successText,
     fontSize: 12,
-    marginTop: 8,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+  },
+  difficultyChip: {
+    backgroundColor: WW.accentSoft,
+    borderWidth: 1,
+    borderColor: WW.accentRing,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  difficultyChipText: {
+    color: WW.accentDark,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   primaryBtn: {
     backgroundColor: WW.accent,
