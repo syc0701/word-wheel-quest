@@ -7,12 +7,18 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Calendar, Settings } from 'lucide-react-native';
-import GradientBackground from '../components/GradientBackground';
+import { Calendar, ChevronRight, Play, Settings } from 'lucide-react-native';
 import WordWheelApi from '../lib/api';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
-import { SCREENS, WW, PLAY_MODE } from '../constants/theme';
+import { SCREENS, PLAY_MODE } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
+
+function formatDifficulty(level) {
+  const raw = String(level || '').trim();
+  if (!raw) return '';
+  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+}
 
 function logHomePuzzle(data, source) {
   const wordsInUse = data?.wordsInUse;
@@ -35,7 +41,31 @@ function logHomePuzzle(data, source) {
   });
 }
 
+function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
+  return (
+    <Pressable
+      style={[
+        styles.row,
+        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+      ]}
+      onPress={onPress}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: colors.surfaceLight }]}>
+        <Icon color={colors.primaryGlow} size={20} strokeWidth={1.8} />
+      </View>
+      <View style={styles.rowBody}>
+        <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+        {subtitle ? (
+          <Text style={[styles.rowSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
+        ) : null}
+      </View>
+      <ChevronRight color={colors.textMuted} size={20} />
+    </Pressable>
+  );
+}
+
 export default function HomeScreen({ navigate }) {
+  const { colors } = useAppearance();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
@@ -79,155 +109,234 @@ export default function HomeScreen({ navigate }) {
   }, []);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
+  const wordCount = useMemo(
+    () => (puzzle?.id ? resolvePuzzleWordCount(puzzle) : 0),
+    [puzzle]
+  );
 
   useEffect(() => {
     if (!puzzle) return;
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
 
+  const canPlay = Boolean(puzzle) && !loading && !error;
+
   return (
-    <GradientBackground variant="home">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.kicker}>PUZZLE COLLECTION</Text>
-        <Text style={styles.title}>Word Wheel Quest</Text>
-        <Text style={styles.tagline}>Swipe letters. Find every word.</Text>
+    <View style={styles.container}>
+      <View style={styles.topBar}>
+        <View style={styles.topBarSpacer} />
+        <Pressable
+          style={[styles.topIconBtn, { backgroundColor: colors.surface }]}
+          onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
+          accessibilityLabel="Settings"
+          hitSlop={8}
+        >
+          <Settings color={colors.text} size={22} strokeWidth={1.8} />
+        </Pressable>
+      </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardMode}>Season Journey</Text>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.kicker, { color: colors.textMuted }]}>PUZZLE COLLECTION</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Word Wheel Quest</Text>
+        <Text style={[styles.tagline, { color: colors.textMuted }]}>
+          Swipe letters. Find every word.
+        </Text>
 
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>Season Journey</Text>
+        <View
+          style={[
+            styles.journeyCard,
+            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+          ]}
+        >
           {loading ? (
-            <ActivityIndicator color={WW.accent} style={styles.cardLoader} />
+            <ActivityIndicator color={colors.primaryGlow} style={styles.cardLoader} />
           ) : error ? (
             <Text style={styles.cardError}>{error}</Text>
           ) : puzzle ? (
             <>
-              {journeyLevel != null && (
-                <Text style={styles.levelHero}>Level {journeyLevel}</Text>
-              )}
-              <Text style={styles.puzzleTitle}>{puzzle.title}</Text>
+              <View style={styles.levelRow}>
+                {journeyLevel != null ? (
+                  <Text style={[styles.levelHero, { color: colors.text }]}>
+                    Level {journeyLevel}
+                  </Text>
+                ) : (
+                  <View style={styles.levelHeroSpacer} />
+                )}
+                {puzzle.difficultyLevel ? (
+                  <View
+                    style={[
+                      styles.difficultyChip,
+                      {
+                        backgroundColor: colors.surfaceLight,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
+                      {formatDifficulty(puzzle.difficultyLevel)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
+                {puzzle.title}
+              </Text>
+              {wordCount > 0 ? (
+                <Text style={[styles.meta, { color: colors.textMuted }]}>
+                  {wordCount} words
+                </Text>
+              ) : null}
             </>
           ) : null}
+
+          <Pressable
+            style={[
+              styles.primaryBtn,
+              { backgroundColor: colors.primary },
+              !canPlay && styles.primaryBtnDisabled,
+            ]}
+            disabled={!canPlay}
+            onPress={() => navigate(SCREENS.PLAY, { mode: PLAY_MODE.JOURNEY })}
+          >
+            <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
+            <Text style={styles.primaryBtnText}>Play</Text>
+          </Pressable>
         </View>
 
-        <Pressable
-          style={[styles.primaryBtn, !puzzle && styles.primaryBtnDisabled]}
-          disabled={!puzzle}
-          onPress={() => navigate(SCREENS.PLAY, { mode: PLAY_MODE.JOURNEY })}
-        >
-          <Text style={styles.primaryBtnText}>Play</Text>
-        </Pressable>
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>More</Text>
+        <MenuRow
+          icon={Calendar}
+          label="Daily Puzzle"
+          subtitle="Today's bonus — separate from the season journey"
+          onPress={() => navigate(SCREENS.DAILY)}
+          colors={colors}
+        />
 
-        <Text style={styles.footer}>
+        <Text style={[styles.footer, { color: colors.textMuted }]}>
           Progress is saved on this device. Sign in once to move guest progress to your account.
         </Text>
-
-        <View style={styles.dailySection}>
-          <Text style={styles.dailyHint}>Today&apos;s bonus puzzle — separate from the season journey</Text>
-          <View style={styles.dailyRow}>
-            <Pressable
-              style={styles.iconBtn}
-              onPress={() => navigate(SCREENS.DAILY)}
-              accessibilityLabel="Daily Puzzle"
-              hitSlop={8}
-            >
-              <Calendar color={WW.accent} size={22} strokeWidth={1.8} />
-            </Pressable>
-            <Pressable
-              style={styles.iconBtn}
-              onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
-              accessibilityLabel="Settings"
-              hitSlop={8}
-            >
-              <Settings color={WW.accent} size={22} strokeWidth={1.8} />
-            </Pressable>
-          </View>
-        </View>
       </ScrollView>
-    </GradientBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    paddingBottom: 32,
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  topBar: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingTop: 52,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
   },
-  kicker: {
-    color: WW.accent,
-    fontSize: 12,
-    letterSpacing: 4,
-    fontWeight: '700',
-    marginBottom: 10,
+  topBarSpacer: {
+    flex: 1,
   },
-  title: {
-    color: WW.text,
-    fontSize: 32,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  tagline: {
-    color: WW.textSecondary,
-    fontSize: 15,
-    marginTop: 10,
-    marginBottom: 28,
-    textAlign: 'center',
-  },
-  card: {
-    width: '100%',
-    maxWidth: 340,
-    minHeight: 220,
-    backgroundColor: WW.surface,
-    borderRadius: 24,
-    paddingVertical: 48,
-    paddingHorizontal: 28,
+  topIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: WW.border,
-    marginBottom: 24,
   },
-  cardMode: {
-    color: WW.accent,
-    fontSize: 11,
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  kicker: {
+    fontSize: 12,
     fontWeight: '700',
-    letterSpacing: 2,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    marginBottom: 20,
+    marginTop: 8,
+    marginBottom: 8,
   },
-  levelHero: {
-    color: WW.text,
-    fontSize: 48,
+  title: {
+    fontSize: 28,
     fontWeight: '800',
-    letterSpacing: -0.5,
-    textAlign: 'center',
+    letterSpacing: -0.4,
+  },
+  tagline: {
+    fontSize: 15,
+    marginTop: 6,
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 22,
+    marginBottom: 10,
+  },
+  journeyCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
   },
   cardLoader: {
-    marginVertical: 24,
+    marginVertical: 28,
   },
   cardError: {
     color: '#dc2626',
     fontSize: 14,
-    textAlign: 'center',
-    marginVertical: 16,
     lineHeight: 20,
+    marginBottom: 12,
+  },
+  levelHero: {
+    fontSize: 36,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+    flexShrink: 1,
+  },
+  levelHeroSpacer: {
+    flex: 1,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  difficultyChip: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  difficultyChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   puzzleTitle: {
-    color: WW.textSecondary,
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 6,
+    lineHeight: 22,
+  },
+  meta: {
+    fontSize: 13,
     fontWeight: '500',
-    marginTop: 12,
-    textAlign: 'center',
+    marginTop: 6,
   },
   primaryBtn: {
-    backgroundColor: WW.accent,
-    paddingHorizontal: 48,
-    paddingVertical: 14,
-    borderRadius: 14,
-    minWidth: 200,
+    marginTop: 18,
+    minHeight: 48,
+    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   primaryBtnDisabled: {
     opacity: 0.5,
@@ -237,42 +346,38 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
   },
-  footer: {
-    color: WW.textMuted,
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 24,
-    lineHeight: 18,
-    maxWidth: 300,
-  },
-  dailySection: {
-    width: '100%',
-    marginTop: 28,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: WW.border,
-    alignItems: 'center',
-  },
-  dailyHint: {
-    color: WW.textMuted,
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  dailyRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  iconBtn: {
-    width: 48,
-    height: 48,
     borderRadius: 14,
-    borderWidth: 2,
-    borderColor: WW.accent,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+  },
+  rowIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: WW.surface,
+    marginRight: 12,
+  },
+  rowBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  rowLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  rowSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+    lineHeight: 18,
+  },
+  footer: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 16,
   },
 });

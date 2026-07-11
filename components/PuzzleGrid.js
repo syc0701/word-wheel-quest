@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
-import { WW } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 
 const GAP = 4;
 
@@ -18,6 +18,7 @@ export default function PuzzleGrid({
   revealBurstId = 0,
   onCellPress,
 }) {
+  const { ww } = useAppearance();
   const [gridWidth, setGridWidth] = useState(0);
 
   // Floor so N cells + gaps never exceed measured width (flexWrap would drop the last column).
@@ -65,6 +66,7 @@ export default function PuzzleGrid({
           style={[
             styles.cell,
             styles.cellInactive,
+            { backgroundColor: ww.gridInactive },
             cellSize > 0 && { width: cellSize, height: cellSize },
           ]}
         />
@@ -98,10 +100,18 @@ export default function PuzzleGrid({
           cellSize > 0 && { width: cellSize, height: cellSize },
           isRevealed
             ? isHintRevealed
-              ? styles.cellHint
-              : styles.cellFound
-            : styles.cellHidden,
-          isSelected && styles.cellSelected,
+              ? { backgroundColor: ww.hintSoft, borderWidth: 2, borderColor: '#fcd34d' }
+              : {
+                  backgroundColor: ww.successSoft,
+                  borderWidth: 2,
+                  borderColor: ww.gridRevealedBorder || '#bbf7d0',
+                }
+            : {
+                backgroundColor: ww.gridHidden,
+                borderWidth: 2,
+                borderColor: ww.gridBorder || ww.borderStrong,
+              },
+          isSelected && { borderColor: ww.accent },
         ]}
       >
         {wordNumber != null && (
@@ -110,7 +120,14 @@ export default function PuzzleGrid({
           </View>
         )}
         {isRevealed ? (
-          <Text style={[styles.letter, isHintRevealed && styles.letterHint]}>{letter}</Text>
+          <Text
+            style={[
+              styles.letter,
+              { color: isHintRevealed ? ww.hintText : ww.successText },
+            ]}
+          >
+            {letter}
+          </Text>
         ) : null}
       </Pressable>
     );
@@ -173,34 +190,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     position: 'relative',
   },
-  cellInactive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-  },
-  cellHidden: {
-    backgroundColor: WW.gridHidden,
-    borderWidth: 2,
-    borderColor: WW.borderStrong,
-  },
-  cellFound: {
-    backgroundColor: WW.successSoft,
-    borderWidth: 2,
-    borderColor: '#bbf7d0',
-  },
-  cellHint: {
-    backgroundColor: WW.hintSoft,
-    borderWidth: 2,
-    borderColor: '#fcd34d',
-  },
-  cellSelected: {
-    borderColor: WW.accent,
-  },
+  cellInactive: {},
   letter: {
     fontSize: 15,
     fontWeight: '700',
-    color: WW.successText,
-  },
-  letterHint: {
-    color: WW.hintText,
   },
   numberBadge: {
     position: 'absolute',

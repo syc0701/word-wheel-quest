@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { SCREENS, COLORS } from './constants/theme';
+import { SCREENS } from './constants/theme';
+import { AppearanceProvider, useAppearance } from './context/AppearanceContext';
+import { AudioProvider, BGM_SCENES, useAudio } from './context/AudioContext';
+import HomeSmogEffect from './components/HomeSmogEffect';
 import { configurePurchases } from './services/purchases';
 import HomeScreen from './screens/HomeScreen';
 import PlayScreen from './screens/PlayScreen';
@@ -14,12 +16,35 @@ import ShopScreen from './screens/ShopScreen';
 import WebViewScreen from './screens/WebViewScreen';
 import SignInScreen from './screens/SignInScreen';
 
-export default function App() {
+function AppShell() {
   const [route, setRoute] = useState({ screen: SCREENS.HOME, params: {} });
+  const { colors } = useAppearance();
+  const { setBgmScene, ready: audioReady } = useAudio();
 
   useEffect(() => {
     configurePurchases();
   }, []);
+
+  useEffect(() => {
+    if (!audioReady) return;
+    const { screen } = route;
+    if (screen === SCREENS.PLAY || screen === SCREENS.DAILY_PLAY) {
+      setBgmScene(BGM_SCENES.PLAY);
+      return;
+    }
+    if (
+      screen === SCREENS.HOME
+      || screen === SCREENS.DAILY
+      || screen === SCREENS.SETTINGS
+      || screen === SCREENS.SHOP
+      || screen === SCREENS.SIGN_IN
+      || screen === SCREENS.WEBVIEW
+    ) {
+      setBgmScene(BGM_SCENES.HOME);
+      return;
+    }
+    setBgmScene(BGM_SCENES.NONE);
+  }, [route.screen, audioReady, setBgmScene]);
 
   const navigate = useCallback((screen, params = {}) => {
     setRoute({ screen, params });
@@ -117,9 +142,25 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" />
-      <View style={styles.container}>{renderScreen()}</View>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={styles.backdrop} pointerEvents="none">
+          <HomeSmogEffect />
+        </View>
+        <View style={styles.screenLayer} pointerEvents="box-none">
+          {renderScreen()}
+        </View>
+      </View>
     </GestureHandlerRootView>
+  );
+}
+
+export default function App() {
+  return (
+    <AppearanceProvider>
+      <AudioProvider>
+        <AppShell />
+      </AudioProvider>
+    </AppearanceProvider>
   );
 }
 
@@ -129,9 +170,21 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+    elevation: 0,
+  },
+  screenLayer: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 10,
+    elevation: 10,
+    backgroundColor: 'transparent',
   },
   screen: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
 });

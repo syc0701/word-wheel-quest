@@ -3,30 +3,39 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable
 import { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { ShoppingBag } from 'lucide-react-native';
 import ScreenHeader from '../components/ScreenHeader';
-import { COLORS, SCREENS } from '../constants/theme';
-import { IAP_PACKAGES, REVENUECAT_OFFERING } from '../constants/store';
+import { useAppearance } from '../context/AppearanceContext';
+import { SCREENS } from '../constants/theme';
+import { IAP_PACKAGES, REVENUECAT_OFFERING, APP_STORE } from '../constants/store';
 import { getDefaultOffering, purchasePackage, readPurchaseTransactionId, restorePurchases } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
-import { APP_STORE } from '../constants/store';
 
-function ProductRow({ name, description, priceLabel, purchasing, onBuy }) {
+function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors }) {
   return (
-    <View style={styles.productRow}>
-      <View style={styles.productIcon}>
-        <ShoppingBag color={COLORS.primaryGlow} size={22} strokeWidth={1.8} />
+    <View
+      style={[
+        styles.productRow,
+        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+      ]}
+    >
+      <View style={[styles.productIcon, { backgroundColor: colors.surfaceLight }]}>
+        <ShoppingBag color={colors.primaryGlow} size={22} strokeWidth={1.8} />
       </View>
       <View style={styles.productInfo}>
-        <Text style={styles.productName}>{name}</Text>
-        <Text style={styles.productDescription}>{description}</Text>
+        <Text style={[styles.productName, { color: colors.text }]}>{name}</Text>
+        <Text style={[styles.productDescription, { color: colors.textMuted }]}>{description}</Text>
       </View>
       <Pressable
-        style={[styles.buyBtn, purchasing && styles.buyBtnDisabled]}
+        style={[
+          styles.buyBtn,
+          { backgroundColor: colors.primary },
+          purchasing && styles.buyBtnDisabled,
+        ]}
         onPress={onBuy}
         disabled={purchasing}
       >
         {purchasing ? (
-          <ActivityIndicator color={COLORS.text} size="small" />
+          <ActivityIndicator color="#fff" size="small" />
         ) : (
           <Text style={styles.buyBtnText}>{priceLabel}</Text>
         )}
@@ -37,6 +46,7 @@ function ProductRow({ name, description, priceLabel, purchasing, onBuy }) {
 
 export default function ShopScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
+  const { colors } = useAppearance();
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
@@ -109,13 +119,13 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       <ScreenHeader title="Shop" onBack={() => navigate(backScreen, routeParams)} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.subtitle}>{REVENUECAT_OFFERING.displayName}</Text>
-        <Text style={styles.hint}>
+        <Text style={[styles.subtitle, { color: colors.text }]}>{REVENUECAT_OFFERING.displayName}</Text>
+        <Text style={[styles.hint, { color: colors.textMuted }]}>
           Offering `{REVENUECAT_OFFERING.identifier}` · Prices from the App Store.
         </Text>
 
         {loading ? (
-          <ActivityIndicator color={COLORS.primaryGlow} style={styles.loader} />
+          <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
         ) : (
           IAP_PACKAGES.map((meta) => {
             const rcPackage = findRcPackage(meta.packageId);
@@ -128,6 +138,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
                 priceLabel={priceLabel}
                 purchasing={purchasingId === meta.packageId}
                 onBuy={() => handleBuy(meta)}
+                colors={colors}
               />
             );
           })
@@ -135,9 +146,9 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
 
         <Pressable style={styles.restoreBtn} onPress={handleRestore} disabled={restoring}>
           {restoring ? (
-            <ActivityIndicator color={COLORS.textMuted} size="small" />
+            <ActivityIndicator color={colors.textMuted} size="small" />
           ) : (
-            <Text style={styles.restoreText}>Restore purchases</Text>
+            <Text style={[styles.restoreText, { color: colors.textMuted }]}>Restore purchases</Text>
           )}
         </Pressable>
       </ScrollView>
@@ -148,20 +159,18 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 32,
   },
   subtitle: {
-    color: COLORS.text,
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 8,
   },
   hint: {
-    color: COLORS.textMuted,
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 20,
@@ -172,18 +181,15 @@ const styles = StyleSheet.create({
   productRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 14,
     marginTop: 10,
     borderWidth: 1,
-    borderColor: COLORS.surfaceLight,
   },
   productIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: COLORS.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -194,18 +200,15 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   productName: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '700',
   },
   productDescription: {
-    color: COLORS.textMuted,
     fontSize: 13,
     marginTop: 4,
     lineHeight: 18,
   },
   buyBtn: {
-    backgroundColor: COLORS.primary,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
@@ -216,7 +219,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   buyBtnText: {
-    color: COLORS.text,
+    color: '#fff',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -226,7 +229,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   restoreText: {
-    color: COLORS.textMuted,
     fontSize: 14,
     fontWeight: '600',
   },

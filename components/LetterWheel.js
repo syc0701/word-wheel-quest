@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { WW } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 import {
   buildWheelNodes,
   findNodeAtPoint,
@@ -20,13 +20,14 @@ import WheelLetter from './WheelLetter';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
-const LINE_CORE = 7;
-const LINE_GLOW = 18;
+const LINE_CORE = 6;
+const LINE_MID = 11;
+const LINE_GLOW = 20;
 const ROLLBACK_MS = 200;
 
-/** Draw one segment with glow + core stroke. */
-function WheelSegment({ x1, y1, x2, y2, active = false }) {
-  const glowOpacity = active ? 0.55 : 0.4;
+/** Draw one segment with soft glow → mid → core (amber lock on teal). */
+function WheelSegment({ x1, y1, x2, y2, active = false, line, lineDark, lineSoft }) {
+  const glowOpacity = active ? 0.5 : 0.35;
   return (
     <>
       <Line
@@ -34,7 +35,7 @@ function WheelSegment({ x1, y1, x2, y2, active = false }) {
         y1={y1}
         x2={x2}
         y2={y2}
-        stroke={WW.wheelLine}
+        stroke={lineSoft || line}
         strokeWidth={LINE_GLOW}
         strokeLinecap="round"
         opacity={glowOpacity}
@@ -44,7 +45,17 @@ function WheelSegment({ x1, y1, x2, y2, active = false }) {
         y1={y1}
         x2={x2}
         y2={y2}
-        stroke={WW.wheelLineDark}
+        stroke={line}
+        strokeWidth={LINE_MID}
+        strokeLinecap="round"
+        opacity={0.85}
+      />
+      <Line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={lineDark}
         strokeWidth={LINE_CORE}
         strokeLinecap="round"
       />
@@ -53,7 +64,7 @@ function WheelSegment({ x1, y1, x2, y2, active = false }) {
 }
 
 /** Live line from last selected node to current finger while dragging. */
-function DraggingLine({ x1, y1, fingerX, fingerY, visible }) {
+function DraggingLine({ x1, y1, fingerX, fingerY, visible, line, lineDark, lineSoft }) {
   const animatedProps = useAnimatedProps(() => ({
     x2: fingerX.value,
     y2: fingerY.value,
@@ -68,10 +79,10 @@ function DraggingLine({ x1, y1, fingerX, fingerY, visible }) {
         y1={y1}
         x2={x1}
         y2={y1}
-        stroke={WW.wheelLine}
+        stroke={lineSoft || line}
         strokeWidth={LINE_GLOW}
         strokeLinecap="round"
-        opacity={0.5}
+        opacity={0.45}
       />
       <AnimatedLine
         animatedProps={animatedProps}
@@ -79,7 +90,18 @@ function DraggingLine({ x1, y1, fingerX, fingerY, visible }) {
         y1={y1}
         x2={x1}
         y2={y1}
-        stroke={WW.wheelLineDark}
+        stroke={line}
+        strokeWidth={LINE_MID}
+        strokeLinecap="round"
+        opacity={0.85}
+      />
+      <AnimatedLine
+        animatedProps={animatedProps}
+        x1={x1}
+        y1={y1}
+        x2={x1}
+        y2={y1}
+        stroke={lineDark}
         strokeWidth={LINE_CORE}
         strokeLinecap="round"
       />
@@ -88,7 +110,7 @@ function DraggingLine({ x1, y1, fingerX, fingerY, visible }) {
 }
 
 /** Last segment whose endpoint animates during ROLLBACK (rubber-band retract). */
-function RetractingSegment({ x1, y1, x2, y2, progress }) {
+function RetractingSegment({ x1, y1, x2, y2, progress, line, lineDark, lineSoft }) {
   const animatedProps = useAnimatedProps(() => {
     // progress 1 = full segment (x1→x2), progress 0 = collapsed at start node (x1)
     const t = progress.value;
@@ -106,10 +128,10 @@ function RetractingSegment({ x1, y1, x2, y2, progress }) {
         y1={y1}
         x2={x2}
         y2={y2}
-        stroke={WW.wheelLine}
+        stroke={lineSoft || line}
         strokeWidth={LINE_GLOW}
         strokeLinecap="round"
-        opacity={0.55}
+        opacity={0.45}
       />
       <AnimatedLine
         animatedProps={animatedProps}
@@ -117,7 +139,18 @@ function RetractingSegment({ x1, y1, x2, y2, progress }) {
         y1={y1}
         x2={x2}
         y2={y2}
-        stroke={WW.wheelLineDark}
+        stroke={line}
+        strokeWidth={LINE_MID}
+        strokeLinecap="round"
+        opacity={0.85}
+      />
+      <AnimatedLine
+        animatedProps={animatedProps}
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={lineDark}
         strokeWidth={LINE_CORE}
         strokeLinecap="round"
       />
@@ -132,6 +165,10 @@ export default function LetterWheel({
   onDragEnd,
   wheelSize = 280,
 }) {
+  const { ww } = useAppearance();
+  const line = ww.wheelLine;
+  const lineDark = ww.wheelLineDark;
+  const lineSoft = ww.wheelLineSoft;
   const nodeRadius = Math.max(18, Math.round(wheelSize * 0.085));
   const hitRadius = nodeRadius * 1.35;
 
@@ -368,6 +405,9 @@ export default function LetterWheel({
                   x2={b.x}
                   y2={b.y}
                   active={isActive}
+                  line={line}
+                  lineDark={lineDark}
+                  lineSoft={lineSoft}
                 />
               );
             })}
@@ -379,6 +419,9 @@ export default function LetterWheel({
                 fingerX={fingerX}
                 fingerY={fingerY}
                 visible={fingerVisible}
+                line={line}
+                lineDark={lineDark}
+                lineSoft={lineSoft}
               />
             ) : null}
 
@@ -389,6 +432,9 @@ export default function LetterWheel({
                 x2={retractTo.x}
                 y2={retractTo.y}
                 progress={segmentProgress}
+                line={line}
+                lineDark={lineDark}
+                lineSoft={lineSoft}
               />
             ) : null}
           </Svg>

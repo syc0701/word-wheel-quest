@@ -7,8 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react-native';
-import GradientBackground from '../components/GradientBackground';
+import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
 import WordWheelApi from '../lib/api';
 import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
 import { resolveWordWheelGridSize } from '../lib/constants';
@@ -19,7 +18,8 @@ import {
   formatDisplayDate,
   montrealYmdFromDate,
 } from '../lib/montrealCalendar';
-import { PLAY_MODE, SCREENS, WW } from '../constants/theme';
+import { PLAY_MODE, SCREENS } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 
 function formatDifficulty(level) {
   const raw = String(level || '').trim();
@@ -43,6 +43,7 @@ function buildMonthDays(year, month, minYmd, maxYmd) {
 }
 
 export default function DailyScreen({ navigate, routeParams = {} }) {
+  const { colors } = useAppearance();
   const todayYmd = useMemo(() => montrealYmdFromDate(), []);
   const minYmd = WORD_WHEEL_DAILY_CALENDAR_MIN;
 
@@ -109,45 +110,77 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const isToday = selectedDate === todayYmd;
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
+  const canPlay = Boolean(puzzle?.id) && !loading;
 
   return (
-    <GradientBackground variant="home">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Pressable style={styles.backBtn} onPress={() => navigate(SCREENS.HOME)}>
-          <ArrowLeft color={WW.text} size={22} />
+    <View style={styles.container}>
+      <View style={styles.topBar}>
+        <Pressable
+          style={[styles.backBtn, { backgroundColor: colors.surface }]}
+          onPress={() => navigate(SCREENS.HOME)}
+          accessibilityLabel="Back"
+        >
+          <ArrowLeft color={colors.text} size={22} />
         </Pressable>
+        <View style={styles.topBarSpacer} />
+      </View>
 
-        <Text style={styles.kicker}>BONUS PUZZLE</Text>
-        <Text style={styles.title}>Daily Puzzle</Text>
-        <Text style={styles.subtitle}>Pick a date to preview and play that day&apos;s puzzle.</Text>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.kicker, { color: colors.textMuted }]}>BONUS PUZZLE</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Daily Puzzle</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Pick a date to preview and play that day&apos;s puzzle.
+        </Text>
 
-        <View style={styles.dateCard}>
-          <Pressable
-            style={[styles.navBtn, !canGoPrev && styles.navBtnDisabled]}
-            disabled={!canGoPrev || loading}
-            onPress={() => shiftDay(-1)}
-          >
-            <ChevronLeft color={WW.text} size={22} />
-          </Pressable>
-          <View style={styles.dateCenter}>
-            <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
-            {isToday && (
-              <View style={styles.todayChip}>
-                <Text style={styles.todayChipText}>Today</Text>
-              </View>
-            )}
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+          ]}
+        >
+          <View style={styles.dateRow}>
+            <Pressable
+              style={[
+                styles.navBtn,
+                { backgroundColor: colors.surfaceLight },
+                !canGoPrev && styles.navBtnDisabled,
+              ]}
+              disabled={!canGoPrev || loading}
+              onPress={() => shiftDay(-1)}
+            >
+              <ChevronLeft color={colors.text} size={22} />
+            </Pressable>
+            <View style={styles.dateCenter}>
+              <Text style={[styles.dateText, { color: colors.text }]}>
+                {formatDisplayDate(selectedDate)}
+              </Text>
+              {isToday ? (
+                <View style={[styles.todayChip, { backgroundColor: colors.surfaceLight }]}>
+                  <Text style={[styles.todayChipText, { color: colors.primaryGlow }]}>Today</Text>
+                </View>
+              ) : null}
+            </View>
+            <Pressable
+              style={[
+                styles.navBtn,
+                { backgroundColor: colors.surfaceLight },
+                !canGoNext && styles.navBtnDisabled,
+              ]}
+              disabled={!canGoNext || loading}
+              onPress={() => shiftDay(1)}
+            >
+              <ChevronRight color={colors.text} size={22} />
+            </Pressable>
           </View>
-          <Pressable
-            style={[styles.navBtn, !canGoNext && styles.navBtnDisabled]}
-            disabled={!canGoNext || loading}
-            onPress={() => shiftDay(1)}
-          >
-            <ChevronRight color={WW.text} size={22} />
-          </Pressable>
         </View>
 
-        <View style={styles.calendarCard}>
-          <Text style={styles.monthLabel}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+          ]}
+        >
+          <Text style={[styles.monthLabel, { color: colors.text }]}>
             {new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(undefined, {
               month: 'long',
               year: 'numeric',
@@ -156,7 +189,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           </Text>
           <View style={styles.weekRow}>
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, index) => (
-              <Text key={`weekday-${index}`} style={styles.weekDay}>
+              <Text key={`weekday-${index}`} style={[styles.weekDay, { color: colors.textMuted }]}>
                 {d}
               </Text>
             ))}
@@ -170,15 +203,24 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                   onPress={() => setDate(cell.ymd)}
                   style={[
                     styles.dayCell,
-                    cell.ymd === selectedDate && styles.dayCellSelected,
+                    cell.ymd === selectedDate && {
+                      backgroundColor: colors.primary,
+                      borderRadius: 999,
+                    },
                     cell.disabled && styles.dayCellDisabled,
                   ]}
                 >
                   <Text
                     style={[
                       styles.dayText,
-                      cell.ymd === selectedDate && styles.dayTextSelected,
-                      cell.disabled && styles.dayTextDisabled,
+                      {
+                        color:
+                          cell.ymd === selectedDate
+                            ? '#fff'
+                            : cell.disabled
+                              ? colors.textMuted
+                              : colors.text,
+                      },
                     ]}
                   >
                     {cell.day}
@@ -191,96 +233,133 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           </View>
         </View>
 
-        <View style={styles.previewCard}>
+        <View
+          style={[
+            styles.card,
+            styles.previewCard,
+            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+          ]}
+        >
           {loading ? (
-            <ActivityIndicator color={WW.accent} style={{ marginVertical: 16 }} />
+            <ActivityIndicator color={colors.primaryGlow} style={{ marginVertical: 8 }} />
           ) : puzzle ? (
             <>
               {puzzleCompleted ? (
-                <View style={styles.completedChip}>
-                  <Text style={styles.completedChipText}>Completed</Text>
+                <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
+                  <Text style={[styles.completedChipText, { color: colors.success }]}>
+                    Completed
+                  </Text>
                 </View>
               ) : null}
               <View style={styles.titleRow}>
                 {puzzle.difficultyLevel ? (
-                  <View style={styles.difficultyChip}>
-                    <Text style={styles.difficultyChipText}>
+                  <View
+                    style={[
+                      styles.difficultyChip,
+                      {
+                        backgroundColor: colors.surfaceLight,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
                       {formatDifficulty(puzzle.difficultyLevel)}
                     </Text>
                   </View>
                 ) : null}
-                <Text style={styles.puzzleTitle} numberOfLines={2}>
+                <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
                   {puzzle.title}
                 </Text>
               </View>
-              <Text style={styles.puzzleMeta}>
+              <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
                 {words.length} words · {gridSize}×{gridSize} grid
               </Text>
             </>
           ) : (
-            <Text style={styles.puzzleMeta}>{error || 'No puzzle for this date.'}</Text>
+            <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
+              {error || 'No puzzle for this date.'}
+            </Text>
           )}
         </View>
 
         <Pressable
-          style={[styles.primaryBtn, (!puzzle?.id || loading) && styles.primaryBtnDisabled]}
-          disabled={!puzzle?.id || loading}
-          onPress={() => navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate })}
+          style={[
+            styles.primaryBtn,
+            { backgroundColor: colors.primary },
+            !canPlay && styles.primaryBtnDisabled,
+          ]}
+          disabled={!canPlay}
+          onPress={() =>
+            navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate })
+          }
         >
+          <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
           <Text style={styles.primaryBtnText}>{puzzleCompleted ? 'Replay' : 'Play'}</Text>
         </Pressable>
       </ScrollView>
-    </GradientBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: 20,
-    paddingTop: 52,
-    paddingBottom: 32,
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
-  backBtn: {
-    alignSelf: 'flex-start',
-    padding: 8,
-    marginLeft: -8,
-    marginBottom: 8,
-  },
-  kicker: {
-    color: WW.accent,
-    fontSize: 12,
-    letterSpacing: 2,
-    fontWeight: '600',
-  },
-  title: {
-    color: WW.text,
-    fontSize: 26,
-    fontWeight: '800',
-    marginTop: 4,
-  },
-  subtitle: {
-    color: WW.textSecondary,
-    fontSize: 14,
-    marginTop: 6,
-    marginBottom: 16,
-  },
-  dateCard: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: WW.surface,
+    paddingTop: 52,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topBarSpacer: {
+    flex: 1,
+  },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  kicker: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  subtitle: {
+    fontSize: 15,
+    marginTop: 6,
+    marginBottom: 18,
+    lineHeight: 22,
+  },
+  card: {
     borderRadius: 16,
-    padding: 12,
     borderWidth: 1,
-    borderColor: WW.border,
+    padding: 14,
     marginBottom: 12,
   },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   navBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: WW.surface,
-    borderWidth: 1,
-    borderColor: WW.borderStrong,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -293,36 +372,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   dateText: {
-    color: WW.text,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
   },
   todayChip: {
     marginTop: 6,
-    backgroundColor: WW.successSoft,
     paddingHorizontal: 10,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 10,
   },
   todayChipText: {
-    color: WW.successText,
     fontSize: 11,
-    fontWeight: '600',
-  },
-  calendarCard: {
-    backgroundColor: WW.surface,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: WW.border,
-    marginBottom: 12,
+    fontWeight: '700',
   },
   monthLabel: {
-    color: WW.text,
     fontWeight: '700',
     fontSize: 15,
-    marginBottom: 8,
+    marginBottom: 10,
     textAlign: 'center',
   },
   weekRow: {
@@ -334,7 +401,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     fontWeight: '600',
-    color: WW.textMuted,
   },
   daysGrid: {
     flexDirection: 'row',
@@ -346,44 +412,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayCellSelected: {
-    backgroundColor: WW.accent,
-    borderRadius: 999,
-  },
   dayCellDisabled: {
-    opacity: 0.35,
+    opacity: 0.45,
   },
   dayText: {
-    color: WW.text,
     fontSize: 14,
     fontWeight: '600',
   },
-  dayTextSelected: {
-    color: '#fff',
-  },
-  dayTextDisabled: {
-    color: WW.textMuted,
-  },
   previewCard: {
-    backgroundColor: WW.surface,
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: WW.border,
     alignItems: 'center',
-    marginBottom: 16,
-    minHeight: 100,
+    minHeight: 96,
     justifyContent: 'center',
   },
   puzzleTitle: {
     flexShrink: 1,
-    color: WW.text,
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'left',
   },
   puzzleMeta: {
-    color: WW.textSecondary,
     fontSize: 14,
     marginTop: 10,
     textAlign: 'center',
@@ -397,39 +444,35 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   completedChip: {
-    backgroundColor: WW.successSoft,
-    borderWidth: 1,
-    borderColor: 'rgba(22, 163, 74, 0.35)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
     marginBottom: 10,
   },
   completedChipText: {
-    color: WW.successText,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
   },
   difficultyChip: {
-    backgroundColor: WW.accentSoft,
     borderWidth: 1,
-    borderColor: WW.accentRing,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
   },
   difficultyChipText: {
-    color: WW.accentDark,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
   primaryBtn: {
-    backgroundColor: WW.accent,
-    borderRadius: 14,
-    paddingVertical: 14,
+    marginTop: 4,
+    minHeight: 48,
+    borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   primaryBtnDisabled: {
     opacity: 0.5,

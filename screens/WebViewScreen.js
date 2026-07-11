@@ -1,10 +1,11 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import ScreenHeader from '../components/ScreenHeader';
-import { COLORS } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 import { normalizeLegalWebViewUrl } from '../lib/legalUrl';
 
 export default function WebViewScreen({ navigate, routeParams, backScreen }) {
+  const { colors } = useAppearance();
   const { url, title } = routeParams ?? {};
   const webUrl = url ? normalizeLegalWebViewUrl(url) : null;
 
@@ -17,11 +18,11 @@ export default function WebViewScreen({ navigate, routeParams, backScreen }) {
       {webUrl ? (
         <WebView
           source={{ uri: webUrl }}
-          style={styles.webview}
+          style={[styles.webview, { backgroundColor: colors.background }]}
           startInLoadingState
           renderLoading={() => (
             <View style={styles.loading}>
-              <ActivityIndicator color={COLORS.primaryGlow} size="large" />
+              <ActivityIndicator color={colors.primaryGlow} size="large" />
             </View>
           )}
         />
@@ -33,16 +34,13 @@ export default function WebViewScreen({ navigate, routeParams, backScreen }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   webview: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   loading: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.background,
   },
 });

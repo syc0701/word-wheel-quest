@@ -12,23 +12,30 @@ import Animated, {
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-function makeBubbles(count = 10) {
+/** Keep bubbles in the lower play area — below the grid. */
+const GRID_FLOOR_Y = SCREEN_H * 0.52;
+
+function makeBubbles(count = 8) {
   return Array.from({ length: count }, (_, i) => {
-    const size = 18 + ((i * 17) % 52);
+    const size = 10 + ((i * 11) % 16);
+    const startY = SCREEN_H * (0.68 + ((i * 13) % 26) / 100);
+    // Short rise only — fade before reaching the grid.
+    const travel = Math.min(startY - GRID_FLOOR_Y + size, 90 + (i % 4) * 18);
     return {
       id: i,
       size,
       left: ((i * 97 + 31) % 100) / 100 * (SCREEN_W - size),
-      startY: SCREEN_H * (0.55 + ((i * 13) % 45) / 100),
-      duration: 9000 + (i % 5) * 2200,
+      startY,
+      travel: Math.max(48, travel),
+      duration: 10000 + (i % 5) * 2000,
       delay: (i % 6) * 900,
-      drift: ((i % 2 === 0 ? 1 : -1) * (12 + (i % 4) * 8)),
-      opacity: 0.12 + (i % 4) * 0.05,
+      drift: ((i % 2 === 0 ? 1 : -1) * (8 + (i % 4) * 5)),
+      opacity: 0.1 + (i % 4) * 0.04,
     };
   });
 }
 
-function FloatingBubble({ size, left, startY, duration, delay, drift, opacity }) {
+function FloatingBubble({ size, left, startY, travel, duration, delay, drift, opacity }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -43,11 +50,11 @@ function FloatingBubble({ size, left, startY, duration, delay, drift, opacity })
   }, [progress, duration, delay]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.08, 0.75, 1], [0, opacity, opacity * 0.85, 0]),
+    opacity: interpolate(progress.value, [0, 0.1, 0.7, 1], [0, opacity, opacity * 0.75, 0]),
     transform: [
-      { translateY: interpolate(progress.value, [0, 1], [0, -(startY + size + 80)]) },
+      { translateY: interpolate(progress.value, [0, 1], [0, -travel]) },
       { translateX: interpolate(progress.value, [0, 0.35, 0.7, 1], [0, drift, -drift * 0.4, drift * 0.6]) },
-      { scale: interpolate(progress.value, [0, 0.5, 1], [0.85, 1.05, 0.9]) },
+      { scale: interpolate(progress.value, [0, 0.5, 1], [0.9, 1.02, 0.92]) },
     ],
   }));
 
@@ -70,7 +77,7 @@ function FloatingBubble({ size, left, startY, duration, delay, drift, opacity })
 }
 
 export default function PlayAmbientBubbles() {
-  const bubbles = useMemo(() => makeBubbles(12), []);
+  const bubbles = useMemo(() => makeBubbles(8), []);
 
   return (
     <View style={styles.layer} pointerEvents="none">
@@ -85,11 +92,15 @@ const styles = StyleSheet.create({
   layer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
+    zIndex: 0,
+    elevation: 0,
   },
   bubble: {
     position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    zIndex: 0,
+    elevation: 0,
+    backgroundColor: 'rgba(148, 163, 184, 0.22)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(148, 163, 184, 0.28)',
   },
 });

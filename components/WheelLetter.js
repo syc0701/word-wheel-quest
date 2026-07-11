@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { Platform, StyleSheet, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { WW } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 
 const SELECTED_SCALE = 1.18;
 const SPRING = { damping: 11, stiffness: 220, mass: 0.65 };
 
 export default function WheelLetter({ letter, x, y, radius, selected }) {
+  const { ww } = useAppearance();
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -16,6 +18,16 @@ export default function WheelLetter({ letter, x, y, radius, selected }) {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  const fillColors = selected
+    ? ww.letterSelectedGradient
+    : ww.letterBgGradient || [ww.letterBg, ww.letterBg];
+  const borderColor = selected
+    ? ww.letterSelectedBorder
+    : ww.letterBorder || ww.border;
+  const textColor = selected
+    ? ww.letterSelectedText
+    : ww.letterText || ww.textOnSurface;
 
   return (
     <Animated.View
@@ -28,12 +40,41 @@ export default function WheelLetter({ letter, x, y, radius, selected }) {
           borderRadius: radius,
           left: x - radius,
           top: y - radius,
+          borderColor,
+          borderWidth: selected ? 2.5 : 1.5,
+          overflow: 'hidden',
+          ...(selected
+            ? Platform.select({
+                ios: {
+                  shadowColor: ww.wheelLineDark,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 0.65,
+                  shadowRadius: 10,
+                },
+                android: { elevation: 8 },
+                default: {},
+              })
+            : Platform.select({
+                ios: {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3,
+                },
+                android: { elevation: 3 },
+                default: {},
+              })),
         },
-        selected && styles.nodeSelected,
         animatedStyle,
       ]}
     >
-      <Text style={[styles.text, selected && styles.textSelected]}>{letter}</Text>
+      <LinearGradient
+        colors={fillColors}
+        start={{ x: 0.15, y: 0 }}
+        end={{ x: 0.85, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <Text style={[styles.text, { color: textColor }]}>{letter}</Text>
     </Animated.View>
   );
 }
@@ -41,36 +82,11 @@ export default function WheelLetter({ letter, x, y, radius, selected }) {
 const styles = StyleSheet.create({
   node: {
     position: 'absolute',
-    backgroundColor: WW.surface,
-    borderWidth: 1,
-    borderColor: WW.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nodeSelected: {
-    borderWidth: 2.5,
-    borderColor: WW.wheelLine,
-    backgroundColor: WW.surface,
-    ...Platform.select({
-      ios: {
-        shadowColor: WW.wheelLineDark,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.55,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-      default: {},
-    }),
-  },
   text: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: WW.textOnSurface,
-  },
-  textSelected: {
-    color: WW.wheelLineDark,
+    fontSize: 22,
     fontWeight: '800',
   },
 });

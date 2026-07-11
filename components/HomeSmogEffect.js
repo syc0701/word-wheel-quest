@@ -9,26 +9,33 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useAppearance } from '../context/AppearanceContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-function makeSmogBanks(count = 8) {
+function makeSmogBanks(count = 10) {
   return Array.from({ length: count }, (_, i) => {
-    const size = SCREEN_W * (0.18 + (i % 4) * 0.05);
+    // Tiny soft orbs — stay out of the mid-screen grid band.
+    const size = SCREEN_W * (0.055 + (i % 4) * 0.018);
     const goingRight = i % 2 === 0;
+    // Prefer top strip or below-grid zone (clue / wheel).
+    const inLowerBand = i % 3 !== 0;
+    const top = inLowerBand
+      ? SCREEN_H * (0.58 + ((i * 11) % 34) / 100) - size * 0.2
+      : SCREEN_H * (0.01 + ((i * 7) % 8) / 100) - size * 0.15;
     return {
       id: i,
       size,
-      top: SCREEN_H * (0.05 + ((i * 17) % 80) / 100) - size * 0.2,
-      duration: 16000 + (i % 5) * 4500,
-      delay: (i % 6) * 1200,
+      top,
+      duration: 16000 + (i % 5) * 3500,
+      delay: (i % 6) * 900,
       goingRight,
-      opacity: 0.14 + (i % 4) * 0.04,
+      opacity: 0.32 + (i % 4) * 0.06,
     };
   });
 }
 
-function SmogBank({ size, top, duration, delay, goingRight, opacity }) {
+function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -43,14 +50,14 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity }) {
     );
   }, [progress, duration, delay]);
 
-  const startX = goingRight ? -size : SCREEN_W;
-  const endX = goingRight ? SCREEN_W : -size;
+  const startX = goingRight ? -size * 0.6 : SCREEN_W - size * 0.4;
+  const endX = goingRight ? SCREEN_W - size * 0.4 : -size * 0.6;
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       progress.value,
-      [0, 0.12, 0.5, 0.88, 1],
-      [0, opacity, opacity, opacity * 0.85, 0]
+      [0, 0.1, 0.5, 0.9, 1],
+      [0, opacity, opacity, opacity * 0.9, 0]
     ),
     transform: [
       { translateX: interpolate(progress.value, [0, 1], [startX, endX]) },
@@ -58,7 +65,7 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity }) {
         translateY: interpolate(
           progress.value,
           [0, 0.5, 1],
-          [0, goingRight ? -14 : 14, 0]
+          [0, goingRight ? -6 : 6, 0]
         ),
       },
     ],
@@ -75,6 +82,7 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity }) {
           borderRadius: size / 2,
           top,
           left: 0,
+          backgroundColor: color,
         },
         animatedStyle,
       ]}
@@ -82,13 +90,21 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity }) {
   );
 }
 
+/**
+ * Drifting mist orbs behind chrome pages.
+ * Light: bright white orbs on mint (high contrast).
+ * Dark: soft seafoam glow on deep teal.
+ */
 export default function HomeSmogEffect() {
-  const banks = useMemo(() => makeSmogBanks(8), []);
+  const { isDark } = useAppearance();
+  const banks = useMemo(() => makeSmogBanks(10), []);
+  // Soft slate mist on white; seafoam on dark teal.
+  const color = isDark ? 'rgba(204, 251, 241, 0.22)' : 'rgba(148, 163, 184, 0.28)';
 
   return (
     <View style={styles.layer} pointerEvents="none">
       {banks.map((bank) => (
-        <SmogBank key={bank.id} {...bank} />
+        <SmogBank key={bank.id} {...bank} color={color} />
       ))}
     </View>
   );
@@ -98,9 +114,12 @@ const styles = StyleSheet.create({
   layer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
+    zIndex: 0,
+    elevation: 0,
   },
   bank: {
     position: 'absolute',
-    backgroundColor: 'rgba(255, 250, 247, 0.5)',
+    zIndex: 0,
+    elevation: 0,
   },
 });

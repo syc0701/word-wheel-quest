@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { Eye, EyeOff, Settings } from 'lucide-react-native';
 import { APP_URLS } from '../constants/store';
-import { COLORS, SCREENS } from '../constants/theme';
+import { SCREENS } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 import {
   loginWithPassword,
   signInErrorMessage,
@@ -20,6 +21,7 @@ import {
 } from '../services/cognitoAuth';
 
 export default function SignInScreen({ navigate, routeParams = {} }) {
+  const { colors } = useAppearance();
   const backScreen = SCREENS.SETTINGS;
 
   const emailRef = useRef('');
@@ -88,6 +90,8 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     });
   };
 
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -95,7 +99,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
         onPress={() => navigate(backScreen, routeParams)}
         hitSlop={8}
       >
-        <Settings color={COLORS.textMuted} size={22} />
+        <Settings color={colors.textMuted} size={22} />
       </Pressable>
 
       <KeyboardAvoidingView
@@ -129,7 +133,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor={COLORS.textMuted}
+            placeholderTextColor={colors.textMuted}
             value={email}
             onChangeText={(value) => {
               emailRef.current = value;
@@ -146,7 +150,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             <TextInput
               style={[styles.input, styles.passwordInput]}
               placeholder="Password"
-              placeholderTextColor={COLORS.textMuted}
+              placeholderTextColor={colors.textMuted}
               value={password}
               onChangeText={(value) => {
                 passwordRef.current = value;
@@ -163,9 +167,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               hitSlop={8}
             >
               {showPassword ? (
-                <EyeOff color={COLORS.textMuted} size={20} />
+                <EyeOff color={colors.textMuted} size={20} />
               ) : (
-                <Eye color={COLORS.textMuted} size={20} />
+                <Eye color={colors.textMuted} size={20} />
               )}
             </Pressable>
           </View>
@@ -176,7 +180,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             disabled={busy || appleBusy}
           >
             {busy ? (
-              <ActivityIndicator color={COLORS.text} />
+              <ActivityIndicator color={colors.text} />
             ) : (
               <Text style={styles.primaryBtnText}>Sign in</Text>
             )}
@@ -209,10 +213,10 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   flex: {
     flex: 1,
@@ -227,7 +231,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 12,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
   },
   scroll: {
     flexGrow: 1,
@@ -237,20 +241,20 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 24,
     fontWeight: '800',
     lineHeight: 32,
     marginBottom: 16,
   },
   legal: {
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 24,
   },
   legalLink: {
-    color: COLORS.primaryGlow,
+    color: colors.primaryGlow,
     fontWeight: '600',
   },
   error: {
@@ -260,13 +264,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   input: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: COLORS.surfaceLight,
+    borderColor: colors.surfaceLight,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 16,
     marginBottom: 12,
   },
@@ -284,7 +288,7 @@ const styles = StyleSheet.create({
     top: 14,
   },
   primaryBtn: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     minHeight: 48,
     alignItems: 'center',
@@ -295,7 +299,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   primaryBtnText: {
-    color: COLORS.text,
+    color: colors.text,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -308,10 +312,10 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS.surfaceLight,
+    backgroundColor: colors.surfaceLight,
   },
   dividerText: {
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
   },
   appleBtn: {
@@ -328,8 +332,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   appleHint: {
-    color: COLORS.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
     textAlign: 'center',
   },
 });
+}
+

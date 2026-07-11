@@ -16,6 +16,7 @@ import Svg, {
   RadialGradient,
   Stop,
 } from 'react-native-svg';
+import { useAppearance } from '../context/AppearanceContext';
 
 const CROSSHAIR_COUNT = 4;
 const TICK_COUNT = 8;
@@ -27,6 +28,7 @@ const SWEEP_MS = 22000;
  * Concentric rings + rotating sweep beam (no helm handles).
  */
 export default function ShipHelm({ size, inset = 0 }) {
+  const { ww } = useAppearance();
   const rotation = useSharedValue(0);
 
   useEffect(() => {
@@ -112,9 +114,14 @@ export default function ShipHelm({ size, inset = 0 }) {
     beamY,
   } = geometry;
 
-  const stroke = 'rgba(255, 255, 255, 0.88)';
-  const strokeSoft = 'rgba(236, 253, 245, 0.5)';
+  const stroke = ww.radarStroke || 'rgba(255, 255, 255, 0.88)';
+  const strokeSoft = ww.radarStrokeSoft || 'rgba(236, 253, 245, 0.5)';
   const strokeWidth = Math.max(1.8, size * 0.01);
+  const glassMid = ww.radarGlassMid || 'rgba(153,246,228,0.26)';
+  const glassOuter = ww.radarGlassOuter || 'rgba(13,148,136,0.16)';
+  const rim = ww.radarRim || 'rgba(204,251,241,0.7)';
+  const hub = ww.radarHub || 'rgba(45, 212, 191, 0.55)';
+  const sweepMid = ww.radarSweepMid || 'rgba(153,246,228,0.18)';
 
   const sweepStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
@@ -125,13 +132,13 @@ export default function ShipHelm({ size, inset = 0 }) {
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
         <Defs>
           <RadialGradient id="radarGlass" cx="42%" cy="38%" r="68%">
-            <Stop offset="0%" stopColor="rgba(255,255,255,0.38)" />
-            <Stop offset="40%" stopColor="rgba(153,246,228,0.26)" />
-            <Stop offset="100%" stopColor="rgba(13,148,136,0.16)" />
+            <Stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
+            <Stop offset="40%" stopColor={glassMid} />
+            <Stop offset="100%" stopColor={glassOuter} />
           </RadialGradient>
           <LinearGradient id="radarRim" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-            <Stop offset="100%" stopColor="rgba(204,251,241,0.7)" />
+            <Stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
+            <Stop offset="100%" stopColor={rim} />
           </LinearGradient>
         </Defs>
 
@@ -153,9 +160,9 @@ export default function ShipHelm({ size, inset = 0 }) {
         <Svg width={size} height={size}>
           <Defs>
             <RadialGradient id="radarSweep" cx="50%" cy="50%" r="50%">
-              <Stop offset="0%" stopColor="rgba(255,255,255,0.28)" />
-              <Stop offset="55%" stopColor="rgba(153,246,228,0.18)" />
-              <Stop offset="100%" stopColor="rgba(153,246,228,0)" />
+              <Stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+              <Stop offset="55%" stopColor={sweepMid} />
+              <Stop offset="100%" stopColor="rgba(148,163,184,0)" />
             </RadialGradient>
           </Defs>
           <Path d={sweepPath} fill="url(#radarSweep)" opacity={0.9} />
@@ -164,7 +171,7 @@ export default function ShipHelm({ size, inset = 0 }) {
             y1={c}
             x2={beamX}
             y2={beamY}
-            stroke="rgba(255,255,255,0.95)"
+            stroke={stroke}
             strokeWidth={Math.max(2, size * 0.012)}
             strokeLinecap="round"
             opacity={0.9}
@@ -173,7 +180,7 @@ export default function ShipHelm({ size, inset = 0 }) {
             cx={beamX}
             cy={beamY}
             r={Math.max(2.5, size * 0.012)}
-            fill="rgba(255,255,255,0.95)"
+            fill={stroke}
           />
         </Svg>
       </Animated.View>
@@ -181,8 +188,8 @@ export default function ShipHelm({ size, inset = 0 }) {
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
         <Defs>
           <LinearGradient id="radarRimTop" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-            <Stop offset="100%" stopColor="rgba(204,251,241,0.7)" />
+            <Stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
+            <Stop offset="100%" stopColor={rim} />
           </LinearGradient>
         </Defs>
 
@@ -229,7 +236,7 @@ export default function ShipHelm({ size, inset = 0 }) {
           cx={c}
           cy={c}
           r={hubOuter}
-          fill="rgba(255,255,255,0.5)"
+          fill="rgba(255,255,255,0.65)"
           stroke={stroke}
           strokeWidth={strokeWidth}
         />
@@ -237,7 +244,7 @@ export default function ShipHelm({ size, inset = 0 }) {
           cx={c}
           cy={c}
           r={hubInner}
-          fill="rgba(45, 212, 191, 0.55)"
+          fill={hub}
           stroke={stroke}
           strokeWidth={strokeWidth * 0.7}
         />

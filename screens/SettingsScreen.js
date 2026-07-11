@@ -1,36 +1,47 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { ChevronRight, FileText, LogIn, LogOut, ShoppingBag } from 'lucide-react-native';
+import AppearancePicker from '../components/AppearancePicker';
+import AudioSettingsCard from '../components/AudioSettingsCard';
 import ScreenHeader from '../components/ScreenHeader';
-import { COLORS, SCREENS } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
+import { SCREENS } from '../constants/theme';
 import { LEGAL_LINKS } from '../constants/store';
 import { isLoggedIn } from '../lib/auth';
 import { signOutAll } from '../services/cognitoAuth';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 
-function MenuRow({ icon: Icon, label, subtitle, onPress }) {
+function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
   return (
-    <Pressable style={styles.row} onPress={onPress}>
-      <View style={styles.rowIcon}>
-        <Icon color={COLORS.primaryGlow} size={20} strokeWidth={1.8} />
+    <Pressable
+      style={[
+        styles.row,
+        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+      ]}
+      onPress={onPress}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: colors.surfaceLight }]}>
+        <Icon color={colors.primaryGlow} size={20} strokeWidth={1.8} />
       </View>
       <View style={styles.rowBody}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+        {subtitle ? (
+          <Text style={[styles.rowSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
+        ) : null}
       </View>
-      <ChevronRight color={COLORS.textMuted} size={20} />
+      <ChevronRight color={colors.textMuted} size={20} />
     </Pressable>
   );
 }
 
-function BalanceCard({ label, value, loading, suffix = '' }) {
+function BalanceCard({ label, value, loading, suffix = '', colors }) {
   return (
     <View style={styles.balanceRow}>
-      <Text style={styles.balanceLabel}>{label}</Text>
+      <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>{label}</Text>
       {loading ? (
-        <ActivityIndicator color={COLORS.primaryGlow} size="small" />
+        <ActivityIndicator color={colors.primaryGlow} size="small" />
       ) : (
-        <Text style={styles.balanceValue}>
+        <Text style={[styles.balanceValue, { color: colors.text }]}>
           {value}
           {suffix}
         </Text>
@@ -42,6 +53,7 @@ function BalanceCard({ label, value, loading, suffix = '' }) {
 export default function SettingsScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.PLAY;
   const wallet = useWordWheelWallet();
+  const { colors } = useAppearance();
   const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
@@ -65,6 +77,25 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
     navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.SETTINGS });
   };
 
+  const themed = useMemo(
+    () => ({
+      sectionTitle: { color: colors.textMuted },
+      walletCard: {
+        backgroundColor: colors.surface,
+        borderColor: colors.surfaceLight,
+      },
+      walletTitle: { color: colors.text },
+      walletHint: { color: colors.textMuted },
+      accountCaption: { color: colors.textMuted },
+      accountLabel: { color: colors.text },
+      appearanceCard: {
+        backgroundColor: colors.surface,
+        borderColor: colors.surfaceLight,
+      },
+    }),
+    [colors]
+  );
+
   return (
     <View style={styles.container}>
       <ScreenHeader
@@ -78,35 +109,45 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>Appearance</Text>
+        <View style={[styles.appearanceCard, themed.appearanceCard]}>
+          <AppearancePicker />
+        </View>
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>Sound</Text>
+        <AudioSettingsCard />
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>Account</Text>
         {authed || wallet.loggedIn ? (
           <>
-            <View style={styles.walletCard}>
-              <Text style={styles.walletTitle}>Your balance</Text>
+            <View style={[styles.walletCard, themed.walletCard]}>
+              <Text style={[styles.walletTitle, themed.walletTitle]}>Your balance</Text>
               <BalanceCard
                 label="Puzzle coins"
                 value={wallet.lifetimePoints}
                 loading={wallet.loading}
+                colors={colors}
               />
               <BalanceCard
                 label="Credits"
                 value={wallet.creditBalance}
                 loading={wallet.loading}
                 suffix=" credits"
+                colors={colors}
               />
-              <Text style={styles.walletHint}>
+              <Text style={[styles.walletHint, themed.walletHint]}>
                 Hints cost 1 coin per letter (or credits when coins run out).
               </Text>
             </View>
             {wallet.accountLabel ? (
               <View style={styles.accountBlock}>
-                <Text style={styles.accountCaption}>Signed in as</Text>
-                <Text style={styles.accountLabel} numberOfLines={2}>
+                <Text style={[styles.accountCaption, themed.accountCaption]}>Signed in as</Text>
+                <Text style={[styles.accountLabel, themed.accountLabel]} numberOfLines={2}>
                   {wallet.accountLabel}
                 </Text>
               </View>
             ) : null}
-            <MenuRow icon={LogOut} label="Sign out" onPress={handleSignOut} />
+            <MenuRow icon={LogOut} label="Sign out" onPress={handleSignOut} colors={colors} />
           </>
         ) : (
           <MenuRow
@@ -114,18 +155,20 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             label="Sign in"
             subtitle="Move guest progress to your account"
             onPress={handleSignIn}
+            colors={colors}
           />
         )}
 
-        <Text style={styles.sectionTitle}>Shop</Text>
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>Shop</Text>
         <MenuRow
           icon={ShoppingBag}
           label="In-app purchases"
           subtitle="Buy coins and bundles"
           onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.SETTINGS })}
+          colors={colors}
         />
 
-        <Text style={styles.sectionTitle}>Help & legal</Text>
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>Help & legal</Text>
         {LEGAL_LINKS.map((link) => (
           <MenuRow
             key={link.id}
@@ -138,6 +181,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 backScreen: SCREENS.SETTINGS,
               })
             }
+            colors={colors}
           />
         ))}
       </ScrollView>
@@ -148,14 +192,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'transparent',
   },
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 32,
   },
   sectionTitle: {
-    color: COLORS.textMuted,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.2,
@@ -163,16 +206,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
+  appearanceCard: {
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 4,
+    borderWidth: 1,
+  },
   walletCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: COLORS.surfaceLight,
   },
   walletTitle: {
-    color: COLORS.text,
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 8,
@@ -184,17 +230,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   balanceLabel: {
-    color: COLORS.textMuted,
     fontSize: 14,
     fontWeight: '600',
   },
   balanceValue: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '800',
   },
   walletHint: {
-    color: COLORS.textMuted,
     fontSize: 12,
     marginTop: 8,
     lineHeight: 18,
@@ -204,13 +247,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   accountCaption: {
-    color: COLORS.textMuted,
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
   },
   accountLabel: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '800',
     lineHeight: 22,
@@ -218,18 +259,15 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: COLORS.surfaceLight,
   },
   rowIcon: {
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: COLORS.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -239,12 +277,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   rowLabel: {
-    color: COLORS.text,
     fontSize: 16,
     fontWeight: '600',
   },
   rowSubtitle: {
-    color: COLORS.textMuted,
     fontSize: 13,
     marginTop: 2,
   },

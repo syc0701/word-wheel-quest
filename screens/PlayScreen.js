@@ -41,7 +41,9 @@ import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/whee
 import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
-import { PLAY_MODE, SCREENS, WW } from '../constants/theme';
+import { PLAY_MODE, SCREENS } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
+import { useAudio } from '../context/AudioContext';
 
 const CLUE_PLACEHOLDER = 'Tap a numbered cell to see the clue';
 const LEVEL_TOAST_MS = 2200;
@@ -53,6 +55,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
   const dailyDate = routeParams.date;
   const wallet = useWordWheelWallet();
+  const { ww } = useAppearance();
+  const { playSfx } = useAudio();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -360,6 +364,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       const completeNow = words.length >= targetWords.length && targetWords.length > 0;
       if (!completeNow || completionShownRef.current) return;
       completionShownRef.current = true;
+      playSfx('complete');
       const startedAt = updatedSession?.startedAt ?? playSession?.startedAt;
       const finishedAt = updatedSession?.finishedAt ?? Date.now();
       setCompletionStats({
@@ -369,28 +374,34 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
-    [targetWords.length, playSession, hintCoinsSpent, wallet]
+    [targetWords.length, playSession, hintCoinsSpent, wallet, playSfx]
   );
 
   const submitWord = useCallback(
     async (wordRaw) => {
       const word = normalizeWord(wordRaw);
-      if (word.length < 3) return;
-      if (!targetWords.includes(word)) return;
+      if (word.length < 3) return false;
+      if (!targetWords.includes(word)) {
+        playSfx('wrong');
+        return false;
+      }
 
       // Already revealed — pulse the cells so the player knows.
       if (foundWords.includes(word)) {
+        playSfx('chime');
         setSelectedWord(word);
         triggerWordRevealEffect(word, 'already');
-        return;
+        return true;
       }
 
+      playSfx('correct');
       const next = [...foundWords, word];
       setFoundWords(next);
       setSelectedWord(word);
       triggerWordRevealEffect(word, 'new');
       const updatedSession = await persistProgress(next);
       await openCompletionIfNeeded(next, updatedSession);
+      return true;
     },
     [
       targetWords,
@@ -398,14 +409,16 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       persistProgress,
       triggerWordRevealEffect,
       openCompletionIfNeeded,
+      playSfx,
     ]
   );
 
   const handleDragEnd = useCallback(
     (word) => {
       if (word.length >= 3) submitWord(word);
+      else if (word.length > 0) playSfx('wrong');
     },
-    [submitWord]
+    [submitWord, playSfx]
   );
 
   const handleCellPress = useCallback(
@@ -418,11 +431,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   );
 
   const handleShuffle = useCallback(() => {
+    playSfx('whoosh');
     setWheelTiles((prev) =>
       shuffleWheelTiles(prev.length ? prev : buildWheelTiles(baseWheelLetters, puzzle?.id || 'wheel'))
     );
     setSelectedIndices([]);
-  }, [baseWheelLetters, puzzle?.id]);
+  }, [baseWheelLetters, puzzle?.id, playSfx]);
 
   const handleHint = useCallback(async () => {
     if (puzzleComplete) return;
@@ -456,6 +470,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         return;
       }
 
+      playSfx('bonus');
       const nextHints = new Map(hintLetters);
       nextHints.set(pick.key, pick.letter);
       setHintLetters(nextHints);
@@ -470,7 +485,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           if (!nextFound.includes(word)) nextFound.push(word);
         });
         setFoundWords(nextFound);
-        newlyCompleted.forEach((word) => triggerWordRevealEffect(word, 'new'));
+        newlyCompleted.forEach((word) => {
+          playSfx('correct');
+          triggerWordRevealEffect(word, 'new');
+        });
         const updatedSession = await persistProgress(nextFound);
         await openCompletionIfNeeded(nextFound, updatedSession);
       }
@@ -494,9 +512,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     triggerWordRevealEffect,
     persistProgress,
     openCompletionIfNeeded,
+    playSfx,
   ]);
 
   const handleBack = () => {
+    playSfx('click');
     if (isDaily) {
       navigate(SCREENS.DAILY, { date: dailyDate });
     } else {
@@ -508,7 +528,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return (
       <GradientBackground variant="play">
         <View style={styles.centered}>
-          <ActivityIndicator color={WW.accent} size="large" />
+          <ActivityIndicator color={ww.accent} size="large" />
         </View>
       </GradientBackground>
     );
@@ -527,17 +547,17 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Pressable style={styles.iconBtn} onPress={handleBack}>
-            <ArrowLeft color={WW.text} size={22} />
+            <ArrowLeft color={ww.text} size={22} />
           </Pressable>
           <View style={styles.headerCenter}>
             {isDaily ? (
-              <Text style={styles.levelHero}>{dailyLabel}</Text>
+              <Text style={[styles.levelHero, { color: ww.text }]}>{dailyLabel}</Text>
             ) : (
-              <Text style={styles.levelHero}>
+              <Text style={[styles.levelHero, { color: ww.text }]}>
                 {journeyLevel != null ? `Level ${journeyLevel}` : 'Level'}
               </Text>
             )}
-            <Text style={styles.title} numberOfLines={2}>
+            <Text style={[styles.title, { color: ww.textSecondary }]} numberOfLines={2}>
               {puzzle?.title || 'Word Wheel Quest'}
             </Text>
           </View>
@@ -560,8 +580,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           onCellPress={handleCellPress}
         />
 
-        <View style={[styles.clueBox, selectedWheelWord ? styles.clueBoxActive : null]}>
-          <Text style={[styles.clueText, !selectedWord && styles.cluePlaceholder]}>
+        <View
+          style={[
+            styles.clueBox,
+            { backgroundColor: ww.clueBg, borderColor: ww.borderStrong },
+            selectedWheelWord ? styles.clueBoxActive : null,
+          ]}
+        >
+          <Text
+            style={[
+              styles.clueText,
+              { color: ww.textOnSurface },
+              !selectedWord && styles.cluePlaceholder,
+            ]}
+          >
             {selectedWord
               ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || 'No clue available.'}`
               : CLUE_PLACEHOLDER}
@@ -576,20 +608,25 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
             <Pressable
-              style={[styles.toolBtn, !canUseHint && styles.toolBtnDisabled]}
+              style={[
+                styles.toolBtn,
+                { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
+                !canUseHint && styles.toolBtnDisabled,
+              ]}
               onPress={handleHint}
               disabled={hintPending}
               accessibilityLabel="Use hint"
             >
               {hintPending ? (
-                <ActivityIndicator color="#2E8B57" size="small" />
+                <ActivityIndicator color={ww.toolIcon} size="small" />
               ) : (
-                <Lightbulb color="#2E8B57" size={18} />
+                <Lightbulb color={ww.toolIcon} size={18} />
               )}
             </Pressable>
             <Text
               style={[
                 styles.coinLabel,
+                { color: ww.coinLabel },
                 totalHintCoinsAvailable < WORD_WHEEL_HINT_COST && styles.coinLabelLow,
               ]}
             >
@@ -607,14 +644,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
           <View style={styles.sideTools}>
             <Pressable
-              style={[styles.toolBtn, !selectedWord && styles.toolBtnDisabled]}
+              style={[
+                styles.toolBtn,
+                { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
+                !selectedWord && styles.toolBtnDisabled,
+              ]}
               onPress={() => setDictionaryOpen(true)}
               disabled={!selectedWord}
             >
-              <BookOpen color="#2E8B57" size={18} />
+              <BookOpen color={ww.toolIcon} size={18} />
             </Pressable>
-            <Pressable style={styles.toolBtn} onPress={handleShuffle}>
-              <Shuffle color="#2E8B57" size={18} />
+            <Pressable
+              style={[styles.toolBtn, { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong }]}
+              onPress={handleShuffle}
+            >
+              <Shuffle color={ww.toolIcon} size={18} />
             </Pressable>
           </View>
         </View>
@@ -661,7 +705,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   levelHero: {
-    color: WW.text,
     fontSize: 28,
     fontWeight: '800',
     textAlign: 'center',
@@ -669,7 +712,6 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   title: {
-    color: 'rgba(30, 41, 59, 0.72)',
     fontSize: 13,
     fontWeight: '600',
     textAlign: 'center',
@@ -693,10 +735,8 @@ const styles = StyleSheet.create({
   clueBox: {
     marginTop: 14,
     marginBottom: 8,
-    backgroundColor: 'rgba(255,255,255,0.88)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: WW.borderStrong,
     minHeight: 52,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -707,7 +747,6 @@ const styles = StyleSheet.create({
     minHeight: 60,
   },
   clueText: {
-    color: WW.textOnSurface,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
@@ -738,9 +777,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    borderWidth: 1,
-    borderColor: WW.borderStrong,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -751,7 +788,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     fontWeight: '800',
-    color: '#ffffff',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.45)',
     textShadowOffset: { width: 0, height: 1 },

@@ -1,15 +1,17 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { COLORS } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 
 /** Shared top bar with back button — `onBack` defaults to no-op if omitted. */
 export default function ScreenHeader({ title, onBack }) {
+  const { colors } = useAppearance();
+
   return (
     <View style={styles.topBar}>
-      <Pressable style={styles.backBtn} onPress={onBack}>
-        <ArrowLeft color={COLORS.text} size={22} />
+      <Pressable style={[styles.backBtn, { backgroundColor: colors.surface }]} onPress={onBack}>
+        <ArrowLeft color={colors.text} size={22} />
       </Pressable>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
       <View style={styles.spacer} />
     </View>
   );
@@ -26,12 +28,10 @@ const styles = StyleSheet.create({
   backBtn: {
     padding: 8,
     borderRadius: 12,
-    backgroundColor: COLORS.surface,
   },
   title: {
     flex: 1,
     textAlign: 'center',
-    color: COLORS.text,
     fontSize: 18,
     fontWeight: '700',
   },
