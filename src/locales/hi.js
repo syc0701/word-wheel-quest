@@ -1,0 +1,235 @@
+/** Hindi UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': 'लेवल {n}',
+  'common.levelFallback': 'लेवल',
+  'common.play': 'खेलें',
+  'common.daily': 'दैनिक',
+  'common.words': '{n} शब्द',
+  'common.coins': '{n} सिक्के',
+
+  // home
+  'home.a11y.settings': 'सेटिंग्स',
+  'home.kicker': 'पज़ल संग्रह',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': 'अक्षर स्वाइप करें। हर शब्द खोजें।',
+  'home.section.seasonJourney': 'सीज़न यात्रा',
+  'home.error.noData': 'अभी कोई वर्ड व्हील पज़ल उपलब्ध नहीं है।',
+  'home.error.loadFailed': 'अगला पज़ल लोड नहीं हो सका।',
+  'home.error.missingData': 'अगले पज़ल के जवाब में पज़ल डेटा नहीं था।',
+  'home.error.generic': 'पज़ल लोड करने में विफल',
+  'home.section.more': 'और',
+  'home.dailyPuzzle.label': 'दैनिक पज़ल',
+  'home.dailyPuzzle.subtitle': 'आज का बोनस — सीज़न यात्रा से अलग',
+  'home.footer':
+    'प्रगति इस डिवाइस पर सहेजी जाती है। गेस्ट प्रगति अपने खाते में ले जाने के लिए एक बार साइन इन करें।',
+
+  // daily
+  'daily.a11y.back': 'वापस',
+  'daily.kicker': 'बोनस पज़ल',
+  'daily.title': 'दैनिक पज़ल',
+  'daily.subtitle': 'उस दिन का पज़ल देखने और खेलने के लिए तारीख चुनें।',
+  'daily.today': 'आज',
+  'daily.weekday.sun': 'र',
+  'daily.weekday.mon': 'सो',
+  'daily.weekday.tue': 'मं',
+  'daily.weekday.wed': 'बु',
+  'daily.weekday.thu': 'गु',
+  'daily.weekday.fri': 'शु',
+  'daily.weekday.sat': 'श',
+  'daily.error.noData': 'इस तारीख के लिए कोई पज़ल उपलब्ध नहीं।',
+  'daily.error.loadFailed': 'दैनिक पज़ल लोड करने में विफल',
+  'daily.completed': 'पूर्ण',
+  'daily.meta': '{n} शब्द · {size}×{size} ग्रिड',
+  'daily.empty': 'इस तारीख के लिए कोई पज़ल नहीं।',
+  'daily.replay': 'फिर खेलें',
+
+  // play
+  'play.clue.placeholder': 'संकेत देखने के लिए क्रमांकित सेल टैप करें',
+  'play.error.noDaily': 'कोई दैनिक पज़ल उपलब्ध नहीं।',
+  'play.error.noPuzzle': 'कोई पज़ल उपलब्ध नहीं।',
+  'play.error.loadFailed': 'पज़ल लोड नहीं हो सका।',
+  'play.error.generic': 'लोड करने में विफल',
+  'play.error.saveFailed': 'प्रगति सहेजी नहीं जा सकी',
+  'play.alert.notEnoughCoins.title': 'पर्याप्त सिक्के नहीं',
+  'play.alert.notEnoughCoins.body': 'संकेत प्रत्येक {n} सिक्का खर्च करते हैं।',
+  'play.alert.noHint.title': 'कोई संकेत उपलब्ध नहीं',
+  'play.alert.noHint.body': 'बाकी हर अक्षर ग्रिड पर पहले से दिख रहा है।',
+  'play.error.hintFailed': 'संकेत इस्तेमाल नहीं हो सका',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': 'कोई संकेत उपलब्ध नहीं।',
+  'play.a11y.useHint': 'संकेत इस्तेमाल करें',
+  'play.a11y.shuffle': 'शफ़ल',
+  'play.a11y.dictionary': 'शब्दकोश',
+
+  // settings
+  'settings.title': 'सेटिंग्स',
+  'settings.section.appearance': 'दिखावट',
+  'settings.section.language': 'भाषा',
+  'settings.section.sound': 'ध्वनि',
+  'settings.section.account': 'खाता',
+  'settings.section.shop': 'दुकान',
+  'settings.section.legal': 'सहायता और कानूनी',
+  'settings.section.developer': 'डेवलपर',
+  'settings.wallet.title': 'आपका बैलेंस',
+  'settings.wallet.puzzleCoins': 'पज़ल सिक्के',
+  'settings.wallet.credits': 'क्रेडिट',
+  'settings.wallet.creditsSuffix': ' क्रेडिट',
+  'settings.wallet.hint':
+    'संकेत प्रति अक्षर 1 सिक्का खर्च करते हैं (या सिक्के खत्म होने पर क्रेडिट)।',
+  'settings.account.signedInAs': 'साइन इन के रूप में',
+  'settings.account.signOut': 'साइन आउट',
+  'settings.account.signIn': 'साइन इन',
+  'settings.account.signInSubtitle': 'गेस्ट प्रगति अपने खाते में ले जाएँ',
+  'settings.shop.label': 'इन-ऐप खरीदारी',
+  'settings.shop.subtitle': 'सिक्के और बंडल खरीदें',
+  'settings.dev.hint': 'केवल डेव बिल्ड — लेवल के बीच स्क्रीन पूर्वावलोकन',
+  'settings.dev.wordMaster': 'वर्ड मास्टर',
+  'settings.dev.wordMaster.subtitle': 'लेवल पूरा · समय और स्टार शब्द',
+  'settings.dev.streaksSparks': 'स्ट्रीक और स्पार्क्स',
+  'settings.dev.streaksSparks.subtitle': 'फायर स्ट्रीक मल्टीप्लायर',
+  'settings.dev.brainPower': 'ब्रेन पावर',
+  'settings.dev.brainPower.subtitle': 'अध्याय मील का पत्थर · क्षमता बार',
+  'settings.appearance.a11y': 'दिखावट',
+  'settings.appearance.light': 'लाइट',
+  'settings.appearance.dark': 'डार्क',
+  'settings.sound.music': 'बैकग्राउंड संगीत चलाएँ',
+  'settings.sound.musicSubtitle': 'होम और प्ले पर लूप',
+  'settings.sound.sfx': 'साउंड इफ़ेक्ट चलाएँ',
+  'settings.sound.sfxSubtitle': 'क्लिक, सही, गलत और जीत की आवाज़ें',
+  'settings.language.a11y': 'भाषा',
+
+  // legal
+  'legal.marketing': 'मार्केटिंग',
+  'legal.privacy': 'गोपनीयता नीति',
+  'legal.terms': 'उपयोग की शर्तें',
+  'legal.support': 'सहायता',
+
+  // sign in
+  'signIn.title': 'Word Wheel Quest में साइन इन करें',
+  'signIn.legal.prefix': 'जारी रखकर, आप हमारी ',
+  'signIn.legal.termsLink': 'सेवा की शर्तों',
+  'signIn.legal.and': ' और ',
+  'signIn.legal.privacyLink': 'गोपनीयता नीति',
+  'signIn.legal.period': ' से सहमत होते हैं।',
+  'signIn.legal.termsTitle': 'उपयोग की शर्तें',
+  'signIn.legal.privacyTitle': 'गोपनीयता नीति',
+  'signIn.placeholder.email': 'ईमेल',
+  'signIn.placeholder.password': 'पासवर्ड',
+  'signIn.button.email': 'साइन इन',
+  'signIn.divider': '— या —',
+  'signIn.button.apple': ' Apple से साइन इन',
+  'signIn.apple.hint': 'Apple से साइन इन iPhone पर उपलब्ध है।',
+
+  // shop
+  'shop.title': 'दुकान',
+  'shop.alert.unavailable.title': 'दुकान उपलब्ध नहीं',
+  'shop.alert.unavailable.body': 'उत्पाद लोड नहीं हो सके।',
+  'shop.alert.productUnavailable.title': 'उपलब्ध नहीं',
+  'shop.alert.productUnavailable.body':
+    'यह उत्पाद अभी लोड नहीं हुआ। थोड़ी देर बाद फिर कोशिश करें।',
+  'shop.alert.success.title': 'धन्यवाद!',
+  'shop.alert.success.body': '{name} सफलतापूर्वक खरीदा गया।',
+  'shop.alert.purchaseFailed.title': 'खरीदारी विफल',
+  'shop.alert.purchaseFailed.body': 'कुछ गलत हो गया।',
+  'shop.alert.restored.title': 'पुनर्स्थापित',
+  'shop.alert.restored.body': 'आपकी खरीदारियाँ पुनर्स्थापित हो गईं।',
+  'shop.alert.restoreFailed.title': 'पुनर्स्थापना विफल',
+  'shop.alert.restoreFailed.body': 'खरीदारियाँ पुनर्स्थापित नहीं हो सकीं।',
+  'shop.offeringHint': 'ऑफ़र `{id}` · कीमतें App Store से।',
+  'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
+
+  // webview
+  'webview.titleFallback': 'पेज',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': 'वर्ड मास्टर',
+  'devIntermission.title.streaksSparks': 'स्ट्रीक और स्पार्क्स',
+  'devIntermission.title.brainPower': 'ब्रेन पावर',
+  'devIntermission.title.fallback': 'अंतराल',
+  'devIntermission.hint': 'डेवलपर पूर्वावलोकन · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': 'अजेय!',
+  'intermission.streak.onFire': 'आग पर!',
+  'intermission.streak.sparkStreak': 'स्पार्क स्ट्रीक!',
+  'intermission.streak.speedSpark': 'स्पीड स्पार्क!',
+  'intermission.wordMaster.headline': 'लेवल पूरा!',
+  'intermission.wordMaster.timeTaken': 'लगा समय',
+  'intermission.wordMaster.starWord': 'स्टार शब्द',
+  'intermission.duration.seconds': '{n}से',
+  'intermission.streak.sessionLabel': 'सेशन स्ट्रीक',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': 'अध्याय मील का पत्थर',
+  'intermission.brainPower.levelArrow': 'लेवल {from} ➔ लेवल {to}',
+  'intermission.brainPower.capacity': 'ब्रेन क्षमता +25%',
+  'intermission.continue': 'क्वेस्ट जारी रखें ➔',
+  'intermission.a11y.continue': 'क्वेस्ट जारी रखें',
+
+  // complete dialog
+  'complete.compliment.goodJob': 'शाबाश!',
+  'complete.compliment.niceWork': 'बढ़िया काम!',
+  'complete.compliment.wellDone': 'बहुत अच्छे!',
+  'complete.compliment.awesome': 'शानदार!',
+  'complete.compliment.brilliant': 'उत्कृष्ट!',
+  'complete.compliment.youNailedIt': 'बिल्कुल सही!',
+  'complete.compliment.greatSolve': 'शानदार समाधान!',
+  'complete.compliment.fantastic': 'अद्भुत!',
+  'complete.compliment.impressive': 'प्रभावशाली!',
+  'complete.compliment.wayToGo': 'ऐसे ही!',
+  'complete.stat.time': 'समय',
+  'complete.hintsUsed': 'उपयोग किए संकेत: −{n} सिक्के',
+  'complete.close': 'बंद करें',
+  'complete.next': 'अगला',
+
+  // dictionary
+  'dictionary.error.load': 'परिभाषा लोड नहीं हो सकी।',
+  'dictionary.loading': 'परिभाषा लोड हो रही है…',
+  'dictionary.empty': 'कोई परिभाषा नहीं मिली।',
+  'dictionary.attribution': 'परिभाषाएँ Wiktionary से (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': 'दैनिक',
+  'toast.level': 'लेवल {n}',
+  'toast.levelFallback': 'लेवल',
+
+  // points table
+  'pointsTable.header.letters': 'अक्षर',
+  'pointsTable.header.coins': 'सिक्के',
+  'pointsTable.empty': 'सिक्का कैटलॉग उपलब्ध नहीं।',
+  'pointsTable.row.letters': '{n} अक्षर',
+  'pointsTable.footer':
+    'पज़ल स्कोर आपके द्वारा पाए गए हर शब्द के सिक्कों का योग है।',
+
+  // duration
+  'duration.lessThanMinute': 'एक मिनट से कम',
+  'duration.hoursMinutes': '{hrs}घं {rem}मि',
+  'duration.hours': '{hrs}घं',
+  'duration.minutesSeconds': '{mins}मि {secs}से',
+  'duration.minutes': '{mins}मि',
+
+  // wallet
+  'wallet.error.loadFailed': 'वॉलेट लोड करने में विफल',
+
+  // auth
+  'auth.error.userNotFound':
+    'इस ईमेल के लिए कोई खाता नहीं मिला। यदि आपने वेबसाइट पर Google या Apple से साइन अप किया है, तो यहाँ Apple से साइन इन करें।',
+  'auth.error.wrongPassword':
+    'गलत पासवर्ड, या यह खाता वेबसाइट से Google/Apple साइन-इन इस्तेमाल करता है। Apple से साइन इन आज़माएँ, या puzzleinteract.com पर पासवर्ड रीसेट करें।',
+  'auth.error.userNotConfirmed': 'साइन इन से पहले अपना ईमेल पुष्टि करें।',
+  'auth.error.passwordResetRequired':
+    'साइन इन से पहले आपको पासवर्ड रीसेट करना होगा।',
+  'auth.error.invalidInput': 'अपना ईमेल और पासवर्ड दर्ज करें।',
+  'auth.error.invalidParameter':
+    'साइन इन पूरा नहीं हो सका। अपना ईमेल और पासवर्ड जाँचकर फिर कोशिश करें।',
+  'auth.error.tooManyAttempts':
+    'बहुत ज़्यादा प्रयास। कुछ मिनट प्रतीक्षा करें और फिर कोशिश करें।',
+  'auth.error.generic': 'साइन इन विफल। कृपया फिर कोशिश करें।',
+  'auth.error.noToken': 'साइन इन ने टोकन नहीं लौटाया।',
+  'auth.apple.iosOnly': 'Apple से साइन इन केवल iPhone पर उपलब्ध है।',
+  'auth.apple.unavailable': 'इस डिवाइस पर Apple से साइन इन उपलब्ध नहीं है।',
+  'auth.apple.noIdentityToken': 'Apple से साइन इन ने आइडेंटिटी टोकन नहीं लौटाया।',
+  'auth.apple.exchangeFailed': 'Apple साइन-इन एक्सचेंज विफल।',
+  'auth.apple.httpFailed': 'Apple साइन-इन विफल (HTTP {status})',
+};

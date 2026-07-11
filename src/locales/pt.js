@@ -1,0 +1,235 @@
+/** Portuguese (Brazilian) UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': 'Nível {n}',
+  'common.levelFallback': 'Nível',
+  'common.play': 'Jogar',
+  'common.daily': 'Diário',
+  'common.words': '{n} palavras',
+  'common.coins': '{n} moedas',
+
+  // home
+  'home.a11y.settings': 'Configurações',
+  'home.kicker': 'COLEÇÃO DE PUZZLES',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': 'Deslize as letras. Encontre cada palavra.',
+  'home.section.seasonJourney': 'Jornada da temporada',
+  'home.error.noData': 'Nenhum puzzle de roda de palavras disponível ainda.',
+  'home.error.loadFailed': 'Não foi possível carregar o próximo puzzle.',
+  'home.error.missingData': 'A resposta do próximo puzzle não tinha dados.',
+  'home.error.generic': 'Falha ao carregar o puzzle',
+  'home.section.more': 'Mais',
+  'home.dailyPuzzle.label': 'Puzzle diário',
+  'home.dailyPuzzle.subtitle': 'Bônus de hoje — separado da jornada da temporada',
+  'home.footer':
+    'O progresso é salvo neste dispositivo. Entre uma vez para mover o progresso de convidado para sua conta.',
+
+  // daily
+  'daily.a11y.back': 'Voltar',
+  'daily.kicker': 'PUZZLE BÔNUS',
+  'daily.title': 'Puzzle diário',
+  'daily.subtitle': 'Escolha uma data para pré-visualizar e jogar o puzzle do dia.',
+  'daily.today': 'Hoje',
+  'daily.weekday.sun': 'D',
+  'daily.weekday.mon': 'S',
+  'daily.weekday.tue': 'T',
+  'daily.weekday.wed': 'Q',
+  'daily.weekday.thu': 'Q',
+  'daily.weekday.fri': 'S',
+  'daily.weekday.sat': 'S',
+  'daily.error.noData': 'Nenhum puzzle disponível para esta data.',
+  'daily.error.loadFailed': 'Falha ao carregar o puzzle diário',
+  'daily.completed': 'Concluído',
+  'daily.meta': '{n} palavras · grade {size}×{size}',
+  'daily.empty': 'Nenhum puzzle para esta data.',
+  'daily.replay': 'Jogar de novo',
+
+  // play
+  'play.clue.placeholder': 'Toque em uma célula numerada para ver a dica',
+  'play.error.noDaily': 'Nenhum puzzle diário disponível.',
+  'play.error.noPuzzle': 'Nenhum puzzle disponível.',
+  'play.error.loadFailed': 'Não foi possível carregar o puzzle.',
+  'play.error.generic': 'Falha ao carregar',
+  'play.error.saveFailed': 'Não foi possível salvar o progresso',
+  'play.alert.notEnoughCoins.title': 'Moedas insuficientes',
+  'play.alert.notEnoughCoins.body': 'Dicas custam {n} moeda cada.',
+  'play.alert.noHint.title': 'Nenhuma dica disponível',
+  'play.alert.noHint.body': 'Cada letra restante já está visível na grade.',
+  'play.error.hintFailed': 'Não foi possível usar a dica',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': 'Nenhuma dica disponível.',
+  'play.a11y.useHint': 'Usar dica',
+  'play.a11y.shuffle': 'Embaralhar',
+  'play.a11y.dictionary': 'Dicionário',
+
+  // settings
+  'settings.title': 'Configurações',
+  'settings.section.appearance': 'Aparência',
+  'settings.section.language': 'Idioma',
+  'settings.section.sound': 'Som',
+  'settings.section.account': 'Conta',
+  'settings.section.shop': 'Loja',
+  'settings.section.legal': 'Ajuda e legal',
+  'settings.section.developer': 'Desenvolvedor',
+  'settings.wallet.title': 'Seu saldo',
+  'settings.wallet.puzzleCoins': 'Moedas de puzzle',
+  'settings.wallet.credits': 'Créditos',
+  'settings.wallet.creditsSuffix': ' créditos',
+  'settings.wallet.hint':
+    'Dicas custam 1 moeda por letra (ou créditos quando as moedas acabam).',
+  'settings.account.signedInAs': 'Conectado como',
+  'settings.account.signOut': 'Sair',
+  'settings.account.signIn': 'Entrar',
+  'settings.account.signInSubtitle': 'Mover progresso de convidado para sua conta',
+  'settings.shop.label': 'Compras no app',
+  'settings.shop.subtitle': 'Comprar moedas e pacotes',
+  'settings.dev.hint': 'Somente builds de desenvolvimento — prévia entre níveis',
+  'settings.dev.wordMaster': 'Mestre das palavras',
+  'settings.dev.wordMaster.subtitle': 'Nível completo · tempo e palavra estrela',
+  'settings.dev.streaksSparks': 'Sequências e faíscas',
+  'settings.dev.streaksSparks.subtitle': 'Multiplicador de sequência de fogo',
+  'settings.dev.brainPower': 'Poder cerebral',
+  'settings.dev.brainPower.subtitle': 'Marco do capítulo · barra de capacidade',
+  'settings.appearance.a11y': 'Aparência',
+  'settings.appearance.light': 'Claro',
+  'settings.appearance.dark': 'Escuro',
+  'settings.sound.music': 'Tocar música de fundo',
+  'settings.sound.musicSubtitle': 'Repete em Início e Jogar',
+  'settings.sound.sfx': 'Tocar efeitos sonoros',
+  'settings.sound.sfxSubtitle': 'Cliques, acerto, erro e sons de vitória',
+  'settings.language.a11y': 'Idioma',
+
+  // legal
+  'legal.marketing': 'Marketing',
+  'legal.privacy': 'Política de privacidade',
+  'legal.terms': 'Termos de uso',
+  'legal.support': 'Suporte',
+
+  // sign in
+  'signIn.title': 'Entre no Word Wheel Quest',
+  'signIn.legal.prefix': 'Ao continuar, você concorda com nossos ',
+  'signIn.legal.termsLink': 'Termos de serviço',
+  'signIn.legal.and': ' e a ',
+  'signIn.legal.privacyLink': 'Política de privacidade',
+  'signIn.legal.period': '.',
+  'signIn.legal.termsTitle': 'Termos de uso',
+  'signIn.legal.privacyTitle': 'Política de privacidade',
+  'signIn.placeholder.email': 'E-mail',
+  'signIn.placeholder.password': 'Senha',
+  'signIn.button.email': 'Entrar',
+  'signIn.divider': '— ou —',
+  'signIn.button.apple': ' Entrar com a Apple',
+  'signIn.apple.hint': 'Entrar com a Apple está disponível no iPhone.',
+
+  // shop
+  'shop.title': 'Loja',
+  'shop.alert.unavailable.title': 'Loja indisponível',
+  'shop.alert.unavailable.body': 'Não foi possível carregar os produtos.',
+  'shop.alert.productUnavailable.title': 'Indisponível',
+  'shop.alert.productUnavailable.body':
+    'Este produto ainda não foi carregado. Tente novamente em um momento.',
+  'shop.alert.success.title': 'Obrigado!',
+  'shop.alert.success.body': '{name} comprado com sucesso.',
+  'shop.alert.purchaseFailed.title': 'Compra falhou',
+  'shop.alert.purchaseFailed.body': 'Algo deu errado.',
+  'shop.alert.restored.title': 'Restaurado',
+  'shop.alert.restored.body': 'Suas compras foram restauradas.',
+  'shop.alert.restoreFailed.title': 'Restauração falhou',
+  'shop.alert.restoreFailed.body': 'Não foi possível restaurar as compras.',
+  'shop.offeringHint': 'Oferta `{id}` · Preços da App Store.',
+  'shop.restore': 'Restaurar compras',
+
+  // webview
+  'webview.titleFallback': 'Página',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': 'Mestre das palavras',
+  'devIntermission.title.streaksSparks': 'Sequências e faíscas',
+  'devIntermission.title.brainPower': 'Poder cerebral',
+  'devIntermission.title.fallback': 'Intervalo',
+  'devIntermission.hint': 'Prévia do desenvolvedor · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': 'IMPARÁVEL!',
+  'intermission.streak.onFire': 'PEGANDO FOGO!',
+  'intermission.streak.sparkStreak': 'SEQUÊNCIA DE FAÍSCAS!',
+  'intermission.streak.speedSpark': 'FAÍSCA DE VELOCIDADE!',
+  'intermission.wordMaster.headline': 'Nível completo!',
+  'intermission.wordMaster.timeTaken': 'Tempo gasto',
+  'intermission.wordMaster.starWord': 'Palavra estrela',
+  'intermission.duration.seconds': '{n}s',
+  'intermission.streak.sessionLabel': 'Sequência da sessão',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': 'Marco do capítulo',
+  'intermission.brainPower.levelArrow': 'Nível {from} ➔ Nível {to}',
+  'intermission.brainPower.capacity': 'Capacidade cerebral +25%',
+  'intermission.continue': 'CONTINUAR A BUSCA ➔',
+  'intermission.a11y.continue': 'Continuar a busca',
+
+  // complete dialog
+  'complete.compliment.goodJob': 'Bom trabalho!',
+  'complete.compliment.niceWork': 'Muito bem!',
+  'complete.compliment.wellDone': 'Excelente!',
+  'complete.compliment.awesome': 'Incrível!',
+  'complete.compliment.brilliant': 'Brilhante!',
+  'complete.compliment.youNailedIt': 'Mandou bem!',
+  'complete.compliment.greatSolve': 'Ótima solução!',
+  'complete.compliment.fantastic': 'Fantástico!',
+  'complete.compliment.impressive': 'Impressionante!',
+  'complete.compliment.wayToGo': 'Isso aí!',
+  'complete.stat.time': 'Tempo',
+  'complete.hintsUsed': 'Dicas usadas: −{n} moedas',
+  'complete.close': 'Fechar',
+  'complete.next': 'Próximo',
+
+  // dictionary
+  'dictionary.error.load': 'Não foi possível carregar a definição.',
+  'dictionary.loading': 'Carregando definição…',
+  'dictionary.empty': 'Nenhuma definição encontrada.',
+  'dictionary.attribution': 'Definições do Wiktionary (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': 'Diário',
+  'toast.level': 'Nível {n}',
+  'toast.levelFallback': 'Nível',
+
+  // points table
+  'pointsTable.header.letters': 'Letras',
+  'pointsTable.header.coins': 'Moedas',
+  'pointsTable.empty': 'Catálogo de moedas indisponível.',
+  'pointsTable.row.letters': '{n} letras',
+  'pointsTable.footer':
+    'A pontuação do puzzle é a soma das moedas de cada palavra que você encontra.',
+
+  // duration
+  'duration.lessThanMinute': 'Menos de um minuto',
+  'duration.hoursMinutes': '{hrs}h {rem}m',
+  'duration.hours': '{hrs}h',
+  'duration.minutesSeconds': '{mins}m {secs}s',
+  'duration.minutes': '{mins}m',
+
+  // wallet
+  'wallet.error.loadFailed': 'Falha ao carregar a carteira',
+
+  // auth
+  'auth.error.userNotFound':
+    'Nenhuma conta encontrada para este e-mail. Se você se cadastrou com Google ou Apple no site, use Entrar com a Apple aqui.',
+  'auth.error.wrongPassword':
+    'Senha incorreta, ou esta conta usa login Google/Apple do site. Tente Entrar com a Apple, ou redefina sua senha em puzzleinteract.com.',
+  'auth.error.userNotConfirmed': 'Confirme seu e-mail antes de entrar.',
+  'auth.error.passwordResetRequired':
+    'Você deve redefinir sua senha antes de entrar.',
+  'auth.error.invalidInput': 'Digite seu e-mail e senha.',
+  'auth.error.invalidParameter':
+    'Não foi possível concluir o login. Verifique seu e-mail e senha e tente de novo.',
+  'auth.error.tooManyAttempts':
+    'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
+  'auth.error.generic': 'Falha ao entrar. Tente novamente.',
+  'auth.error.noToken': 'O login não retornou um token.',
+  'auth.apple.iosOnly': 'Entrar com a Apple está disponível apenas no iPhone.',
+  'auth.apple.unavailable': 'Entrar com a Apple não está disponível neste dispositivo.',
+  'auth.apple.noIdentityToken': 'Entrar com a Apple não retornou um token de identidade.',
+  'auth.apple.exchangeFailed': 'Falha na troca do login da Apple.',
+  'auth.apple.httpFailed': 'Falha no login da Apple (HTTP {status})',
+};

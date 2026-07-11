@@ -5,6 +5,6 @@ import { registerRootComponent } from 'expo';
 
 global.Buffer = global.Buffer || Buffer;
 
-import App from './App';
+import App from './src/App';
 
 registerRootComponent(App);

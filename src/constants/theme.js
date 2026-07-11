@@ -1,0 +1,72 @@
+/** Legacy dark chrome — prefer useAppearance().colors */
+export const COLORS = {
+  background: '#0A2925',
+  surface: '#153D38',
+  surfaceLight: '#1a4a43',
+  primary: '#2dd4bf',
+  primaryGlow: '#5eead4',
+  accent: '#2dd4bf',
+  accentDark: '#14b8a6',
+  accentGlow: '#5eead4',
+  success: '#34d399',
+  warning: '#fbbf24',
+  text: '#f0faf6',
+  textMuted: 'rgba(224, 242, 236, 0.68)',
+  lineGlow: 'rgba(45, 212, 191, 0.45)',
+  particle: '#fbbf24',
+  segmentTrackBg: 'rgba(0, 0, 0, 0.28)',
+  segmentTrackBorder: 'rgba(59, 166, 102, 0.28)',
+  segmentSelectedBg: '#1a4a43',
+  segmentSelectedText: '#f0faf6',
+  segmentInactiveText: 'rgba(224, 242, 236, 0.58)',
+  statusBar: 'light',
+};
+
+/** Legacy light play alias — prefer useAppearance().ww */
+export const WW = {
+  gradient: ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0'],
+  surface: 'rgba(255, 255, 255, 0.94)',
+  border: 'rgba(148, 163, 184, 0.4)',
+  borderStrong: 'rgba(148, 163, 184, 0.65)',
+  text: '#0f172a',
+  textSecondary: 'rgba(15, 23, 42, 0.68)',
+  textMuted: 'rgba(15, 23, 42, 0.45)',
+  textOnSurface: '#334155',
+  accent: '#0d9488',
+  accentDark: '#0f766e',
+  accentSoft: 'rgba(241, 245, 249, 0.9)',
+  accentRing: 'rgba(13, 148, 136, 0.28)',
+  wheelLine: '#f59e0b',
+  wheelLineDark: '#d97706',
+  wheelLineGlow: 'rgba(245, 158, 11, 0.45)',
+  success: '#059669',
+  successSoft: 'rgba(167, 243, 208, 0.92)',
+  successText: '#065f46',
+  hintSoft: 'rgba(254, 243, 199, 0.95)',
+  hintText: '#92400e',
+  gridHidden: 'rgba(204, 251, 241, 0.92)',
+  gridInactive: 'rgba(167, 243, 208, 0.45)',
+  playGradient: ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0'],
+  toolBtnBg: 'rgba(255, 255, 255, 0.95)',
+  clueBg: 'rgba(255, 255, 255, 0.94)',
+  coinLabel: '#64748b',
+  statusBar: 'dark',
+};
+
+export const SCREENS = {
+  HOME: 'HOME',
+  PLAY: 'PLAY',
+  DAILY: 'DAILY',
+  DAILY_PLAY: 'DAILY_PLAY',
+  SETTINGS: 'SETTINGS',
+  SHOP: 'SHOP',
+  WEBVIEW: 'WEBVIEW',
+  SIGN_IN: 'SIGN_IN',
+  /** Dev-only preview of between-level intermission variants */
+  DEV_INTERMISSION: 'DEV_INTERMISSION',
+};
+
+export const PLAY_MODE = {
+  JOURNEY: 'journey',
+  DAILY: 'daily',
+};

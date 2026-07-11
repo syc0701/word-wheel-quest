@@ -1,0 +1,235 @@
+/** Korean UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': '레벨 {n}',
+  'common.levelFallback': '레벨',
+  'common.play': '플레이',
+  'common.daily': '데일리',
+  'common.words': '{n}개 단어',
+  'common.coins': '{n}코인',
+
+  // home
+  'home.a11y.settings': '설정',
+  'home.kicker': '퍼즐 컬렉션',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': '글자를 스와이프하세요. 모든 단어를 찾으세요.',
+  'home.section.seasonJourney': '시즌 여정',
+  'home.error.noData': '아직 사용 가능한 워드 휠 퍼즐이 없습니다.',
+  'home.error.loadFailed': '다음 퍼즐을 불러올 수 없습니다.',
+  'home.error.missingData': '다음 퍼즐 응답에 퍼즐 데이터가 없습니다.',
+  'home.error.generic': '퍼즐 불러오기 실패',
+  'home.section.more': '더보기',
+  'home.dailyPuzzle.label': '데일리 퍼즐',
+  'home.dailyPuzzle.subtitle': '오늘의 보너스 — 시즌 여정과 별개',
+  'home.footer':
+    '진행 상황은 이 기기에 저장됩니다. 게스트 진행을 계정으로 옮기려면 한 번 로그인하세요.',
+
+  // daily
+  'daily.a11y.back': '뒤로',
+  'daily.kicker': '보너스 퍼즐',
+  'daily.title': '데일리 퍼즐',
+  'daily.subtitle': '날짜를 골라 그날의 퍼즐을 미리 보고 플레이하세요.',
+  'daily.today': '오늘',
+  'daily.weekday.sun': '일',
+  'daily.weekday.mon': '월',
+  'daily.weekday.tue': '화',
+  'daily.weekday.wed': '수',
+  'daily.weekday.thu': '목',
+  'daily.weekday.fri': '금',
+  'daily.weekday.sat': '토',
+  'daily.error.noData': '이 날짜의 퍼즐이 없습니다.',
+  'daily.error.loadFailed': '데일리 퍼즐 불러오기 실패',
+  'daily.completed': '완료',
+  'daily.meta': '{n}개 단어 · {size}×{size} 격자',
+  'daily.empty': '이 날짜의 퍼즐이 없습니다.',
+  'daily.replay': '다시 하기',
+
+  // play
+  'play.clue.placeholder': '번호 칸을 탭해 힌트를 확인하세요',
+  'play.error.noDaily': '사용 가능한 데일리 퍼즐이 없습니다.',
+  'play.error.noPuzzle': '사용 가능한 퍼즐이 없습니다.',
+  'play.error.loadFailed': '퍼즐을 불러올 수 없습니다.',
+  'play.error.generic': '불러오기 실패',
+  'play.error.saveFailed': '진행 상황을 저장할 수 없습니다',
+  'play.alert.notEnoughCoins.title': '코인이 부족합니다',
+  'play.alert.notEnoughCoins.body': '힌트는 개당 {n}코인입니다.',
+  'play.alert.noHint.title': '사용 가능한 힌트가 없습니다',
+  'play.alert.noHint.body': '남은 글자가 모두 격자에 이미 표시되어 있습니다.',
+  'play.error.hintFailed': '힌트를 사용할 수 없습니다',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': '사용 가능한 힌트가 없습니다.',
+  'play.a11y.useHint': '힌트 사용',
+  'play.a11y.shuffle': '섞기',
+  'play.a11y.dictionary': '사전',
+
+  // settings
+  'settings.title': '설정',
+  'settings.section.appearance': '모양',
+  'settings.section.language': '언어',
+  'settings.section.sound': '사운드',
+  'settings.section.account': '계정',
+  'settings.section.shop': '상점',
+  'settings.section.legal': '도움말 및 법적 고지',
+  'settings.section.developer': '개발자',
+  'settings.wallet.title': '잔액',
+  'settings.wallet.puzzleCoins': '퍼즐 코인',
+  'settings.wallet.credits': '크레딧',
+  'settings.wallet.creditsSuffix': ' 크레딧',
+  'settings.wallet.hint':
+    '힌트는 글자당 코인 1개입니다 (코인이 없으면 크레딧 사용).',
+  'settings.account.signedInAs': '로그인됨',
+  'settings.account.signOut': '로그아웃',
+  'settings.account.signIn': '로그인',
+  'settings.account.signInSubtitle': '게스트 진행을 계정으로 옮기기',
+  'settings.shop.label': '인앱 구매',
+  'settings.shop.subtitle': '코인과 번들 구매',
+  'settings.dev.hint': '개발 빌드 전용 — 레벨 사이 화면 미리보기',
+  'settings.dev.wordMaster': '워드 마스터',
+  'settings.dev.wordMaster.subtitle': '레벨 완료 · 시간 & 스타 워드',
+  'settings.dev.streaksSparks': '연속 & 스파크',
+  'settings.dev.streaksSparks.subtitle': '파이어 연속 배수',
+  'settings.dev.brainPower': '브레인 파워',
+  'settings.dev.brainPower.subtitle': '챕터 마일스톤 · 용량 바',
+  'settings.appearance.a11y': '모양',
+  'settings.appearance.light': '라이트',
+  'settings.appearance.dark': '다크',
+  'settings.sound.music': '배경 음악 재생',
+  'settings.sound.musicSubtitle': '홈과 플레이에서 반복',
+  'settings.sound.sfx': '효과음 재생',
+  'settings.sound.sfxSubtitle': '클릭, 정답, 오답, 승리 사운드',
+  'settings.language.a11y': '언어',
+
+  // legal
+  'legal.marketing': '마케팅',
+  'legal.privacy': '개인정보 처리방침',
+  'legal.terms': '이용약관',
+  'legal.support': '지원',
+
+  // sign in
+  'signIn.title': 'Word Wheel Quest에 로그인',
+  'signIn.legal.prefix': '계속하면 당사의 ',
+  'signIn.legal.termsLink': '서비스 약관',
+  'signIn.legal.and': ' 및 ',
+  'signIn.legal.privacyLink': '개인정보 처리방침',
+  'signIn.legal.period': '에 동의하는 것입니다.',
+  'signIn.legal.termsTitle': '이용약관',
+  'signIn.legal.privacyTitle': '개인정보 처리방침',
+  'signIn.placeholder.email': '이메일',
+  'signIn.placeholder.password': '비밀번호',
+  'signIn.button.email': '로그인',
+  'signIn.divider': '— 또는 —',
+  'signIn.button.apple': ' Apple로 로그인',
+  'signIn.apple.hint': 'Apple로 로그인은 iPhone에서 사용할 수 있습니다.',
+
+  // shop
+  'shop.title': '상점',
+  'shop.alert.unavailable.title': '상점 이용 불가',
+  'shop.alert.unavailable.body': '상품을 불러올 수 없습니다.',
+  'shop.alert.productUnavailable.title': '이용 불가',
+  'shop.alert.productUnavailable.body':
+    '이 상품이 아직 로드되지 않았습니다. 잠시 후 다시 시도하세요.',
+  'shop.alert.success.title': '감사합니다!',
+  'shop.alert.success.body': '{name} 구매가 완료되었습니다.',
+  'shop.alert.purchaseFailed.title': '구매 실패',
+  'shop.alert.purchaseFailed.body': '문제가 발생했습니다.',
+  'shop.alert.restored.title': '복원됨',
+  'shop.alert.restored.body': '구매 내역이 복원되었습니다.',
+  'shop.alert.restoreFailed.title': '복원 실패',
+  'shop.alert.restoreFailed.body': '구매를 복원할 수 없습니다.',
+  'shop.offeringHint': '오퍼링 `{id}` · 가격은 App Store 기준.',
+  'shop.restore': '구매 복원',
+
+  // webview
+  'webview.titleFallback': '페이지',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': '워드 마스터',
+  'devIntermission.title.streaksSparks': '연속 & 스파크',
+  'devIntermission.title.brainPower': '브레인 파워',
+  'devIntermission.title.fallback': '중간 화면',
+  'devIntermission.hint': '개발자 미리보기 · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': '막을 수 없어!',
+  'intermission.streak.onFire': '불타오른다!',
+  'intermission.streak.sparkStreak': '스파크 연속!',
+  'intermission.streak.speedSpark': '스피드 스파크!',
+  'intermission.wordMaster.headline': '레벨 완료!',
+  'intermission.wordMaster.timeTaken': '소요 시간',
+  'intermission.wordMaster.starWord': '스타 워드',
+  'intermission.duration.seconds': '{n}초',
+  'intermission.streak.sessionLabel': '세션 연속',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': '챕터 마일스톤',
+  'intermission.brainPower.levelArrow': '레벨 {from} ➔ 레벨 {to}',
+  'intermission.brainPower.capacity': '브레인 용량 +25%',
+  'intermission.continue': '퀘스트 계속 ➔',
+  'intermission.a11y.continue': '퀘스트 계속',
+
+  // complete dialog
+  'complete.compliment.goodJob': '잘했어요!',
+  'complete.compliment.niceWork': '멋져요!',
+  'complete.compliment.wellDone': '훌륭해요!',
+  'complete.compliment.awesome': '대단해요!',
+  'complete.compliment.brilliant': '훌륭해요!',
+  'complete.compliment.youNailedIt': '완벽해요!',
+  'complete.compliment.greatSolve': '멋진 해결!',
+  'complete.compliment.fantastic': '환상적이에요!',
+  'complete.compliment.impressive': '인상적이에요!',
+  'complete.compliment.wayToGo': '잘했어요!',
+  'complete.stat.time': '시간',
+  'complete.hintsUsed': '사용한 힌트: −{n}코인',
+  'complete.close': '닫기',
+  'complete.next': '다음',
+
+  // dictionary
+  'dictionary.error.load': '정의를 불러올 수 없습니다.',
+  'dictionary.loading': '정의 불러오는 중…',
+  'dictionary.empty': '정의를 찾을 수 없습니다.',
+  'dictionary.attribution': '정의 출처: Wiktionary (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': '데일리',
+  'toast.level': '레벨 {n}',
+  'toast.levelFallback': '레벨',
+
+  // points table
+  'pointsTable.header.letters': '글자',
+  'pointsTable.header.coins': '코인',
+  'pointsTable.empty': '코인 카탈로그를 사용할 수 없습니다.',
+  'pointsTable.row.letters': '{n}글자',
+  'pointsTable.footer':
+    '퍼즐 점수는 찾은 모든 단어의 코인 합계입니다.',
+
+  // duration
+  'duration.lessThanMinute': '1분 미만',
+  'duration.hoursMinutes': '{hrs}시간 {rem}분',
+  'duration.hours': '{hrs}시간',
+  'duration.minutesSeconds': '{mins}분 {secs}초',
+  'duration.minutes': '{mins}분',
+
+  // wallet
+  'wallet.error.loadFailed': '지갑 불러오기 실패',
+
+  // auth
+  'auth.error.userNotFound':
+    '이 이메일의 계정을 찾을 수 없습니다. 웹사이트에서 Google 또는 Apple로 가입했다면 여기서 Apple로 로그인하세요.',
+  'auth.error.wrongPassword':
+    '비밀번호가 틀렸거나, 이 계정은 웹사이트의 Google/Apple 로그인을 사용합니다. Apple로 로그인을 시도하거나 puzzleinteract.com에서 비밀번호를 재설정하세요.',
+  'auth.error.userNotConfirmed': '로그인 전에 이메일을 확인하세요.',
+  'auth.error.passwordResetRequired':
+    '로그인 전에 비밀번호를 재설정해야 합니다.',
+  'auth.error.invalidInput': '이메일과 비밀번호를 입력하세요.',
+  'auth.error.invalidParameter':
+    '로그인을 완료할 수 없습니다. 이메일과 비밀번호를 확인하고 다시 시도하세요.',
+  'auth.error.tooManyAttempts':
+    '시도가 너무 많습니다. 몇 분 기다린 후 다시 시도하세요.',
+  'auth.error.generic': '로그인에 실패했습니다. 다시 시도하세요.',
+  'auth.error.noToken': '로그인이 토큰을 반환하지 않았습니다.',
+  'auth.apple.iosOnly': 'Apple로 로그인은 iPhone에서만 사용할 수 있습니다.',
+  'auth.apple.unavailable': '이 기기에서는 Apple로 로그인을 사용할 수 없습니다.',
+  'auth.apple.noIdentityToken': 'Apple로 로그인이 ID 토큰을 반환하지 않았습니다.',
+  'auth.apple.exchangeFailed': 'Apple 로그인 교환에 실패했습니다.',
+  'auth.apple.httpFailed': 'Apple 로그인 실패 (HTTP {status})',
+};

@@ -1,0 +1,235 @@
+/** Japanese UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': 'レベル {n}',
+  'common.levelFallback': 'レベル',
+  'common.play': 'プレイ',
+  'common.daily': 'デイリー',
+  'common.words': '{n}語',
+  'common.coins': '{n}コイン',
+
+  // home
+  'home.a11y.settings': '設定',
+  'home.kicker': 'パズルコレクション',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': '文字をスワイプ。すべての単語を見つけよう。',
+  'home.section.seasonJourney': 'シーズントラベル',
+  'home.error.noData': 'ワードホイールパズルはまだありません。',
+  'home.error.loadFailed': '次のパズルを読み込めませんでした。',
+  'home.error.missingData': '次のパズルの応答にパズルデータがありませんでした。',
+  'home.error.generic': 'パズルの読み込みに失敗しました',
+  'home.section.more': 'もっと見る',
+  'home.dailyPuzzle.label': 'デイリーパズル',
+  'home.dailyPuzzle.subtitle': '今日のボーナス — シーズントラベルとは別',
+  'home.footer':
+    '進捗はこの端末に保存されます。ゲストの進捗をアカウントに移すには一度サインインしてください。',
+
+  // daily
+  'daily.a11y.back': '戻る',
+  'daily.kicker': 'ボーナスパズル',
+  'daily.title': 'デイリーパズル',
+  'daily.subtitle': '日付を選んで、その日のパズルをプレビューしてプレイ。',
+  'daily.today': '今日',
+  'daily.weekday.sun': '日',
+  'daily.weekday.mon': '月',
+  'daily.weekday.tue': '火',
+  'daily.weekday.wed': '水',
+  'daily.weekday.thu': '木',
+  'daily.weekday.fri': '金',
+  'daily.weekday.sat': '土',
+  'daily.error.noData': 'この日付のパズルはありません。',
+  'daily.error.loadFailed': 'デイリーパズルの読み込みに失敗しました',
+  'daily.completed': 'クリア済み',
+  'daily.meta': '{n}語 · {size}×{size}グリッド',
+  'daily.empty': 'この日付のパズルはありません。',
+  'daily.replay': '再プレイ',
+
+  // play
+  'play.clue.placeholder': '番号付きマスをタップしてヒントを表示',
+  'play.error.noDaily': 'デイリーパズルはありません。',
+  'play.error.noPuzzle': 'パズルはありません。',
+  'play.error.loadFailed': 'パズルを読み込めませんでした。',
+  'play.error.generic': '読み込みに失敗しました',
+  'play.error.saveFailed': '進捗を保存できませんでした',
+  'play.alert.notEnoughCoins.title': 'コインが足りません',
+  'play.alert.notEnoughCoins.body': 'ヒントは1つにつき{n}コインです。',
+  'play.alert.noHint.title': '使えるヒントはありません',
+  'play.alert.noHint.body': '残りの文字はすべてグリッドに表示済みです。',
+  'play.error.hintFailed': 'ヒントを使えませんでした',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': 'ヒントはありません。',
+  'play.a11y.useHint': 'ヒントを使う',
+  'play.a11y.shuffle': 'シャッフル',
+  'play.a11y.dictionary': '辞書',
+
+  // settings
+  'settings.title': '設定',
+  'settings.section.appearance': '外観',
+  'settings.section.language': '言語',
+  'settings.section.sound': 'サウンド',
+  'settings.section.account': 'アカウント',
+  'settings.section.shop': 'ショップ',
+  'settings.section.legal': 'ヘルプと法的情報',
+  'settings.section.developer': '開発者',
+  'settings.wallet.title': '残高',
+  'settings.wallet.puzzleCoins': 'パズルコイン',
+  'settings.wallet.credits': 'クレジット',
+  'settings.wallet.creditsSuffix': ' クレジット',
+  'settings.wallet.hint':
+    'ヒントは文字1つにつき1コイン（コインがなくなるとクレジット）です。',
+  'settings.account.signedInAs': 'サインイン中',
+  'settings.account.signOut': 'サインアウト',
+  'settings.account.signIn': 'サインイン',
+  'settings.account.signInSubtitle': 'ゲストの進捗をアカウントに移す',
+  'settings.shop.label': 'アプリ内購入',
+  'settings.shop.subtitle': 'コインとバンドルを購入',
+  'settings.dev.hint': '開発ビルドのみ — レベル間画面のプレビュー',
+  'settings.dev.wordMaster': 'ワードマスター',
+  'settings.dev.wordMaster.subtitle': 'レベルクリア · 時間とスターワード',
+  'settings.dev.streaksSparks': 'ストリーク＆スパーク',
+  'settings.dev.streaksSparks.subtitle': 'ファイアストリーク倍率',
+  'settings.dev.brainPower': 'ブレインパワー',
+  'settings.dev.brainPower.subtitle': 'チャプターマイルストーン · 容量バー',
+  'settings.appearance.a11y': '外観',
+  'settings.appearance.light': 'ライト',
+  'settings.appearance.dark': 'ダーク',
+  'settings.sound.music': 'BGMを再生',
+  'settings.sound.musicSubtitle': 'ホームとプレイでループ',
+  'settings.sound.sfx': '効果音を再生',
+  'settings.sound.sfxSubtitle': 'クリック、正解、不正解、クリア音',
+  'settings.language.a11y': '言語',
+
+  // legal
+  'legal.marketing': 'マーケティング',
+  'legal.privacy': 'プライバシーポリシー',
+  'legal.terms': '利用規約',
+  'legal.support': 'サポート',
+
+  // sign in
+  'signIn.title': 'Word Wheel Questにサインイン',
+  'signIn.legal.prefix': '続行すると、当社の',
+  'signIn.legal.termsLink': '利用規約',
+  'signIn.legal.and': 'および',
+  'signIn.legal.privacyLink': 'プライバシーポリシー',
+  'signIn.legal.period': 'に同意したことになります。',
+  'signIn.legal.termsTitle': '利用規約',
+  'signIn.legal.privacyTitle': 'プライバシーポリシー',
+  'signIn.placeholder.email': 'メール',
+  'signIn.placeholder.password': 'パスワード',
+  'signIn.button.email': 'サインイン',
+  'signIn.divider': '— または —',
+  'signIn.button.apple': ' Appleでサインイン',
+  'signIn.apple.hint': 'AppleでサインインはiPhoneで利用できます。',
+
+  // shop
+  'shop.title': 'ショップ',
+  'shop.alert.unavailable.title': 'ショップ利用不可',
+  'shop.alert.unavailable.body': '商品を読み込めませんでした。',
+  'shop.alert.productUnavailable.title': '利用不可',
+  'shop.alert.productUnavailable.body':
+    'この商品はまだ読み込まれていません。しばらくしてから再試行してください。',
+  'shop.alert.success.title': 'ありがとうございます！',
+  'shop.alert.success.body': '{name}の購入が完了しました。',
+  'shop.alert.purchaseFailed.title': '購入に失敗しました',
+  'shop.alert.purchaseFailed.body': '問題が発生しました。',
+  'shop.alert.restored.title': '復元しました',
+  'shop.alert.restored.body': '購入内容を復元しました。',
+  'shop.alert.restoreFailed.title': '復元に失敗しました',
+  'shop.alert.restoreFailed.body': '購入内容を復元できませんでした。',
+  'shop.offeringHint': 'オファリング `{id}` · 価格はApp Storeより。',
+  'shop.restore': '購入を復元',
+
+  // webview
+  'webview.titleFallback': 'ページ',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': 'ワードマスター',
+  'devIntermission.title.streaksSparks': 'ストリーク＆スパーク',
+  'devIntermission.title.brainPower': 'ブレインパワー',
+  'devIntermission.title.fallback': 'インターミッション',
+  'devIntermission.hint': '開発者プレビュー · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': '止められない！',
+  'intermission.streak.onFire': '絶好調！',
+  'intermission.streak.sparkStreak': 'スパークストリーク！',
+  'intermission.streak.speedSpark': 'スピードスパーク！',
+  'intermission.wordMaster.headline': 'レベルクリア！',
+  'intermission.wordMaster.timeTaken': 'かかった時間',
+  'intermission.wordMaster.starWord': 'スターワード',
+  'intermission.duration.seconds': '{n}秒',
+  'intermission.streak.sessionLabel': 'セッションストリーク',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': 'チャプターマイルストーン',
+  'intermission.brainPower.levelArrow': 'レベル {from} ➔ レベル {to}',
+  'intermission.brainPower.capacity': 'ブレイン容量 +25%',
+  'intermission.continue': 'クエストを続ける ➔',
+  'intermission.a11y.continue': 'クエストを続ける',
+
+  // complete dialog
+  'complete.compliment.goodJob': 'よくできました！',
+  'complete.compliment.niceWork': 'ナイス！',
+  'complete.compliment.wellDone': 'お疲れさま！',
+  'complete.compliment.awesome': 'すごい！',
+  'complete.compliment.brilliant': '素晴らしい！',
+  'complete.compliment.youNailedIt': '完璧！',
+  'complete.compliment.greatSolve': '見事なクリア！',
+  'complete.compliment.fantastic': 'ファンタスティック！',
+  'complete.compliment.impressive': '印象的！',
+  'complete.compliment.wayToGo': 'その調子！',
+  'complete.stat.time': '時間',
+  'complete.hintsUsed': '使用ヒント：−{n}コイン',
+  'complete.close': '閉じる',
+  'complete.next': '次へ',
+
+  // dictionary
+  'dictionary.error.load': '定義を読み込めませんでした。',
+  'dictionary.loading': '定義を読み込み中…',
+  'dictionary.empty': '定義が見つかりません。',
+  'dictionary.attribution': '定義はWiktionaryより (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': 'デイリー',
+  'toast.level': 'レベル {n}',
+  'toast.levelFallback': 'レベル',
+
+  // points table
+  'pointsTable.header.letters': '文字数',
+  'pointsTable.header.coins': 'コイン',
+  'pointsTable.empty': 'コインカタログは利用できません。',
+  'pointsTable.row.letters': '{n}文字',
+  'pointsTable.footer':
+    'パズルスコアは見つけた各単語のコインの合計です。',
+
+  // duration
+  'duration.lessThanMinute': '1分未満',
+  'duration.hoursMinutes': '{hrs}時間 {rem}分',
+  'duration.hours': '{hrs}時間',
+  'duration.minutesSeconds': '{mins}分 {secs}秒',
+  'duration.minutes': '{mins}分',
+
+  // wallet
+  'wallet.error.loadFailed': 'ウォレットの読み込みに失敗しました',
+
+  // auth
+  'auth.error.userNotFound':
+    'このメールのアカウントが見つかりません。ウェブサイトでGoogleまたはAppleで登録した場合は、ここでAppleでサインインしてください。',
+  'auth.error.wrongPassword':
+    'パスワードが違うか、このアカウントはウェブサイトのGoogle/Appleサインインを使っています。Appleでサインインするか、puzzleinteract.comでパスワードをリセットしてください。',
+  'auth.error.userNotConfirmed': 'サインイン前にメールを確認してください。',
+  'auth.error.passwordResetRequired':
+    'サインイン前にパスワードをリセットする必要があります。',
+  'auth.error.invalidInput': 'メールとパスワードを入力してください。',
+  'auth.error.invalidParameter':
+    'サインインを完了できませんでした。メールとパスワードを確認して再試行してください。',
+  'auth.error.tooManyAttempts':
+    '試行回数が多すぎます。数分待ってから再試行してください。',
+  'auth.error.generic': 'サインインに失敗しました。もう一度お試しください。',
+  'auth.error.noToken': 'サインインがトークンを返しませんでした。',
+  'auth.apple.iosOnly': 'AppleでサインインはiPhoneでのみ利用できます。',
+  'auth.apple.unavailable': 'この端末ではAppleでサインインを利用できません。',
+  'auth.apple.noIdentityToken': 'AppleでサインインがIDトークンを返しませんでした。',
+  'auth.apple.exchangeFailed': 'Appleサインインの交換に失敗しました。',
+  'auth.apple.httpFailed': 'Appleサインインに失敗しました (HTTP {status})',
+};

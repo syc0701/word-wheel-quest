@@ -13,7 +13,7 @@ This app does **not** use SwiftUI for its UI.
 
 | Layer | Technology |
 | --- | --- |
-| **App UI** | **React Native** (JavaScript) — `App.js`, `components/WordWheel.js`, `screens/` |
+| **App UI** | **React Native** (JavaScript) — `src/App.js`, `src/components/`, `src/screens/` |
 | **Framework** | **Expo SDK 53** |
 | **Native iOS shell** | **UIKit** — `ios/WordWheelQuest/AppDelegate.swift` hosts the React Native bridge |
 

@@ -1,0 +1,235 @@
+/** French UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': 'Niveau {n}',
+  'common.levelFallback': 'Niveau',
+  'common.play': 'Jouer',
+  'common.daily': 'Quotidien',
+  'common.words': '{n} mots',
+  'common.coins': '{n} pièces',
+
+  // home
+  'home.a11y.settings': 'Réglages',
+  'home.kicker': 'COLLECTION DE PUZZLES',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': 'Glissez les lettres. Trouvez chaque mot.',
+  'home.section.seasonJourney': 'Parcours de saison',
+  'home.error.noData': 'Aucun puzzle de roue de mots disponible pour le moment.',
+  'home.error.loadFailed': 'Impossible de charger le puzzle suivant.',
+  'home.error.missingData': 'La réponse du puzzle suivant ne contenait pas de données.',
+  'home.error.generic': 'Échec du chargement du puzzle',
+  'home.section.more': 'Plus',
+  'home.dailyPuzzle.label': 'Puzzle du jour',
+  'home.dailyPuzzle.subtitle': 'Bonus du jour — séparé du parcours de saison',
+  'home.footer':
+    'La progression est enregistrée sur cet appareil. Connectez-vous une fois pour transférer la progression invité vers votre compte.',
+
+  // daily
+  'daily.a11y.back': 'Retour',
+  'daily.kicker': 'PUZZLE BONUS',
+  'daily.title': 'Puzzle du jour',
+  'daily.subtitle': 'Choisissez une date pour prévisualiser et jouer le puzzle du jour.',
+  'daily.today': "Aujourd'hui",
+  'daily.weekday.sun': 'D',
+  'daily.weekday.mon': 'L',
+  'daily.weekday.tue': 'M',
+  'daily.weekday.wed': 'M',
+  'daily.weekday.thu': 'J',
+  'daily.weekday.fri': 'V',
+  'daily.weekday.sat': 'S',
+  'daily.error.noData': 'Aucun puzzle disponible pour cette date.',
+  'daily.error.loadFailed': 'Échec du chargement du puzzle du jour',
+  'daily.completed': 'Terminé',
+  'daily.meta': '{n} mots · grille {size}×{size}',
+  'daily.empty': 'Aucun puzzle pour cette date.',
+  'daily.replay': 'Rejouer',
+
+  // play
+  'play.clue.placeholder': 'Touchez une case numérotée pour voir l’indice',
+  'play.error.noDaily': 'Aucun puzzle du jour disponible.',
+  'play.error.noPuzzle': 'Aucun puzzle disponible.',
+  'play.error.loadFailed': 'Impossible de charger le puzzle.',
+  'play.error.generic': 'Échec du chargement',
+  'play.error.saveFailed': 'Impossible d’enregistrer la progression',
+  'play.alert.notEnoughCoins.title': 'Pas assez de pièces',
+  'play.alert.notEnoughCoins.body': 'Les indices coûtent {n} pièce chacun.',
+  'play.alert.noHint.title': 'Aucun indice disponible',
+  'play.alert.noHint.body': 'Chaque lettre restante est déjà visible sur la grille.',
+  'play.error.hintFailed': 'Impossible d’utiliser l’indice',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': 'Aucun indice disponible.',
+  'play.a11y.useHint': 'Utiliser un indice',
+  'play.a11y.shuffle': 'Mélanger',
+  'play.a11y.dictionary': 'Dictionnaire',
+
+  // settings
+  'settings.title': 'Réglages',
+  'settings.section.appearance': 'Apparence',
+  'settings.section.language': 'Langue',
+  'settings.section.sound': 'Son',
+  'settings.section.account': 'Compte',
+  'settings.section.shop': 'Boutique',
+  'settings.section.legal': 'Aide et mentions légales',
+  'settings.section.developer': 'Développeur',
+  'settings.wallet.title': 'Votre solde',
+  'settings.wallet.puzzleCoins': 'Pièces puzzle',
+  'settings.wallet.credits': 'Crédits',
+  'settings.wallet.creditsSuffix': ' crédits',
+  'settings.wallet.hint':
+    'Les indices coûtent 1 pièce par lettre (ou des crédits quand les pièces sont épuisées).',
+  'settings.account.signedInAs': 'Connecté en tant que',
+  'settings.account.signOut': 'Se déconnecter',
+  'settings.account.signIn': 'Se connecter',
+  'settings.account.signInSubtitle': 'Transférer la progression invité vers votre compte',
+  'settings.shop.label': 'Achats intégrés',
+  'settings.shop.subtitle': 'Acheter des pièces et des packs',
+  'settings.dev.hint': 'Builds de développement uniquement — aperçu entre les niveaux',
+  'settings.dev.wordMaster': 'Maître des mots',
+  'settings.dev.wordMaster.subtitle': 'Niveau terminé · temps et mot étoile',
+  'settings.dev.streaksSparks': 'Séries et étincelles',
+  'settings.dev.streaksSparks.subtitle': 'Multiplicateur de série de feu',
+  'settings.dev.brainPower': 'Puissance cérébrale',
+  'settings.dev.brainPower.subtitle': 'Jalon de chapitre · barre de capacité',
+  'settings.appearance.a11y': 'Apparence',
+  'settings.appearance.light': 'Clair',
+  'settings.appearance.dark': 'Sombre',
+  'settings.sound.music': 'Lire la musique de fond',
+  'settings.sound.musicSubtitle': 'En boucle sur Accueil et Jouer',
+  'settings.sound.sfx': 'Lire les effets sonores',
+  'settings.sound.sfxSubtitle': 'Clics, juste, faux et sons de victoire',
+  'settings.language.a11y': 'Langue',
+
+  // legal
+  'legal.marketing': 'Marketing',
+  'legal.privacy': 'Politique de confidentialité',
+  'legal.terms': 'Conditions d’utilisation',
+  'legal.support': 'Assistance',
+
+  // sign in
+  'signIn.title': 'Se connecter à Word Wheel Quest',
+  'signIn.legal.prefix': 'En continuant, vous acceptez nos ',
+  'signIn.legal.termsLink': 'Conditions d’utilisation',
+  'signIn.legal.and': ' et notre ',
+  'signIn.legal.privacyLink': 'Politique de confidentialité',
+  'signIn.legal.period': '.',
+  'signIn.legal.termsTitle': 'Conditions d’utilisation',
+  'signIn.legal.privacyTitle': 'Politique de confidentialité',
+  'signIn.placeholder.email': 'E-mail',
+  'signIn.placeholder.password': 'Mot de passe',
+  'signIn.button.email': 'Se connecter',
+  'signIn.divider': '— ou —',
+  'signIn.button.apple': ' Se connecter avec Apple',
+  'signIn.apple.hint': 'Se connecter avec Apple est disponible sur iPhone.',
+
+  // shop
+  'shop.title': 'Boutique',
+  'shop.alert.unavailable.title': 'Boutique indisponible',
+  'shop.alert.unavailable.body': 'Impossible de charger les produits.',
+  'shop.alert.productUnavailable.title': 'Indisponible',
+  'shop.alert.productUnavailable.body':
+    'Ce produit n’est pas encore chargé. Réessayez dans un instant.',
+  'shop.alert.success.title': 'Merci !',
+  'shop.alert.success.body': '{name} acheté avec succès.',
+  'shop.alert.purchaseFailed.title': 'Achat échoué',
+  'shop.alert.purchaseFailed.body': 'Une erreur s’est produite.',
+  'shop.alert.restored.title': 'Restauré',
+  'shop.alert.restored.body': 'Vos achats ont été restaurés.',
+  'shop.alert.restoreFailed.title': 'Restauration échouée',
+  'shop.alert.restoreFailed.body': 'Impossible de restaurer les achats.',
+  'shop.offeringHint': 'Offre `{id}` · Prix de l’App Store.',
+  'shop.restore': 'Restaurer les achats',
+
+  // webview
+  'webview.titleFallback': 'Page',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': 'Maître des mots',
+  'devIntermission.title.streaksSparks': 'Séries et étincelles',
+  'devIntermission.title.brainPower': 'Puissance cérébrale',
+  'devIntermission.title.fallback': 'Intermède',
+  'devIntermission.hint': 'Aperçu développeur · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': 'INARRÊTABLE !',
+  'intermission.streak.onFire': 'EN FEU !',
+  'intermission.streak.sparkStreak': 'SÉRIE D’ÉTINCELLES !',
+  'intermission.streak.speedSpark': 'ÉTINCELLE DE VITESSE !',
+  'intermission.wordMaster.headline': 'Niveau terminé !',
+  'intermission.wordMaster.timeTaken': 'Temps écoulé',
+  'intermission.wordMaster.starWord': 'Mot étoile',
+  'intermission.duration.seconds': '{n}s',
+  'intermission.streak.sessionLabel': 'Série de session',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': 'Jalon de chapitre',
+  'intermission.brainPower.levelArrow': 'Niveau {from} ➔ Niveau {to}',
+  'intermission.brainPower.capacity': 'Capacité cérébrale +25%',
+  'intermission.continue': 'CONTINUER LA QUÊTE ➔',
+  'intermission.a11y.continue': 'Continuer la quête',
+
+  // complete dialog
+  'complete.compliment.goodJob': 'Bien joué !',
+  'complete.compliment.niceWork': 'Beau travail !',
+  'complete.compliment.wellDone': 'Bravo !',
+  'complete.compliment.awesome': 'Génial !',
+  'complete.compliment.brilliant': 'Brillant !',
+  'complete.compliment.youNailedIt': 'Tu as cartonné !',
+  'complete.compliment.greatSolve': 'Super résolution !',
+  'complete.compliment.fantastic': 'Fantastique !',
+  'complete.compliment.impressive': 'Impressionnant !',
+  'complete.compliment.wayToGo': 'Continue comme ça !',
+  'complete.stat.time': 'Temps',
+  'complete.hintsUsed': 'Indices utilisés : −{n} pièces',
+  'complete.close': 'Fermer',
+  'complete.next': 'Suivant',
+
+  // dictionary
+  'dictionary.error.load': 'Impossible de charger la définition.',
+  'dictionary.loading': 'Chargement de la définition…',
+  'dictionary.empty': 'Aucune définition trouvée.',
+  'dictionary.attribution': 'Définitions de Wiktionary (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': 'Quotidien',
+  'toast.level': 'Niveau {n}',
+  'toast.levelFallback': 'Niveau',
+
+  // points table
+  'pointsTable.header.letters': 'Lettres',
+  'pointsTable.header.coins': 'Pièces',
+  'pointsTable.empty': 'Catalogue de pièces indisponible.',
+  'pointsTable.row.letters': '{n} lettres',
+  'pointsTable.footer':
+    'Le score du puzzle est la somme des pièces pour chaque mot trouvé.',
+
+  // duration
+  'duration.lessThanMinute': 'Moins d’une minute',
+  'duration.hoursMinutes': '{hrs}h {rem}m',
+  'duration.hours': '{hrs}h',
+  'duration.minutesSeconds': '{mins}m {secs}s',
+  'duration.minutes': '{mins}m',
+
+  // wallet
+  'wallet.error.loadFailed': 'Échec du chargement du portefeuille',
+
+  // auth
+  'auth.error.userNotFound':
+    'Aucun compte trouvé pour cet e-mail. Si vous vous êtes inscrit avec Google ou Apple sur le site, utilisez Se connecter avec Apple ici.',
+  'auth.error.wrongPassword':
+    'Mot de passe incorrect, ou ce compte utilise la connexion Google/Apple du site. Essayez Se connecter avec Apple, ou réinitialisez votre mot de passe sur puzzleinteract.com.',
+  'auth.error.userNotConfirmed': 'Veuillez confirmer votre e-mail avant de vous connecter.',
+  'auth.error.passwordResetRequired':
+    'Vous devez réinitialiser votre mot de passe avant de vous connecter.',
+  'auth.error.invalidInput': 'Entrez votre e-mail et votre mot de passe.',
+  'auth.error.invalidParameter':
+    'La connexion n’a pas pu être terminée. Vérifiez votre e-mail et votre mot de passe, puis réessayez.',
+  'auth.error.tooManyAttempts':
+    'Trop de tentatives. Attendez quelques minutes et réessayez.',
+  'auth.error.generic': 'Échec de la connexion. Veuillez réessayer.',
+  'auth.error.noToken': 'La connexion n’a pas renvoyé de jeton.',
+  'auth.apple.iosOnly': 'Se connecter avec Apple est disponible uniquement sur iPhone.',
+  'auth.apple.unavailable': 'Se connecter avec Apple n’est pas disponible sur cet appareil.',
+  'auth.apple.noIdentityToken': 'Se connecter avec Apple n’a pas renvoyé de jeton d’identité.',
+  'auth.apple.exchangeFailed': 'Échec de l’échange de connexion Apple.',
+  'auth.apple.httpFailed': 'Échec de la connexion Apple (HTTP {status})',
+};

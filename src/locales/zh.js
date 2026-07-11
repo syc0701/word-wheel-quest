@@ -1,0 +1,235 @@
+/** Simplified Chinese UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': '第 {n} 关',
+  'common.levelFallback': '关卡',
+  'common.play': '开始',
+  'common.daily': '每日',
+  'common.words': '{n} 个词',
+  'common.coins': '{n} 枚金币',
+
+  // home
+  'home.a11y.settings': '设置',
+  'home.kicker': '拼图合集',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': '滑动字母，找出每个单词。',
+  'home.section.seasonJourney': '赛季旅程',
+  'home.error.noData': '暂无可用的字母轮拼图。',
+  'home.error.loadFailed': '无法加载下一关拼图。',
+  'home.error.missingData': '下一关响应缺少拼图数据。',
+  'home.error.generic': '加载拼图失败',
+  'home.section.more': '更多',
+  'home.dailyPuzzle.label': '每日拼图',
+  'home.dailyPuzzle.subtitle': '今日奖励 — 独立于赛季旅程',
+  'home.footer':
+    '进度保存在本设备。登录一次即可将游客进度转移到你的账户。',
+
+  // daily
+  'daily.a11y.back': '返回',
+  'daily.kicker': '奖励拼图',
+  'daily.title': '每日拼图',
+  'daily.subtitle': '选择日期以预览并游玩当天的拼图。',
+  'daily.today': '今天',
+  'daily.weekday.sun': '日',
+  'daily.weekday.mon': '一',
+  'daily.weekday.tue': '二',
+  'daily.weekday.wed': '三',
+  'daily.weekday.thu': '四',
+  'daily.weekday.fri': '五',
+  'daily.weekday.sat': '六',
+  'daily.error.noData': '该日期没有可用拼图。',
+  'daily.error.loadFailed': '加载每日拼图失败',
+  'daily.completed': '已完成',
+  'daily.meta': '{n} 个词 · {size}×{size} 网格',
+  'daily.empty': '该日期没有拼图。',
+  'daily.replay': '再玩一次',
+
+  // play
+  'play.clue.placeholder': '点按带编号的格子查看线索',
+  'play.error.noDaily': '暂无每日拼图。',
+  'play.error.noPuzzle': '暂无拼图。',
+  'play.error.loadFailed': '无法加载拼图。',
+  'play.error.generic': '加载失败',
+  'play.error.saveFailed': '无法保存进度',
+  'play.alert.notEnoughCoins.title': '金币不足',
+  'play.alert.notEnoughCoins.body': '每个提示消耗 {n} 枚金币。',
+  'play.alert.noHint.title': '没有可用提示',
+  'play.alert.noHint.body': '剩余字母已全部显示在网格上。',
+  'play.error.hintFailed': '无法使用提示',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': '没有可用线索。',
+  'play.a11y.useHint': '使用提示',
+  'play.a11y.shuffle': '打乱',
+  'play.a11y.dictionary': '词典',
+
+  // settings
+  'settings.title': '设置',
+  'settings.section.appearance': '外观',
+  'settings.section.language': '语言',
+  'settings.section.sound': '声音',
+  'settings.section.account': '账户',
+  'settings.section.shop': '商店',
+  'settings.section.legal': '帮助与法律',
+  'settings.section.developer': '开发者',
+  'settings.wallet.title': '你的余额',
+  'settings.wallet.puzzleCoins': '拼图金币',
+  'settings.wallet.credits': '点数',
+  'settings.wallet.creditsSuffix': ' 点数',
+  'settings.wallet.hint':
+    '提示每个字母消耗 1 枚金币（金币用完时使用点数）。',
+  'settings.account.signedInAs': '已登录为',
+  'settings.account.signOut': '退出登录',
+  'settings.account.signIn': '登录',
+  'settings.account.signInSubtitle': '将游客进度转移到你的账户',
+  'settings.shop.label': '应用内购买',
+  'settings.shop.subtitle': '购买金币和礼包',
+  'settings.dev.hint': '仅开发版 — 预览关卡间屏幕',
+  'settings.dev.wordMaster': '单词大师',
+  'settings.dev.wordMaster.subtitle': '通关 · 用时与明星词',
+  'settings.dev.streaksSparks': '连胜与火花',
+  'settings.dev.streaksSparks.subtitle': '火焰连胜倍数',
+  'settings.dev.brainPower': '脑力',
+  'settings.dev.brainPower.subtitle': '章节里程碑 · 容量条',
+  'settings.appearance.a11y': '外观',
+  'settings.appearance.light': '浅色',
+  'settings.appearance.dark': '深色',
+  'settings.sound.music': '播放背景音乐',
+  'settings.sound.musicSubtitle': '在首页和游戏中循环',
+  'settings.sound.sfx': '播放音效',
+  'settings.sound.sfxSubtitle': '点击、正确、错误和胜利音效',
+  'settings.language.a11y': '语言',
+
+  // legal
+  'legal.marketing': '营销',
+  'legal.privacy': '隐私政策',
+  'legal.terms': '使用条款',
+  'legal.support': '支持',
+
+  // sign in
+  'signIn.title': '登录 Word Wheel Quest',
+  'signIn.legal.prefix': '继续即表示你同意我们的',
+  'signIn.legal.termsLink': '服务条款',
+  'signIn.legal.and': '和',
+  'signIn.legal.privacyLink': '隐私政策',
+  'signIn.legal.period': '。',
+  'signIn.legal.termsTitle': '使用条款',
+  'signIn.legal.privacyTitle': '隐私政策',
+  'signIn.placeholder.email': '邮箱',
+  'signIn.placeholder.password': '密码',
+  'signIn.button.email': '登录',
+  'signIn.divider': '— 或 —',
+  'signIn.button.apple': ' 通过 Apple 登录',
+  'signIn.apple.hint': '通过 Apple 登录可在 iPhone 上使用。',
+
+  // shop
+  'shop.title': '商店',
+  'shop.alert.unavailable.title': '商店不可用',
+  'shop.alert.unavailable.body': '无法加载商品。',
+  'shop.alert.productUnavailable.title': '不可用',
+  'shop.alert.productUnavailable.body':
+    '该商品尚未加载。请稍后再试。',
+  'shop.alert.success.title': '谢谢！',
+  'shop.alert.success.body': '{name} 购买成功。',
+  'shop.alert.purchaseFailed.title': '购买失败',
+  'shop.alert.purchaseFailed.body': '出了点问题。',
+  'shop.alert.restored.title': '已恢复',
+  'shop.alert.restored.body': '你的购买已恢复。',
+  'shop.alert.restoreFailed.title': '恢复失败',
+  'shop.alert.restoreFailed.body': '无法恢复购买。',
+  'shop.offeringHint': '商品 `{id}` · 价格来自 App Store。',
+  'shop.restore': '恢复购买',
+
+  // webview
+  'webview.titleFallback': '页面',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': '单词大师',
+  'devIntermission.title.streaksSparks': '连胜与火花',
+  'devIntermission.title.brainPower': '脑力',
+  'devIntermission.title.fallback': '过场',
+  'devIntermission.hint': '开发者预览 · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': '势不可挡！',
+  'intermission.streak.onFire': '火力全开！',
+  'intermission.streak.sparkStreak': '火花连胜！',
+  'intermission.streak.speedSpark': '极速火花！',
+  'intermission.wordMaster.headline': '关卡完成！',
+  'intermission.wordMaster.timeTaken': '用时',
+  'intermission.wordMaster.starWord': '明星词',
+  'intermission.duration.seconds': '{n}秒',
+  'intermission.streak.sessionLabel': '本局连胜',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': '章节里程碑',
+  'intermission.brainPower.levelArrow': '第 {from} 关 ➔ 第 {to} 关',
+  'intermission.brainPower.capacity': '脑力容量 +25%',
+  'intermission.continue': '继续冒险 ➔',
+  'intermission.a11y.continue': '继续冒险',
+
+  // complete dialog
+  'complete.compliment.goodJob': '干得好！',
+  'complete.compliment.niceWork': '不错！',
+  'complete.compliment.wellDone': '出色！',
+  'complete.compliment.awesome': '太棒了！',
+  'complete.compliment.brilliant': '精彩！',
+  'complete.compliment.youNailedIt': '完美搞定！',
+  'complete.compliment.greatSolve': '解得漂亮！',
+  'complete.compliment.fantastic': '太赞了！',
+  'complete.compliment.impressive': '令人印象深刻！',
+  'complete.compliment.wayToGo': '继续加油！',
+  'complete.stat.time': '时间',
+  'complete.hintsUsed': '已用提示：−{n} 金币',
+  'complete.close': '关闭',
+  'complete.next': '下一关',
+
+  // dictionary
+  'dictionary.error.load': '无法加载释义。',
+  'dictionary.loading': '正在加载释义…',
+  'dictionary.empty': '未找到释义。',
+  'dictionary.attribution': '释义来自 Wiktionary (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': '每日',
+  'toast.level': '第 {n} 关',
+  'toast.levelFallback': '关卡',
+
+  // points table
+  'pointsTable.header.letters': '字母数',
+  'pointsTable.header.coins': '金币',
+  'pointsTable.empty': '金币目录不可用。',
+  'pointsTable.row.letters': '{n} 个字母',
+  'pointsTable.footer':
+    '拼图得分是你找到的每个单词金币之和。',
+
+  // duration
+  'duration.lessThanMinute': '不到一分钟',
+  'duration.hoursMinutes': '{hrs}小时 {rem}分',
+  'duration.hours': '{hrs}小时',
+  'duration.minutesSeconds': '{mins}分 {secs}秒',
+  'duration.minutes': '{mins}分',
+
+  // wallet
+  'wallet.error.loadFailed': '加载钱包失败',
+
+  // auth
+  'auth.error.userNotFound':
+    '未找到此邮箱的账户。如果您在网站上使用 Google 或 Apple 注册，请在此使用通过 Apple 登录。',
+  'auth.error.wrongPassword':
+    '密码错误，或此账户使用网站的 Google/Apple 登录。请尝试通过 Apple 登录，或在 puzzleinteract.com 重置密码。',
+  'auth.error.userNotConfirmed': '登录前请先确认邮箱。',
+  'auth.error.passwordResetRequired':
+    '登录前必须重置密码。',
+  'auth.error.invalidInput': '请输入邮箱和密码。',
+  'auth.error.invalidParameter':
+    '无法完成登录。请检查邮箱和密码后重试。',
+  'auth.error.tooManyAttempts':
+    '尝试次数过多。请稍等几分钟后再试。',
+  'auth.error.generic': '登录失败。请重试。',
+  'auth.error.noToken': '登录未返回令牌。',
+  'auth.apple.iosOnly': '通过 Apple 登录仅在 iPhone 上可用。',
+  'auth.apple.unavailable': '此设备不支持通过 Apple 登录。',
+  'auth.apple.noIdentityToken': '通过 Apple 登录未返回身份令牌。',
+  'auth.apple.exchangeFailed': 'Apple 登录交换失败。',
+  'auth.apple.httpFailed': 'Apple 登录失败 (HTTP {status})',
+};

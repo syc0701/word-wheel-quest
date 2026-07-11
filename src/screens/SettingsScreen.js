@@ -1,0 +1,348 @@
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, ShoppingBag, Star } from 'lucide-react-native';
+import AppearancePicker from '../components/AppearancePicker';
+import AudioSettingsCard from '../components/AudioSettingsCard';
+// import LanguagePicker from '../components/LanguagePicker';
+import ScreenHeader from '../components/ScreenHeader';
+import { useAppearance } from '../context/AppearanceContext';
+import { useT } from '../context/LanguageContext';
+import { SCREENS } from '../constants/theme';
+import { LEGAL_LINKS } from '../constants/store';
+import { LEVEL_SCREEN_TYPES } from '../lib/LevelScreenPolicy';
+import { isLoggedIn } from '../lib/auth';
+import { signOutAll } from '../services/cognitoAuth';
+import useWordWheelWallet from '../hooks/useWordWheelWallet';
+
+const DEV_INTERMISSION_LINKS = [
+  {
+    id: LEVEL_SCREEN_TYPES.WORD_MASTER,
+    icon: Star,
+    labelKey: 'settings.dev.wordMaster',
+    subtitleKey: 'settings.dev.wordMaster.subtitle',
+  },
+  {
+    id: LEVEL_SCREEN_TYPES.STREAKS_SPARKS,
+    icon: Flame,
+    labelKey: 'settings.dev.streaksSparks',
+    subtitleKey: 'settings.dev.streaksSparks.subtitle',
+  },
+  {
+    id: LEVEL_SCREEN_TYPES.BRAIN_POWER,
+    icon: Crown,
+    labelKey: 'settings.dev.brainPower',
+    subtitleKey: 'settings.dev.brainPower.subtitle',
+  },
+];
+
+function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
+  return (
+    <Pressable
+      style={[
+        styles.row,
+        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+      ]}
+      onPress={onPress}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: colors.surfaceLight }]}>
+        <Icon color={colors.primaryGlow} size={20} strokeWidth={1.8} />
+      </View>
+      <View style={styles.rowBody}>
+        <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+        {subtitle ? (
+          <Text style={[styles.rowSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
+        ) : null}
+      </View>
+      <ChevronRight color={colors.textMuted} size={20} />
+    </Pressable>
+  );
+}
+
+function BalanceCard({ label, value, loading, suffix = '', colors }) {
+  return (
+    <View style={styles.balanceRow}>
+      <Text style={[styles.balanceLabel, { color: colors.textMuted }]}>{label}</Text>
+      {loading ? (
+        <ActivityIndicator color={colors.primaryGlow} size="small" />
+      ) : (
+        <Text style={[styles.balanceValue, { color: colors.text }]}>
+          {value}
+          {suffix}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+export default function SettingsScreen({ navigate, routeParams = {} }) {
+  const backScreen = routeParams.backScreen ?? SCREENS.PLAY;
+  const wallet = useWordWheelWallet();
+  const { colors } = useAppearance();
+  const t = useT();
+  const [authed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    isLoggedIn().then(setAuthed);
+  }, []);
+
+  useEffect(() => {
+    if (routeParams.signedIn || routeParams.authTick) {
+      isLoggedIn().then(setAuthed);
+      wallet.refresh({ silent: true }).catch(() => {});
+    }
+  }, [routeParams.signedIn, routeParams.authTick, wallet.refresh]);
+
+  const handleSignOut = async () => {
+    await signOutAll();
+    setAuthed(false);
+    wallet.refresh({ silent: true }).catch(() => {});
+  };
+
+  const handleSignIn = () => {
+    navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.SETTINGS });
+  };
+
+  const themed = useMemo(
+    () => ({
+      sectionTitle: { color: colors.textMuted },
+      walletCard: {
+        backgroundColor: colors.surface,
+        borderColor: colors.surfaceLight,
+      },
+      walletTitle: { color: colors.text },
+      walletHint: { color: colors.textMuted },
+      accountCaption: { color: colors.textMuted },
+      accountLabel: { color: colors.text },
+      appearanceCard: {
+        backgroundColor: colors.surface,
+        borderColor: colors.surfaceLight,
+      },
+    }),
+    [colors]
+  );
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScreenHeader
+        title={t('settings.title')}
+        onBack={() =>
+          navigate(backScreen, {
+            mode: routeParams.mode,
+            date: routeParams.date,
+          })
+        }
+      />
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.appearance')}</Text>
+        <View style={[styles.appearanceCard, themed.appearanceCard]}>
+          <AppearancePicker />
+        </View>
+
+        {/* Language picker — re-enable when shipping multi-language UI
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.language')}</Text>
+        <View style={[styles.appearanceCard, themed.appearanceCard]}>
+          <LanguagePicker />
+        </View>
+        */}
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.sound')}</Text>
+        <AudioSettingsCard />
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
+        {authed || wallet.loggedIn ? (
+          <>
+            <View style={[styles.walletCard, themed.walletCard]}>
+              <Text style={[styles.walletTitle, themed.walletTitle]}>{t('settings.wallet.title')}</Text>
+              <BalanceCard
+                label={t('settings.wallet.puzzleCoins')}
+                value={wallet.lifetimePoints}
+                loading={wallet.loading}
+                colors={colors}
+              />
+              <BalanceCard
+                label={t('settings.wallet.credits')}
+                value={wallet.creditBalance}
+                loading={wallet.loading}
+                suffix={t('settings.wallet.creditsSuffix')}
+                colors={colors}
+              />
+              <Text style={[styles.walletHint, themed.walletHint]}>
+                {t('settings.wallet.hint')}
+              </Text>
+            </View>
+            {wallet.accountLabel ? (
+              <View style={styles.accountBlock}>
+                <Text style={[styles.accountCaption, themed.accountCaption]}>{t('settings.account.signedInAs')}</Text>
+                <Text style={[styles.accountLabel, themed.accountLabel]} numberOfLines={2}>
+                  {wallet.accountLabel}
+                </Text>
+              </View>
+            ) : null}
+            <MenuRow icon={LogOut} label={t('settings.account.signOut')} onPress={handleSignOut} colors={colors} />
+          </>
+        ) : (
+          <MenuRow
+            icon={LogIn}
+            label={t('settings.account.signIn')}
+            subtitle={t('settings.account.signInSubtitle')}
+            onPress={handleSignIn}
+            colors={colors}
+          />
+        )}
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.shop')}</Text>
+        <MenuRow
+          icon={ShoppingBag}
+          label={t('settings.shop.label')}
+          subtitle={t('settings.shop.subtitle')}
+          onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.SETTINGS })}
+          colors={colors}
+        />
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.legal')}</Text>
+        {LEGAL_LINKS.map((link) => (
+          <MenuRow
+            key={link.id}
+            icon={FileText}
+            label={t(link.labelKey)}
+            onPress={() =>
+              navigate(SCREENS.WEBVIEW, {
+                url: link.url,
+                title: t(link.labelKey),
+                backScreen: SCREENS.SETTINGS,
+              })
+            }
+            colors={colors}
+          />
+        ))}
+
+        {__DEV__ ? (
+          <>
+            <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.developer')}</Text>
+            <Text style={[styles.devHint, { color: colors.textMuted }]}>
+              {t('settings.dev.hint')}
+            </Text>
+            {DEV_INTERMISSION_LINKS.map((link) => (
+              <MenuRow
+                key={link.id}
+                icon={link.icon}
+                label={t(link.labelKey)}
+                subtitle={t(link.subtitleKey)}
+                onPress={() =>
+                  navigate(SCREENS.DEV_INTERMISSION, {
+                    previewType: link.id,
+                    backScreen: SCREENS.SETTINGS,
+                  })
+                }
+                colors={colors}
+              />
+            ))}
+          </>
+        ) : null}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  appearanceCard: {
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 4,
+    borderWidth: 1,
+  },
+  walletCard: {
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+  },
+  walletTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  balanceValue: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  walletHint: {
+    fontSize: 12,
+    marginTop: 8,
+    lineHeight: 18,
+  },
+  accountBlock: {
+    marginBottom: 12,
+    marginHorizontal: 4,
+  },
+  accountCaption: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  accountLabel: {
+    fontSize: 16,
+    fontWeight: '800',
+    lineHeight: 22,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+  },
+  rowIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  rowBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  rowLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  rowSubtitle: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  devHint: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 10,
+    marginHorizontal: 2,
+  },
+});

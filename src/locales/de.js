@@ -1,0 +1,235 @@
+/** German UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': 'Level {n}',
+  'common.levelFallback': 'Level',
+  'common.play': 'Spielen',
+  'common.daily': 'Täglich',
+  'common.words': '{n} Wörter',
+  'common.coins': '{n} Münzen',
+
+  // home
+  'home.a11y.settings': 'Einstellungen',
+  'home.kicker': 'RÄTSELSAMMLUNG',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': 'Buchstaben wischen. Alle Wörter finden.',
+  'home.section.seasonJourney': 'Saisonreise',
+  'home.error.noData': 'Noch kein Word-Wheel-Rätsel verfügbar.',
+  'home.error.loadFailed': 'Nächstes Rätsel konnte nicht geladen werden.',
+  'home.error.missingData': 'Antwort für nächstes Rätsel enthielt keine Rätseldaten.',
+  'home.error.generic': 'Rätsel konnte nicht geladen werden',
+  'home.section.more': 'Mehr',
+  'home.dailyPuzzle.label': 'Tägliches Rätsel',
+  'home.dailyPuzzle.subtitle': 'Heutiger Bonus — getrennt von der Saisonreise',
+  'home.footer':
+    'Fortschritt wird auf diesem Gerät gespeichert. Einmal anmelden, um Gastfortschritt auf dein Konto zu übertragen.',
+
+  // daily
+  'daily.a11y.back': 'Zurück',
+  'daily.kicker': 'BONUS-RÄTSEL',
+  'daily.title': 'Tägliches Rätsel',
+  'daily.subtitle': 'Datum wählen, um das Rätsel des Tages anzusehen und zu spielen.',
+  'daily.today': 'Heute',
+  'daily.weekday.sun': 'S',
+  'daily.weekday.mon': 'M',
+  'daily.weekday.tue': 'D',
+  'daily.weekday.wed': 'M',
+  'daily.weekday.thu': 'D',
+  'daily.weekday.fri': 'F',
+  'daily.weekday.sat': 'S',
+  'daily.error.noData': 'Kein Rätsel für dieses Datum verfügbar.',
+  'daily.error.loadFailed': 'Tägliches Rätsel konnte nicht geladen werden',
+  'daily.completed': 'Abgeschlossen',
+  'daily.meta': '{n} Wörter · {size}×{size}-Raster',
+  'daily.empty': 'Kein Rätsel für dieses Datum.',
+  'daily.replay': 'Nochmal',
+
+  // play
+  'play.clue.placeholder': 'Nummerierte Zelle tippen für den Hinweis',
+  'play.error.noDaily': 'Kein tägliches Rätsel verfügbar.',
+  'play.error.noPuzzle': 'Kein Rätsel verfügbar.',
+  'play.error.loadFailed': 'Rätsel konnte nicht geladen werden.',
+  'play.error.generic': 'Laden fehlgeschlagen',
+  'play.error.saveFailed': 'Fortschritt konnte nicht gespeichert werden',
+  'play.alert.notEnoughCoins.title': 'Nicht genug Münzen',
+  'play.alert.notEnoughCoins.body': 'Hinweise kosten je {n} Münze.',
+  'play.alert.noHint.title': 'Kein Hinweis verfügbar',
+  'play.alert.noHint.body': 'Jeder verbleibende Buchstabe ist bereits im Raster sichtbar.',
+  'play.error.hintFailed': 'Hinweis konnte nicht genutzt werden',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': 'Kein Hinweis verfügbar.',
+  'play.a11y.useHint': 'Hinweis nutzen',
+  'play.a11y.shuffle': 'Mischen',
+  'play.a11y.dictionary': 'Wörterbuch',
+
+  // settings
+  'settings.title': 'Einstellungen',
+  'settings.section.appearance': 'Darstellung',
+  'settings.section.language': 'Sprache',
+  'settings.section.sound': 'Ton',
+  'settings.section.account': 'Konto',
+  'settings.section.shop': 'Shop',
+  'settings.section.legal': 'Hilfe & Rechtliches',
+  'settings.section.developer': 'Entwickler',
+  'settings.wallet.title': 'Dein Guthaben',
+  'settings.wallet.puzzleCoins': 'Rätsel-Münzen',
+  'settings.wallet.credits': 'Credits',
+  'settings.wallet.creditsSuffix': ' Credits',
+  'settings.wallet.hint':
+    'Hinweise kosten 1 Münze pro Buchstabe (oder Credits, wenn Münzen ausgehen).',
+  'settings.account.signedInAs': 'Angemeldet als',
+  'settings.account.signOut': 'Abmelden',
+  'settings.account.signIn': 'Anmelden',
+  'settings.account.signInSubtitle': 'Gastfortschritt auf dein Konto übertragen',
+  'settings.shop.label': 'In-App-Käufe',
+  'settings.shop.subtitle': 'Münzen und Bundles kaufen',
+  'settings.dev.hint': 'Nur Dev-Builds — Vorschau der Zwischenbildschirme',
+  'settings.dev.wordMaster': 'Wortmeister',
+  'settings.dev.wordMaster.subtitle': 'Level geschafft · Zeit & Sternwort',
+  'settings.dev.streaksSparks': 'Serien & Funken',
+  'settings.dev.streaksSparks.subtitle': 'Feuer-Serien-Multiplikator',
+  'settings.dev.brainPower': 'Hirnkraft',
+  'settings.dev.brainPower.subtitle': 'Kapitel-Meilenstein · Kapazitätsbalken',
+  'settings.appearance.a11y': 'Darstellung',
+  'settings.appearance.light': 'Hell',
+  'settings.appearance.dark': 'Dunkel',
+  'settings.sound.music': 'Hintergrundmusik abspielen',
+  'settings.sound.musicSubtitle': 'Wiederholt auf Home und Play',
+  'settings.sound.sfx': 'Soundeffekte abspielen',
+  'settings.sound.sfxSubtitle': 'Klicks, richtig, falsch und Sieg-Sounds',
+  'settings.language.a11y': 'Sprache',
+
+  // legal
+  'legal.marketing': 'Marketing',
+  'legal.privacy': 'Datenschutz',
+  'legal.terms': 'Nutzungsbedingungen',
+  'legal.support': 'Support',
+
+  // sign in
+  'signIn.title': 'Bei Word Wheel Quest anmelden',
+  'signIn.legal.prefix': 'Mit dem Fortfahren stimmst du unseren ',
+  'signIn.legal.termsLink': 'Nutzungsbedingungen',
+  'signIn.legal.and': ' und der ',
+  'signIn.legal.privacyLink': 'Datenschutzerklärung',
+  'signIn.legal.period': ' zu.',
+  'signIn.legal.termsTitle': 'Nutzungsbedingungen',
+  'signIn.legal.privacyTitle': 'Datenschutz',
+  'signIn.placeholder.email': 'E-Mail',
+  'signIn.placeholder.password': 'Passwort',
+  'signIn.button.email': 'Anmelden',
+  'signIn.divider': '— oder —',
+  'signIn.button.apple': ' Mit Apple anmelden',
+  'signIn.apple.hint': 'Mit Apple anmelden ist auf dem iPhone verfügbar.',
+
+  // shop
+  'shop.title': 'Shop',
+  'shop.alert.unavailable.title': 'Shop nicht verfügbar',
+  'shop.alert.unavailable.body': 'Produkte konnten nicht geladen werden.',
+  'shop.alert.productUnavailable.title': 'Nicht verfügbar',
+  'shop.alert.productUnavailable.body':
+    'Dieses Produkt ist noch nicht geladen. Bitte gleich erneut versuchen.',
+  'shop.alert.success.title': 'Danke!',
+  'shop.alert.success.body': '{name} erfolgreich gekauft.',
+  'shop.alert.purchaseFailed.title': 'Kauf fehlgeschlagen',
+  'shop.alert.purchaseFailed.body': 'Etwas ist schiefgelaufen.',
+  'shop.alert.restored.title': 'Wiederhergestellt',
+  'shop.alert.restored.body': 'Deine Käufe wurden wiederhergestellt.',
+  'shop.alert.restoreFailed.title': 'Wiederherstellung fehlgeschlagen',
+  'shop.alert.restoreFailed.body': 'Käufe konnten nicht wiederhergestellt werden.',
+  'shop.offeringHint': 'Angebot `{id}` · Preise aus dem App Store.',
+  'shop.restore': 'Käufe wiederherstellen',
+
+  // webview
+  'webview.titleFallback': 'Seite',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': 'Wortmeister',
+  'devIntermission.title.streaksSparks': 'Serien & Funken',
+  'devIntermission.title.brainPower': 'Hirnkraft',
+  'devIntermission.title.fallback': 'Zwischenpause',
+  'devIntermission.hint': 'Entwickler-Vorschau · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': 'UNAUFHALTSAM!',
+  'intermission.streak.onFire': 'IN FLAMMEN!',
+  'intermission.streak.sparkStreak': 'FUNKEN-SERIE!',
+  'intermission.streak.speedSpark': 'TEMPO-FUNKE!',
+  'intermission.wordMaster.headline': 'Level geschafft!',
+  'intermission.wordMaster.timeTaken': 'Benötigte Zeit',
+  'intermission.wordMaster.starWord': 'Sternwort',
+  'intermission.duration.seconds': '{n}s',
+  'intermission.streak.sessionLabel': 'Sitzungsserie',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': 'Kapitel-Meilenstein',
+  'intermission.brainPower.levelArrow': 'Level {from} ➔ Level {to}',
+  'intermission.brainPower.capacity': 'Hirnkapazität +25%',
+  'intermission.continue': 'QUEST FORTSETZEN ➔',
+  'intermission.a11y.continue': 'Quest fortsetzen',
+
+  // complete dialog
+  'complete.compliment.goodJob': 'Gut gemacht!',
+  'complete.compliment.niceWork': 'Schöne Arbeit!',
+  'complete.compliment.wellDone': 'Sehr gut!',
+  'complete.compliment.awesome': 'Fantastisch!',
+  'complete.compliment.brilliant': 'Brillant!',
+  'complete.compliment.youNailedIt': 'Voll getroffen!',
+  'complete.compliment.greatSolve': 'Tolle Lösung!',
+  'complete.compliment.fantastic': 'Wunderbar!',
+  'complete.compliment.impressive': 'Beeindruckend!',
+  'complete.compliment.wayToGo': 'Weiter so!',
+  'complete.stat.time': 'Zeit',
+  'complete.hintsUsed': 'Hinweise genutzt: −{n} Münzen',
+  'complete.close': 'Schließen',
+  'complete.next': 'Weiter',
+
+  // dictionary
+  'dictionary.error.load': 'Definition konnte nicht geladen werden.',
+  'dictionary.loading': 'Definition wird geladen…',
+  'dictionary.empty': 'Keine Definitionen gefunden.',
+  'dictionary.attribution': 'Definitionen von Wiktionary (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': 'Täglich',
+  'toast.level': 'Level {n}',
+  'toast.levelFallback': 'Level',
+
+  // points table
+  'pointsTable.header.letters': 'Buchstaben',
+  'pointsTable.header.coins': 'Münzen',
+  'pointsTable.empty': 'Münzenkatalog nicht verfügbar.',
+  'pointsTable.row.letters': '{n} Buchstaben',
+  'pointsTable.footer':
+    'Der Rätselpunktestand ist die Summe der Münzen für jedes gefundene Wort.',
+
+  // duration
+  'duration.lessThanMinute': 'Weniger als eine Minute',
+  'duration.hoursMinutes': '{hrs}h {rem}m',
+  'duration.hours': '{hrs}h',
+  'duration.minutesSeconds': '{mins}m {secs}s',
+  'duration.minutes': '{mins}m',
+
+  // wallet
+  'wallet.error.loadFailed': 'Geldbörse konnte nicht geladen werden',
+
+  // auth
+  'auth.error.userNotFound':
+    'Kein Konto für diese E-Mail gefunden. Wenn du dich auf der Website mit Google oder Apple registriert hast, nutze hier Mit Apple anmelden.',
+  'auth.error.wrongPassword':
+    'Falsches Passwort, oder dieses Konto nutzt Google-/Apple-Anmeldung von der Website. Versuche Mit Apple anmelden oder setze dein Passwort auf puzzleinteract.com zurück.',
+  'auth.error.userNotConfirmed': 'Bitte bestätige deine E-Mail vor der Anmeldung.',
+  'auth.error.passwordResetRequired':
+    'Du musst dein Passwort zurücksetzen, bevor du dich anmelden kannst.',
+  'auth.error.invalidInput': 'Gib E-Mail und Passwort ein.',
+  'auth.error.invalidParameter':
+    'Anmeldung konnte nicht abgeschlossen werden. Prüfe E-Mail und Passwort und versuche es erneut.',
+  'auth.error.tooManyAttempts':
+    'Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.',
+  'auth.error.generic': 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
+  'auth.error.noToken': 'Anmeldung hat kein Token zurückgegeben.',
+  'auth.apple.iosOnly': 'Mit Apple anmelden ist nur auf dem iPhone verfügbar.',
+  'auth.apple.unavailable': 'Mit Apple anmelden ist auf diesem Gerät nicht verfügbar.',
+  'auth.apple.noIdentityToken': 'Mit Apple anmelden hat kein Identity-Token zurückgegeben.',
+  'auth.apple.exchangeFailed': 'Apple-Anmelde-Austausch fehlgeschlagen.',
+  'auth.apple.httpFailed': 'Apple-Anmeldung fehlgeschlagen (HTTP {status})',
+};

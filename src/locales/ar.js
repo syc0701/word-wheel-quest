@@ -1,0 +1,235 @@
+/** Arabic UI catalog */
+export default {
+  // common
+  'common.emDash': '—',
+  'common.level': 'المستوى {n}',
+  'common.levelFallback': 'المستوى',
+  'common.play': 'العب',
+  'common.daily': 'اليومي',
+  'common.words': '{n} كلمات',
+  'common.coins': '{n} عملات',
+
+  // home
+  'home.a11y.settings': 'الإعدادات',
+  'home.kicker': 'مجموعة الألغاز',
+  'home.title': 'Word Wheel Quest',
+  'home.tagline': 'اسحب الحروف. ابحث عن كل كلمة.',
+  'home.section.seasonJourney': 'رحلة الموسم',
+  'home.error.noData': 'لا يتوفر لغز عجلة الكلمات بعد.',
+  'home.error.loadFailed': 'تعذّر تحميل اللغز التالي.',
+  'home.error.missingData': 'استجابة اللغز التالي لم تتضمن بيانات اللغز.',
+  'home.error.generic': 'فشل تحميل اللغز',
+  'home.section.more': 'المزيد',
+  'home.dailyPuzzle.label': 'اللغز اليومي',
+  'home.dailyPuzzle.subtitle': 'مكافأة اليوم — منفصلة عن رحلة الموسم',
+  'home.footer':
+    'يُحفظ التقدم على هذا الجهاز. سجّل الدخول مرة لنقل تقدم الضيف إلى حسابك.',
+
+  // daily
+  'daily.a11y.back': 'رجوع',
+  'daily.kicker': 'لغز المكافأة',
+  'daily.title': 'اللغز اليومي',
+  'daily.subtitle': 'اختر تاريخاً لمعاينة ولعب لغز ذلك اليوم.',
+  'daily.today': 'اليوم',
+  'daily.weekday.sun': 'ح',
+  'daily.weekday.mon': 'ن',
+  'daily.weekday.tue': 'ث',
+  'daily.weekday.wed': 'ر',
+  'daily.weekday.thu': 'خ',
+  'daily.weekday.fri': 'ج',
+  'daily.weekday.sat': 'س',
+  'daily.error.noData': 'لا يتوفر لغز لهذا التاريخ.',
+  'daily.error.loadFailed': 'فشل تحميل اللغز اليومي',
+  'daily.completed': 'مكتمل',
+  'daily.meta': '{n} كلمات · شبكة {size}×{size}',
+  'daily.empty': 'لا لغز لهذا التاريخ.',
+  'daily.replay': 'إعادة اللعب',
+
+  // play
+  'play.clue.placeholder': 'اضغط خلية مرقّمة لرؤية التلميح',
+  'play.error.noDaily': 'لا يتوفر لغز يومي.',
+  'play.error.noPuzzle': 'لا يتوفر لغز.',
+  'play.error.loadFailed': 'تعذّر تحميل اللغز.',
+  'play.error.generic': 'فشل التحميل',
+  'play.error.saveFailed': 'تعذّر حفظ التقدم',
+  'play.alert.notEnoughCoins.title': 'عملات غير كافية',
+  'play.alert.notEnoughCoins.body': 'التلميحات تكلّف {n} عملة لكل واحدة.',
+  'play.alert.noHint.title': 'لا تلميح متاح',
+  'play.alert.noHint.body': 'كل حرف متبقٍ ظاهر بالفعل على الشبكة.',
+  'play.error.hintFailed': 'تعذّر استخدام التلميح',
+  'play.titleFallback': 'Word Wheel Quest',
+  'play.clue.missing': 'لا تلميح متاح.',
+  'play.a11y.useHint': 'استخدم تلميحاً',
+  'play.a11y.shuffle': 'خلط',
+  'play.a11y.dictionary': 'القاموس',
+
+  // settings
+  'settings.title': 'الإعدادات',
+  'settings.section.appearance': 'المظهر',
+  'settings.section.language': 'اللغة',
+  'settings.section.sound': 'الصوت',
+  'settings.section.account': 'الحساب',
+  'settings.section.shop': 'المتجر',
+  'settings.section.legal': 'المساعدة والقانون',
+  'settings.section.developer': 'المطوّر',
+  'settings.wallet.title': 'رصيدك',
+  'settings.wallet.puzzleCoins': 'عملات الألغاز',
+  'settings.wallet.credits': 'الأرصدة',
+  'settings.wallet.creditsSuffix': ' أرصدة',
+  'settings.wallet.hint':
+    'التلميحات تكلّف عملة واحدة لكل حرف (أو أرصدة عند نفاد العملات).',
+  'settings.account.signedInAs': 'مسجّل الدخول كـ',
+  'settings.account.signOut': 'تسجيل الخروج',
+  'settings.account.signIn': 'تسجيل الدخول',
+  'settings.account.signInSubtitle': 'انقل تقدم الضيف إلى حسابك',
+  'settings.shop.label': 'مشتريات داخل التطبيق',
+  'settings.shop.subtitle': 'اشترِ عملات وحزم',
+  'settings.dev.hint': 'إصدارات التطوير فقط — معاينة شاشات بين المستويات',
+  'settings.dev.wordMaster': 'سيد الكلمات',
+  'settings.dev.wordMaster.subtitle': 'اكتمال المستوى · الوقت والكلمة النجمية',
+  'settings.dev.streaksSparks': 'السلاسل والشرارات',
+  'settings.dev.streaksSparks.subtitle': 'مضاعف سلسلة النار',
+  'settings.dev.brainPower': 'قوة الدماغ',
+  'settings.dev.brainPower.subtitle': 'معلم الفصل · شريط السعة',
+  'settings.appearance.a11y': 'المظهر',
+  'settings.appearance.light': 'فاتح',
+  'settings.appearance.dark': 'داكن',
+  'settings.sound.music': 'تشغيل موسيقى الخلفية',
+  'settings.sound.musicSubtitle': 'تتكرر في الرئيسية واللعب',
+  'settings.sound.sfx': 'تشغيل المؤثرات الصوتية',
+  'settings.sound.sfxSubtitle': 'نقرات، صحيح، خطأ، وأصوات الفوز',
+  'settings.language.a11y': 'اللغة',
+
+  // legal
+  'legal.marketing': 'التسويق',
+  'legal.privacy': 'سياسة الخصوصية',
+  'legal.terms': 'شروط الاستخدام',
+  'legal.support': 'الدعم',
+
+  // sign in
+  'signIn.title': 'سجّل الدخول إلى Word Wheel Quest',
+  'signIn.legal.prefix': 'بالمتابعة، فإنك توافق على ',
+  'signIn.legal.termsLink': 'شروط الخدمة',
+  'signIn.legal.and': ' و ',
+  'signIn.legal.privacyLink': 'سياسة الخصوصية',
+  'signIn.legal.period': '.',
+  'signIn.legal.termsTitle': 'شروط الاستخدام',
+  'signIn.legal.privacyTitle': 'سياسة الخصوصية',
+  'signIn.placeholder.email': 'البريد الإلكتروني',
+  'signIn.placeholder.password': 'كلمة المرور',
+  'signIn.button.email': 'تسجيل الدخول',
+  'signIn.divider': '— أو —',
+  'signIn.button.apple': ' تسجيل الدخول عبر Apple',
+  'signIn.apple.hint': 'تسجيل الدخول عبر Apple متاح على iPhone.',
+
+  // shop
+  'shop.title': 'المتجر',
+  'shop.alert.unavailable.title': 'المتجر غير متاح',
+  'shop.alert.unavailable.body': 'تعذّر تحميل المنتجات.',
+  'shop.alert.productUnavailable.title': 'غير متاح',
+  'shop.alert.productUnavailable.body':
+    'هذا المنتج غير محمّل بعد. حاول مرة أخرى بعد لحظات.',
+  'shop.alert.success.title': 'شكراً لك!',
+  'shop.alert.success.body': 'تم شراء {name} بنجاح.',
+  'shop.alert.purchaseFailed.title': 'فشل الشراء',
+  'shop.alert.purchaseFailed.body': 'حدث خطأ ما.',
+  'shop.alert.restored.title': 'تمت الاستعادة',
+  'shop.alert.restored.body': 'تمت استعادة مشترياتك.',
+  'shop.alert.restoreFailed.title': 'فشلت الاستعادة',
+  'shop.alert.restoreFailed.body': 'تعذّر استعادة المشتريات.',
+  'shop.offeringHint': 'العرض `{id}` · الأسعار من App Store.',
+  'shop.restore': 'استعادة المشتريات',
+
+  // webview
+  'webview.titleFallback': 'صفحة',
+
+  // dev intermission
+  'devIntermission.title.wordMaster': 'سيد الكلمات',
+  'devIntermission.title.streaksSparks': 'السلاسل والشرارات',
+  'devIntermission.title.brainPower': 'قوة الدماغ',
+  'devIntermission.title.fallback': 'فاصل',
+  'devIntermission.hint': 'معاينة المطوّر · {type}',
+
+  // intermission
+  'intermission.streak.unstoppable': 'لا يُوقف!',
+  'intermission.streak.onFire': 'مشتعل!',
+  'intermission.streak.sparkStreak': 'سلسلة الشرارات!',
+  'intermission.streak.speedSpark': 'شرارة السرعة!',
+  'intermission.wordMaster.headline': 'اكتمل المستوى!',
+  'intermission.wordMaster.timeTaken': 'الوقت المستغرق',
+  'intermission.wordMaster.starWord': 'الكلمة النجمية',
+  'intermission.duration.seconds': '{n}ث',
+  'intermission.streak.sessionLabel': 'سلسلة الجلسة',
+  'intermission.streak.multiplier': '×{n}',
+  'intermission.brainPower.headline': 'معلم الفصل',
+  'intermission.brainPower.levelArrow': 'المستوى {from} ➔ المستوى {to}',
+  'intermission.brainPower.capacity': 'سعة الدماغ +25%',
+  'intermission.continue': 'تابع المغامرة ➔',
+  'intermission.a11y.continue': 'تابع المغامرة',
+
+  // complete dialog
+  'complete.compliment.goodJob': 'أحسنت!',
+  'complete.compliment.niceWork': 'عمل رائع!',
+  'complete.compliment.wellDone': 'ممتاز!',
+  'complete.compliment.awesome': 'مذهل!',
+  'complete.compliment.brilliant': 'عبقري!',
+  'complete.compliment.youNailedIt': 'أتقنتها!',
+  'complete.compliment.greatSolve': 'حل رائع!',
+  'complete.compliment.fantastic': 'رائع!',
+  'complete.compliment.impressive': 'مثير للإعجاب!',
+  'complete.compliment.wayToGo': 'إلى الأمام!',
+  'complete.stat.time': 'الوقت',
+  'complete.hintsUsed': 'التلميحات المستخدمة: −{n} عملات',
+  'complete.close': 'إغلاق',
+  'complete.next': 'التالي',
+
+  // dictionary
+  'dictionary.error.load': 'تعذّر تحميل التعريف.',
+  'dictionary.loading': 'جارٍ تحميل التعريف…',
+  'dictionary.empty': 'لم يُعثر على تعريفات.',
+  'dictionary.attribution': 'التعريفات من Wiktionary (CC BY-SA 3.0)',
+
+  // toast
+  'toast.dailyFallback': 'اليومي',
+  'toast.level': 'المستوى {n}',
+  'toast.levelFallback': 'المستوى',
+
+  // points table
+  'pointsTable.header.letters': 'الحروف',
+  'pointsTable.header.coins': 'العملات',
+  'pointsTable.empty': 'كتالوج العملات غير متاح.',
+  'pointsTable.row.letters': '{n} حروف',
+  'pointsTable.footer':
+    'نقاط اللغز هي مجموع عملات كل كلمة تجدها.',
+
+  // duration
+  'duration.lessThanMinute': 'أقل من دقيقة',
+  'duration.hoursMinutes': '{hrs}س {rem}د',
+  'duration.hours': '{hrs}س',
+  'duration.minutesSeconds': '{mins}د {secs}ث',
+  'duration.minutes': '{mins}د',
+
+  // wallet
+  'wallet.error.loadFailed': 'فشل تحميل المحفظة',
+
+  // auth
+  'auth.error.userNotFound':
+    'لم يُعثر على حساب لهذا البريد. إذا سجّلت عبر Google أو Apple على الموقع، استخدم تسجيل الدخول عبر Apple هنا.',
+  'auth.error.wrongPassword':
+    'كلمة مرور خاطئة، أو هذا الحساب يستخدم تسجيل Google/Apple من الموقع. جرّب تسجيل الدخول عبر Apple، أو أعد تعيين كلمة المرور على puzzleinteract.com.',
+  'auth.error.userNotConfirmed': 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.',
+  'auth.error.passwordResetRequired':
+    'يجب إعادة تعيين كلمة المرور قبل تسجيل الدخول.',
+  'auth.error.invalidInput': 'أدخل بريدك الإلكتروني وكلمة المرور.',
+  'auth.error.invalidParameter':
+    'تعذّر إكمال تسجيل الدخول. تحقق من بريدك وكلمة المرور وحاول مجدداً.',
+  'auth.error.tooManyAttempts':
+    'محاولات كثيرة جداً. انتظر بضع دقائق وحاول مجدداً.',
+  'auth.error.generic': 'فشل تسجيل الدخول. يرجى المحاولة مجدداً.',
+  'auth.error.noToken': 'تسجيل الدخول لم يُرجع رمزاً.',
+  'auth.apple.iosOnly': 'تسجيل الدخول عبر Apple متاح على iPhone فقط.',
+  'auth.apple.unavailable': 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.',
+  'auth.apple.noIdentityToken': 'تسجيل الدخول عبر Apple لم يُرجع رمز هوية.',
+  'auth.apple.exchangeFailed': 'فشل تبادل تسجيل الدخول عبر Apple.',
+  'auth.apple.httpFailed': 'فشل تسجيل الدخول عبر Apple (HTTP {status})',
+};

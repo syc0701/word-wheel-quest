@@ -1,0 +1,30 @@
+import { Platform } from 'react-native';
+
+/** Premium interstitial palette — soft teal glass + metallic gold. */
+export const INTERMISSION = {
+  cardBg: ['rgba(232, 250, 245, 0.96)', 'rgba(210, 242, 233, 0.94)', 'rgba(186, 230, 220, 0.92)'],
+  cardBorder: 'rgba(212, 175, 55, 0.55)',
+  cardGlow: 'rgba(45, 180, 160, 0.28)',
+  filigree: 'rgba(184, 148, 58, 0.22)',
+  titleGold: '#9a7209',
+  titleTeal: '#0f5c54',
+  bodyMuted: 'rgba(15, 61, 54, 0.62)',
+  marble: ['#f7f5f0', '#ebe4d8', '#f5f1ea'],
+  marbleBorder: 'rgba(148, 130, 100, 0.35)',
+  marbleHighlight: ['#fff8e7', '#f3e6c0', '#e8d5a0'],
+  marbleHighlightBorder: 'rgba(184, 134, 11, 0.45)',
+  button: ['#5ec4b8', '#2a9d8f', '#1a7a72'],
+  buttonRim: '#d4af37',
+  buttonText: '#f8fffc',
+  wood: ['#6b3f24', '#8b5a33', '#5a3018'],
+  woodInner: 'rgba(10, 50, 45, 0.55)',
+  woodGold: 'rgba(212, 175, 55, 0.7)',
+  flame: ['#ffb347', '#ff6b1a', '#c2410c'],
+  flameGlow: 'rgba(251, 146, 60, 0.55)',
+  crown: ['#c9a227', '#8b6914', '#e8c547'],
+  bronze: ['#a67c52', '#7a5330', '#c4a574'],
+  progressTrack: 'rgba(122, 83, 48, 0.35)',
+  progressFill: ['#f6e27a', '#d4af37', '#b8860b'],
+  serif: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+  serifBold: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+};
