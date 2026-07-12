@@ -12,7 +12,7 @@ import {
 } from '../lib/userApi';
 
 export const WORD_WHEEL_LOW_CREDITS_BALANCE = 10;
-export const WORD_WHEEL_LOW_HINT_POINTS_BALANCE = 1;
+export const WORD_WHEEL_LOW_HINT_POINTS_BALANCE = 10;
 
 export default function useWordWheelWallet() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -92,6 +92,13 @@ export default function useWordWheelWallet() {
     setLifetimePoints((prev) => Math.max(0, prev - n));
   }, []);
 
+  /** Add puzzle coins locally (e.g. bonus-word gift). */
+  const addLifetimePoints = useCallback((amount) => {
+    const n = Math.max(0, Number(amount) || 0);
+    if (!n) return;
+    setLifetimePoints((prev) => prev + n);
+  }, []);
+
   const showCreditPurchase = loggedIn && creditBalance < WORD_WHEEL_LOW_CREDITS_BALANCE;
   const showPointPurchase = loggedIn && lifetimePoints < WORD_WHEEL_LOW_HINT_POINTS_BALANCE;
 
@@ -109,6 +116,7 @@ export default function useWordWheelWallet() {
       refresh,
       consumeHintCredits,
       spendLifetimePoints,
+      addLifetimePoints,
     }),
     [
       loggedIn,
@@ -123,6 +131,7 @@ export default function useWordWheelWallet() {
       refresh,
       consumeHintCredits,
       spendLifetimePoints,
+      addLifetimePoints,
     ]
   );
 }

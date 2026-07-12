@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'Credits',
   'settings.wallet.creditsSuffix': ' Credits',
   'settings.wallet.hint':
-    'Hinweise kosten 1 Münze pro Buchstabe (oder Credits, wenn Münzen ausgehen).',
+    'Hinweise kosten 10 Münzen pro Buchstabe (oder Credits, wenn Münzen ausgehen).',
   'settings.score.wordsFound': 'Gefundene Wörter',
   'settings.score.rank': 'Rang',
   'settings.score.rankValue': '#{n}',

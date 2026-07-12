@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
+import { formatCellWordNumberLabel } from '../lib/gridReveal';
 import { useAppearance } from '../context/AppearanceContext';
 
 const GAP = 4;
@@ -57,6 +58,7 @@ export default function PuzzleGrid({
     const isHintRevealed = isRevealed && hintOnlyCells.has(cellKey);
     const isSelected = selectedWordCells.has(cellKey);
     const wordNumber = cellWordNumbers.get(cellKey);
+    const wordNumberLabel = formatCellWordNumberLabel(wordNumber);
     const isCelebrating = celebrating.has(cellKey);
 
     if (!isPuzzleCell) {
@@ -79,7 +81,7 @@ export default function PuzzleGrid({
           key={cellKey}
           size={cellSize}
           letter={letter}
-          wordNumber={wordNumber}
+          wordNumber={wordNumberLabel}
           isHint={isHintRevealed}
           isSelected={isSelected}
           celebrate
@@ -117,11 +119,13 @@ export default function PuzzleGrid({
           },
         ]}
       >
-        {wordNumber != null && (
-          <View style={styles.numberBadge}>
-            <Text style={styles.numberText}>{wordNumber}</Text>
+        {wordNumberLabel ? (
+          <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
+            <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
+              {wordNumberLabel}
+            </Text>
           </View>
-        )}
+        ) : null}
         {isRevealed ? (
           <Text
             style={[
@@ -212,9 +216,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  numberBadgeWide: {
+    minWidth: 22,
+    paddingHorizontal: 3,
+  },
   numberText: {
     fontSize: 9,
     fontWeight: '800',
     color: '#064e3b',
+  },
+  numberTextCompact: {
+    fontSize: 8,
+    letterSpacing: -0.2,
   },
 });

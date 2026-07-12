@@ -387,7 +387,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       {__DEV__ ? (
         <WordWheelCompleteDialog
           visible={completePreviewVisible}
-          durationLabel="42s"
+          durationLabel="0:42"
           scoreCoins={42}
           hintCoinsSpent={2}
           onClose={() => setCompletePreviewVisible(false)}

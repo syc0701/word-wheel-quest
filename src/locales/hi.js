@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'क्रेडिट',
   'settings.wallet.creditsSuffix': ' क्रेडिट',
   'settings.wallet.hint':
-    'संकेत प्रति अक्षर 1 सिक्का खर्च करते हैं (या सिक्के खत्म होने पर क्रेडिट)।',
+    'संकेत प्रति अक्षर 10 सिक्के खर्च करते हैं (या सिक्के खत्म होने पर क्रेडिट)।',
   'settings.score.wordsFound': 'मिले शब्द',
   'settings.score.rank': 'रैंक',
   'settings.score.rankValue': '#{n}',

@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'الأرصدة',
   'settings.wallet.creditsSuffix': ' أرصدة',
   'settings.wallet.hint':
-    'التلميحات تكلّف عملة واحدة لكل حرف (أو أرصدة عند نفاد العملات).',
+    'التلميحات تكلّف 10 عملات لكل حرف (أو أرصدة عند نفاد العملات).',
   'settings.score.wordsFound': 'كلمات وُجدت',
   'settings.score.rank': 'الترتيب',
   'settings.score.rankValue': '#{n}',

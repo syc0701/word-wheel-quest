@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { ShoppingBag } from 'lucide-react-native';
+import { GiTwoCoins } from '../components/GiTwoCoins';
 import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
@@ -11,7 +12,26 @@ import { getDefaultOffering, purchasePackage, readPurchaseTransactionId, restore
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 
-function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors }) {
+const GOLD = '#facc15';
+
+const PACKAGE_ICONS = {
+  starterChest: require('../assets/icons/starter-chest.png'),
+  classicSwords: require('../assets/icons/classic-swords.png'),
+  masterScroll: require('../assets/icons/master-scroll.png'),
+};
+
+function ProductIcon({ icon, colors }) {
+  if (icon === 'goldCoins') {
+    return <GiTwoCoins size={28} color={GOLD} />;
+  }
+  const source = PACKAGE_ICONS[icon];
+  if (source) {
+    return <Image source={source} style={styles.packageIconImage} resizeMode="contain" />;
+  }
+  return <ShoppingBag color={colors.primaryGlow} size={22} strokeWidth={1.8} />;
+}
+
+function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors, icon }) {
   return (
     <View
       style={[
@@ -19,8 +39,13 @@ function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors }
         { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
       ]}
     >
-      <View style={[styles.productIcon, { backgroundColor: colors.surfaceLight }]}>
-        <ShoppingBag color={colors.primaryGlow} size={22} strokeWidth={1.8} />
+      <View
+        style={[
+          styles.productIcon,
+          { backgroundColor: colors.surfaceLight },
+        ]}
+      >
+        <ProductIcon icon={icon} colors={colors} />
       </View>
       <View style={styles.productInfo}>
         <Text style={[styles.productName, { color: colors.text }]}>{name}</Text>
@@ -47,12 +72,31 @@ function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors }
 
 export default function ShopScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
-  const { colors } = useAppearance();
+  const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
   const [restoring, setRestoring] = useState(false);
+
+  const sceneText = isRandomScene
+    ? {
+        color: '#ffffff',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
+      }
+    : null;
+  const sceneChip = isRandomScene
+    ? {
+        color: '#0b3d36',
+        backgroundColor: 'rgba(255, 255, 255, 0.92)',
+        overflow: 'hidden',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+      }
+    : null;
 
   const loadOfferings = useCallback(async () => {
     setLoading(true);
@@ -121,8 +165,10 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       <ScreenHeader title={t('shop.title')} onBack={() => navigate(backScreen, routeParams)} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.subtitle, { color: colors.text }]}>{REVENUECAT_OFFERING.displayName}</Text>
-        <Text style={[styles.hint, { color: colors.textMuted }]}>
+        <Text style={[styles.subtitle, { color: colors.text }, sceneText]}>
+          {REVENUECAT_OFFERING.displayName}
+        </Text>
+        <Text style={[styles.hint, { color: colors.textMuted }, sceneChip]}>
           {t('shop.offeringHint', { id: REVENUECAT_OFFERING.identifier })}
         </Text>
 
@@ -141,6 +187,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
                 purchasing={purchasingId === meta.packageId}
                 onBuy={() => handleBuy(meta)}
                 colors={colors}
+                icon={meta.icon}
               />
             );
           })
@@ -150,7 +197,9 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           {restoring ? (
             <ActivityIndicator color={colors.textMuted} size="small" />
           ) : (
-            <Text style={[styles.restoreText, { color: colors.textMuted }]}>{t('shop.restore')}</Text>
+            <Text style={[styles.restoreText, { color: colors.textMuted }, sceneChip]}>
+              {t('shop.restore')}
+            </Text>
           )}
         </Pressable>
       </ScrollView>
@@ -195,6 +244,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+  },
+  packageIconImage: {
+    width: 32,
+    height: 32,
   },
   productInfo: {
     flex: 1,

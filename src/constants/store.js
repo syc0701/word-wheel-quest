@@ -35,25 +35,12 @@ export const REVENUECAT_OFFERING = {
 /** Packages in default offering (RevenueCat package ID → App Store product ID) */
 export const IAP_PACKAGES = [
   {
-    packageId: 'coins_large',
-    productId: 'word_wheel_coins_large',
-    name: '1,000 Coins',
-    description: 'Adds 1,000 coins to player balance',
-    priceUsd: '$2.49',
-  },
-  {
-    packageId: 'coins_small',
-    productId: 'word_wheel_coins_small',
-    name: '300 Coins',
-    description: 'Adds 300 coins to player balance',
-    priceUsd: '$0.99',
-  },
-  {
-    packageId: 'bundle_master',
-    productId: 'word_wheel_pack_hard',
-    name: 'Master Quest',
+    packageId: 'bundle_starter',
+    productId: 'word_wheel_pack_starter',
+    name: 'Starter Fun Bundle',
     description: 'Adds coins to player balance',
-    priceUsd: '$2.99',
+    priceUsd: '$3.99',
+    icon: 'starterChest',
   },
   {
     packageId: 'bundle_classic',
@@ -61,13 +48,31 @@ export const IAP_PACKAGES = [
     name: 'Classic Challenge',
     description: 'Adds coins to player balance',
     priceUsd: '$1.99',
+    icon: 'classicSwords',
   },
   {
-    packageId: 'bundle_starter',
-    productId: 'word_wheel_pack_starter',
-    name: 'Starter Fun Bundle',
+    packageId: 'bundle_master',
+    productId: 'word_wheel_pack_hard',
+    name: 'Master Quest',
     description: 'Adds coins to player balance',
-    priceUsd: '$3.99',
+    priceUsd: '$2.99',
+    icon: 'masterScroll',
+  },
+  {
+    packageId: 'coins_small',
+    productId: 'word_wheel_coins_small',
+    name: '300 Coins',
+    description: 'Adds 300 coins to player balance',
+    priceUsd: '$0.99',
+    icon: 'goldCoins',
+  },
+  {
+    packageId: 'coins_large',
+    productId: 'word_wheel_coins_large',
+    name: '1,000 Coins',
+    description: 'Adds 1,000 coins to player balance',
+    priceUsd: '$2.49',
+    icon: 'goldCoins',
   },
 ];
 

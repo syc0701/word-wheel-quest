@@ -10,6 +10,8 @@ import {
   View,
 } from 'react-native';
 import { ArrowLeft, BookOpen, ChevronRight, Lightbulb, Tornado } from 'lucide-react-native';
+import { GiTwoCoins } from '../components/GiTwoCoins';
+import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
 import ClueLetterRow from '../components/ClueLetterRow';
 import PuzzleGrid from '../components/PuzzleGrid';
@@ -17,8 +19,10 @@ import GradientBackground from '../components/GradientBackground';
 import PuzzleLevelToast from '../components/PuzzleLevelToast';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
+import BonusWordModal from '../components/BonusWordModal';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
+import { validateBonusWord } from '../lib/dictionary';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
   buildCellWordNumbers,
@@ -39,9 +43,10 @@ import {
   readCoinsEarned,
   sumWordWheelCoinsForWords,
   WORD_WHEEL_HINT_COST,
+  WORD_WHEEL_BONUS_WORD_GIFT,
 } from '../lib/points';
 import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/wheelLetters';
-import { resolveJourneyLevel } from '../lib/puzzleLevel';
+import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
@@ -50,7 +55,7 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useAudio } from '../context/AudioContext';
 import { useT } from '../context/LanguageContext';
 
-const LEVEL_TOAST_MS = 2200;
+const LEVEL_TOAST_MS = 5200;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 /** Keep wheel + helm handles clear of the home indicator. */
 const WHEEL_SIZE = Math.min(SCREEN_W - 120, Math.max(200, SCREEN_H * 0.28), 260);
@@ -59,7 +64,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
   const dailyDate = routeParams.date;
   const wallet = useWordWheelWallet();
-  const { ww } = useAppearance();
+  const { ww, isRandomScene } = useAppearance();
   const { playSfx } = useAudio();
   const t = useT();
 
@@ -80,6 +85,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
   const [levelToastVisible, setLevelToastVisible] = useState(false);
+  const [bonusWordModal, setBonusWordModal] = useState({
+    visible: false,
+    word: '',
+    awardedGift: false,
+  });
   const [shuffleSignal, setShuffleSignal] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const [coinsCatalog, setCoinsCatalog] = useState([]);
@@ -89,6 +99,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [revealBurstId, setRevealBurstId] = useState(0);
   const completionShownRef = useRef(false);
   const levelStartedAtRef = useRef(null);
+  const bonusWordGiftClaimedRef = useRef(false);
+  const bonusWordLookupRef = useRef(false);
   const completedPuzzleIdRef = useRef(null);
   const completedLevelRef = useRef(null);
   const completedSeasonRef = useRef(null);
@@ -191,6 +203,17 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return formatShortDisplayDate(dailyDate || puzzle?.dailyPlayDate) || t('toast.dailyFallback');
   }, [isDaily, dailyDate, puzzle?.dailyPlayDate, t]);
 
+  const toastWordCount = useMemo(
+    () => (targetWords.length > 0 ? targetWords.length : resolvePuzzleWordCount(puzzle)),
+    [targetWords.length, puzzle]
+  );
+
+  const toastMaxScore = useMemo(() => {
+    const wordCoins = sumWordWheelCoinsForWords(targetWords, coinsCatalog);
+    const bonus = LevelScreenPolicy.resolveBonusCoins(journeyLevel);
+    return wordCoins + bonus;
+  }, [targetWords, coinsCatalog, journeyLevel]);
+
   useEffect(() => {
     setWheelTiles(buildWheelTiles(baseWheelLetters, puzzle?.id || 'wheel'));
   }, [puzzle?.id, baseWheelLetters]);
@@ -236,6 +259,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCelebrateMode('new');
     completionShownRef.current = false;
     levelStartedAtRef.current = null;
+    bonusWordGiftClaimedRef.current = false;
+    bonusWordLookupRef.current = false;
+    setBonusWordModal({ visible: false, word: '', awardedGift: false });
   }, []);
 
   useEffect(() => {
@@ -434,9 +460,40 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     async (wordRaw) => {
       const word = normalizeWord(wordRaw);
       if (word.length < 3) return false;
+
       if (!targetWords.includes(word)) {
-        playSfx('wrong');
-        return false;
+        if (bonusWordLookupRef.current) return false;
+        bonusWordLookupRef.current = true;
+        try {
+          const language = puzzle?.language || 'english';
+          const check = await validateBonusWord(word, language);
+          if (!check.ok) {
+            playSfx('wrong');
+            return false;
+          }
+
+          const awardGift = !bonusWordGiftClaimedRef.current;
+          if (awardGift) {
+            bonusWordGiftClaimedRef.current = true;
+            playSfx('bonus');
+            if (wallet.loggedIn) {
+              wallet.addLifetimePoints?.(WORD_WHEEL_BONUS_WORD_GIFT);
+            } else {
+              setPlaySessionCoins((prev) => prev + WORD_WHEEL_BONUS_WORD_GIFT);
+            }
+          } else {
+            playSfx('chime');
+          }
+
+          setBonusWordModal({
+            visible: true,
+            word,
+            awardedGift: awardGift,
+          });
+          return true;
+        } finally {
+          bonusWordLookupRef.current = false;
+        }
       }
 
       // Already revealed — pulse the cells so the player knows.
@@ -463,6 +520,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       triggerWordRevealEffect,
       openCompletionIfNeeded,
       playSfx,
+      puzzle?.language,
+      wallet,
     ]
   );
 
@@ -620,25 +679,34 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         level={journeyLevel}
         dailyLabel={dailyLabel}
         title={puzzle?.title}
+        wordCount={toastWordCount}
+        maxScore={toastMaxScore}
       />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Pressable style={styles.iconBtn} onPress={handleBack}>
-            <ArrowLeft color={ww.text} size={22} />
+          <Pressable
+            style={[
+              styles.iconBtn,
+              isRandomScene && styles.iconBtnOnScene,
+            ]}
+            onPress={handleBack}
+          >
+            <ArrowLeft color={isRandomScene ? '#0b3d36' : ww.text} size={22} />
           </Pressable>
           <View style={styles.headerCenter}>
-            {isDaily ? (
-              <Text style={[styles.levelHero, { color: ww.text }]}>{dailyLabel}</Text>
-            ) : (
-              <Text style={[styles.levelHero, { color: ww.text }]}>
-                {journeyLevel != null
+            <Text
+              style={[
+                styles.levelHero,
+                { color: ww.text },
+                isRandomScene && styles.levelHeroOnScene,
+              ]}
+            >
+              {isDaily
+                ? dailyLabel
+                : journeyLevel != null
                   ? t('common.level', { n: journeyLevel })
                   : t('common.levelFallback')}
-              </Text>
-            )}
-            <Text style={[styles.title, { color: ww.textSecondary }]} numberOfLines={2}>
-              {puzzle?.title || t('play.titleFallback')}
             </Text>
           </View>
           {showHeaderNext && puzzleComplete ? (
@@ -702,6 +770,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
+            <View style={styles.coinRow}>
+              <GiTwoCoins size={18} color="#facc15" />
+              <Text
+                style={[
+                  styles.coinLabel,
+                  styles.coinLabelGold,
+                  totalHintCoinsAvailable < WORD_WHEEL_HINT_COST && styles.coinLabelLow,
+                ]}
+              >
+                {lifetimeCoinsRemaining}
+              </Text>
+            </View>
             <Pressable
               style={[
                 styles.toolBtn,
@@ -718,15 +798,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 <Lightbulb color={ww.toolIcon} size={18} />
               )}
             </Pressable>
-            <Text
+            <View
               style={[
-                styles.coinLabel,
-                { color: ww.coinLabel },
-                totalHintCoinsAvailable < WORD_WHEEL_HINT_COST && styles.coinLabelLow,
+                styles.toolBtn,
+                { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
               ]}
             >
-              {t('common.coins', { n: lifetimeCoinsRemaining })}
-            </Text>
+              <PiTreasureChest size={18} color="#facc15" />
+            </View>
           </View>
 
           <LetterWheel
@@ -781,6 +860,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         levelNumber={completionStats?.levelNumber}
         forceScreenType={completionStats?.screenType}
       />
+
+      <BonusWordModal
+        visible={bonusWordModal.visible}
+        word={bonusWordModal.word}
+        awardedGift={bonusWordModal.awardedGift}
+        giftCoins={WORD_WHEEL_BONUS_WORD_GIFT}
+        onClose={() => setBonusWordModal({ visible: false, word: '', awardedGift: false })}
+      />
     </GradientBackground>
   );
 }
@@ -813,6 +900,12 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     lineHeight: 32,
   },
+  levelHeroOnScene: {
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
+  },
   title: {
     fontSize: 13,
     fontWeight: '600',
@@ -824,6 +917,9 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  iconBtnOnScene: {
+    backgroundColor: 'rgba(255,255,255,0.94)',
   },
   headerNextBtn: {
     minWidth: 52,
@@ -902,14 +998,23 @@ const styles = StyleSheet.create({
   toolBtnDisabled: {
     opacity: 0.5,
   },
-  coinLabel: {
+  coinRow: {
     marginTop: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  coinLabel: {
     fontSize: 12,
     fontWeight: '800',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.45)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  coinLabelGold: {
+    color: '#facc15',
   },
   coinLabelLow: {
     color: '#fecaca',

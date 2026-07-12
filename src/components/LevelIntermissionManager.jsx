@@ -10,12 +10,16 @@ import WordMasterCard from './intermission/WordMasterCard';
 import StreaksSparksCard from './intermission/StreaksSparksCard';
 import BrainPowerCard from './intermission/BrainPowerCard';
 
-function formatDuration(seconds, t) {
+function formatDuration(seconds) {
   const total = Math.max(0, Math.floor(Number(seconds) || 0));
   const m = Math.floor(total / 60);
   const s = total % 60;
-  if (m <= 0) return t('intermission.duration.seconds', { n: s });
-  return `${m}:${String(s).padStart(2, '0')}`;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  if (m <= 0) return `0:${pad2(s)}`;
+  if (m < 60) return `${m}:${pad2(s)}`;
+  const hrs = Math.floor(m / 60);
+  const rem = m % 60;
+  return `${hrs}:${pad2(rem)}:${pad2(s)}`;
 }
 
 /**
@@ -68,7 +72,7 @@ export default function LevelIntermissionManager({
     body = (
       <WordMasterCard
         title={t('intermission.wordMaster.title')}
-        timeLabel={formatDuration(timeSpentSeconds, t)}
+        timeLabel={formatDuration(timeSpentSeconds)}
         timeCaption={t('intermission.wordMaster.timeTaken')}
         starCaption={t('intermission.wordMaster.starWord')}
         starWord={(starWord || t('common.emDash')).toUpperCase()}
@@ -78,7 +82,7 @@ export default function LevelIntermissionManager({
     body = (
       <WordMasterCard
         title={t('intermission.levelComplete.headline')}
-        timeLabel={formatDuration(timeSpentSeconds, t)}
+        timeLabel={formatDuration(timeSpentSeconds)}
         timeCaption={t('intermission.wordMaster.timeTaken')}
         starCaption={t('intermission.wordMaster.starWord')}
         starWord={(starWord || t('common.emDash')).toUpperCase()}

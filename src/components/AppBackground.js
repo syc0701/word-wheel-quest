@@ -7,7 +7,7 @@ import { useAppearance } from '../context/AppearanceContext';
 export default function AppBackground({ children, scrim, style }) {
   const { colors, isRandomScene, weeklyBg } = useAppearance();
   const showScene = isRandomScene && weeklyBg?.source;
-  const resolvedScrim = scrim ?? (showScene ? 0.38 : 0.12);
+  const resolvedScrim = scrim ?? (showScene ? 0.42 : 0.12);
 
   return (
     <View

@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'Crédits',
   'settings.wallet.creditsSuffix': ' crédits',
   'settings.wallet.hint':
-    'Les indices coûtent 1 pièce par lettre (ou des crédits quand les pièces sont épuisées).',
+    'Les indices coûtent 10 pièces par lettre (ou des crédits quand les pièces sont épuisées).',
   'settings.score.wordsFound': 'Mots trouvés',
   'settings.score.rank': 'Rang',
   'settings.score.rankValue': '#{n}',

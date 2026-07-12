@@ -26,6 +26,7 @@ export default {
   'home.dailyPuzzle.lockedTitle': 'Daily Puzzle Locked',
   'home.dailyPuzzle.lockedBody':
     'Reach Level {n} in the Season Journey to unlock the Daily Puzzle.',
+  'home.dailyPuzzle.lockedOk': 'Got it',
   'home.footer':
     'Progress is saved on this device. Sign in once to move guest progress to your account.',
 
@@ -57,7 +58,7 @@ export default {
   'play.error.generic': 'Failed to load',
   'play.error.saveFailed': 'Could not save progress',
   'play.alert.notEnoughCoins.title': 'Not enough coins',
-  'play.alert.notEnoughCoins.body': 'Hints cost {n} coin each.',
+  'play.alert.notEnoughCoins.body': 'Hints cost {n} coins per letter.',
   'play.alert.notEnoughCoins.ok': 'OK',
   'play.alert.notEnoughCoins.charge': 'Charge',
   'play.alert.noHint.title': 'No hint available',
@@ -84,7 +85,7 @@ export default {
   'settings.wallet.credits': 'Credits',
   'settings.wallet.creditsSuffix': ' credits',
   'settings.wallet.hint':
-    'Hints cost 1 coin per letter (or credits when coins run out).',
+    'Hints cost 10 coins per letter (or credits when coins run out).',
   'settings.score.wordsFound': 'Words found',
   'settings.score.rank': 'Rank',
   'settings.score.rankValue': '#{n}',
@@ -218,6 +219,21 @@ export default {
   'toast.dailyFallback': 'Daily',
   'toast.level': 'Level {n}',
   'toast.levelFallback': 'Level',
+  'toast.words': '{n} words',
+  'toast.maxScore': 'Up to +{n} score',
+  'toast.guide':
+    'Swipe letters on the wheel to spell words. Find every word on the grid to clear the level.',
+  'toast.guideDaily':
+    'Swipe letters on the wheel to spell words. Clear every word on today’s bonus grid.',
+
+  // bonus word (off-grid dictionary find)
+  'bonusWord.title': 'Word Discovery!',
+  'bonusWord.bodyGift':
+    'You found a real word that is not in this puzzle. We are giving you {n} coins right away!',
+  'bonusWord.bodyNoGift':
+    'You found another real word that is not in this puzzle. Nice find — the bonus gift is once per puzzle.',
+  'bonusWord.giftAmount': '+{n} coins',
+  'bonusWord.ok': 'Nice!',
 
   // points table
   'pointsTable.header.letters': 'Letters',

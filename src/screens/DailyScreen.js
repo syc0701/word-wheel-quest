@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
 import WordWheelApi from '../lib/api';
-import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
+import { WORD_WHEEL_DAILY_CALENDAR_MIN, WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import { parseWords } from '../lib/gridReveal';
+import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import {
   addMontrealCalendarDays,
   clampYmd,
@@ -54,10 +55,51 @@ function buildMonthDays(year, month, minYmd, maxYmd) {
 }
 
 export default function DailyScreen({ navigate, routeParams = {} }) {
-  const { colors } = useAppearance();
+  const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [dailyAllowed, setDailyAllowed] = useState(false);
+
+  const sceneText = useMemo(
+    () =>
+      isRandomScene
+        ? {
+            color: '#ffffff',
+            textShadowColor: 'rgba(0, 0, 0, 0.75)',
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 4,
+          }
+        : null,
+    [isRandomScene]
+  );
   const todayYmd = useMemo(() => montrealYmdFromDate(), []);
   const minYmd = WORD_WHEEL_DAILY_CALENDAR_MIN;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const next = await WordWheelApi.fetchNext();
+        const level = resolveJourneyLevel(next);
+        const allowed = level != null && level >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
+        if (cancelled) return;
+        setDailyAllowed(allowed);
+        if (!allowed) {
+          navigate(SCREENS.HOME);
+        }
+      } catch {
+        if (!cancelled) {
+          setDailyAllowed(false);
+          navigate(SCREENS.HOME);
+        }
+      } finally {
+        if (!cancelled) setAccessChecked(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
   const [selectedDate, setSelectedDate] = useState(() =>
     clampYmd(routeParams.date || todayYmd, minYmd, todayYmd)
@@ -92,6 +134,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   );
 
   useEffect(() => {
+    if (!dailyAllowed) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -114,7 +157,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate]);
+  }, [selectedDate, t, dailyAllowed]);
 
   const words = useMemo(() => parseWords(puzzle?.wordsInUse), [puzzle]);
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
@@ -124,23 +167,34 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const canGoNext = selectedDate < todayYmd;
   const canPlay = Boolean(puzzle?.id) && !loading;
 
+  if (!accessChecked || !dailyAllowed) {
+    return (
+      <View style={[styles.container, styles.accessGate]}>
+        <ActivityIndicator color={colors.primaryGlow} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Pressable
-          style={[styles.backBtn, { backgroundColor: colors.surface }]}
+          style={[
+            styles.backBtn,
+            { backgroundColor: isRandomScene ? 'rgba(255,255,255,0.94)' : colors.surface },
+          ]}
           onPress={() => navigate(SCREENS.HOME)}
           accessibilityLabel={t('daily.a11y.back')}
         >
-          <ArrowLeft color={colors.text} size={22} />
+          <ArrowLeft color={isRandomScene ? '#0b3d36' : colors.text} size={22} />
         </Pressable>
         <View style={styles.topBarSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.kicker, { color: colors.textMuted }]}>{t('daily.kicker')}</Text>
-        <Text style={[styles.title, { color: colors.text }]}>{t('daily.title')}</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+        <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>{t('daily.kicker')}</Text>
+        <Text style={[styles.title, { color: colors.text }, sceneText]}>{t('daily.title')}</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText]}>
           {t('daily.subtitle')}
         </Text>
 
@@ -279,9 +333,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                     </Text>
                   </View>
                 ) : null}
-                <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
-                  {puzzle.title}
-                </Text>
               </View>
               <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
                 {t('daily.meta', { n: words.length, size: gridSize })}
@@ -317,6 +368,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  accessGate: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   topBar: {
     flexDirection: 'row',

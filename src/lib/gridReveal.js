@@ -33,44 +33,79 @@ function getFirstPosition(coord) {
   return coord.positions[0];
 }
 
-export function buildCellWordNumbers(filledCoordinates) {
-  const coords = parseFilledCoordinates(filledCoordinates);
-  const startingPositions = new Map();
+function directionSortKey(direction) {
+  if (direction === 'horizontal') return 0;
+  if (direction === 'vertical') return 1;
+  return 2;
+}
 
-  coords.forEach((coord) => {
+/**
+ * One entry per grid word, numbered in reading order.
+ * Multiple words that share a start cell get consecutive numbers (e.g. 1 then 2).
+ */
+export function listNumberedWordEntries(filledCoordinates) {
+  const entries = [];
+  const seenWords = new Set();
+
+  parseFilledCoordinates(filledCoordinates).forEach((coord, orderIndex) => {
     if (coord.direction === 'scattered') return;
+    const word = normalizeWord(coord.word || coord.text);
     const firstPos = getFirstPosition(coord);
-    if (!firstPos) return;
-    const cellKey = `${firstPos.row},${firstPos.col}`;
-    if (!startingPositions.has(cellKey)) {
-      startingPositions.set(cellKey, { row: firstPos.row, col: firstPos.col });
+    if (!word || !firstPos || seenWords.has(word)) return;
+    seenWords.add(word);
+    entries.push({
+      word,
+      direction: coord.direction,
+      row: firstPos.row,
+      col: firstPos.col,
+      orderIndex,
+    });
+  });
+
+  entries.sort((a, b) => {
+    if (a.row !== b.row) return a.row - b.row;
+    if (a.col !== b.col) return a.col - b.col;
+    const dirDiff = directionSortKey(a.direction) - directionSortKey(b.direction);
+    if (dirDiff !== 0) return dirDiff;
+    return a.orderIndex - b.orderIndex;
+  });
+
+  return entries.map((entry, index) => ({
+    ...entry,
+    number: index + 1,
+  }));
+}
+
+/** Map of start cell → word number(s). Shared starts keep every word number, e.g. [1, 2]. */
+export function buildCellWordNumbers(filledCoordinates) {
+  const cellToNumbers = new Map();
+  listNumberedWordEntries(filledCoordinates).forEach((entry) => {
+    const cellKey = `${entry.row},${entry.col}`;
+    const existing = cellToNumbers.get(cellKey);
+    if (existing) {
+      if (!existing.includes(entry.number)) existing.push(entry.number);
+    } else {
+      cellToNumbers.set(cellKey, [entry.number]);
     }
   });
+  return cellToNumbers;
+}
 
-  const sorted = Array.from(startingPositions.values()).sort((a, b) => {
-    if (a.row !== b.row) return a.row - b.row;
-    return a.col - b.col;
-  });
-
-  const cellToNumber = new Map();
-  sorted.forEach((pos, index) => {
-    cellToNumber.set(`${pos.row},${pos.col}`, index + 1);
-  });
-  return cellToNumber;
+export function formatCellWordNumberLabel(wordNumber) {
+  if (wordNumber == null) return null;
+  if (Array.isArray(wordNumber)) {
+    return wordNumber.length ? wordNumber.join(',') : null;
+  }
+  return String(wordNumber);
 }
 
 export function buildWordToNumberMap(filledCoordinates, cellWordNumbers) {
   const map = new Map();
-  parseFilledCoordinates(filledCoordinates).forEach((coord) => {
-    if (coord.direction === 'scattered') return;
-    const word = normalizeWord(coord.word || coord.text);
-    const firstPos = getFirstPosition(coord);
-    if (!word || !firstPos) return;
-    const number = cellWordNumbers.get(`${firstPos.row},${firstPos.col}`);
-    if (number != null) {
-      map.set(word, number);
-    }
+  listNumberedWordEntries(filledCoordinates).forEach((entry) => {
+    map.set(entry.word, entry.number);
   });
+  // cellWordNumbers kept for call-site compatibility; numbering is word-based.
+  void cellWordNumbers;
   return map;
 }
 
@@ -88,6 +123,7 @@ export function buildClueMapFromDisplayClue(displayClue) {
 }
 
 export function findWordsAtCell(filledCoordinates, row, col, cellWordNumbers) {
+  const wordToNumber = buildWordToNumberMap(filledCoordinates, cellWordNumbers);
   const coords = parseFilledCoordinates(filledCoordinates);
   const words = coords
     .filter((coord) => {
@@ -96,11 +132,11 @@ export function findWordsAtCell(filledCoordinates, row, col, cellWordNumbers) {
     })
     .map((coord) => {
       const word = normalizeWord(coord.word || coord.text);
-      const firstPos = getFirstPosition(coord);
-      const number = firstPos
-        ? cellWordNumbers.get(`${firstPos.row},${firstPos.col}`) ?? 999
-        : 999;
-      return { word, number, direction: coord.direction };
+      return {
+        word,
+        number: wordToNumber.get(word) ?? 999,
+        direction: coord.direction,
+      };
     })
     .filter((entry) => entry.word);
 
@@ -196,7 +232,7 @@ export function findWordsCompletedByReveal(foundWords, wordPositions, hintedCell
 }
 
 /**
- * Remaining hint cells in spend order (1 coin each).
+ * Remaining hint cells in spend order (10 coins each).
  * Example words ABC, DEF, HIJ → A, D, H, B, E, I, C, F, J
  * (all 1st letters by word number, then all 2nd, then 3rd, …).
  * Shared/crossing cells appear once, at the earliest slot in that sequence.
@@ -205,6 +241,7 @@ export function findHintLetterCandidates(filledCoordinates, foundWords, wordPosi
   const foundSet = new Set((foundWords || []).map(normalizeWord));
   const revealed = buildRevealedCellKeys(foundWords, wordPositions, hintedCellKeys);
   const cellWordNumbers = buildCellWordNumbers(filledCoordinates);
+  const wordToNumber = buildWordToNumberMap(filledCoordinates, cellWordNumbers);
   const wordEntries = [];
   const seenWords = new Set();
 
@@ -217,10 +254,7 @@ export function findHintLetterCandidates(filledCoordinates, foundWords, wordPosi
     const ordered = getOrderedPositions(coord);
     if (!ordered.length) return;
 
-    const firstPos = getFirstPosition(coord);
-    const number = firstPos
-      ? cellWordNumbers.get(`${firstPos.row},${firstPos.col}`) ?? 999
-      : 999;
+    const number = wordToNumber.get(word) ?? 999;
     wordEntries.push({ word, ordered, number, orderIndex });
   });
 
@@ -232,10 +266,7 @@ export function findHintLetterCandidates(filledCoordinates, foundWords, wordPosi
       const positions = wordPositions[rawWord] || wordPositions[word];
       if (!Array.isArray(positions) || !positions.length) return;
       seenWords.add(word);
-      const first = positions[0];
-      const number = first
-        ? cellWordNumbers.get(`${first.row},${first.col}`) ?? 900 + orderIndex
-        : 900 + orderIndex;
+      const number = wordToNumber.get(word) ?? 900 + orderIndex;
       wordEntries.push({
         word,
         ordered: positions.map((p) => ({

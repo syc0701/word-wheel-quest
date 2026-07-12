@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'クレジット',
   'settings.wallet.creditsSuffix': ' クレジット',
   'settings.wallet.hint':
-    'ヒントは文字1つにつき1コイン（コインがなくなるとクレジット）です。',
+    'ヒントは文字1つにつき10コイン（コインがなくなるとクレジット）です。',
   'settings.score.wordsFound': '見つけた単語',
   'settings.score.rank': '順位',
   'settings.score.rankValue': '#{n}',

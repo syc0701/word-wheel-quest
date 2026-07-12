@@ -7,10 +7,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Calendar, ChevronRight, Play, Settings } from 'lucide-react-native';
+import { Calendar, ChevronRight, Lock, Play, Settings } from 'lucide-react-native';
+import DailyLockedModal from '../components/DailyLockedModal';
 import WordWheelApi from '../lib/api';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
+import { WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
@@ -42,17 +44,23 @@ function logHomePuzzle(data, source) {
   });
 }
 
-function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
+function MenuRow({ icon: Icon, label, subtitle, onPress, colors, locked }) {
+  const TrailingIcon = locked ? Lock : ChevronRight;
   return (
     <Pressable
       style={[
         styles.row,
         { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+        locked && styles.rowLocked,
       ]}
       onPress={onPress}
     >
       <View style={[styles.rowIcon, { backgroundColor: colors.surfaceLight }]}>
-        <Icon color={colors.primaryGlow} size={20} strokeWidth={1.8} />
+        <Icon
+          color={locked ? colors.textMuted : colors.primaryGlow}
+          size={20}
+          strokeWidth={1.8}
+        />
       </View>
       <View style={styles.rowBody}>
         <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
@@ -60,7 +68,7 @@ function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
           <Text style={[styles.rowSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
         ) : null}
       </View>
-      <ChevronRight color={colors.textMuted} size={20} />
+      <TrailingIcon color={colors.textMuted} size={20} />
     </Pressable>
   );
 }
@@ -71,6 +79,7 @@ export default function HomeScreen({ navigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
+  const [dailyLockedVisible, setDailyLockedVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,6 +124,8 @@ export default function HomeScreen({ navigate }) {
     () => (puzzle?.id ? resolvePuzzleWordCount(puzzle) : 0),
     [puzzle]
   );
+  const dailyUnlocked =
+    journeyLevel != null && journeyLevel >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
 
   useEffect(() => {
     if (!puzzle) return;
@@ -122,6 +133,14 @@ export default function HomeScreen({ navigate }) {
   }, [puzzle]);
 
   const canPlay = Boolean(puzzle) && !loading && !error;
+
+  const openDaily = () => {
+    if (dailyUnlocked) {
+      navigate(SCREENS.DAILY);
+      return;
+    }
+    setDailyLockedVisible(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -213,15 +232,24 @@ export default function HomeScreen({ navigate }) {
         <MenuRow
           icon={Calendar}
           label={t('home.dailyPuzzle.label')}
-          subtitle={t('home.dailyPuzzle.subtitle')}
-          onPress={() => navigate(SCREENS.DAILY)}
+          subtitle={
+            dailyUnlocked
+              ? t('home.dailyPuzzle.subtitle')
+              : t('home.dailyPuzzle.lockedSubtitle', { n: WORD_WHEEL_DAILY_UNLOCK_LEVEL })
+          }
+          onPress={openDaily}
           colors={colors}
+          locked={!dailyUnlocked}
         />
-
         <Text style={[styles.footer, { color: colors.textMuted }]}>
           {t('home.footer')}
         </Text>
       </ScrollView>
+
+      <DailyLockedModal
+        visible={dailyLockedVisible}
+        onClose={() => setDailyLockedVisible(false)}
+      />
     </View>
   );
 }
@@ -376,6 +404,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
     lineHeight: 18,
+  },
+  rowLocked: {
+    opacity: 0.78,
   },
   footer: {
     fontSize: 12,

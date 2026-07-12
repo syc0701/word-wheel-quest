@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'Créditos',
   'settings.wallet.creditsSuffix': ' créditos',
   'settings.wallet.hint':
-    'Dicas custam 1 moeda por letra (ou créditos quando as moedas acabam).',
+    'Dicas custam 10 moedas por letra (ou créditos quando as moedas acabam).',
   'settings.score.wordsFound': 'Palavras encontradas',
   'settings.score.rank': 'Colocação',
   'settings.score.rankValue': '#{n}',

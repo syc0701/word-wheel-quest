@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': '크레딧',
   'settings.wallet.creditsSuffix': ' 크레딧',
   'settings.wallet.hint':
-    '힌트는 글자당 코인 1개입니다 (코인이 없으면 크레딧 사용).',
+    '힌트는 글자당 코인 10개입니다 (코인이 없으면 크레딧 사용).',
   'settings.score.wordsFound': '찾은 단어',
   'settings.score.rank': '순위',
   'settings.score.rankValue': '#{n}',

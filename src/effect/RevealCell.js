@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { WW } from '../constants/theme';
+import { formatCellWordNumberLabel } from '../lib/gridReveal';
 
 const SPRING_POP = { damping: 8, stiffness: 280, mass: 0.55 };
 const SPRING_SETTLE = { damping: 12, stiffness: 180, mass: 0.7 };
@@ -99,6 +100,8 @@ export default function RevealCell({
     shadowRadius: 4 + glow.value * 8,
   }));
 
+  const wordNumberLabel = formatCellWordNumberLabel(wordNumber);
+
   return (
     <Animated.View
       style={[
@@ -117,11 +120,13 @@ export default function RevealCell({
           celebrate && (mode === 'already' ? styles.cellAlready : styles.cellCelebrate),
         ]}
       >
-        {wordNumber != null && (
-          <View style={styles.numberBadge}>
-            <Text style={styles.numberText}>{wordNumber}</Text>
+        {wordNumberLabel ? (
+          <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
+            <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
+              {wordNumberLabel}
+            </Text>
           </View>
-        )}
+        ) : null}
         {letter ? (
           <Text style={[styles.letter, isHint && styles.letterHint]}>{letter}</Text>
         ) : null}
@@ -192,9 +197,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  numberBadgeWide: {
+    minWidth: 22,
+    paddingHorizontal: 3,
+  },
   numberText: {
     fontSize: 9,
     fontWeight: '800',
     color: '#064e3b',
+  },
+  numberTextCompact: {
+    fontSize: 8,
+    letterSpacing: -0.2,
   },
 });

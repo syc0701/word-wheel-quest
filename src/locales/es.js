@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': 'Créditos',
   'settings.wallet.creditsSuffix': ' créditos',
   'settings.wallet.hint':
-    'Las pistas cuestan 1 moneda por letra (o créditos cuando se acaban las monedas).',
+    'Las pistas cuestan 10 monedas por letra (o créditos cuando se acaban las monedas).',
   'settings.score.wordsFound': 'Palabras halladas',
   'settings.score.rank': 'Puesto',
   'settings.score.rankValue': '#{n}',

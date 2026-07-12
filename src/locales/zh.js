@@ -80,7 +80,7 @@ export default {
   'settings.wallet.credits': '点数',
   'settings.wallet.creditsSuffix': ' 点数',
   'settings.wallet.hint':
-    '提示每个字母消耗 1 枚金币（金币用完时使用点数）。',
+    '提示每个字母消耗 10 枚金币（金币用完时使用点数）。',
   'settings.score.wordsFound': '找到的单词',
   'settings.score.rank': '排名',
   'settings.score.rankValue': '#{n}',

@@ -29,25 +29,23 @@ export function formatWordWheelPlayDuration(startedAt, finishedAt) {
   };
   const ms = toMs(finishedAt) - toMs(startedAt);
   if (!Number.isFinite(ms) || ms < 0) return t('common.emDash');
-  // Compact forms fit the completion-dialog Time pill (avoid "Less than a…").
+  // Clock-style labels (0:44, 2:05) — avoid "44s", which looks like "445" in serif.
   const totalSecs = Math.floor(ms / 1000);
-  if (totalSecs < 60) return t('duration.seconds', { n: totalSecs });
+  const pad2 = (n) => String(n).padStart(2, '0');
+  if (totalSecs < 60) return `0:${pad2(totalSecs)}`;
   const mins = Math.floor(totalSecs / 60);
   const secs = totalSecs % 60;
-  if (mins >= 60) {
-    const hrs = Math.floor(mins / 60);
-    const rem = mins % 60;
-    return rem > 0
-      ? t('duration.hoursMinutes', { hrs, rem })
-      : t('duration.hours', { hrs });
-  }
-  return secs > 0
-    ? t('duration.minutesSeconds', { mins, secs })
-    : t('duration.minutes', { mins });
+  if (mins < 60) return `${mins}:${pad2(secs)}`;
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return `${hrs}:${pad2(rem)}:${pad2(secs)}`;
 }
 
 /** Coins (or credits) charged to reveal one empty letter. */
-export const WORD_WHEEL_HINT_COST = 1;
+export const WORD_WHEEL_HINT_COST = 10;
+
+/** One-time gift for finding a real dictionary word that is not on the puzzle grid. */
+export const WORD_WHEEL_BONUS_WORD_GIFT = 10;
 
 export function resolveWordWheelCoinsForWord(word, catalogRows) {
   const len = (word || '').trim().length;
