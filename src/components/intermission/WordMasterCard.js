@@ -100,7 +100,12 @@ function MarbleStat({ label, value, highlight, delay, fullWidth }) {
         ]}
       >
         <Text style={styles.statLabel}>{label}</Text>
-        <Text style={[styles.statValue, highlight && styles.statValueGold]} numberOfLines={1}>
+        <Text
+          style={[styles.statValue, highlight && styles.statValueGold]}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           {value}
         </Text>
       </LinearGradient>

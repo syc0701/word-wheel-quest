@@ -1,37 +1,52 @@
 /**
- * Between-level intermission screen types (Policy Pattern).
- * Values are the visual state ids consumed by LevelIntermissionManager.
+ * Between-level completion dialog / intermission types (Policy Pattern).
+ * Values are the visual state ids consumed by LevelIntermissionManager
+ * and WordWheelCompleteDialog.
  */
 export const LEVEL_SCREEN_TYPES = {
-  WORD_MASTER: 'word-master',
-  STREAKS_SPARKS: 'streaks-sparks',
-  BRAIN_POWER: 'brain-power',
+  WORD_MASTER: 'WORD_MASTER',
+  STREAK_SPARKS: 'STREAK_SPARKS',
+  BRAIN_POWER: 'BRAIN_POWER',
+  LEVEL_COMPLETE: 'LEVEL_COMPLETE',
+};
+
+/** @deprecated Use STREAK_SPARKS */
+export const STREAKS_SPARKS_ALIAS = LEVEL_SCREEN_TYPES.STREAK_SPARKS;
+
+/** Extra coins on top of regular word-length rewards. */
+export const MILESTONE_BONUS_COINS = {
+  [LEVEL_SCREEN_TYPES.STREAK_SPARKS]: 10,
+  [LEVEL_SCREEN_TYPES.BRAIN_POWER]: 5,
+  [LEVEL_SCREEN_TYPES.WORD_MASTER]: 0,
+  [LEVEL_SCREEN_TYPES.LEVEL_COMPLETE]: 0,
 };
 
 /**
- * Picks the intermission variant from level outcomes.
+ * Picks the completion popup from journey level.
  *
- * Rules (priority order):
- * 1. Mod 10 level → major chapter / BRAIN_POWER
- * 2. Session streak mod 3 (when streak > 0) OR time under 40s → STREAKS_SPARKS
- * 3. Otherwise → WORD_MASTER
+ * Priority:
+ * 1. Level 1000 → Word Master
+ * 2. Multiples of 100 (not 1000) → Streak Sparks (+10)
+ * 3. Multiples of 10 (not 100s) → Brain Power (+5)
+ * 4. Otherwise → standard Level Complete
  */
 export const LevelScreenPolicy = {
-  determineScreenType({ levelNumber, timeSpentSeconds, sessionStreak }) {
+  determineScreenType({ levelNumber }) {
     const level = Number(levelNumber) || 0;
-    const seconds = Number(timeSpentSeconds);
-    const streak = Number(sessionStreak) || 0;
-
+    if (level === 1000) {
+      return LEVEL_SCREEN_TYPES.WORD_MASTER;
+    }
+    if (level > 0 && level % 100 === 0) {
+      return LEVEL_SCREEN_TYPES.STREAK_SPARKS;
+    }
     if (level > 0 && level % 10 === 0) {
       return LEVEL_SCREEN_TYPES.BRAIN_POWER;
     }
+    return LEVEL_SCREEN_TYPES.LEVEL_COMPLETE;
+  },
 
-    const sparkStreak = streak > 0 && streak % 3 === 0;
-    const fastClear = Number.isFinite(seconds) && seconds < 40;
-    if (sparkStreak || fastClear) {
-      return LEVEL_SCREEN_TYPES.STREAKS_SPARKS;
-    }
-
-    return LEVEL_SCREEN_TYPES.WORD_MASTER;
+  resolveBonusCoins(levelNumber) {
+    const type = this.determineScreenType({ levelNumber });
+    return MILESTONE_BONUS_COINS[type] ?? 0;
   },
 };

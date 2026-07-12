@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, BookOpen, ChevronRight, Lightbulb, Shuffle } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, ChevronRight, Lightbulb, Tornado } from 'lucide-react-native';
 import LetterWheel from '../components/LetterWheel';
 import ClueLetterRow from '../components/ClueLetterRow';
 import PuzzleGrid from '../components/PuzzleGrid';
@@ -35,10 +35,14 @@ import {
 } from '../lib/gridReveal';
 import {
   formatWordWheelPlayDuration,
+  parseWordWheelCatalog,
+  readCoinsEarned,
+  sumWordWheelCoinsForWords,
   WORD_WHEEL_HINT_COST,
 } from '../lib/points';
 import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/wheelLetters';
 import { resolveJourneyLevel } from '../lib/puzzleLevel';
+import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
@@ -76,12 +80,15 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
   const [levelToastVisible, setLevelToastVisible] = useState(false);
+  const [shuffleSignal, setShuffleSignal] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
+  const [coinsCatalog, setCoinsCatalog] = useState([]);
   const [celebratingCellKeys, setCelebratingCellKeys] = useState(() => new Set());
   const [celebrateOrder, setCelebrateOrder] = useState([]);
   const [celebrateMode, setCelebrateMode] = useState('new');
   const [revealBurstId, setRevealBurstId] = useState(0);
   const completionShownRef = useRef(false);
+  const levelStartedAtRef = useRef(null);
   const completedPuzzleIdRef = useRef(null);
   const completedLevelRef = useRef(null);
   const completedSeasonRef = useRef(null);
@@ -189,6 +196,23 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, [puzzle?.id, baseWheelLetters]);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const catalog = await WordWheelApi.fetchCoinsCatalog();
+        if (!cancelled) {
+          setCoinsCatalog(parseWordWheelCatalog(catalog));
+        }
+      } catch {
+        if (!cancelled) setCoinsCatalog([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (loading || !puzzle) return undefined;
     setLevelToastVisible(true);
     const timer = setTimeout(() => setLevelToastVisible(false), LEVEL_TOAST_MS);
@@ -211,6 +235,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCelebrateOrder([]);
     setCelebrateMode('new');
     completionShownRef.current = false;
+    levelStartedAtRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -279,6 +304,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         const play = await WordWheelApi.startPlay(data.id);
         if (!cancelled && play && !play.code) {
           setPlaySession(play);
+          levelStartedAtRef.current = Date.now();
           const saved = (play.wordsFound || '')
             .split('\n')
             .map(normalizeWord)
@@ -287,6 +313,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           if (play.totalPuzzleCoins != null) {
             setPlaySessionCoins(Number(play.totalPuzzleCoins) || 0);
           }
+        } else if (!cancelled) {
+          // Still time the attempt even if play session start fails.
+          levelStartedAtRef.current = Date.now();
         }
       } catch (e) {
         if (!cancelled) {
@@ -375,16 +404,30 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (!completeNow || completionShownRef.current) return;
       completionShownRef.current = true;
       playSfx('complete');
-      const startedAt = updatedSession?.startedAt ?? playSession?.startedAt;
-      const finishedAt = updatedSession?.finishedAt ?? Date.now();
+      const startedAt = levelStartedAtRef.current ?? Date.now();
+      const finishedAt = Date.now();
+      const levelNumber = isDaily
+        ? null
+        : (resolveJourneyLevel(puzzle) ?? Number(puzzle?.puzzleLevel) ?? null);
+      const screenType = LevelScreenPolicy.determineScreenType({ levelNumber });
+      const milestoneBonus = LevelScreenPolicy.resolveBonusCoins(levelNumber);
+      const fromServer = readCoinsEarned(updatedSession);
+      const localBase = sumWordWheelCoinsForWords(words, coinsCatalog);
+      // Server award already includes milestone bonus; local/guest path adds it here.
+      const scoreCoins =
+        fromServer > 0 ? fromServer : localBase + milestoneBonus;
       setCompletionStats({
         durationLabel: formatWordWheelPlayDuration(startedAt, finishedAt),
         hintCoinsSpent,
+        scoreCoins,
+        levelNumber,
+        screenType,
+        milestoneBonus,
       });
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
-    [targetWords.length, playSession, hintCoinsSpent, wallet, playSfx]
+    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, puzzle]
   );
 
   const submitWord = useCallback(
@@ -442,21 +485,41 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   const handleShuffle = useCallback(() => {
     playSfx('whoosh');
+    setSelectedIndices([]);
+    setShuffleSignal((n) => n + 1);
+  }, [playSfx]);
+
+  const applyWheelShuffle = useCallback(() => {
     setWheelTiles((prev) =>
       shuffleWheelTiles(prev.length ? prev : buildWheelTiles(baseWheelLetters, puzzle?.id || 'wheel'))
     );
-    setSelectedIndices([]);
-  }, [baseWheelLetters, puzzle?.id, playSfx]);
+  }, [baseWheelLetters, puzzle?.id]);
+
+  const showNotEnoughCoinsAlert = useCallback(() => {
+    Alert.alert(
+      t('play.alert.notEnoughCoins.title'),
+      t('play.alert.notEnoughCoins.body', { n: WORD_WHEEL_HINT_COST }),
+      [
+        { text: t('play.alert.notEnoughCoins.ok'), style: 'cancel' },
+        {
+          text: t('play.alert.notEnoughCoins.charge'),
+          onPress: () =>
+            navigate(SCREENS.SHOP, {
+              backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
+              mode: routeParams.mode,
+              date: routeParams.date,
+            }),
+        },
+      ]
+    );
+  }, [t, navigate, isDaily, routeParams.mode, routeParams.date]);
 
   const handleHint = useCallback(async () => {
     if (puzzleComplete) return;
     if (hintPending) return;
 
     if (totalHintCoinsAvailable < WORD_WHEEL_HINT_COST) {
-      Alert.alert(
-        t('play.alert.notEnoughCoins.title'),
-        t('play.alert.notEnoughCoins.body', { n: WORD_WHEEL_HINT_COST })
-      );
+      showNotEnoughCoinsAlert();
       return;
     }
 
@@ -479,10 +542,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           creditsConsumed: WORD_WHEEL_HINT_COST,
         });
       } else {
-        Alert.alert(
-          t('play.alert.notEnoughCoins.title'),
-          t('play.alert.notEnoughCoins.body', { n: WORD_WHEEL_HINT_COST })
-        );
+        showNotEnoughCoinsAlert();
         return;
       }
 
@@ -529,6 +589,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     persistProgress,
     openCompletionIfNeeded,
     playSfx,
+    showNotEnoughCoinsAlert,
     t,
   ]);
 
@@ -673,6 +734,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             selectedIndices={selectedIndices}
             onSelectionChange={setSelectedIndices}
             onDragEnd={handleDragEnd}
+            onShuffle={applyWheelShuffle}
+            shuffleSignal={shuffleSignal}
             wheelSize={WHEEL_SIZE}
           />
 
@@ -694,7 +757,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               onPress={handleShuffle}
               accessibilityLabel={t('play.a11y.shuffle')}
             >
-              <Shuffle color={ww.toolIcon} size={18} />
+              <Tornado color={ww.toolIcon} size={18} />
             </Pressable>
           </View>
         </View>
@@ -713,7 +776,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         onClose={handleCloseCompletionDialog}
         onNext={handleNextPuzzle}
         durationLabel={completionStats?.durationLabel}
+        scoreCoins={completionStats?.scoreCoins ?? 0}
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}
+        levelNumber={completionStats?.levelNumber}
+        forceScreenType={completionStats?.screenType}
       />
     </GradientBackground>
   );

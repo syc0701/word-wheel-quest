@@ -24,6 +24,11 @@ const LINE_CORE = 6;
 const LINE_MID = 11;
 const LINE_GLOW = 20;
 const ROLLBACK_MS = 200;
+/** Shuffle: spiral implode into center, then spiral explode to new seats (~1.55s). */
+const SHUFFLE_IMPLODE_MS = 720;
+const SHUFFLE_EXPLODE_MS = 830;
+const SHUFFLE_IMPLODE_EASING = Easing.inOut(Easing.cubic);
+const SHUFFLE_EXPLODE_EASING = Easing.out(Easing.cubic);
 
 /** Draw one segment with soft glow → mid → core (amber lock on teal). */
 function WheelSegment({ x1, y1, x2, y2, active = false, line, lineDark, lineSoft }) {
@@ -163,6 +168,8 @@ export default function LetterWheel({
   selectedIndices,
   onSelectionChange,
   onDragEnd,
+  onShuffle,
+  shuffleSignal = 0,
   wheelSize = 280,
 }) {
   const { ww } = useAppearance();
@@ -171,6 +178,7 @@ export default function LetterWheel({
   const lineSoft = ww.wheelLineSoft;
   const nodeRadius = Math.max(18, Math.round(wheelSize * 0.085));
   const hitRadius = nodeRadius * 1.35;
+  const center = wheelSize / 2;
 
   const nodes = useMemo(
     () => buildWheelNodes(tiles.length, wheelSize, nodeRadius),
@@ -182,15 +190,94 @@ export default function LetterWheel({
   const pathRef = useRef([]);
   const phaseRef = useRef('idle');
   const rollbackAbortRef = useRef(false);
+  const shufflingRef = useRef(false);
+  const onShuffleRef = useRef(onShuffle);
   const segmentProgress = useSharedValue(1);
   const fingerX = useSharedValue(0);
   const fingerY = useSharedValue(0);
   const fingerVisible = useSharedValue(0);
+  /** 0 = on ring, 1 = collapsed at center. */
+  const shuffleProgress = useSharedValue(0);
+
+  onShuffleRef.current = onShuffle;
 
   const setPhaseBoth = useCallback((nextPhase) => {
     phaseRef.current = nextPhase;
     setPhase(nextPhase);
   }, []);
+
+  const tilesIdentity = useMemo(
+    () =>
+      [...tiles]
+        .map((tile) => tile.id)
+        .sort()
+        .join('|'),
+    [tiles]
+  );
+
+  // Snap clear if the puzzle (tile set) changes mid-animation.
+  useEffect(() => {
+    shuffleProgress.value = 0;
+    shufflingRef.current = false;
+    if (phaseRef.current === 'shuffling') {
+      setPhaseBoth('idle');
+    }
+  }, [tilesIdentity, setPhaseBoth, shuffleProgress]);
+
+  const finishShuffle = useCallback(() => {
+    shufflingRef.current = false;
+    setPhaseBoth('idle');
+  }, [setPhaseBoth]);
+
+  const explodeAfterShuffle = useCallback(() => {
+    shuffleProgress.value = withTiming(
+      0,
+      { duration: SHUFFLE_EXPLODE_MS, easing: SHUFFLE_EXPLODE_EASING },
+      (finished) => {
+        if (finished) runOnJS(finishShuffle)();
+      }
+    );
+  }, [shuffleProgress, finishShuffle]);
+
+  const applyShuffleAtCenter = useCallback(() => {
+    onShuffleRef.current?.();
+    // Let React commit new tile seats while letters are still hidden at center.
+    setTimeout(() => {
+      explodeAfterShuffle();
+    }, 16);
+  }, [explodeAfterShuffle]);
+
+  useEffect(() => {
+    if (!shuffleSignal) return undefined;
+    if (shufflingRef.current) return undefined;
+    if (!onShuffleRef.current) return undefined;
+
+    shufflingRef.current = true;
+    rollbackAbortRef.current = true;
+    setPhaseBoth('shuffling');
+    pathRef.current = [];
+    setDisplayIndices([]);
+    fingerVisible.value = 0;
+    onSelectionChange([]);
+
+    shuffleProgress.value = withTiming(
+      1,
+      { duration: SHUFFLE_IMPLODE_MS, easing: SHUFFLE_IMPLODE_EASING },
+      (finished) => {
+        if (!finished) return;
+        runOnJS(applyShuffleAtCenter)();
+      }
+    );
+
+    return undefined;
+  }, [
+    shuffleSignal,
+    applyShuffleAtCenter,
+    setPhaseBoth,
+    onSelectionChange,
+    shuffleProgress,
+    fingerVisible,
+  ]);
 
   const syncPath = useCallback(
     (nextPath) => {
@@ -234,6 +321,7 @@ export default function LetterWheel({
 
   const startPathAt = useCallback(
     (x, y) => {
+      if (phaseRef.current === 'shuffling' || shufflingRef.current) return;
       if (phaseRef.current === 'rollback') {
         rollbackAbortRef.current = true;
       }
@@ -450,6 +538,9 @@ export default function LetterWheel({
                 y={node.y}
                 radius={nodeRadius}
                 selected={displayIndices.includes(index)}
+                centerX={center}
+                centerY={center}
+                shuffleProgress={shuffleProgress}
               />
             );
           })}

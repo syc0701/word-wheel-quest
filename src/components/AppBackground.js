@@ -4,9 +4,10 @@ import { useAppearance } from '../context/AppearanceContext';
 /**
  * App backdrop: solid theme color, or weekly random scene when Appearance = Random.
  */
-export default function AppBackground({ children, scrim = 0.12, style }) {
+export default function AppBackground({ children, scrim, style }) {
   const { colors, isRandomScene, weeklyBg } = useAppearance();
   const showScene = isRandomScene && weeklyBg?.source;
+  const resolvedScrim = scrim ?? (showScene ? 0.38 : 0.12);
 
   return (
     <View
@@ -19,8 +20,10 @@ export default function AppBackground({ children, scrim = 0.12, style }) {
       {showScene ? (
         <View style={styles.backdrop} pointerEvents="none">
           <Image source={weeklyBg.source} style={styles.image} resizeMode="cover" />
-          {scrim > 0 ? (
-            <View style={[styles.scrim, { backgroundColor: `rgba(6, 32, 38, ${scrim})` }]} />
+          {resolvedScrim > 0 ? (
+            <View
+              style={[styles.scrim, { backgroundColor: `rgba(6, 32, 38, ${resolvedScrim})` }]}
+            />
           ) : null}
         </View>
       ) : null}

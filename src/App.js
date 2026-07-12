@@ -161,7 +161,7 @@ function AppShell() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <View style={[styles.container, { direction: isRtl ? 'rtl' : 'ltr' }]}>
-        <AppBackground scrim={0.1}>
+        <AppBackground>
           <View style={styles.screenLayer} pointerEvents="box-none">
             {renderScreen()}
           </View>

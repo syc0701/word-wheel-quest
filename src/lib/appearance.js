@@ -184,14 +184,22 @@ export function getWW(mode) {
 export function getColors(mode) {
   const normalized = normalizeAppearance(mode);
   if (normalized === APPEARANCE_DARK) return COLORS_DARK;
-  // Random uses light surfaces with slightly glassier cards over photos
+  // Random: opaque frosted cards over photo scenes
   if (normalized === APPEARANCE_RANDOM) {
     return {
       ...COLORS_LIGHT,
       background: 'transparent',
-      surface: 'rgba(255, 255, 255, 0.88)',
-      surfaceLight: 'rgba(241, 245, 249, 0.82)',
+      surface: 'rgba(255, 255, 255, 0.95)',
+      surfaceLight: 'rgba(236, 242, 239, 0.98)',
+      text: '#0b3d36',
+      textMuted: 'rgba(15, 61, 54, 0.68)',
+      primaryGlow: '#0f766e',
       statusBar: 'light',
+      segmentTrackBg: 'rgba(226, 232, 240, 0.95)',
+      segmentTrackBorder: 'rgba(148, 163, 184, 0.55)',
+      segmentSelectedBg: '#ffffff',
+      segmentSelectedText: '#0f3d36',
+      segmentInactiveText: 'rgba(15, 61, 54, 0.55)',
     };
   }
   return COLORS_LIGHT;

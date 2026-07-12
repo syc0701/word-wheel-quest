@@ -9,28 +9,25 @@ import { LEVEL_SCREEN_TYPES } from '../lib/LevelScreenPolicy';
 
 const PREVIEW_PROPS = {
   [LEVEL_SCREEN_TYPES.WORD_MASTER]: {
-    levelNumber: 7,
+    levelNumber: 1000,
     timeSpentSeconds: 95,
-    sessionStreak: 1,
     starWord: 'QUEST',
   },
-  [LEVEL_SCREEN_TYPES.STREAKS_SPARKS]: {
-    levelNumber: 4,
+  [LEVEL_SCREEN_TYPES.STREAK_SPARKS]: {
+    levelNumber: 100,
     timeSpentSeconds: 28,
-    sessionStreak: 6,
     starWord: 'SPARK',
   },
   [LEVEL_SCREEN_TYPES.BRAIN_POWER]: {
     levelNumber: 10,
     timeSpentSeconds: 120,
-    sessionStreak: 2,
     starWord: 'CROWN',
   },
 };
 
 const TITLE_KEYS = {
   [LEVEL_SCREEN_TYPES.WORD_MASTER]: 'devIntermission.title.wordMaster',
-  [LEVEL_SCREEN_TYPES.STREAKS_SPARKS]: 'devIntermission.title.streaksSparks',
+  [LEVEL_SCREEN_TYPES.STREAK_SPARKS]: 'devIntermission.title.streaksSparks',
   [LEVEL_SCREEN_TYPES.BRAIN_POWER]: 'devIntermission.title.brainPower',
 };
 

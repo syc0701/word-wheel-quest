@@ -6,18 +6,56 @@ import { useAppearance } from '../context/AppearanceContext';
 
 const SELECTED_SCALE = 1.18;
 const SPRING = { damping: 11, stiffness: 220, mass: 0.65 };
+/** Full turns while collapsing into / expanding from the center (cyclone path). */
+const SPIRAL_TURNS = 1;
 
-export default function WheelLetter({ letter, x, y, radius, selected }) {
+/**
+ * Letter chip on the wheel.
+ * `shuffleProgress` 0 = ring position, 1 = collapsed at wheel center (hidden).
+ * Path is a spiral (radius shrinks while angle winds), not a straight line.
+ */
+export default function WheelLetter({
+  letter,
+  x,
+  y,
+  radius,
+  selected,
+  centerX,
+  centerY,
+  shuffleProgress,
+}) {
   const { ww } = useAppearance();
-  const scale = useSharedValue(1);
+  const selectScale = useSharedValue(1);
+  const idleProgress = useSharedValue(0);
+  const progress = shuffleProgress ?? idleProgress;
 
   useEffect(() => {
-    scale.value = withSpring(selected ? SELECTED_SCALE : 1, SPRING);
-  }, [selected, scale]);
+    selectScale.value = withSpring(selected ? SELECTED_SCALE : 1, SPRING);
+  }, [selected, selectScale]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const baseRadius = Math.hypot(dx, dy);
+    const baseAngle = Math.atan2(dy, dx);
+    // Wind inward clockwise as p → 1; unwind the same spiral as p → 0.
+    const angle = baseAngle + p * SPIRAL_TURNS * Math.PI * 2;
+    const r = baseRadius * (1 - p);
+    const currX = centerX + r * Math.cos(angle);
+    const currY = centerY + r * Math.sin(angle);
+    const ringScale = Math.max(0, 1 - p);
+
+    return {
+      opacity: ringScale,
+      transform: [
+        { translateX: currX - x },
+        { translateY: currY - y },
+        { rotate: `${p * SPIRAL_TURNS * 360}deg` },
+        { scale: ringScale * selectScale.value },
+      ],
+    };
+  }, [x, y, centerX, centerY]);
 
   const fillColors = selected
     ? ww.letterSelectedGradient

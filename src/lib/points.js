@@ -14,11 +14,26 @@ export function parseWordWheelCatalog(catalog) {
 }
 
 export function formatWordWheelPlayDuration(startedAt, finishedAt) {
-  if (!startedAt || !finishedAt) return t('duration.lessThanMinute');
-  const ms = Number(finishedAt) - Number(startedAt);
-  if (!Number.isFinite(ms) || ms < 60000) return t('duration.lessThanMinute');
-  const mins = Math.floor(ms / 60000);
-  const secs = Math.floor((ms % 60000) / 1000);
+  if (!startedAt || !finishedAt) return t('common.emDash');
+  const toMs = (value) => {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      // Treat small unix timestamps as seconds.
+      return value > 0 && value < 1e12 ? value * 1000 : value;
+    }
+    const asNumber = Number(value);
+    if (Number.isFinite(asNumber) && asNumber > 0) {
+      return asNumber < 1e12 ? asNumber * 1000 : asNumber;
+    }
+    const parsed = Date.parse(String(value));
+    return Number.isFinite(parsed) ? parsed : NaN;
+  };
+  const ms = toMs(finishedAt) - toMs(startedAt);
+  if (!Number.isFinite(ms) || ms < 0) return t('common.emDash');
+  // Compact forms fit the completion-dialog Time pill (avoid "Less than a…").
+  const totalSecs = Math.floor(ms / 1000);
+  if (totalSecs < 60) return t('duration.seconds', { n: totalSecs });
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
   if (mins >= 60) {
     const hrs = Math.floor(mins / 60);
     const rem = mins % 60;

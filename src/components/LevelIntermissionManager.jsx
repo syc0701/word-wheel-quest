@@ -1,5 +1,9 @@
 import { useMemo } from 'react';
-import { LEVEL_SCREEN_TYPES, LevelScreenPolicy } from '../lib/LevelScreenPolicy';
+import {
+  LEVEL_SCREEN_TYPES,
+  LevelScreenPolicy,
+  MILESTONE_BONUS_COINS,
+} from '../lib/LevelScreenPolicy';
 import { useT } from '../context/LanguageContext';
 import IntermissionCardShell from './intermission/IntermissionCardShell';
 import WordMasterCard from './intermission/WordMasterCard';
@@ -14,21 +18,12 @@ function formatDuration(seconds, t) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-function streakTitle(sessionStreak, t) {
-  const streak = Number(sessionStreak) || 0;
-  if (streak >= 9) return { label: t('intermission.streak.unstoppable'), color: '#dc2626' };
-  if (streak >= 6) return { label: t('intermission.streak.onFire'), color: '#ea580c' };
-  if (streak >= 3) return { label: t('intermission.streak.sparkStreak'), color: '#f59e0b' };
-  return { label: t('intermission.streak.speedSpark'), color: '#f97316' };
-}
-
 /**
  * Policy-driven between-level interstitial with premium teal/gold motion design.
  */
 export default function LevelIntermissionManager({
   levelNumber,
   timeSpentSeconds,
-  sessionStreak,
   starWord,
   forceScreenType,
   onNextLevel,
@@ -38,43 +33,51 @@ export default function LevelIntermissionManager({
   const screenType = useMemo(() => {
     if (
       forceScreenType === LEVEL_SCREEN_TYPES.WORD_MASTER
-      || forceScreenType === LEVEL_SCREEN_TYPES.STREAKS_SPARKS
+      || forceScreenType === LEVEL_SCREEN_TYPES.STREAK_SPARKS
       || forceScreenType === LEVEL_SCREEN_TYPES.BRAIN_POWER
+      || forceScreenType === LEVEL_SCREEN_TYPES.LEVEL_COMPLETE
     ) {
       return forceScreenType;
     }
-    return LevelScreenPolicy.determineScreenType({
-      levelNumber,
-      timeSpentSeconds,
-      sessionStreak,
-    });
-  }, [forceScreenType, levelNumber, timeSpentSeconds, sessionStreak]);
+    return LevelScreenPolicy.determineScreenType({ levelNumber });
+  }, [forceScreenType, levelNumber]);
+
+  const level = Number(levelNumber) || 0;
+  const streakBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.STREAK_SPARKS];
+  const brainBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.BRAIN_POWER];
 
   let body = null;
   if (screenType === LEVEL_SCREEN_TYPES.BRAIN_POWER) {
-    const level = Number(levelNumber) || 0;
     body = (
       <BrainPowerCard
         title={t('intermission.brainPower.headline')}
         levelArrow={t('intermission.brainPower.levelArrow', { from: level, to: level + 1 })}
-        capacityLabel={t('intermission.brainPower.capacity')}
+        capacityLabel={t('intermission.brainPower.bonus', { n: brainBonus })}
       />
     );
-  } else if (screenType === LEVEL_SCREEN_TYPES.STREAKS_SPARKS) {
-    const title = streakTitle(sessionStreak, t);
-    const multiplier = Math.max(1, Number(sessionStreak) || 1);
+  } else if (screenType === LEVEL_SCREEN_TYPES.STREAK_SPARKS) {
     body = (
       <StreaksSparksCard
-        title={title.label}
-        titleColor={title.color}
-        streakLabel={t('intermission.streak.sessionLabel')}
-        multiplierText={t('intermission.streak.multiplier', { n: multiplier })}
+        title={t('intermission.streak.headline')}
+        titleColor="#ea580c"
+        streakLabel={t('intermission.streak.bonusLabel')}
+        multiplierText={t('intermission.streak.bonusCoins', { n: streakBonus })}
+      />
+    );
+  } else if (screenType === LEVEL_SCREEN_TYPES.WORD_MASTER) {
+    body = (
+      <WordMasterCard
+        title={t('intermission.wordMaster.title')}
+        timeLabel={formatDuration(timeSpentSeconds, t)}
+        timeCaption={t('intermission.wordMaster.timeTaken')}
+        starCaption={t('intermission.wordMaster.starWord')}
+        starWord={(starWord || t('common.emDash')).toUpperCase()}
       />
     );
   } else {
     body = (
       <WordMasterCard
-        title={t('intermission.wordMaster.headline')}
+        title={t('intermission.levelComplete.headline')}
         timeLabel={formatDuration(timeSpentSeconds, t)}
         timeCaption={t('intermission.wordMaster.timeTaken')}
         starCaption={t('intermission.wordMaster.starWord')}
