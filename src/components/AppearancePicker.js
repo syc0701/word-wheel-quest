@@ -1,13 +1,19 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { APPEARANCE_DARK, APPEARANCE_LIGHT, useAppearance } from '../context/AppearanceContext';
+import {
+  APPEARANCE_DARK,
+  APPEARANCE_LIGHT,
+  APPEARANCE_RANDOM,
+  useAppearance,
+} from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 
 const OPTIONS = [
   { value: APPEARANCE_LIGHT, labelKey: 'settings.appearance.light' },
   { value: APPEARANCE_DARK, labelKey: 'settings.appearance.dark' },
+  { value: APPEARANCE_RANDOM, labelKey: 'settings.appearance.random' },
 ];
 
-/** iOS-style Light / Dark segmented control for Settings. */
+/** iOS-style Light / Dark / Random segmented control for Settings. */
 export default function AppearancePicker() {
   const { mode, setMode, colors } = useAppearance();
   const t = useT();
@@ -54,6 +60,7 @@ export default function AppearancePicker() {
                   fontWeight: selected ? '700' : '500',
                 },
               ]}
+              numberOfLines={1}
             >
               {t(opt.labelKey)}
             </Text>
@@ -78,9 +85,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
   },
 });

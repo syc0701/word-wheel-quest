@@ -158,7 +158,8 @@ const styles = StyleSheet.create({
     borderColor: '#fcd34d',
   },
   cellSelected: {
-    borderColor: WW.accent,
+    borderWidth: 3.5,
+    borderColor: WW.wheelLine || '#f59e0b',
   },
   cellCelebrate: {
     backgroundColor: '#d9f99d',

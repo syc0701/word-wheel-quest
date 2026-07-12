@@ -67,7 +67,7 @@ function PulsingStarBadge() {
   );
 }
 
-function MarbleStat({ label, value, highlight, delay }) {
+function MarbleStat({ label, value, highlight, delay, fullWidth }) {
   const scale = useSharedValue(0.82);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ function MarbleStat({ label, value, highlight, delay }) {
   return (
     <Animated.View
       entering={ZoomIn.delay(delay).springify().damping(14)}
-      style={[styles.statWrap, animStyle]}
+      style={[styles.statWrap, fullWidth && styles.statWrapFull, animStyle]}
     >
       <LinearGradient
         colors={highlight ? INTERMISSION.marbleHighlight : INTERMISSION.marble}
@@ -115,6 +115,8 @@ export default function WordMasterCard({
   timeCaption,
   starCaption,
 }) {
+  const showStar = Boolean(starCaption && starWord != null && starWord !== '');
+
   return (
     <View style={styles.body}>
       <PulsingStarBadge />
@@ -125,8 +127,15 @@ export default function WordMasterCard({
         {title}
       </Animated.Text>
       <View style={styles.statsRow}>
-        <MarbleStat label={timeCaption} value={timeLabel} delay={320} />
-        <MarbleStat label={starCaption} value={starWord} highlight delay={420} />
+        <MarbleStat
+          label={timeCaption}
+          value={timeLabel}
+          delay={320}
+          fullWidth={!showStar}
+        />
+        {showStar ? (
+          <MarbleStat label={starCaption} value={starWord} highlight delay={420} />
+        ) : null}
       </View>
     </View>
   );
@@ -189,6 +198,10 @@ const styles = StyleSheet.create({
   },
   statWrap: {
     flex: 1,
+  },
+  statWrapFull: {
+    flex: 1,
+    maxWidth: '100%',
   },
   marbleOval: {
     borderRadius: 999,

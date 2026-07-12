@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, BookOpen, Lightbulb, Shuffle } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, ChevronRight, Lightbulb, Shuffle } from 'lucide-react-native';
 import LetterWheel from '../components/LetterWheel';
 import ClueLetterRow from '../components/ClueLetterRow';
 import PuzzleGrid from '../components/PuzzleGrid';
@@ -74,6 +74,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [completionStats, setCompletionStats] = useState(null);
+  const [showHeaderNext, setShowHeaderNext] = useState(false);
   const [levelToastVisible, setLevelToastVisible] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [celebratingCellKeys, setCelebratingCellKeys] = useState(() => new Set());
@@ -205,6 +206,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setDictionaryOpen(false);
     setCompletionDialogOpen(false);
     setCompletionStats(null);
+    setShowHeaderNext(false);
     setCelebratingCellKeys(new Set());
     setCelebrateOrder([]);
     setCelebrateMode('new');
@@ -303,6 +305,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const handleNextPuzzle = useCallback(() => {
     if (isDaily) {
       setCompletionDialogOpen(false);
+      setShowHeaderNext(false);
       navigate(SCREENS.DAILY, { date: dailyDate });
       return;
     }
@@ -310,8 +313,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     completedLevelRef.current = resolveJourneyLevel(puzzle) ?? Number(puzzle?.puzzleLevel) ?? null;
     completedSeasonRef.current = puzzle?.season || DEFAULT_SEASON;
     setCompletionDialogOpen(false);
+    setShowHeaderNext(false);
     setReloadKey((k) => k + 1);
   }, [isDaily, dailyDate, navigate, puzzle]);
+
+  const handleCloseCompletionDialog = useCallback(() => {
+    setCompletionDialogOpen(false);
+    setShowHeaderNext(true);
+  }, []);
 
   const persistProgress = useCallback(
     async (words) => {
@@ -571,7 +580,22 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               {puzzle?.title || t('play.titleFallback')}
             </Text>
           </View>
-          <View style={styles.headerSpacer} />
+          {showHeaderNext && puzzleComplete ? (
+            <Pressable
+              style={[styles.headerNextBtn, { backgroundColor: ww.accentDark }]}
+              onPress={() => {
+                playSfx('click');
+                handleNextPuzzle();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={t('complete.next')}
+            >
+              <Text style={styles.headerNextText}>{t('complete.next')}</Text>
+              <ChevronRight color="#fff" size={16} strokeWidth={2.6} />
+            </Pressable>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -686,7 +710,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
       <WordWheelCompleteDialog
         visible={completionDialogOpen}
-        onClose={() => setCompletionDialogOpen(false)}
+        onClose={handleCloseCompletionDialog}
         onNext={handleNextPuzzle}
         durationLabel={completionStats?.durationLabel}
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}
@@ -734,6 +758,22 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  headerNextBtn: {
+    minWidth: 52,
+    minHeight: 38,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  headerNextText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '800',
   },
   headerSpacer: {
     width: 38,

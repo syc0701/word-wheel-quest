@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, ShoppingBag, Star } from 'lucide-react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, ShoppingBag, Star } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AudioSettingsCard from '../components/AudioSettingsCard';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
+import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
@@ -77,9 +78,10 @@ function BalanceCard({ label, value, loading, suffix = '', colors }) {
 export default function SettingsScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.PLAY;
   const wallet = useWordWheelWallet();
-  const { colors } = useAppearance();
+  const { colors, mode } = useAppearance();
   const t = useT();
   const [authed, setAuthed] = useState(false);
+  const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
 
   useEffect(() => {
     isLoggedIn().then(setAuthed);
@@ -122,7 +124,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
       <ScreenHeader
         title={t('settings.title')}
         onBack={() =>
@@ -138,6 +140,11 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         <View style={[styles.appearanceCard, themed.appearanceCard]}>
           <AppearancePicker />
         </View>
+        {mode === 'random' ? (
+          <Text style={[styles.appearanceHint, { color: colors.textMuted }]}>
+            {t('settings.appearance.randomHint')}
+          </Text>
+        ) : null}
 
         {/* Language picker — re-enable when shipping multi-language UI
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.language')}</Text>
@@ -238,9 +245,26 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
               />
             ))}
+            <MenuRow
+              icon={PartyPopper}
+              label={t('settings.dev.completeDialog')}
+              subtitle={t('settings.dev.completeDialog.subtitle')}
+              onPress={() => setCompletePreviewVisible(true)}
+              colors={colors}
+            />
           </>
         ) : null}
       </ScrollView>
+
+      {__DEV__ ? (
+        <WordWheelCompleteDialog
+          visible={completePreviewVisible}
+          durationLabel="4h 9m"
+          hintCoinsSpent={2}
+          onClose={() => setCompletePreviewVisible(false)}
+          onNext={() => setCompletePreviewVisible(false)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -266,6 +290,12 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 4,
     borderWidth: 1,
+  },
+  appearanceHint: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 4,
+    marginHorizontal: 2,
   },
   walletCard: {
     borderRadius: 14,

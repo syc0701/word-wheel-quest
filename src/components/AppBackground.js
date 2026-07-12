@@ -1,0 +1,54 @@
+import { Image, StyleSheet, View } from 'react-native';
+import { useAppearance } from '../context/AppearanceContext';
+
+/**
+ * App backdrop: solid theme color, or weekly random scene when Appearance = Random.
+ */
+export default function AppBackground({ children, scrim = 0.12, style }) {
+  const { colors, isRandomScene, weeklyBg } = useAppearance();
+  const showScene = isRandomScene && weeklyBg?.source;
+
+  return (
+    <View
+      style={[
+        styles.root,
+        style,
+        !showScene && { backgroundColor: colors.background },
+      ]}
+    >
+      {showScene ? (
+        <View style={styles.backdrop} pointerEvents="none">
+          <Image source={weeklyBg.source} style={styles.image} resizeMode="cover" />
+          {scrim > 0 ? (
+            <View style={[styles.scrim, { backgroundColor: `rgba(6, 32, 38, ${scrim})` }]} />
+          ) : null}
+        </View>
+      ) : null}
+      <View style={styles.content} pointerEvents="box-none">
+        {children}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  image: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  scrim: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    flex: 1,
+    zIndex: 1,
+  },
+});

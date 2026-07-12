@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { WW } from '../constants/theme';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useT } from '../context/LanguageContext';
+import IntermissionCardShell from './intermission/IntermissionCardShell';
+import WordMasterCard from './intermission/WordMasterCard';
+import { INTERMISSION } from './intermission/intermissionTheme';
 
 const COMPLIMENT_KEYS = [
   'complete.compliment.goodJob',
@@ -20,6 +23,9 @@ function pickComplimentKey() {
   return COMPLIMENT_KEYS[Math.floor(Math.random() * COMPLIMENT_KEYS.length)];
 }
 
+/**
+ * Level completion modal — matches Word Master intermission styling.
+ */
 export default function WordWheelCompleteDialog({
   visible,
   onClose,
@@ -34,32 +40,37 @@ export default function WordWheelCompleteDialog({
     if (visible) setTitleKey(pickComplimentKey());
   }, [visible]);
 
+  const hasHints = hintCoinsSpent > 0;
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{t(titleKey)}</Text>
+        {visible ? (
+          <Animated.View entering={FadeIn.duration(280)} style={styles.wrap}>
+            <IntermissionCardShell
+              continueLabel={`${t('complete.next').toUpperCase()} ➔`}
+              continueA11y={t('complete.next')}
+              onContinue={onNext || onClose}
+            >
+              <WordMasterCard
+                title={t(titleKey)}
+                timeCaption={t('complete.stat.time')}
+                timeLabel={durationLabel || t('common.emDash')}
+                starCaption={hasHints ? t('complete.stat.hints') : undefined}
+                starWord={hasHints ? `−${hintCoinsSpent}` : undefined}
+              />
+            </IntermissionCardShell>
 
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statLabel}>{t('complete.stat.time')}</Text>
-              <Text style={styles.statValue}>{durationLabel || t('common.emDash')}</Text>
-            </View>
-          </View>
-
-          {hintCoinsSpent > 0 && (
-            <Text style={styles.metaSmall}>{t('complete.hintsUsed', { n: hintCoinsSpent })}</Text>
-          )}
-
-          <View style={styles.actions}>
-            <Pressable style={styles.closeBtn} onPress={onClose}>
+            <Pressable
+              style={styles.closeBtn}
+              onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel={t('complete.close')}
+            >
               <Text style={styles.closeText}>{t('complete.close')}</Text>
             </Pressable>
-            <Pressable style={styles.nextBtn} onPress={onNext || onClose}>
-              <Text style={styles.nextText}>{t('complete.next')}</Text>
-            </Pressable>
-          </View>
-        </View>
+          </Animated.View>
+        ) : null}
       </View>
     </Modal>
   );
@@ -68,88 +79,27 @@ export default function WordWheelCompleteDialog({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(4, 28, 34, 0.55)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
   },
-  card: {
+  wrap: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: WW.surface,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 20,
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#059669',
-    marginBottom: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 12,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: 'rgba(5, 150, 105, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(5, 150, 105, 0.18)',
-    borderRadius: 12,
-    padding: 12,
     alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 11,
-    color: 'rgba(15, 61, 54, 0.65)',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: WW.textOnSurface,
-  },
-  metaSmall: {
-    textAlign: 'center',
-    color: 'rgba(15, 61, 54, 0.65)',
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 20,
   },
   closeBtn: {
-    flex: 1,
-    borderRadius: 12,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(5, 150, 105, 0.45)',
-    backgroundColor: '#fff',
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   closeText: {
-    color: '#059669',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  nextBtn: {
-    flex: 1,
-    backgroundColor: '#059669',
-    borderRadius: 12,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    fontFamily: INTERMISSION.serif,
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'rgba(255, 248, 230, 0.92)',
+    letterSpacing: 0.4,
+    textDecorationLine: 'underline',
   },
 });

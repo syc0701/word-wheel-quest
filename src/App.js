@@ -4,10 +4,10 @@ import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-nat
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SCREENS } from './constants/theme';
-import { AppearanceProvider, useAppearance } from './context/AppearanceContext';
+import { AppearanceProvider } from './context/AppearanceContext';
 import { AudioProvider, BGM_SCENES, useAudio } from './context/AudioContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import HomeSmogEffect from './components/HomeSmogEffect';
+import AppBackground from './components/AppBackground';
 import { configurePurchases } from './services/purchases';
 import HomeScreen from './screens/HomeScreen';
 import PlayScreen from './screens/PlayScreen';
@@ -20,7 +20,6 @@ import DevIntermissionScreen from './screens/DevIntermissionScreen';
 
 function AppShell() {
   const [route, setRoute] = useState({ screen: SCREENS.HOME, params: {} });
-  const { colors } = useAppearance();
   const { isRtl } = useLanguage();
   const { setBgmScene, ready: audioReady } = useAudio();
 
@@ -54,8 +53,8 @@ function AppShell() {
     setRoute({ screen, params });
   }, []);
 
-  /** Opaque fill so outgoing screens (e.g. Home) cannot show through during transitions. */
-  const opaqueScreenStyle = [styles.screen, { backgroundColor: colors.background }];
+  /** Soft scrim hides outgoing screen UI but keeps the reef background visible. */
+  const opaqueScreenStyle = [styles.screen, styles.screenScrim];
 
   const renderScreen = () => {
     const { screen, params } = route;
@@ -161,18 +160,12 @@ function AppShell() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <View
-        style={[
-          styles.container,
-          { backgroundColor: colors.background, direction: isRtl ? 'rtl' : 'ltr' },
-        ]}
-      >
-        <View style={styles.backdrop} pointerEvents="none">
-          <HomeSmogEffect />
-        </View>
-        <View style={styles.screenLayer} pointerEvents="box-none">
-          {renderScreen()}
-        </View>
+      <View style={[styles.container, { direction: isRtl ? 'rtl' : 'ltr' }]}>
+        <AppBackground scrim={0.1}>
+          <View style={styles.screenLayer} pointerEvents="box-none">
+            {renderScreen()}
+          </View>
+        </AppBackground>
       </View>
     </GestureHandlerRootView>
   );
@@ -197,11 +190,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
-    elevation: 0,
-  },
   screenLayer: {
     flex: 1,
     position: 'relative',
@@ -212,5 +200,8 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  screenScrim: {
+    backgroundColor: 'rgba(6, 28, 34, 0.28)',
   },
 });

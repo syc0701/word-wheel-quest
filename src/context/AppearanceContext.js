@@ -3,26 +3,32 @@ import { StatusBar } from 'expo-status-bar';
 import {
   APPEARANCE_DARK,
   APPEARANCE_LIGHT,
+  APPEARANCE_RANDOM,
   getColors,
   getWW,
   loadAppearance,
   saveAppearance,
 } from '../lib/appearance';
+import { resolveWeeklyBackground } from '../lib/bgAssets';
 
 const AppearanceContext = createContext(null);
 
 export function AppearanceProvider({ children }) {
   const [mode, setModeState] = useState(APPEARANCE_LIGHT);
   const [ready, setReady] = useState(false);
+  const [weeklyBg, setWeeklyBg] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const loaded = await loadAppearance();
-      if (!cancelled) {
-        setModeState(loaded);
-        setReady(true);
+      if (cancelled) return;
+      setModeState(loaded);
+      if (loaded === APPEARANCE_RANDOM) {
+        const bg = await resolveWeeklyBackground();
+        if (!cancelled) setWeeklyBg(bg);
       }
+      if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
@@ -32,6 +38,13 @@ export function AppearanceProvider({ children }) {
   const setMode = useCallback(async (nextMode) => {
     const normalized = await saveAppearance(nextMode);
     setModeState(normalized);
+    if (normalized === APPEARANCE_RANDOM) {
+      const bg = await resolveWeeklyBackground();
+      setWeeklyBg(bg);
+    } else {
+      setWeeklyBg(null);
+    }
+    return normalized;
   }, []);
 
   const value = useMemo(
@@ -40,10 +53,12 @@ export function AppearanceProvider({ children }) {
       setMode,
       ready,
       isDark: mode === APPEARANCE_DARK,
+      isRandomScene: mode === APPEARANCE_RANDOM,
+      weeklyBg,
       ww: getWW(mode),
       colors: getColors(mode),
     }),
-    [mode, ready, setMode]
+    [mode, setMode, ready, weeklyBg]
   );
 
   return (
@@ -62,6 +77,8 @@ export function useAppearance() {
       setMode: async () => {},
       ready: true,
       isDark: false,
+      isRandomScene: false,
+      weeklyBg: null,
       ww: getWW(APPEARANCE_LIGHT),
       colors: getColors(APPEARANCE_LIGHT),
     };
@@ -69,4 +86,4 @@ export function useAppearance() {
   return ctx;
 }
 
-export { APPEARANCE_LIGHT, APPEARANCE_DARK };
+export { APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_RANDOM };

@@ -111,7 +111,10 @@ export default function PuzzleGrid({
                 borderWidth: 2,
                 borderColor: ww.gridBorder || ww.borderStrong,
               },
-          isSelected && { borderColor: ww.accent },
+          isSelected && {
+            borderWidth: 3.5,
+            borderColor: ww.wheelLine || '#f59e0b',
+          },
         ]}
       >
         {wordNumber != null && (

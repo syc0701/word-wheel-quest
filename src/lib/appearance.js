@@ -3,8 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const APPEARANCE_KEY = 'ww.appearance';
 export const APPEARANCE_LIGHT = 'light';
 export const APPEARANCE_DARK = 'dark';
+/** Weekly random scene photo from `assets/bg_image`. */
+export const APPEARANCE_RANDOM = 'random';
 
-const MODES = new Set([APPEARANCE_LIGHT, APPEARANCE_DARK]);
+const MODES = new Set([APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_RANDOM]);
 
 /**
  * Light play — clean white / soft slate (not mint green).
@@ -170,11 +172,29 @@ export function normalizeAppearance(value) {
 }
 
 export function getWW(mode) {
-  return normalizeAppearance(mode) === APPEARANCE_DARK ? WW_DARK : WW_LIGHT;
+  const normalized = normalizeAppearance(mode);
+  if (normalized === APPEARANCE_DARK) return WW_DARK;
+  // Random scenes use light chrome; status bar light (white icons) over photo + scrim
+  if (normalized === APPEARANCE_RANDOM) {
+    return { ...WW_LIGHT, statusBar: 'light' };
+  }
+  return WW_LIGHT;
 }
 
 export function getColors(mode) {
-  return normalizeAppearance(mode) === APPEARANCE_DARK ? COLORS_DARK : COLORS_LIGHT;
+  const normalized = normalizeAppearance(mode);
+  if (normalized === APPEARANCE_DARK) return COLORS_DARK;
+  // Random uses light surfaces with slightly glassier cards over photos
+  if (normalized === APPEARANCE_RANDOM) {
+    return {
+      ...COLORS_LIGHT,
+      background: 'transparent',
+      surface: 'rgba(255, 255, 255, 0.88)',
+      surfaceLight: 'rgba(241, 245, 249, 0.82)',
+      statusBar: 'light',
+    };
+  }
+  return COLORS_LIGHT;
 }
 
 export async function loadAppearance() {
