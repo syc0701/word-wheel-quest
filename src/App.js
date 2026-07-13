@@ -8,6 +8,7 @@ import { AppearanceProvider } from './context/AppearanceContext';
 import { AudioProvider, BGM_SCENES, useAudio } from './context/AudioContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import AppBackground from './components/AppBackground';
+import LaunchSplashOverlay from './components/LaunchSplashOverlay';
 import { configurePurchases } from './services/purchases';
 import HomeScreen from './screens/HomeScreen';
 import PlayScreen from './screens/PlayScreen';
@@ -166,6 +167,7 @@ function AppShell() {
             {renderScreen()}
           </View>
         </AppBackground>
+        <LaunchSplashOverlay />
       </View>
     </GestureHandlerRootView>
   );

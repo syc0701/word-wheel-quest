@@ -9,6 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { APPEARANCE_LIGHT } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -91,15 +92,15 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
 }
 
 /**
- * Drifting mist orbs behind chrome pages.
- * Light: bright white orbs on mint (high contrast).
- * Dark: soft seafoam glow on deep teal.
+ * Drifting mist orbs behind home + play (light theme only).
  */
 export default function HomeSmogEffect() {
-  const { isDark } = useAppearance();
+  const { mode } = useAppearance();
   const banks = useMemo(() => makeSmogBanks(10), []);
-  // Soft slate mist on white; seafoam on dark teal.
-  const color = isDark ? 'rgba(204, 251, 241, 0.22)' : 'rgba(148, 163, 184, 0.28)';
+  if (mode !== APPEARANCE_LIGHT) return null;
+
+  // Soft white / seafoam mist on mint home and white play surfaces.
+  const color = 'rgba(255, 255, 255, 0.48)';
 
   return (
     <View style={styles.layer} pointerEvents="none">

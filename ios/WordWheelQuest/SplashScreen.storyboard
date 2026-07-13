@@ -16,16 +16,34 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Word Wheel Quest" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SPLASH-TITLE">
+                                <rect key="frame" x="24" y="120" width="345" height="48"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="36"/>
+                                <color key="textColor" red="0.024" green="0.306" blue="0.231" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <imageView id="EXPO-SplashScreen" userLabel="SplashScreenLogo" image="SplashScreenLogo" contentMode="scaleAspectFit" clipsSubviews="true" userInteractionEnabled="false" translatesAutoresizingMaskIntoConstraints="false">
-                                <rect key="frame" x="0" y="0" width="414" height="736"/>
+                                <rect key="frame" x="114" y="326" width="165" height="165"/>
                             </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="© 2026 Puzzle Interact. All rights reserved." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SPLASH-BRAND">
+                                <rect key="frame" x="24" y="752" width="345" height="36"/>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="13"/>
+                                <color key="textColor" red="0.024" green="0.306" blue="0.231" alpha="0.75" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Rmq-lb-GrQ"/>
                         <constraints>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="top" secondItem="EXPO-ContainerView" secondAttribute="top" id="83fcb9b545b870ba44c24f0feeb116490c499c52"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" id="61d16215e44b98e39d0a2c74fdbfaaa22601b12c"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" id="f934da460e9ab5acae3ad9987d5b676a108796c1"/>
-                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="bottom" secondItem="EXPO-ContainerView" secondAttribute="bottom" id="d6a0be88096b36fb132659aa90203d39139deda9"/>
+                            <constraint firstItem="SPLASH-TITLE" firstAttribute="top" secondItem="Rmq-lb-GrQ" secondAttribute="top" constant="56" id="splash-title-top"/>
+                            <constraint firstItem="SPLASH-TITLE" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" constant="24" id="splash-title-leading"/>
+                            <constraint firstItem="SPLASH-TITLE" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" constant="-24" id="splash-title-trailing"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="centerX" secondItem="EXPO-ContainerView" secondAttribute="centerX" id="splash-center-x"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="centerY" secondItem="EXPO-ContainerView" secondAttribute="centerY" id="splash-center-y"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="width" secondItem="EXPO-ContainerView" secondAttribute="width" multiplier="0.42" id="splash-width"/>
+                            <constraint firstItem="EXPO-SplashScreen" firstAttribute="height" secondItem="EXPO-SplashScreen" secondAttribute="width" id="splash-aspect"/>
+                            <constraint firstItem="Rmq-lb-GrQ" firstAttribute="bottom" secondItem="SPLASH-BRAND" secondAttribute="bottom" constant="28" id="splash-brand-bottom"/>
+                            <constraint firstItem="SPLASH-BRAND" firstAttribute="leading" secondItem="EXPO-ContainerView" secondAttribute="leading" constant="24" id="splash-brand-leading"/>
+                            <constraint firstItem="SPLASH-BRAND" firstAttribute="trailing" secondItem="EXPO-ContainerView" secondAttribute="trailing" constant="-24" id="splash-brand-trailing"/>
                         </constraints>
                         <color key="backgroundColor" name="SplashScreenBackground"/>
                     </view>
@@ -38,7 +56,7 @@
     <resources>
         <image name="SplashScreenLogo" width="414" height="736"/>
         <namedColor name="SplashScreenBackground">
-            <color alpha="1.000" blue="0.0901960784313725" green="0.0549019607843137" red="0.0588235294117647" customColorSpace="sRGB" colorSpace="custom"/>
+            <color alpha="1.000" blue="0.941176470588235" green="0.960784313725490" red="0.909803921568627" customColorSpace="sRGB" colorSpace="custom"/>
         </namedColor>
     </resources>
 </document>

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Calendar, ChevronRight, Lock, Play, Settings } from 'lucide-react-native';
 import DailyLockedModal from '../components/DailyLockedModal';
+import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
@@ -143,6 +144,7 @@ export default function HomeScreen({ navigate }) {
   };
 
   return (
+    <GradientBackground variant="home">
     <View style={styles.container}>
       <View style={styles.topBar}>
         <View style={styles.topBarSpacer} />
@@ -203,9 +205,6 @@ export default function HomeScreen({ navigate }) {
                   </View>
                 ) : null}
               </View>
-              <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
-                {puzzle.title}
-              </Text>
               {wordCount > 0 ? (
                 <Text style={[styles.meta, { color: colors.textMuted }]}>
                   {t('common.words', { n: wordCount })}
@@ -251,6 +250,7 @@ export default function HomeScreen({ navigate }) {
         onClose={() => setDailyLockedVisible(false)}
       />
     </View>
+    </GradientBackground>
   );
 }
 
@@ -323,9 +323,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   levelHero: {
-    fontSize: 36,
+    fontSize: 44,
     fontWeight: '800',
-    letterSpacing: -0.6,
+    letterSpacing: -0.8,
     flexShrink: 1,
   },
   levelHeroSpacer: {
@@ -339,29 +339,23 @@ const styles = StyleSheet.create({
   },
   difficultyChip: {
     borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 999,
   },
   difficultyChipText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.3,
   },
-  puzzleTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 6,
-    lineHeight: 22,
-  },
   meta: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '500',
-    marginTop: 6,
+    marginTop: 8,
   },
   primaryBtn: {
-    marginTop: 18,
-    minHeight: 48,
+    marginTop: 20,
+    minHeight: 52,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -373,7 +367,7 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     color: '#fff',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
   },
   row: {

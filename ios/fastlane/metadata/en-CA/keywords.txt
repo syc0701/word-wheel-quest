@@ -1,1 +1,1 @@
-word,crossword,wheel,puzzle,vocabulary,brain,clues,grid,spelling,wordgame,teatime,relax
+word,crossword,wheel,puzzle,hint,shuffle,dictionary,vocabulary,brain,clues,grid,wordgame

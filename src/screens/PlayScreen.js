@@ -20,6 +20,7 @@ import PuzzleLevelToast from '../components/PuzzleLevelToast';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 import BonusWordModal from '../components/BonusWordModal';
+import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
 import { validateBonusWord } from '../lib/dictionary';
@@ -90,6 +91,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     word: '',
     awardedGift: false,
   });
+  const [bonusWordsFound, setBonusWordsFound] = useState([]);
+  const [treasureOpen, setTreasureOpen] = useState(false);
   const [shuffleSignal, setShuffleSignal] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
   const [coinsCatalog, setCoinsCatalog] = useState([]);
@@ -99,7 +102,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [revealBurstId, setRevealBurstId] = useState(0);
   const completionShownRef = useRef(false);
   const levelStartedAtRef = useRef(null);
-  const bonusWordGiftClaimedRef = useRef(false);
   const bonusWordLookupRef = useRef(false);
   const completedPuzzleIdRef = useRef(null);
   const completedLevelRef = useRef(null);
@@ -196,7 +198,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     puzzleComplete,
     hintPending,
   ]);
-  const selectedWordRevealed = Boolean(selectedWord && foundWords.includes(selectedWord));
+  const selectedWordRevealed = Boolean(
+    selectedWord
+    && (foundWords.includes(selectedWord) || bonusWordsFound.includes(selectedWord))
+  );
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
   const dailyLabel = useMemo(() => {
     if (!isDaily) return '';
@@ -259,9 +264,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCelebrateMode('new');
     completionShownRef.current = false;
     levelStartedAtRef.current = null;
-    bonusWordGiftClaimedRef.current = false;
     bonusWordLookupRef.current = false;
     setBonusWordModal({ visible: false, word: '', awardedGift: false });
+    setBonusWordsFound([]);
+    setTreasureOpen(false);
   }, []);
 
   useEffect(() => {
@@ -463,6 +469,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
       if (!targetWords.includes(word)) {
         if (bonusWordLookupRef.current) return false;
+        // Same bonus word again — no second gift.
+        if (bonusWordsFound.includes(word)) {
+          playSfx('wrong');
+          return false;
+        }
         bonusWordLookupRef.current = true;
         try {
           const language = puzzle?.language || 'english';
@@ -472,23 +483,17 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             return false;
           }
 
-          const awardGift = !bonusWordGiftClaimedRef.current;
-          if (awardGift) {
-            bonusWordGiftClaimedRef.current = true;
-            playSfx('bonus');
-            if (wallet.loggedIn) {
-              wallet.addLifetimePoints?.(WORD_WHEEL_BONUS_WORD_GIFT);
-            } else {
-              setPlaySessionCoins((prev) => prev + WORD_WHEEL_BONUS_WORD_GIFT);
-            }
+          setBonusWordsFound((prev) => (prev.includes(word) ? prev : [...prev, word]));
+          playSfx('bonus');
+          if (wallet.loggedIn) {
+            wallet.addLifetimePoints?.(WORD_WHEEL_BONUS_WORD_GIFT);
           } else {
-            playSfx('chime');
+            setPlaySessionCoins((prev) => prev + WORD_WHEEL_BONUS_WORD_GIFT);
           }
-
           setBonusWordModal({
             visible: true,
             word,
-            awardedGift: awardGift,
+            awardedGift: true,
           });
           return true;
         } finally {
@@ -522,6 +527,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       playSfx,
       puzzle?.language,
       wallet,
+      bonusWordsFound,
     ]
   );
 
@@ -798,14 +804,16 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 <Lightbulb color={ww.toolIcon} size={18} />
               )}
             </Pressable>
-            <View
+            <Pressable
               style={[
                 styles.toolBtn,
                 { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
               ]}
+              onPress={() => setTreasureOpen(true)}
+              accessibilityLabel={t('play.a11y.treasureChest')}
             >
               <PiTreasureChest size={18} color="#facc15" />
-            </View>
+            </Pressable>
           </View>
 
           <LetterWheel
@@ -867,6 +875,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         awardedGift={bonusWordModal.awardedGift}
         giftCoins={WORD_WHEEL_BONUS_WORD_GIFT}
         onClose={() => setBonusWordModal({ visible: false, word: '', awardedGift: false })}
+      />
+
+      <TreasureBonusWordsModal
+        visible={treasureOpen}
+        onClose={() => setTreasureOpen(false)}
+        words={bonusWordsFound}
+        giftCoins={WORD_WHEEL_BONUS_WORD_GIFT}
+        onWordPress={(word) => {
+          setSelectedWord(word);
+          setTreasureOpen(false);
+          setDictionaryOpen(true);
+        }}
       />
     </GradientBackground>
   );

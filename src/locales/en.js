@@ -229,11 +229,20 @@ export default {
   // bonus word (off-grid dictionary find)
   'bonusWord.title': 'Word Discovery!',
   'bonusWord.bodyGift':
-    'You found a real word that is not in this puzzle. We are giving you {n} coins right away!',
-  'bonusWord.bodyNoGift':
-    'You found another real word that is not in this puzzle. Nice find — the bonus gift is once per puzzle.',
-  'bonusWord.giftAmount': '+{n} coins',
+    'You found a real word that is not in this puzzle. We are giving you {n} coin right away!',
+  'bonusWord.giftAmount': '+{n} coin',
   'bonusWord.ok': 'Nice!',
+
+  // treasure chest (bonus words found)
+  'treasureChest.title': 'Treasure Finds',
+  'treasureChest.subtitle':
+    'Real words you found that are not on this puzzle. Each new word earns +{n} coin once.',
+  'treasureChest.empty':
+    'No bonus words yet. Spell a real word that is not on the grid to stash it here.',
+  'treasureChest.giftBadge': '+{n}',
+  'treasureChest.close': 'Close',
+  'treasureChest.openDictionary': 'Look up {word}',
+  'play.a11y.treasureChest': 'Bonus words treasure chest',
 
   // points table
   'pointsTable.header.letters': 'Letters',

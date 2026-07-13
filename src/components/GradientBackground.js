@@ -1,16 +1,25 @@
 import { StyleSheet, View } from 'react-native';
+import { APPEARANCE_LIGHT } from '../lib/appearance';
+import { useAppearance } from '../context/AppearanceContext';
+import HomeSmogEffect from './HomeSmogEffect';
 import PlayAmbientBubbles from './PlayAmbientBubbles';
 
 /**
- * Screen shell over the shared reef AppBackground.
- * Play variant adds ambient bubbles only (no second background image).
+ * Screen shell over the shared AppBackground.
+ * Light theme: drifting mist on home + play.
+ * Dark play: ambient bubbles.
  */
 export default function GradientBackground({ children, variant = 'home' }) {
+  const { mode, isDark } = useAppearance();
+  const showMist = mode === APPEARANCE_LIGHT && (variant === 'home' || variant === 'play');
+  const showBubbles = variant === 'play' && isDark;
+
   return (
     <View style={styles.fill}>
-      {variant === 'play' ? (
+      {showMist || showBubbles ? (
         <View style={styles.backdrop} pointerEvents="none">
-          <PlayAmbientBubbles />
+          {showMist ? <HomeSmogEffect /> : null}
+          {showBubbles ? <PlayAmbientBubbles /> : null}
         </View>
       ) : null}
       <View style={styles.content} pointerEvents="box-none">

@@ -1,5 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Gift, Sparkles } from 'lucide-react-native';
+import { Gift } from 'lucide-react-native';
 import { GiTwoCoins } from './GiTwoCoins';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
@@ -7,13 +7,13 @@ import { WORD_WHEEL_BONUS_WORD_GIFT } from '../lib/points';
 
 /**
  * Popup when the player spells a real dictionary word that is not on the puzzle.
- * First find in a puzzle awards coins; later finds still celebrate without a gift.
+ * Awarded once per puzzle (+coins).
  */
 export default function BonusWordModal({
   visible,
   onClose,
   word = '',
-  awardedGift = false,
+  awardedGift = true,
   giftCoins = WORD_WHEEL_BONUS_WORD_GIFT,
 }) {
   const { colors } = useAppearance();
@@ -34,11 +34,7 @@ export default function BonusWordModal({
           onPress={(e) => e.stopPropagation?.()}
         >
           <View style={[styles.iconRing, { backgroundColor: colors.surfaceLight, borderColor: colors.primary }]}>
-            {awardedGift ? (
-              <Gift color={colors.primaryGlow} size={28} strokeWidth={2} />
-            ) : (
-              <Sparkles color={colors.primaryGlow} size={28} strokeWidth={2} />
-            )}
+            <Gift color={colors.primaryGlow} size={28} strokeWidth={2} />
           </View>
 
           <Text style={[styles.title, { color: colors.text }]}>
@@ -48,9 +44,7 @@ export default function BonusWordModal({
             <Text style={[styles.word, { color: colors.primaryGlow }]}>{label}</Text>
           ) : null}
           <Text style={[styles.body, { color: colors.textMuted }]}>
-            {awardedGift
-              ? t('bonusWord.bodyGift', { n: giftCoins })
-              : t('bonusWord.bodyNoGift')}
+            {t('bonusWord.bodyGift', { n: giftCoins })}
           </Text>
 
           {awardedGift ? (

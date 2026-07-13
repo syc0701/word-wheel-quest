@@ -8,9 +8,9 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/assets/icon.png",
+      "image": "./src/assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0f0e17"
+      "backgroundColor": "#e8f5f0"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,7 +20,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
-        "backgroundColor": "#0f0e17"
+        "backgroundColor": "#595F70"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.puzint.wordwheel.app"

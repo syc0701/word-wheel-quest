@@ -38,6 +38,19 @@ def sync_review_info_from_env!
   last = ENV["ASC_REVIEW_LAST_NAME"].to_s.strip
   phone = ENV["ASC_REVIEW_PHONE"].to_s.strip
 
+  # Fall back to metadata/review_information/*.txt when env is missing or still the example.
+  review_dir = File.join(__dir__, "metadata", "review_information")
+  if [email, first, last, phone].any?(&:empty?) || email.include?("example.com")
+    first = read_utf8_file(File.join(review_dir, "first_name.txt")).to_s if first.empty? || first == "YourFirstName"
+    last = read_utf8_file(File.join(review_dir, "last_name.txt")).to_s if last.empty? || last == "YourLastName"
+    email = read_utf8_file(File.join(review_dir, "email_address.txt")).to_s if email.empty? || email.include?("example.com")
+    phone = read_utf8_file(File.join(review_dir, "phone_number.txt")).to_s if phone.empty? || phone.include?("555 555")
+    ENV["ASC_REVIEW_FIRST_NAME"] = first
+    ENV["ASC_REVIEW_LAST_NAME"] = last
+    ENV["ASC_REVIEW_EMAIL"] = email
+    ENV["ASC_REVIEW_PHONE"] = phone
+  end
+
   if [email, first, last, phone].any?(&:empty?) || email.include?("example.com")
     UI.user_error!(
       "Missing App Review contact. Copy ios/fastlane/asc_review_contact.env.example to " \
@@ -45,7 +58,6 @@ def sync_review_info_from_env!
     )
   end
 
-  review_dir = File.join(__dir__, "metadata", "review_information")
   FileUtils.mkdir_p(review_dir)
   File.write(File.join(review_dir, "first_name.txt"), first)
   File.write(File.join(review_dir, "last_name.txt"), last)

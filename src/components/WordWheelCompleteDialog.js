@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useT } from '../context/LanguageContext';
@@ -26,6 +26,9 @@ const COMPLIMENT_KEYS = [
   'complete.compliment.wayToGo',
 ];
 
+/** Auto-advance to next puzzle after this many ms. */
+export const COMPLETE_DIALOG_AUTO_MS = 5_000;
+
 function pickComplimentKey() {
   return COMPLIMENT_KEYS[Math.floor(Math.random() * COMPLIMENT_KEYS.length)];
 }
@@ -45,6 +48,7 @@ export default function WordWheelCompleteDialog({
 }) {
   const t = useT();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
+  const autoTimerRef = useRef(null);
 
   const screenType = useMemo(() => {
     if (
@@ -63,6 +67,35 @@ export default function WordWheelCompleteDialog({
       setTitleKey(pickComplimentKey());
     }
   }, [visible, screenType]);
+
+  const clearAutoTimer = useCallback(() => {
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
+  }, []);
+
+  const handleContinue = useCallback(() => {
+    clearAutoTimer();
+    (onNext || onClose)?.();
+  }, [clearAutoTimer, onNext, onClose]);
+
+  const handleClose = useCallback(() => {
+    clearAutoTimer();
+    onClose?.();
+  }, [clearAutoTimer, onClose]);
+
+  useEffect(() => {
+    clearAutoTimer();
+    if (!visible) return undefined;
+    const advance = onNext || onClose;
+    if (!advance) return undefined;
+    autoTimerRef.current = setTimeout(() => {
+      autoTimerRef.current = null;
+      advance();
+    }, COMPLETE_DIALOG_AUTO_MS);
+    return clearAutoTimer;
+  }, [visible, onNext, onClose, clearAutoTimer]);
 
   const hasScore = Number(scoreCoins) > 0;
   const hasHints = hintCoinsSpent > 0;
@@ -120,14 +153,14 @@ export default function WordWheelCompleteDialog({
     && hasScore;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.backdrop}>
         {visible ? (
           <Animated.View entering={FadeIn.duration(280)} style={styles.wrap}>
             <IntermissionCardShell
               continueLabel={`${t('complete.next').toUpperCase()} ➔`}
               continueA11y={t('complete.next')}
-              onContinue={onNext || onClose}
+              onContinue={handleContinue}
             >
               {body}
               {showScoreHint ? (
@@ -144,7 +177,7 @@ export default function WordWheelCompleteDialog({
 
             <Pressable
               style={styles.closeBtn}
-              onPress={onClose}
+              onPress={handleClose}
               accessibilityRole="button"
               accessibilityLabel={t('complete.close')}
             >
