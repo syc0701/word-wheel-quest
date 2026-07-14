@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': '外观',
   'settings.appearance.light': '浅色',
   'settings.appearance.dark': '深色',
-  'settings.appearance.random': '随机',
+  'settings.appearance.random': '图片',
   'settings.appearance.randomHint': '每周一张新场景图',
   'settings.sound.music': '播放背景音乐',
   'settings.sound.musicSubtitle': '在首页和游戏中循环',

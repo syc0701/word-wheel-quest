@@ -112,7 +112,7 @@ export default {
   'settings.appearance.a11y': 'Appearance',
   'settings.appearance.light': 'Light',
   'settings.appearance.dark': 'Dark',
-  'settings.appearance.random': 'Random',
+  'settings.appearance.random': 'Image',
   'settings.appearance.randomHint': 'A new scene photo each week',
   'settings.sound.music': 'Play background music',
   'settings.sound.musicSubtitle': 'Loops on Home and Play',

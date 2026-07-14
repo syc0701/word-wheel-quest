@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': '모양',
   'settings.appearance.light': '라이트',
   'settings.appearance.dark': '다크',
-  'settings.appearance.random': '랜덤',
+  'settings.appearance.random': '이미지',
   'settings.appearance.randomHint': '매주 새로운 장면 사진',
   'settings.sound.music': '배경 음악 재생',
   'settings.sound.musicSubtitle': '홈과 플레이에서 반복',

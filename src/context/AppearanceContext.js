@@ -14,7 +14,7 @@ import { resolveWeeklyBackground } from '../lib/bgAssets';
 const AppearanceContext = createContext(null);
 
 export function AppearanceProvider({ children }) {
-  const [mode, setModeState] = useState(APPEARANCE_LIGHT);
+  const [mode, setModeState] = useState(APPEARANCE_RANDOM);
   const [ready, setReady] = useState(false);
   const [weeklyBg, setWeeklyBg] = useState(null);
 
@@ -73,14 +73,14 @@ export function useAppearance() {
   const ctx = useContext(AppearanceContext);
   if (!ctx) {
     return {
-      mode: APPEARANCE_LIGHT,
+      mode: APPEARANCE_RANDOM,
       setMode: async () => {},
       ready: true,
       isDark: false,
-      isRandomScene: false,
+      isRandomScene: true,
       weeklyBg: null,
-      ww: getWW(APPEARANCE_LIGHT),
-      colors: getColors(APPEARANCE_LIGHT),
+      ww: getWW(APPEARANCE_RANDOM),
+      colors: getColors(APPEARANCE_RANDOM),
     };
   }
   return ctx;

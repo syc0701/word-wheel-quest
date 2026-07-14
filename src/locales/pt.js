@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': 'Aparência',
   'settings.appearance.light': 'Claro',
   'settings.appearance.dark': 'Escuro',
-  'settings.appearance.random': 'Aleatório',
+  'settings.appearance.random': 'Imagem',
   'settings.appearance.randomHint': 'Uma nova foto de cena a cada semana',
   'settings.sound.music': 'Tocar música de fundo',
   'settings.sound.musicSubtitle': 'Repete em Início e Jogar',

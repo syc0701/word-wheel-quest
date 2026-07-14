@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': 'Apparence',
   'settings.appearance.light': 'Clair',
   'settings.appearance.dark': 'Sombre',
-  'settings.appearance.random': 'Aléatoire',
+  'settings.appearance.random': 'Image',
   'settings.appearance.randomHint': 'Une nouvelle photo de scène chaque semaine',
   'settings.sound.music': 'Lire la musique de fond',
   'settings.sound.musicSubtitle': 'En boucle sur Accueil et Jouer',

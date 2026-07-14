@@ -217,11 +217,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         <View style={[styles.appearanceCard, themed.appearanceCard]}>
           <AppearancePicker />
         </View>
-        {mode === 'random' ? (
-          <Text style={[styles.appearanceHint, themed.appearanceHint]}>
-            {t('settings.appearance.randomHint')}
-          </Text>
-        ) : null}
 
         {/* Language picker — re-enable when shipping multi-language UI
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.language')}</Text>

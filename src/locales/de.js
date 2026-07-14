@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': 'Darstellung',
   'settings.appearance.light': 'Hell',
   'settings.appearance.dark': 'Dunkel',
-  'settings.appearance.random': 'Zufall',
+  'settings.appearance.random': 'Bild',
   'settings.appearance.randomHint': 'Jede Woche ein neues Szenenbild',
   'settings.sound.music': 'Hintergrundmusik abspielen',
   'settings.sound.musicSubtitle': 'Wiederholt auf Home und Play',

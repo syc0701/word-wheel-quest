@@ -252,9 +252,14 @@ export function getColors(mode) {
 export async function loadAppearance() {
   try {
     const raw = await AsyncStorage.getItem(APPEARANCE_KEY);
+    if (raw == null || String(raw).trim() === '') {
+      // Default: Image (weekly scene photos).
+      await AsyncStorage.setItem(APPEARANCE_KEY, APPEARANCE_RANDOM);
+      return APPEARANCE_RANDOM;
+    }
     return normalizeAppearance(raw);
   } catch {
-    return APPEARANCE_LIGHT;
+    return APPEARANCE_RANDOM;
   }
 }
 

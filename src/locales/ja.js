@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': '外観',
   'settings.appearance.light': 'ライト',
   'settings.appearance.dark': 'ダーク',
-  'settings.appearance.random': 'ランダム',
+  'settings.appearance.random': '画像',
   'settings.appearance.randomHint': '毎週新しいシーン写真',
   'settings.sound.music': 'BGMを再生',
   'settings.sound.musicSubtitle': 'ホームとプレイでループ',

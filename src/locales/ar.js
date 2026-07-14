@@ -105,7 +105,7 @@ export default {
   'settings.appearance.a11y': 'المظهر',
   'settings.appearance.light': 'فاتح',
   'settings.appearance.dark': 'داكن',
-  'settings.appearance.random': 'عشوائي',
+  'settings.appearance.random': 'صورة',
   'settings.appearance.randomHint': 'صورة مشهد جديدة كل أسبوع',
   'settings.sound.music': 'تشغيل موسيقى الخلفية',
   'settings.sound.musicSubtitle': 'تتكرر في الرئيسية واللعب',
