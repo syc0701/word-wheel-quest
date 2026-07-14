@@ -31,6 +31,7 @@ export default {
   'home.shop.subtitle': 'Buy coins and bundles',
   'home.footer':
     'Progress is saved on this device. Sign in once to move guest progress to your account.',
+  'home.copyright': '© 2026 Puzzle Interact',
 
   // daily
   'daily.a11y.back': 'Back',

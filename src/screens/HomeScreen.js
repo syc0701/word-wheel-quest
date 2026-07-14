@@ -18,12 +18,6 @@ import { SCREENS, PLAY_MODE } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 
-function formatDifficulty(level) {
-  const raw = String(level || '').trim();
-  if (!raw) return '';
-  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-}
-
 function logHomePuzzle(data, source) {
   const wordsInUse = data?.wordsInUse;
   console.log('[Home] fetchNext', {
@@ -75,12 +69,37 @@ function MenuRow({ icon: Icon, label, subtitle, onPress, colors, locked }) {
 }
 
 export default function HomeScreen({ navigate }) {
-  const { colors } = useAppearance();
+  const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
   const [dailyLockedVisible, setDailyLockedVisible] = useState(false);
+
+  const sceneText = useMemo(
+    () =>
+      isRandomScene
+        ? {
+            color: '#ffffff',
+            textShadowColor: 'rgba(0, 0, 0, 0.8)',
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 5,
+          }
+        : null,
+    [isRandomScene]
+  );
+  const sceneMuted = useMemo(
+    () =>
+      isRandomScene
+        ? {
+            color: 'rgba(255, 255, 255, 0.88)',
+            textShadowColor: 'rgba(0, 0, 0, 0.75)',
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 4,
+          }
+        : null,
+    [isRandomScene]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -162,13 +181,19 @@ export default function HomeScreen({ navigate }) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.kicker, { color: colors.textMuted }]}>{t('home.kicker')}</Text>
-        <Text style={[styles.title, { color: colors.text }]}>{t('home.title')}</Text>
-        <Text style={[styles.tagline, { color: colors.textMuted }]}>
+        <Text style={[styles.kicker, { color: colors.textMuted }, sceneMuted]}>
+          {t('home.kicker')}
+        </Text>
+        <Text style={[styles.title, { color: colors.text }, sceneText]}>
+          {t('home.title')}
+        </Text>
+        <Text style={[styles.tagline, { color: colors.textMuted }, sceneMuted]}>
           {t('home.tagline')}
         </Text>
 
-        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('home.section.seasonJourney')}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }, sceneMuted]}>
+          {t('home.section.seasonJourney')}
+        </Text>
         <View
           style={[
             styles.journeyCard,
@@ -189,21 +214,6 @@ export default function HomeScreen({ navigate }) {
                 ) : (
                   <View style={styles.levelHeroSpacer} />
                 )}
-                {puzzle.difficultyLevel ? (
-                  <View
-                    style={[
-                      styles.difficultyChip,
-                      {
-                        backgroundColor: colors.surfaceLight,
-                        borderColor: colors.primary,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
-                      {formatDifficulty(puzzle.difficultyLevel)}
-                    </Text>
-                  </View>
-                ) : null}
               </View>
               {wordCount > 0 ? (
                 <Text style={[styles.meta, { color: colors.textMuted }]}>
@@ -227,7 +237,9 @@ export default function HomeScreen({ navigate }) {
           </Pressable>
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{t('home.section.more')}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textMuted }, sceneMuted]}>
+          {t('home.section.more')}
+        </Text>
         <MenuRow
           icon={Calendar}
           label={t('home.dailyPuzzle.label')}
@@ -247,8 +259,11 @@ export default function HomeScreen({ navigate }) {
           onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
           colors={colors}
         />
-        <Text style={[styles.footer, { color: colors.textMuted }]}>
+        <Text style={[styles.footer, { color: colors.textMuted }, sceneMuted]}>
           {t('home.footer')}
+        </Text>
+        <Text style={[styles.copyright, { color: colors.textMuted }, sceneMuted]}>
+          {t('home.copyright')}
         </Text>
       </ScrollView>
 
@@ -344,17 +359,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  difficultyChip: {
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  difficultyChipText: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
   meta: {
     fontSize: 15,
     fontWeight: '500',
@@ -413,5 +417,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     marginTop: 16,
+  },
+  copyright: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 18,
+    marginBottom: 8,
+    letterSpacing: 0.2,
   },
 });

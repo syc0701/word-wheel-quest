@@ -33,12 +33,6 @@ const WEEKDAY_KEYS = [
   'daily.weekday.sat',
 ];
 
-function formatDifficulty(level) {
-  const raw = String(level || '').trim();
-  if (!raw) return '';
-  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-}
-
 function buildMonthDays(year, month, minYmd, maxYmd) {
   const first = new Date(Date.UTC(year, month - 1, 1));
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -317,23 +311,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                   </Text>
                 </View>
               ) : null}
-              <View style={styles.titleRow}>
-                {puzzle.difficultyLevel ? (
-                  <View
-                    style={[
-                      styles.difficultyChip,
-                      {
-                        backgroundColor: colors.surfaceLight,
-                        borderColor: colors.primary,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
-                      {formatDifficulty(puzzle.difficultyLevel)}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
               <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
                 {t('daily.meta', { n: words.length, size: gridSize })}
               </Text>
@@ -502,14 +479,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    maxWidth: '100%',
-  },
   completedChip: {
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -520,17 +489,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
-  },
-  difficultyChip: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  difficultyChipText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
   primaryBtn: {
     marginTop: 4,
