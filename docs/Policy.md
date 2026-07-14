@@ -70,7 +70,7 @@ Settings → Shop (RevenueCat). Packages add coins to the player balance (bundle
 | Rule | Value |
 | --- | --- |
 | Cost | **10** coins **or** credits per letter (`WORD_WHEEL_HINT_COST`) |
-| Effect | Reveals one empty letter on the grid |
+| Effect | Reveals one empty letter on the grid (preferred: next letter in the selected word) |
 | Order | Prefer **puzzle coins**; if fewer than 10 coins remain, spend **credits** (signed-in only) |
 | Auto-complete | If hints (+ crossings) fully reveal a target word, that word is counted as found |
 

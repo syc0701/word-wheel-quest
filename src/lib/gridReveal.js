@@ -76,10 +76,20 @@ export function listNumberedWordEntries(filledCoordinates) {
   }));
 }
 
-/** Map of start cell → word number(s). Shared starts keep every word number, e.g. [1, 2]. */
-export function buildCellWordNumbers(filledCoordinates) {
+/** Map of start cell → word number(s). Shared starts keep every word number, e.g. [1, 2].
+ * Pass `foundWords` to hide numbers for words already solved. Optionally pass
+ * `wordPositions` + `hintedCellKeys` so fully revealed (but not yet scored) words hide too. */
+export function buildCellWordNumbers(
+  filledCoordinates,
+  foundWords = [],
+  wordPositions = null,
+  hintedCellKeys = null,
+  displayGrid = null
+) {
+  const found = buildSolvedWordSet(foundWords, wordPositions, hintedCellKeys, displayGrid);
   const cellToNumbers = new Map();
   listNumberedWordEntries(filledCoordinates).forEach((entry) => {
+    if (found.has(entry.word)) return;
     const cellKey = `${entry.row},${entry.col}`;
     const existing = cellToNumbers.get(cellKey);
     if (existing) {
@@ -89,6 +99,28 @@ export function buildCellWordNumbers(filledCoordinates) {
     }
   });
   return cellToNumbers;
+}
+
+/**
+ * Unsolved grid words with clues, in number order (for the swipeable clue strip).
+ */
+export function listUnfoundClueEntries(
+  filledCoordinates,
+  displayClue,
+  foundWords = [],
+  wordPositions = null,
+  hintedCellKeys = null,
+  displayGrid = null
+) {
+  const found = buildSolvedWordSet(foundWords, wordPositions, hintedCellKeys, displayGrid);
+  const clueMap = buildClueMapFromDisplayClue(displayClue);
+  return listNumberedWordEntries(filledCoordinates)
+    .filter((entry) => !found.has(entry.word))
+    .map((entry) => ({
+      word: entry.word,
+      number: entry.number,
+      clue: clueMap.get(entry.word) || '',
+    }));
 }
 
 export function formatCellWordNumberLabel(wordNumber) {
@@ -198,16 +230,54 @@ function getOrderedPositions(coord) {
   return coord.reversed ? positions.reverse() : positions;
 }
 
+function hintedKeysToSet(hintedCellKeys) {
+  if (!hintedCellKeys) return new Set();
+  if (hintedCellKeys instanceof Set) return new Set(hintedCellKeys);
+  // hintLetters is a Map — iterating a Map yields [key, value] pairs, not cell keys.
+  if (hintedCellKeys instanceof Map) return new Set(hintedCellKeys.keys());
+  if (Array.isArray(hintedCellKeys)) return new Set(hintedCellKeys);
+  if (typeof hintedCellKeys === 'object') return new Set(Object.keys(hintedCellKeys));
+  return new Set();
+}
+
 function buildRevealedCellKeys(foundWords, wordPositions, hintedCellKeys) {
-  const revealed = new Set(
-    hintedCellKeys instanceof Set ? hintedCellKeys : hintedCellKeys || []
-  );
+  const revealed = hintedKeysToSet(hintedCellKeys);
   (foundWords || []).forEach((word) => {
     const positions = wordPositions?.[normalizeWord(word)];
     if (!positions) return;
     positions.forEach((p) => revealed.add(`${p.row},${p.col}`));
   });
   return revealed;
+}
+
+/** Words already scored, or fully visible via crossings/hints / display grid. */
+export function buildSolvedWordSet(
+  foundWords,
+  wordPositions = null,
+  hintedCellKeys = null,
+  displayGrid = null
+) {
+  const found = new Set(
+    (Array.isArray(foundWords) ? foundWords : []).map((w) => normalizeWord(w))
+  );
+  if (wordPositions) {
+    findWordsCompletedByReveal(foundWords, wordPositions, hintedCellKeys).forEach((w) => {
+      found.add(normalizeWord(w));
+    });
+    if (displayGrid) {
+      Object.keys(wordPositions).forEach((rawWord) => {
+        const word = normalizeWord(rawWord);
+        if (!word || found.has(word)) return;
+        const positions = wordPositions[rawWord] || wordPositions[word];
+        if (!Array.isArray(positions) || !positions.length) return;
+        const allShown = positions.every((p) =>
+          String(displayGrid[p.row]?.[p.col] || '').trim()
+        );
+        if (allShown) found.add(word);
+      });
+    }
+  }
+  return found;
 }
 
 /**
@@ -233,11 +303,18 @@ export function findWordsCompletedByReveal(foundWords, wordPositions, hintedCell
 
 /**
  * Remaining hint cells in spend order (10 coins each).
- * Example words ABC, DEF, HIJ → A, D, H, B, E, I, C, F, J
- * (all 1st letters by word number, then all 2nd, then 3rd, …).
+ * Default: all 1st letters by word number, then 2nd, then 3rd, …
+ * When `preferredWord` is set (selected clue), that word’s unrevealed letters come first
+ * (in reading order), then the usual global queue.
  * Shared/crossing cells appear once, at the earliest slot in that sequence.
  */
-export function findHintLetterCandidates(filledCoordinates, foundWords, wordPositions, hintedCellKeys) {
+export function findHintLetterCandidates(
+  filledCoordinates,
+  foundWords,
+  wordPositions,
+  hintedCellKeys,
+  preferredWord = null
+) {
   const foundSet = new Set((foundWords || []).map(normalizeWord));
   const revealed = buildRevealedCellKeys(foundWords, wordPositions, hintedCellKeys);
   const cellWordNumbers = buildCellWordNumbers(filledCoordinates);
@@ -318,7 +395,17 @@ export function findHintLetterCandidates(filledCoordinates, foundWords, wordPosi
     });
   }
 
-  return queue;
+  const preferred = normalizeWord(preferredWord);
+  if (!preferred) return queue;
+
+  const preferredFirst = queue
+    .filter((c) => c.word === preferred)
+    .sort((a, b) => a.letterIndex - b.letterIndex);
+  if (!preferredFirst.length) return queue;
+
+  const preferredKeys = new Set(preferredFirst.map((c) => c.key));
+  const rest = queue.filter((c) => !preferredKeys.has(c.key));
+  return [...preferredFirst, ...rest];
 }
 
 /** @deprecated Prefer {@link findHintLetterCandidates} — kept for call-site compatibility. */

@@ -69,9 +69,12 @@ const WordWheelApi = {
     return data;
   },
 
-  updateProgress: async (wordWheelTplId, foundWords) => {
+  updateProgress: async (wordWheelTplId, foundWords, bonusWords) => {
     const { session, loggedIn } = await getSessionForRequest();
     const payload = { wordWheelTplId, foundWords };
+    if (Array.isArray(bonusWords)) {
+      payload.bonusWords = bonusWords;
+    }
     if (session) payload.sessionId = session.sessionId;
     const data = await apiPut('/v1/puzzle/wordwheel-play/progress', payload);
     clearSessionAfterLoginMigration(loggedIn, session);

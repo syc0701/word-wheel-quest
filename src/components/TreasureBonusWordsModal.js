@@ -1,5 +1,5 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Gift, X } from 'lucide-react-native';
+import { BookOpen, Gift, X } from 'lucide-react-native';
 import { PiTreasureChest } from './PiTreasureChest';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
@@ -79,7 +79,10 @@ export default function TreasureBonusWordsModal({
                     accessibilityRole="button"
                     accessibilityLabel={t('treasureChest.openDictionary', { word })}
                   >
-                    <Text style={[styles.word, { color: colors.text }]}>{word}</Text>
+                    <View style={styles.wordLeft}>
+                      <BookOpen color={colors.primary || '#0d9488'} size={16} strokeWidth={2.2} />
+                      <Text style={[styles.word, { color: colors.text }]}>{word}</Text>
+                    </View>
                     <View style={styles.giftBadge}>
                       <Gift color="#ca8a04" size={14} strokeWidth={2.2} />
                       <Text style={styles.giftBadgeText}>
@@ -183,6 +186,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
+  },
+  wordLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
   },
   word: {
     flexShrink: 1,

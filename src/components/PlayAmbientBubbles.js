@@ -12,25 +12,24 @@ import Animated, {
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-/** Keep bubbles in the lower play area — below the grid. */
-const GRID_FLOOR_Y = SCREEN_H * 0.52;
+/** Keep bubbles mostly in the lower play area — below the grid. */
+const GRID_FLOOR_Y = SCREEN_H * 0.48;
 
-function makeBubbles(count = 8) {
+function makeBubbles(count = 12) {
   return Array.from({ length: count }, (_, i) => {
-    const size = 10 + ((i * 11) % 16);
-    const startY = SCREEN_H * (0.68 + ((i * 13) % 26) / 100);
-    // Short rise only — fade before reaching the grid.
-    const travel = Math.min(startY - GRID_FLOOR_Y + size, 90 + (i % 4) * 18);
+    const size = 8 + ((i * 11) % 18);
+    const startY = SCREEN_H * (0.62 + ((i * 13) % 32) / 100);
+    const travel = Math.min(startY - GRID_FLOOR_Y + size, 110 + (i % 5) * 22);
     return {
       id: i,
       size,
       left: ((i * 97 + 31) % 100) / 100 * (SCREEN_W - size),
       startY,
-      travel: Math.max(48, travel),
-      duration: 10000 + (i % 5) * 2000,
-      delay: (i % 6) * 900,
-      drift: ((i % 2 === 0 ? 1 : -1) * (8 + (i % 4) * 5)),
-      opacity: 0.1 + (i % 4) * 0.04,
+      travel: Math.max(56, travel),
+      duration: 9000 + (i % 5) * 2200,
+      delay: (i % 7) * 700,
+      drift: ((i % 2 === 0 ? 1 : -1) * (10 + (i % 4) * 6)),
+      opacity: 0.14 + (i % 4) * 0.05,
     };
   });
 }
@@ -54,7 +53,7 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
     transform: [
       { translateY: interpolate(progress.value, [0, 1], [0, -travel]) },
       { translateX: interpolate(progress.value, [0, 0.35, 0.7, 1], [0, drift, -drift * 0.4, drift * 0.6]) },
-      { scale: interpolate(progress.value, [0, 0.5, 1], [0.9, 1.02, 0.92]) },
+      { scale: interpolate(progress.value, [0, 0.5, 1], [0.88, 1.05, 0.9]) },
     ],
   }));
 
@@ -76,8 +75,9 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
   );
 }
 
+/** Rising bubbles for the deep-water play backdrop. */
 export default function PlayAmbientBubbles() {
-  const bubbles = useMemo(() => makeBubbles(8), []);
+  const bubbles = useMemo(() => makeBubbles(12), []);
 
   return (
     <View style={styles.layer} pointerEvents="none">
@@ -99,8 +99,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 0,
     elevation: 0,
-    backgroundColor: 'rgba(148, 163, 184, 0.22)',
+    backgroundColor: 'rgba(224, 242, 254, 0.28)',
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.28)',
+    borderColor: 'rgba(186, 230, 253, 0.4)',
   },
 });

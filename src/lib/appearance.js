@@ -9,9 +9,113 @@ export const APPEARANCE_RANDOM = 'random';
 const MODES = new Set([APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_RANDOM]);
 
 /**
- * Light play — clean white / soft slate (not mint green).
+ * Light play — deep water (ocean gradient behind play UI).
  */
 export const WW_LIGHT = {
+  gradient: ['#1a6b8a', '#0c4a6e', '#082f49', '#031525'],
+  surface: 'rgba(15, 55, 75, 0.72)',
+  border: 'rgba(125, 211, 252, 0.4)',
+  borderStrong: 'rgba(186, 230, 253, 0.55)',
+  text: '#f0f9ff',
+  textSecondary: 'rgba(224, 242, 254, 0.78)',
+  textMuted: 'rgba(186, 230, 253, 0.62)',
+  textOnSurface: '#0c4a6e',
+  accent: '#38bdf8',
+  accentDark: '#0ea5e9',
+  accentSoft: 'rgba(14, 165, 233, 0.22)',
+  accentRing: 'rgba(56, 189, 248, 0.35)',
+  wheelLine: '#fcd34d',
+  wheelLineDark: '#f59e0b',
+  wheelLineGlow: 'rgba(252, 211, 77, 0.5)',
+  wheelLineSoft: 'rgba(254, 243, 199, 0.9)',
+  success: '#34d399',
+  successSoft: 'rgba(16, 185, 129, 0.28)',
+  successText: '#ecfdf5',
+  hintSoft: 'rgba(251, 191, 36, 0.32)',
+  hintText: '#fde68a',
+  gridHidden: 'rgba(56, 189, 248, 0.22)',
+  gridInactive: 'rgba(14, 116, 144, 0.35)',
+  gridBorder: 'rgba(125, 211, 252, 0.55)',
+  gridRevealedBorder: '#7dd3fc',
+  gridNumberBorder: '#38bdf8',
+  gridNumberText: '#082f49',
+  playGradient: ['#38bdf8', '#0284c7', '#0c4a6e', '#031525'],
+  toolBtnBg: 'rgba(224, 242, 254, 0.2)',
+  toolIcon: '#e0f2fe',
+  clueBg: 'rgba(224, 242, 254, 0.18)',
+  coinLabel: '#e0f2fe',
+  letterBg: 'rgba(240, 249, 255, 0.96)',
+  letterBgGradient: ['#f0f9ff', '#bae6fd'],
+  letterText: '#0c4a6e',
+  letterBorder: 'rgba(125, 211, 252, 0.9)',
+  letterSelectedGradient: ['#fffbeb', '#fde68a', '#fbbf24'],
+  letterSelectedBorder: '#fcd34d',
+  letterSelectedText: '#78350f',
+  radarGlassMid: 'rgba(56, 189, 248, 0.22)',
+  radarGlassOuter: 'rgba(8, 47, 73, 0.35)',
+  radarRim: 'rgba(186, 230, 253, 0.65)',
+  radarStroke: 'rgba(255, 255, 255, 0.85)',
+  radarStrokeSoft: 'rgba(186, 230, 253, 0.45)',
+  radarHub: 'rgba(56, 189, 248, 0.5)',
+  radarSweepMid: 'rgba(56, 189, 248, 0.16)',
+  statusBar: 'light',
+};
+
+/** Dark — deeper ocean play. */
+export const WW_DARK = {
+  gradient: ['#0e7490', '#0c4a6e', '#082f49', '#020617'],
+  surface: '#0c4a6e',
+  border: 'rgba(125, 211, 252, 0.4)',
+  borderStrong: 'rgba(186, 230, 253, 0.55)',
+  text: '#f0f9ff',
+  textSecondary: 'rgba(224, 242, 254, 0.75)',
+  textMuted: 'rgba(186, 230, 253, 0.55)',
+  textOnSurface: '#082f49',
+  accent: '#38bdf8',
+  accentDark: '#0ea5e9',
+  accentSoft: 'rgba(14, 165, 233, 0.2)',
+  accentRing: 'rgba(56, 189, 248, 0.35)',
+  wheelLine: '#fcd34d',
+  wheelLineDark: '#f59e0b',
+  wheelLineGlow: 'rgba(252, 211, 77, 0.55)',
+  wheelLineSoft: 'rgba(254, 243, 199, 0.9)',
+  success: '#34d399',
+  successSoft: 'rgba(16, 185, 129, 0.28)',
+  successText: '#ecfdf5',
+  hintSoft: 'rgba(251, 191, 36, 0.28)',
+  hintText: '#fde68a',
+  gridHidden: 'rgba(56, 189, 248, 0.18)',
+  gridInactive: 'rgba(8, 47, 73, 0.55)',
+  gridBorder: 'rgba(125, 211, 252, 0.5)',
+  gridRevealedBorder: '#7dd3fc',
+  gridNumberBorder: '#38bdf8',
+  gridNumberText: '#082f49',
+  playGradient: ['#22d3ee', '#0284c7', '#0c4a6e', '#020617'],
+  toolBtnBg: 'rgba(224, 242, 254, 0.18)',
+  toolIcon: '#e0f2fe',
+  clueBg: 'rgba(224, 242, 254, 0.16)',
+  coinLabel: '#e0f2fe',
+  letterBg: 'rgba(240, 249, 255, 0.96)',
+  letterBgGradient: ['#f0f9ff', '#bae6fd'],
+  letterText: '#0c4a6e',
+  letterBorder: 'rgba(125, 211, 252, 0.95)',
+  letterSelectedGradient: ['#fffbeb', '#fde68a', '#fbbf24'],
+  letterSelectedBorder: '#fcd34d',
+  letterSelectedText: '#78350f',
+  radarGlassMid: 'rgba(56, 189, 248, 0.24)',
+  radarGlassOuter: 'rgba(2, 6, 23, 0.35)',
+  radarRim: 'rgba(186, 230, 253, 0.7)',
+  radarStroke: 'rgba(255, 255, 255, 0.88)',
+  radarStrokeSoft: 'rgba(186, 230, 253, 0.5)',
+  radarHub: 'rgba(56, 189, 248, 0.55)',
+  radarSweepMid: 'rgba(56, 189, 248, 0.18)',
+  statusBar: 'light',
+};
+
+/**
+ * Random theme play chrome — light frosted UI over weekly photo scenes.
+ */
+export const WW_RANDOM = {
   gradient: ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0'],
   surface: 'rgba(255, 255, 255, 0.94)',
   border: 'rgba(148, 163, 184, 0.4)',
@@ -24,7 +128,6 @@ export const WW_LIGHT = {
   accentDark: '#0f766e',
   accentSoft: 'rgba(241, 245, 249, 0.9)',
   accentRing: 'rgba(13, 148, 136, 0.28)',
-  /** Amber lock — warm contrast on cool white */
   wheelLine: '#f59e0b',
   wheelLineDark: '#d97706',
   wheelLineGlow: 'rgba(245, 158, 11, 0.45)',
@@ -34,7 +137,6 @@ export const WW_LIGHT = {
   successText: '#065f46',
   hintSoft: 'rgba(254, 243, 199, 0.95)',
   hintText: '#92400e',
-  /** Grid keeps the previous mint / seafoam look on the white play page */
   gridHidden: 'rgba(204, 251, 241, 0.92)',
   gridInactive: 'rgba(167, 243, 208, 0.45)',
   gridBorder: 'rgba(110, 231, 183, 0.9)',
@@ -46,7 +148,6 @@ export const WW_LIGHT = {
   toolIcon: '#475569',
   clueBg: 'rgba(255, 255, 255, 0.94)',
   coinLabel: '#64748b',
-  /** Letter pods on the radar */
   letterBg: 'rgba(255, 255, 255, 0.98)',
   letterBgGradient: ['#ffffff', '#f1f5f9'],
   letterText: '#0f172a',
@@ -54,7 +155,6 @@ export const WW_LIGHT = {
   letterSelectedGradient: ['#fffbeb', '#fde68a', '#fbbf24'],
   letterSelectedBorder: '#f59e0b',
   letterSelectedText: '#78350f',
-  /** Radar glass (light) */
   radarGlassMid: 'rgba(226, 232, 240, 0.55)',
   radarGlassOuter: 'rgba(148, 163, 184, 0.22)',
   radarRim: 'rgba(203, 213, 225, 0.95)',
@@ -62,59 +162,6 @@ export const WW_LIGHT = {
   radarStrokeSoft: 'rgba(148, 163, 184, 0.4)',
   radarHub: 'rgba(148, 163, 184, 0.55)',
   radarSweepMid: 'rgba(148, 163, 184, 0.16)',
-  statusBar: 'dark',
-};
-
-/** Dark — deep teal play. */
-export const WW_DARK = {
-  gradient: ['#124036', '#0A2925', '#051412'],
-  surface: '#153D38',
-  border: 'rgba(153, 246, 228, 0.45)',
-  borderStrong: 'rgba(204, 251, 241, 0.65)',
-  text: '#f0faf6',
-  textSecondary: 'rgba(224, 242, 236, 0.72)',
-  textMuted: 'rgba(224, 242, 236, 0.5)',
-  textOnSurface: '#064e3b',
-  accent: '#5eead4',
-  accentDark: '#2dd4bf',
-  accentSoft: 'rgba(45, 212, 191, 0.18)',
-  accentRing: 'rgba(45, 212, 191, 0.35)',
-  wheelLine: '#fcd34d',
-  wheelLineDark: '#f59e0b',
-  wheelLineGlow: 'rgba(252, 211, 77, 0.55)',
-  wheelLineSoft: 'rgba(254, 243, 199, 0.9)',
-  success: '#34d399',
-  successSoft: 'rgba(16, 185, 129, 0.28)',
-  successText: '#ecfdf5',
-  hintSoft: 'rgba(251, 191, 36, 0.28)',
-  hintText: '#fde68a',
-  gridHidden: 'rgba(167, 243, 208, 0.16)',
-  gridInactive: 'rgba(167, 243, 208, 0.08)',
-  gridBorder: 'rgba(153, 246, 228, 0.65)',
-  gridRevealedBorder: '#bbf7d0',
-  gridNumberBorder: '#5eead4',
-  gridNumberText: '#064e3b',
-  playGradient: ['#0f766e', '#0d9488', '#115e59', '#042f2e'],
-  toolBtnBg: 'rgba(236, 253, 245, 0.28)',
-  toolIcon: '#ecfdf5',
-  clueBg: 'rgba(236, 253, 245, 0.22)',
-  coinLabel: '#f0faf6',
-  /** Bright pods + dark letters so they read on the glowing radar */
-  letterBg: 'rgba(236, 253, 245, 0.96)',
-  letterBgGradient: ['#ecfdf5', '#99f6e4'],
-  letterText: '#064e3b',
-  letterBorder: 'rgba(153, 246, 228, 0.95)',
-  letterSelectedGradient: ['#fffbeb', '#fde68a', '#fbbf24'],
-  letterSelectedBorder: '#fcd34d',
-  letterSelectedText: '#78350f',
-  /** Radar glass (dark teal) */
-  radarGlassMid: 'rgba(153, 246, 228, 0.26)',
-  radarGlassOuter: 'rgba(13, 148, 136, 0.16)',
-  radarRim: 'rgba(204, 251, 241, 0.7)',
-  radarStroke: 'rgba(255, 255, 255, 0.88)',
-  radarStrokeSoft: 'rgba(236, 253, 245, 0.5)',
-  radarHub: 'rgba(45, 212, 191, 0.55)',
-  radarSweepMid: 'rgba(153, 246, 228, 0.18)',
   statusBar: 'light',
 };
 
@@ -174,10 +221,7 @@ export function normalizeAppearance(value) {
 export function getWW(mode) {
   const normalized = normalizeAppearance(mode);
   if (normalized === APPEARANCE_DARK) return WW_DARK;
-  // Random scenes use light chrome; status bar light (white icons) over photo + scrim
-  if (normalized === APPEARANCE_RANDOM) {
-    return { ...WW_LIGHT, statusBar: 'light' };
-  }
+  if (normalized === APPEARANCE_RANDOM) return WW_RANDOM;
   return WW_LIGHT;
 }
 

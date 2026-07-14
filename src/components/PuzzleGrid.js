@@ -68,7 +68,6 @@ export default function PuzzleGrid({
           style={[
             styles.cell,
             styles.cellInactive,
-            { backgroundColor: ww.gridInactive },
             cellSize > 0 && { width: cellSize, height: cellSize },
           ]}
         />
@@ -197,7 +196,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     position: 'relative',
   },
-  cellInactive: {},
+  cellInactive: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
   letter: {
     fontSize: 15,
     fontWeight: '700',

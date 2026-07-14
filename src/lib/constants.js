@@ -1,4 +1,4 @@
-export const GRID_SIZE = 7;
+export const GRID_SIZE = 8;
 
 /** Prefer API `gridSize`; fall back to default when missing. */
 export function resolveWordWheelGridSize(puzzleOrSize) {

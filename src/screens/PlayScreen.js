@@ -2,25 +2,27 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Dimensions,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, BookOpen, ChevronRight, Lightbulb, Tornado } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, Lightbulb, Tornado } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
 import ClueLetterRow from '../components/ClueLetterRow';
 import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
-import PuzzleLevelToast from '../components/PuzzleLevelToast';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 import BonusWordModal from '../components/BonusWordModal';
 import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
+import { CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
 import { validateBonusWord } from '../lib/dictionary';
@@ -33,11 +35,18 @@ import {
   findHintLetterCandidates,
   findWordsAtCell,
   findWordsCompletedByReveal,
+  listUnfoundClueEntries,
   normalizeWord,
   parseWordPositions,
   parseWords,
   puzzleCellKeys,
 } from '../lib/gridReveal';
+import {
+  loadStoredBonusWords,
+  mergeBonusWordLists,
+  parseBonusWordsFromPlay,
+  saveStoredBonusWords,
+} from '../lib/bonusWordsStorage';
 import {
   formatWordWheelPlayDuration,
   parseWordWheelCatalog,
@@ -47,7 +56,7 @@ import {
   WORD_WHEEL_BONUS_WORD_GIFT,
 } from '../lib/points';
 import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/wheelLetters';
-import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
+import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
@@ -56,9 +65,8 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useAudio } from '../context/AudioContext';
 import { useT } from '../context/LanguageContext';
 
-const LEVEL_TOAST_MS = 5200;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-/** Keep wheel + helm handles clear of the home indicator. */
+/** Keep wheel clear of the home indicator. */
 const WHEEL_SIZE = Math.min(SCREEN_W - 120, Math.max(200, SCREEN_H * 0.28), 260);
 
 export default function PlayScreen({ navigate, routeParams = {} }) {
@@ -82,15 +90,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [hintPending, setHintPending] = useState(false);
   const [playSessionCoins, setPlaySessionCoins] = useState(0);
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
+  const [dictionaryWord, setDictionaryWord] = useState('');
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
-  const [levelToastVisible, setLevelToastVisible] = useState(false);
   const [bonusWordModal, setBonusWordModal] = useState({
     visible: false,
     word: '',
     awardedGift: false,
+    pendingGift: 0,
   });
+  const coinPulse = useRef(new Animated.Value(1)).current;
+  const [coinSparkBurstId, setCoinSparkBurstId] = useState(0);
+  const [coinSparkVisible, setCoinSparkVisible] = useState(false);
+  const coinSparkClearRef = useRef(null);
   const [bonusWordsFound, setBonusWordsFound] = useState([]);
   const [treasureOpen, setTreasureOpen] = useState(false);
   const [shuffleSignal, setShuffleSignal] = useState(0);
@@ -123,31 +136,105 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [foundWords, wordPositions, hintLetters, gridSize]
   );
   const hintedCellKeys = useMemo(() => new Set(hintLetters.keys()), [hintLetters]);
-  const hintCandidates = useMemo(
+  const cellWordNumbers = useMemo(
     () =>
-      findHintLetterCandidates(
+      buildCellWordNumbers(
         puzzle?.filledCoordinates,
         foundWords,
         wordPositions,
-        hintedCellKeys
+        hintedCellKeys,
+        displayGrid
       ),
-    [puzzle?.filledCoordinates, foundWords, wordPositions, hintedCellKeys]
-  );
-  const cellWordNumbers = useMemo(
-    () => buildCellWordNumbers(puzzle?.filledCoordinates),
-    [puzzle?.filledCoordinates]
+    [puzzle?.filledCoordinates, foundWords, wordPositions, hintedCellKeys, displayGrid]
   );
   const wordToNumber = useMemo(
     () => buildWordToNumberMap(puzzle?.filledCoordinates, cellWordNumbers),
     [puzzle?.filledCoordinates, cellWordNumbers]
   );
   const clueMap = useMemo(() => buildClueMapFromDisplayClue(puzzle?.displayClue), [puzzle?.displayClue]);
-  const selectedWordNumber = selectedWord ? wordToNumber.get(selectedWord) ?? null : null;
-  const selectedClue = selectedWord ? clueMap.get(selectedWord) || '' : '';
+  const unfoundClues = useMemo(
+    () =>
+      listUnfoundClueEntries(
+        puzzle?.filledCoordinates,
+        puzzle?.displayClue,
+        foundWords,
+        wordPositions,
+        hintedCellKeys,
+        displayGrid
+      ),
+    [puzzle?.filledCoordinates, puzzle?.displayClue, foundWords, wordPositions, hintedCellKeys, displayGrid]
+  );
+
+  // Keep clue strip on an unsolved word; default to the first remaining clue.
+  useEffect(() => {
+    if (unfoundClues.length === 0) {
+      if (selectedWord && foundWords.includes(normalizeWord(selectedWord))) {
+        setSelectedWord(null);
+      }
+      return;
+    }
+    const normalizedSelected = selectedWord ? normalizeWord(selectedWord) : '';
+    const stillOpen = unfoundClues.some((entry) => entry.word === normalizedSelected);
+    if (!stillOpen) {
+      setSelectedWord(unfoundClues[0].word);
+    }
+  }, [unfoundClues, selectedWord, foundWords]);
+
+  const clueIndex = useMemo(() => {
+    if (!selectedWord) return 0;
+    const idx = unfoundClues.findIndex((entry) => entry.word === normalizeWord(selectedWord));
+    return idx >= 0 ? idx : 0;
+  }, [unfoundClues, selectedWord]);
+
+  const activeClue = unfoundClues[clueIndex] || null;
+
+  // Prefer hint letters in the currently selected/clued word.
+  const hintPreferredWord = normalizeWord(selectedWord || activeClue?.word || '');
+  const hintCandidates = useMemo(
+    () =>
+      findHintLetterCandidates(
+        puzzle?.filledCoordinates,
+        foundWords,
+        wordPositions,
+        hintedCellKeys,
+        hintPreferredWord
+      ),
+    [puzzle?.filledCoordinates, foundWords, wordPositions, hintedCellKeys, hintPreferredWord]
+  );
+  const selectedWordNumber = activeClue?.number
+    ?? (selectedWord ? wordToNumber.get(normalizeWord(selectedWord)) ?? null : null);
+  const selectedClue = activeClue
+    ? (activeClue.clue || '')
+    : (selectedWord ? clueMap.get(normalizeWord(selectedWord)) || '' : '');
   const selectedWordCells = useMemo(() => {
-    if (!selectedWord || !wordPositions[selectedWord]) return new Set();
-    return new Set(wordPositions[selectedWord].map((p) => `${p.row},${p.col}`));
-  }, [selectedWord, wordPositions]);
+    // Prefer the word the player just picked/found; fall back to the clue strip word.
+    const word = selectedWord || activeClue?.word;
+    if (!word || !wordPositions[normalizeWord(word)]) return new Set();
+    return new Set(wordPositions[normalizeWord(word)].map((p) => `${p.row},${p.col}`));
+  }, [activeClue, selectedWord, wordPositions]);
+
+  const goClue = useCallback(
+    (delta) => {
+      if (unfoundClues.length === 0) return;
+      const next = (clueIndex + delta + unfoundClues.length) % unfoundClues.length;
+      setSelectedWord(unfoundClues[next].word);
+    },
+    [unfoundClues, clueIndex]
+  );
+
+  const cluePanResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gesture) =>
+          Math.abs(gesture.dx) > 18 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+        onPanResponderRelease: (_, gesture) => {
+          if (gesture.dx <= -40) goClue(1);
+          else if (gesture.dx >= 40) goClue(-1);
+        },
+      }),
+    [goClue]
+  );
+
   const hintOnlyCells = useMemo(() => {
     const keys = new Set();
     hintLetters.forEach((_, key) => {
@@ -198,26 +285,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     puzzleComplete,
     hintPending,
   ]);
-  const selectedWordRevealed = Boolean(
-    selectedWord
-    && (foundWords.includes(selectedWord) || bonusWordsFound.includes(selectedWord))
+  const dictionaryWordRevealed = Boolean(
+    dictionaryWord
+    && (
+      foundWords.includes(normalizeWord(dictionaryWord))
+      || bonusWordsFound.includes(normalizeWord(dictionaryWord))
+    )
   );
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
   const dailyLabel = useMemo(() => {
     if (!isDaily) return '';
     return formatShortDisplayDate(dailyDate || puzzle?.dailyPlayDate) || t('toast.dailyFallback');
   }, [isDaily, dailyDate, puzzle?.dailyPlayDate, t]);
-
-  const toastWordCount = useMemo(
-    () => (targetWords.length > 0 ? targetWords.length : resolvePuzzleWordCount(puzzle)),
-    [targetWords.length, puzzle]
-  );
-
-  const toastMaxScore = useMemo(() => {
-    const wordCoins = sumWordWheelCoinsForWords(targetWords, coinsCatalog);
-    const bonus = LevelScreenPolicy.resolveBonusCoins(journeyLevel);
-    return wordCoins + bonus;
-  }, [targetWords, coinsCatalog, journeyLevel]);
 
   useEffect(() => {
     setWheelTiles(buildWheelTiles(baseWheelLetters, puzzle?.id || 'wheel'));
@@ -240,13 +319,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (loading || !puzzle) return undefined;
-    setLevelToastVisible(true);
-    const timer = setTimeout(() => setLevelToastVisible(false), LEVEL_TOAST_MS);
-    return () => clearTimeout(timer);
-  }, [loading, puzzle?.id, isDaily, dailyDate, reloadKey]);
-
   const resetPlayState = useCallback(() => {
     setFoundWords([]);
     setSelectedIndices([]);
@@ -256,6 +328,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setHintCoinsSpent(0);
     setHintPending(false);
     setDictionaryOpen(false);
+    setDictionaryWord('');
     setCompletionDialogOpen(false);
     setCompletionStats(null);
     setShowHeaderNext(false);
@@ -265,9 +338,65 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     completionShownRef.current = false;
     levelStartedAtRef.current = null;
     bonusWordLookupRef.current = false;
-    setBonusWordModal({ visible: false, word: '', awardedGift: false });
+    setBonusWordModal({ visible: false, word: '', awardedGift: false, pendingGift: 0 });
     setBonusWordsFound([]);
     setTreasureOpen(false);
+  }, []);
+
+  const pulseCoinBalance = useCallback(() => {
+    coinPulse.stopAnimation();
+    coinPulse.setValue(1);
+    Animated.sequence([
+      Animated.spring(coinPulse, {
+        toValue: 1.45,
+        friction: 4,
+        tension: 180,
+        useNativeDriver: true,
+      }),
+      Animated.spring(coinPulse, {
+        toValue: 1,
+        friction: 5,
+        tension: 140,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    if (coinSparkClearRef.current) clearTimeout(coinSparkClearRef.current);
+    setCoinSparkVisible(true);
+    setCoinSparkBurstId((id) => id + 1);
+    coinSparkClearRef.current = setTimeout(() => {
+      setCoinSparkVisible(false);
+      coinSparkClearRef.current = null;
+    }, 900);
+  }, [coinPulse]);
+
+  const applyBonusWordGift = useCallback(
+    (amount) => {
+      const gift = Math.max(0, Number(amount) || 0);
+      if (!gift) return;
+      if (wallet.loggedIn) {
+        wallet.addLifetimePoints?.(gift);
+      } else {
+        setPlaySessionCoins((prev) => prev + gift);
+      }
+      playSfx('bonus');
+      // Let the new total paint, then pulse icon + number.
+      requestAnimationFrame(() => pulseCoinBalance());
+    },
+    [wallet, playSfx, pulseCoinBalance]
+  );
+
+  const handleBonusWordClose = useCallback(() => {
+    const gift = bonusWordModal.awardedGift ? bonusWordModal.pendingGift : 0;
+    setBonusWordModal({ visible: false, word: '', awardedGift: false, pendingGift: 0 });
+    if (gift > 0) {
+      // Award after the modal uncovers the coin row so 3 → 4 is visible.
+      setTimeout(() => applyBonusWordGift(gift), 80);
+    }
+  }, [bonusWordModal.awardedGift, bonusWordModal.pendingGift, applyBonusWordGift]);
+
+  useEffect(() => () => {
+    if (coinSparkClearRef.current) clearTimeout(coinSparkClearRef.current);
   }, []);
 
   useEffect(() => {
@@ -342,12 +471,26 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             .map(normalizeWord)
             .filter(Boolean);
           setFoundWords(saved);
-          if (play.totalPuzzleCoins != null) {
-            setPlaySessionCoins(Number(play.totalPuzzleCoins) || 0);
+          const fromServer = parseBonusWordsFromPlay(play);
+          const fromLocal = await loadStoredBonusWords(data.id);
+          const bonus = mergeBonusWordLists(fromServer, fromLocal);
+          setBonusWordsFound(bonus);
+          if (bonus.length) {
+            await saveStoredBonusWords(data.id, bonus);
+            if (fromLocal.length > fromServer.length) {
+              // Push local-only finds up to the server when the API supports it.
+              WordWheelApi.updateProgress(data.id, saved, bonus).catch(() => {});
+            }
           }
+          const baseCoins = Number(play.totalPuzzleCoins) || 0;
+          // Guest puzzle-coin balance isn’t on the server for bonus gifts — restore +1 per saved find.
+          const restoredBonusCoins = bonus.length * WORD_WHEEL_BONUS_WORD_GIFT;
+          setPlaySessionCoins(baseCoins + restoredBonusCoins);
         } else if (!cancelled) {
           // Still time the attempt even if play session start fails.
           levelStartedAtRef.current = Date.now();
+          const fromLocal = await loadStoredBonusWords(data.id);
+          if (fromLocal.length) setBonusWordsFound(fromLocal);
         }
       } catch (e) {
         if (!cancelled) {
@@ -384,10 +527,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, []);
 
   const persistProgress = useCallback(
-    async (words) => {
+    async (words, bonusWords = bonusWordsFound) => {
       if (!puzzle?.id) return null;
       try {
-        const updated = await WordWheelApi.updateProgress(puzzle.id, words);
+        const updated = await WordWheelApi.updateProgress(puzzle.id, words, bonusWords);
         if (updated && !updated.code) {
           setPlaySession(updated);
           if (updated.totalPuzzleCoins != null) {
@@ -401,7 +544,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         return null;
       }
     },
-    [puzzle, t]
+    [puzzle, t, bonusWordsFound]
+  );
+
+  const persistBonusWords = useCallback(
+    async (words) => {
+      if (!puzzle?.id) return;
+      await saveStoredBonusWords(puzzle.id, words);
+      try {
+        await WordWheelApi.updateProgress(puzzle.id, foundWords, words);
+      } catch {
+        // Local cache already saved; server sync is best-effort.
+      }
+    },
+    [puzzle?.id, foundWords]
   );
 
   const triggerCellRevealEffect = useCallback((keys, mode = 'new') => {
@@ -462,6 +618,35 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, puzzle]
   );
 
+  // Crossings / hints can finish a word without a wheel submit — promote those to found.
+  useEffect(() => {
+    if (!puzzle?.id || !wordPositions || Object.keys(wordPositions).length === 0) return;
+    const newly = findWordsCompletedByReveal(foundWords, wordPositions, hintedCellKeys);
+    if (!newly.length) return;
+    const next = [...foundWords];
+    newly.forEach((w) => {
+      if (!next.includes(w)) next.push(w);
+    });
+    if (next.length === foundWords.length) return;
+    setFoundWords(next);
+    newly.forEach((w) => {
+      playSfx('correct');
+      triggerWordRevealEffect(w, 'new');
+    });
+    persistProgress(next).then((updatedSession) => {
+      openCompletionIfNeeded(next, updatedSession);
+    });
+  }, [
+    puzzle?.id,
+    foundWords,
+    wordPositions,
+    hintedCellKeys,
+    persistProgress,
+    openCompletionIfNeeded,
+    playSfx,
+    triggerWordRevealEffect,
+  ]);
+
   const submitWord = useCallback(
     async (wordRaw) => {
       const word = normalizeWord(wordRaw);
@@ -483,17 +668,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             return false;
           }
 
-          setBonusWordsFound((prev) => (prev.includes(word) ? prev : [...prev, word]));
-          playSfx('bonus');
-          if (wallet.loggedIn) {
-            wallet.addLifetimePoints?.(WORD_WHEEL_BONUS_WORD_GIFT);
-          } else {
-            setPlaySessionCoins((prev) => prev + WORD_WHEEL_BONUS_WORD_GIFT);
-          }
+          setBonusWordsFound((prev) => {
+            const next = prev.includes(word) ? prev : [...prev, word];
+            persistBonusWords(next);
+            return next;
+          });
+          playSfx('chime');
+          // Gift applies when the modal closes so the coin row can animate 3 → 4.
           setBonusWordModal({
             visible: true,
             word,
             awardedGift: true,
+            pendingGift: WORD_WHEEL_BONUS_WORD_GIFT,
           });
           return true;
         } finally {
@@ -510,10 +696,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       }
 
       playSfx('correct');
-      const next = [...foundWords, word];
+      let next = [...foundWords, word];
+      // Crossings can finish other words — treat them as found too.
+      const cascaded = findWordsCompletedByReveal(next, wordPositions, hintedCellKeys);
+      cascaded.forEach((w) => {
+        if (!next.includes(w)) next.push(w);
+      });
       setFoundWords(next);
       setSelectedWord(word);
       triggerWordRevealEffect(word, 'new');
+      cascaded.forEach((w) => {
+        if (w !== word) triggerWordRevealEffect(w, 'new');
+      });
       const updatedSession = await persistProgress(next);
       await openCompletionIfNeeded(next, updatedSession);
       return true;
@@ -521,6 +715,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [
       targetWords,
       foundWords,
+      wordPositions,
+      hintedCellKeys,
       persistProgress,
       triggerWordRevealEffect,
       openCompletionIfNeeded,
@@ -528,6 +724,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       puzzle?.language,
       wallet,
       bonusWordsFound,
+      persistBonusWords,
     ]
   );
 
@@ -543,9 +740,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     (row, col) => {
       setSelectedIndices([]);
       const matches = findWordsAtCell(puzzle?.filledCoordinates, row, col, cellWordNumbers);
-      if (matches.length > 0) setSelectedWord(matches[0].word);
+      const open = matches.find((m) => !foundWords.includes(m.word));
+      if (open) setSelectedWord(open.word);
+      else if (matches.length > 0) setSelectedWord(matches[0].word);
     },
-    [puzzle?.filledCoordinates, cellWordNumbers]
+    [puzzle?.filledCoordinates, cellWordNumbers, foundWords]
   );
 
   const handleShuffle = useCallback(() => {
@@ -619,7 +818,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       triggerCellRevealEffect([pick.key], 'new');
 
       // If hints (plus crossings) fully reveal a word, count it as found.
-      const newlyCompleted = findWordsCompletedByReveal(foundWords, wordPositions, nextHints);
+      // (Also covered by the reveal-sync effect; keeping this for snappy feedback.)
+      const newlyCompleted = findWordsCompletedByReveal(
+        foundWords,
+        wordPositions,
+        new Set(nextHints.keys())
+      );
       if (newlyCompleted.length > 0) {
         const nextFound = [...foundWords];
         newlyCompleted.forEach((word) => {
@@ -679,16 +883,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   return (
     <GradientBackground variant="play">
-      <PuzzleLevelToast
-        visible={levelToastVisible && !loading && Boolean(puzzle)}
-        isDaily={isDaily}
-        level={journeyLevel}
-        dailyLabel={dailyLabel}
-        title={puzzle?.title}
-        wordCount={toastWordCount}
-        maxScore={toastMaxScore}
-      />
-
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Pressable
@@ -755,18 +949,47 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             { backgroundColor: ww.clueBg, borderColor: ww.borderStrong },
             selectedWheelWord ? styles.clueBoxActive : null,
           ]}
+          {...cluePanResponder.panHandlers}
         >
-          <Text
-            style={[
-              styles.clueText,
-              { color: ww.textOnSurface },
-              !selectedWord && styles.cluePlaceholder,
-            ]}
-          >
-            {selectedWord
-              ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
-              : t('play.clue.placeholder')}
-          </Text>
+          <View style={styles.clueRow}>
+            {unfoundClues.length > 1 ? (
+              <Pressable
+                style={styles.clueArrowBtn}
+                onPress={() => goClue(-1)}
+                hitSlop={8}
+                accessibilityLabel={t('play.clue.prev')}
+              >
+                <ChevronLeft color={ww.textOnSurface || '#334155'} size={22} strokeWidth={2.4} />
+              </Pressable>
+            ) : (
+              <View style={styles.clueArrowSpacer} />
+            )}
+            <Text
+              style={[
+                styles.clueText,
+                { color: ww.textOnSurface },
+                !activeClue && !selectedWord && styles.cluePlaceholder,
+              ]}
+            >
+              {activeClue
+                ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
+                : selectedWord
+                  ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
+                  : t('play.clue.placeholder')}
+            </Text>
+            {unfoundClues.length > 1 ? (
+              <Pressable
+                style={styles.clueArrowBtn}
+                onPress={() => goClue(1)}
+                hitSlop={8}
+                accessibilityLabel={t('play.clue.next')}
+              >
+                <ChevronRight color={ww.textOnSurface || '#334155'} size={22} strokeWidth={2.4} />
+              </Pressable>
+            ) : (
+              <View style={styles.clueArrowSpacer} />
+            )}
+          </View>
           {selectedWheelWord ? (
             <View style={styles.wordOverlay}>
               <ClueLetterRow word={selectedWheelWord} />
@@ -776,17 +999,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
-            <View style={styles.coinRow}>
-              <GiTwoCoins size={18} color="#facc15" />
-              <Text
-                style={[
-                  styles.coinLabel,
-                  styles.coinLabelGold,
-                  totalHintCoinsAvailable < WORD_WHEEL_HINT_COST && styles.coinLabelLow,
-                ]}
-              >
-                {lifetimeCoinsRemaining}
-              </Text>
+            <View style={styles.coinBurstWrap}>
+              <CoinSparkBurst burstId={coinSparkBurstId} visible={coinSparkVisible} />
+              <Animated.View style={[styles.coinRow, { transform: [{ scale: coinPulse }] }]}>
+                <GiTwoCoins size={18} color="#facc15" />
+                <Text
+                  style={[
+                    styles.coinLabel,
+                    styles.coinLabelGold,
+                    totalHintCoinsAvailable < WORD_WHEEL_HINT_COST && styles.coinLabelLow,
+                  ]}
+                >
+                  {lifetimeCoinsRemaining}
+                </Text>
+              </Animated.View>
             </View>
             <Pressable
               style={[
@@ -812,7 +1038,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               onPress={() => setTreasureOpen(true)}
               accessibilityLabel={t('play.a11y.treasureChest')}
             >
-              <PiTreasureChest size={18} color="#facc15" />
+              <PiTreasureChest size={18} color={ww.toolIcon} />
             </Pressable>
           </View>
 
@@ -833,7 +1059,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
                 !selectedWord && styles.toolBtnDisabled,
               ]}
-              onPress={() => setDictionaryOpen(true)}
+              onPress={() => {
+                setDictionaryWord(selectedWord || '');
+                setDictionaryOpen(true);
+              }}
               disabled={!selectedWord}
               accessibilityLabel={t('play.a11y.dictionary')}
             >
@@ -852,9 +1081,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
       <WordWheelDictionarySheet
         visible={dictionaryOpen}
-        onClose={() => setDictionaryOpen(false)}
-        word={selectedWord || ''}
-        wordRevealed={selectedWordRevealed}
+        onClose={() => {
+          setDictionaryOpen(false);
+          setDictionaryWord('');
+        }}
+        word={dictionaryWord || ''}
+        wordRevealed={dictionaryWordRevealed}
         language={puzzle?.language || 'english'}
       />
 
@@ -873,8 +1105,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         visible={bonusWordModal.visible}
         word={bonusWordModal.word}
         awardedGift={bonusWordModal.awardedGift}
-        giftCoins={WORD_WHEEL_BONUS_WORD_GIFT}
-        onClose={() => setBonusWordModal({ visible: false, word: '', awardedGift: false })}
+        giftCoins={bonusWordModal.pendingGift || WORD_WHEEL_BONUS_WORD_GIFT}
+        onClose={handleBonusWordClose}
       />
 
       <TreasureBonusWordsModal
@@ -883,7 +1115,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         words={bonusWordsFound}
         giftCoins={WORD_WHEEL_BONUS_WORD_GIFT}
         onWordPress={(word) => {
-          setSelectedWord(word);
+          const next = normalizeWord(word);
+          setDictionaryWord(next);
           setTreasureOpen(false);
           setDictionaryOpen(true);
         }}
@@ -972,18 +1205,34 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     minHeight: 52,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 10,
     justifyContent: 'center',
     overflow: 'hidden',
   },
   clueBoxActive: {
     minHeight: 60,
   },
+  clueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  clueArrowBtn: {
+    width: 32,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clueArrowSpacer: {
+    width: 8,
+  },
   clueText: {
+    flex: 1,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
+    textAlign: 'center',
   },
   cluePlaceholder: {
     fontStyle: 'italic',
@@ -1006,6 +1255,8 @@ const styles = StyleSheet.create({
     width: 44,
     alignItems: 'center',
     gap: 6,
+    overflow: 'visible',
+    zIndex: 5,
   },
   toolBtn: {
     width: 34,
@@ -1017,6 +1268,13 @@ const styles = StyleSheet.create({
   },
   toolBtnDisabled: {
     opacity: 0.5,
+  },
+  coinBurstWrap: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+    zIndex: 6,
   },
   coinRow: {
     marginTop: 2,

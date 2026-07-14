@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Image,
   ImageBackground,
+  InteractionManager,
   Pressable,
   StyleSheet,
   Text,
@@ -18,9 +18,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-
-/** Splash duration before entering the app. */
-export const LAUNCH_SPLASH_HOLD_MS = 3_000;
 
 const SPLASH_BG = require('../assets/bg_image/deep_sea.png');
 const COPYRIGHT = '© 2026 Puzzle Interact. All rights reserved.';
@@ -92,46 +89,30 @@ function MistOrb({ size, top, duration, delay, goingRight, opacity, screenW }) {
   );
 }
 
-function LoadingBar({ durationMs, trackWidth }) {
-  const progress = useSharedValue(0);
-
-  useEffect(() => {
-    progress.value = 0;
-    progress.value = withTiming(1, {
-      duration: durationMs,
-      easing: Easing.linear,
-    });
-  }, [progress, durationMs]);
-
-  const fillStyle = useAnimatedStyle(() => ({
-    width: interpolate(progress.value, [0, 1], [0, trackWidth]),
-  }));
-
-  return (
-    <View style={[styles.barTrack, { width: trackWidth }]}>
-      <Animated.View style={[styles.barFill, fillStyle]} />
-    </View>
-  );
-}
-
 /**
- * Launch splash: cover background, centered icon, loading bar, copyright.
- * Tap anywhere to dismiss early.
+ * Covers the cold-start gap with the same reef as the native splash.
+ * No progress bar — leaves as soon as the background has loaded and
+ * startup interactions settle (no fixed hold).
  */
-export default function LaunchSplashOverlay({ onDone, holdMs = LAUNCH_SPLASH_HOLD_MS }) {
+export default function LaunchSplashOverlay({ onDone }) {
   const [visible, setVisible] = useState(true);
+  const [bgReady, setBgReady] = useState(false);
+  const [appReady, setAppReady] = useState(false);
   const { width, height } = useWindowDimensions();
-  const iconSize = Math.round(width * 0.42);
-  const barWidth = Math.min(220, Math.round(width * 0.55));
   const banks = useMemo(() => makeMistBanks(6, width, height), [width, height]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      onDone?.();
-    }, holdMs);
-    return () => clearTimeout(timer);
-  }, [holdMs, onDone]);
+    const task = InteractionManager.runAfterInteractions(() => {
+      setAppReady(true);
+    });
+    return () => task.cancel();
+  }, []);
+
+  useEffect(() => {
+    if (!visible || !bgReady || !appReady) return;
+    setVisible(false);
+    onDone?.();
+  }, [visible, bgReady, appReady, onDone]);
 
   if (!visible) return null;
 
@@ -152,6 +133,8 @@ export default function LaunchSplashOverlay({ onDone, holdMs = LAUNCH_SPLASH_HOL
         style={styles.background}
         imageStyle={styles.backgroundImage}
         resizeMode="cover"
+        onLoad={() => setBgReady(true)}
+        onError={() => setBgReady(true)}
       >
         <LinearGradient
           colors={[
@@ -171,14 +154,7 @@ export default function LaunchSplashOverlay({ onDone, holdMs = LAUNCH_SPLASH_HOL
         </View>
         <View style={styles.content} pointerEvents="box-none">
           <Text style={styles.title}>Word Wheel Quest</Text>
-          <View style={styles.center}>
-            <Image
-              source={require('../assets/splash-icon.png')}
-              style={{ width: iconSize, height: iconSize }}
-              resizeMode="contain"
-            />
-            <LoadingBar durationMs={holdMs} trackWidth={barWidth} />
-          </View>
+          <View style={styles.center} />
           <Text style={styles.copyright}>{COPYRIGHT}</Text>
         </View>
       </ImageBackground>
@@ -196,6 +172,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    backgroundColor: '#031525',
   },
   backgroundImage: {
     width: '100%',
@@ -228,20 +205,6 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  barTrack: {
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.28)',
-    overflow: 'hidden',
-    marginTop: 28,
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 999,
-    backgroundColor: '#5eead4',
   },
   copyright: {
     color: 'rgba(255, 255, 255, 0.88)',

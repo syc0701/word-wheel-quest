@@ -51,7 +51,9 @@ export default {
   'daily.replay': 'Replay',
 
   // play
-  'play.clue.placeholder': 'Tap a numbered cell to see the clue',
+  'play.clue.placeholder': 'Swipe the clue strip, or tap a numbered cell',
+  'play.clue.prev': 'Previous clue',
+  'play.clue.next': 'Next clue',
   'play.error.noDaily': 'No daily puzzle available.',
   'play.error.noPuzzle': 'No puzzle available.',
   'play.error.loadFailed': 'Could not load puzzle.',
