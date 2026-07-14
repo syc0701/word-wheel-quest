@@ -49,6 +49,7 @@ export const WW = {
   playGradient: ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0'],
   toolBtnBg: 'rgba(255, 255, 255, 0.95)',
   clueBg: 'rgba(255, 255, 255, 0.94)',
+  clueText: '#0f172a',
   coinLabel: '#64748b',
   statusBar: 'dark',
 };

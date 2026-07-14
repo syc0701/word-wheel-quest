@@ -174,6 +174,8 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'レベルクリア！',
+  'intermission.wordMaster.message':
+    'おめでとうございます！旅のすべてをクリアしました。',
   'intermission.wordMaster.timeTaken': 'かかった時間',
   'intermission.wordMaster.starWord': 'スターワード',
   'intermission.duration.seconds': '{n}秒',

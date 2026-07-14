@@ -174,6 +174,8 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'Nível completo!',
+  'intermission.wordMaster.message':
+    'Parabéns! Você concluiu toda a jornada.',
   'intermission.wordMaster.timeTaken': 'Tempo gasto',
   'intermission.wordMaster.starWord': 'Palavra estrela',
   'intermission.duration.seconds': '{n}s',

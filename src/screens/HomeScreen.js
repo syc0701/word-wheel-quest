@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Calendar, ChevronRight, Lock, Play, Settings } from 'lucide-react-native';
+import { Calendar, ChevronRight, Lock, Play, Settings, ShoppingBag } from 'lucide-react-native';
 import DailyLockedModal from '../components/DailyLockedModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
@@ -239,6 +239,13 @@ export default function HomeScreen({ navigate }) {
           onPress={openDaily}
           colors={colors}
           locked={!dailyUnlocked}
+        />
+        <MenuRow
+          icon={ShoppingBag}
+          label={t('home.shop.label')}
+          subtitle={t('home.shop.subtitle')}
+          onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
+          colors={colors}
         />
         <Text style={[styles.footer, { color: colors.textMuted }]}>
           {t('home.footer')}

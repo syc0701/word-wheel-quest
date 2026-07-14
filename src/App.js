@@ -7,6 +7,7 @@ import { SCREENS } from './constants/theme';
 import { AppearanceProvider } from './context/AppearanceContext';
 import { AudioProvider, BGM_SCENES, useAudio } from './context/AudioContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { PlayTimerProvider } from './context/PlayTimerContext';
 import AppBackground from './components/AppBackground';
 import LaunchSplashOverlay from './components/LaunchSplashOverlay';
 import { configurePurchases } from './services/purchases';
@@ -178,7 +179,9 @@ export default function App() {
     <LanguageProvider>
       <AppearanceProvider>
         <AudioProvider>
-          <AppShell />
+          <PlayTimerProvider>
+            <AppShell />
+          </PlayTimerProvider>
         </AudioProvider>
       </AppearanceProvider>
     </LanguageProvider>

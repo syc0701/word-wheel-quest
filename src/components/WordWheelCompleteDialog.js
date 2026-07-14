@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 import {
   LEVEL_SCREEN_TYPES,
@@ -47,6 +48,7 @@ export default function WordWheelCompleteDialog({
   forceScreenType,
 }) {
   const t = useT();
+  const { timerEnabled } = usePlayTimer();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
   const autoTimerRef = useRef(null);
 
@@ -129,8 +131,7 @@ export default function WordWheelCompleteDialog({
     body = (
       <WordMasterCard
         title={t('intermission.wordMaster.title')}
-        timeCaption={t('complete.stat.time')}
-        timeLabel={durationLabel || t('common.emDash')}
+        message={t('intermission.wordMaster.message')}
         starCaption={t('complete.stat.score')}
         starWord={scoreLabel}
       />
@@ -139,8 +140,8 @@ export default function WordWheelCompleteDialog({
     body = (
       <WordMasterCard
         title={t(titleKey)}
-        timeCaption={t('complete.stat.time')}
-        timeLabel={durationLabel || t('common.emDash')}
+        timeCaption={timerEnabled ? t('complete.stat.time') : undefined}
+        timeLabel={timerEnabled ? (durationLabel || t('common.emDash')) : undefined}
         starCaption={t('complete.stat.score')}
         starWord={scoreLabel}
       />

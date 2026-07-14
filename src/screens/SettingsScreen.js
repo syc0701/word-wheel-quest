@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, ShoppingBag, Star, Trophy } from 'lucide-react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AudioSettingsCard from '../components/AudioSettingsCard';
+import PlayTimerSettingsCard from '../components/PlayTimerSettingsCard';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
@@ -213,21 +214,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.appearance')}</Text>
-        <View style={[styles.appearanceCard, themed.appearanceCard]}>
-          <AppearancePicker />
-        </View>
-
-        {/* Language picker — re-enable when shipping multi-language UI
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.language')}</Text>
-        <View style={[styles.appearanceCard, themed.appearanceCard]}>
-          <LanguagePicker />
-        </View>
-        */}
-
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.sound')}</Text>
-        <AudioSettingsCard />
-
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
         {authed || wallet.loggedIn ? (
           <>
@@ -270,6 +256,24 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           />
         )}
 
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.appearance')}</Text>
+        <View style={[styles.appearanceCard, themed.appearanceCard]}>
+          <AppearancePicker />
+        </View>
+
+        {/* Language picker — re-enable when shipping multi-language UI
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.language')}</Text>
+        <View style={[styles.appearanceCard, themed.appearanceCard]}>
+          <LanguagePicker />
+        </View>
+        */}
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.sound')}</Text>
+        <AudioSettingsCard />
+
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.play')}</Text>
+        <PlayTimerSettingsCard />
+
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.score')}</Text>
         <View style={[styles.walletCard, themed.walletCard]}>
           <View style={styles.scoreHeader}>
@@ -306,15 +310,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             <Text style={[styles.walletHint, themed.walletHint]}>{t('settings.score.signInHint')}</Text>
           )}
         </View>
-
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.shop')}</Text>
-        <MenuRow
-          icon={ShoppingBag}
-          label={t('settings.shop.label')}
-          subtitle={t('settings.shop.subtitle')}
-          onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.SETTINGS })}
-          colors={colors}
-        />
 
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.legal')}</Text>
         {LEGAL_LINKS.map((link) => (

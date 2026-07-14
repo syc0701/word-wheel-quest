@@ -174,6 +174,8 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': '레벨 완료!',
+  'intermission.wordMaster.message':
+    '축하합니다! 여정을 모두 완료했습니다.',
   'intermission.wordMaster.timeTaken': '소요 시간',
   'intermission.wordMaster.starWord': '스타 워드',
   'intermission.duration.seconds': '{n}초',

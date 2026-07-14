@@ -174,6 +174,7 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': '关卡完成！',
+  'intermission.wordMaster.message': '恭喜！你已完成整段旅程。',
   'intermission.wordMaster.timeTaken': '用时',
   'intermission.wordMaster.starWord': '明星词',
   'intermission.duration.seconds': '{n}秒',

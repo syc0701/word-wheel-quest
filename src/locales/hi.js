@@ -174,6 +174,8 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'लेवल पूरा!',
+  'intermission.wordMaster.message':
+    'बधाई हो! आपने पूरी यात्रा पूरी कर ली है।',
   'intermission.wordMaster.timeTaken': 'लगा समय',
   'intermission.wordMaster.starWord': 'स्टार शब्द',
   'intermission.duration.seconds': '{n}से',

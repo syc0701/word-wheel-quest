@@ -4,18 +4,18 @@ import {
   Alert,
   Animated,
   Dimensions,
-  PanResponder,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, Lightbulb, Tornado } from 'lucide-react-native';
+import { ScrollView } from 'react-native-gesture-handler';
+import { ArrowLeft, BookOpen, ChevronRight, Clock, Lightbulb, Tornado } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
 import ClueLetterRow from '../components/ClueLetterRow';
+import SwipeableClueStrip from '../components/SwipeableClueStrip';
 import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
@@ -63,6 +63,7 @@ import { DEFAULT_SEASON } from '../constants/api';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useAudio } from '../context/AudioContext';
+import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -75,6 +76,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const wallet = useWordWheelWallet();
   const { ww, isRandomScene } = useAppearance();
   const { playSfx } = useAudio();
+  const { timerEnabled } = usePlayTimer();
   const t = useT();
 
   const [loading, setLoading] = useState(true);
@@ -115,6 +117,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [revealBurstId, setRevealBurstId] = useState(0);
   const completionShownRef = useRef(false);
   const levelStartedAtRef = useRef(null);
+  const [timerStartedAt, setTimerStartedAt] = useState(null);
+  const [elapsedLabel, setElapsedLabel] = useState('0:00');
   const bonusWordLookupRef = useRef(false);
   const completedPuzzleIdRef = useRef(null);
   const completedLevelRef = useRef(null);
@@ -222,18 +226,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [unfoundClues, clueIndex]
   );
 
-  const cluePanResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          Math.abs(gesture.dx) > 18 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
-        onPanResponderRelease: (_, gesture) => {
-          if (gesture.dx <= -40) goClue(1);
-          else if (gesture.dx >= 40) goClue(-1);
-        },
-      }),
-    [goClue]
-  );
+  const clueStripText = activeClue
+    ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
+    : selectedWord
+      ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
+      : t('play.clue.placeholder');
+  const clueStripPlaceholder = !activeClue && !selectedWord;
 
   const hintOnlyCells = useMemo(() => {
     const keys = new Set();
@@ -251,6 +249,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, [hintLetters, foundWords, wordPositions]);
   const puzzleComplete = foundWords.length >= targetWords.length && targetWords.length > 0;
   const selectedWheelWord = selectedIndices.map((i) => wheelTiles[i]?.letter || '').join('');
+
+  useEffect(() => {
+    if (!timerEnabled || !timerStartedAt) {
+      setElapsedLabel('0:00');
+      return undefined;
+    }
+    const tick = () => {
+      setElapsedLabel(formatWordWheelPlayDuration(timerStartedAt, Date.now()));
+    };
+    tick();
+    if (puzzleComplete) return undefined;
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [timerEnabled, timerStartedAt, puzzleComplete]);
+
   const lifetimeCoinsRemaining = wallet.loggedIn
     ? Math.max(0, wallet.lifetimePoints)
     : Math.max(0, playSessionCoins - hintCoinsSpent);
@@ -337,6 +350,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCelebrateMode('new');
     completionShownRef.current = false;
     levelStartedAtRef.current = null;
+    setTimerStartedAt(null);
+    setElapsedLabel('0:00');
     bonusWordLookupRef.current = false;
     setBonusWordModal({ visible: false, word: '', awardedGift: false, pendingGift: 0 });
     setBonusWordsFound([]);
@@ -465,7 +480,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         const play = await WordWheelApi.startPlay(data.id);
         if (!cancelled && play && !play.code) {
           setPlaySession(play);
-          levelStartedAtRef.current = Date.now();
+          const startedAt = Date.now();
+          levelStartedAtRef.current = startedAt;
+          setTimerStartedAt(startedAt);
           const saved = (play.wordsFound || '')
             .split('\n')
             .map(normalizeWord)
@@ -488,7 +505,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           setPlaySessionCoins(baseCoins + restoredBonusCoins);
         } else if (!cancelled) {
           // Still time the attempt even if play session start fails.
-          levelStartedAtRef.current = Date.now();
+          const startedAt = Date.now();
+          levelStartedAtRef.current = startedAt;
+          setTimerStartedAt(startedAt);
           const fromLocal = await loadStoredBonusWords(data.id);
           if (fromLocal.length) setBonusWordsFound(fromLocal);
         }
@@ -943,59 +962,42 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           onCellPress={handleCellPress}
         />
 
-        <View
-          style={[
-            styles.clueBox,
-            { backgroundColor: ww.clueBg, borderColor: ww.borderStrong },
-            selectedWheelWord ? styles.clueBoxActive : null,
-          ]}
-          {...cluePanResponder.panHandlers}
-        >
-          <View style={styles.clueRow}>
-            {unfoundClues.length > 1 ? (
-              <Pressable
-                style={styles.clueArrowBtn}
-                onPress={() => goClue(-1)}
-                hitSlop={8}
-                accessibilityLabel={t('play.clue.prev')}
-              >
-                <ChevronLeft color={ww.textOnSurface || '#334155'} size={22} strokeWidth={2.4} />
-              </Pressable>
-            ) : (
-              <View style={styles.clueArrowSpacer} />
-            )}
-            <Text
-              style={[
-                styles.clueText,
-                { color: ww.textOnSurface },
-                !activeClue && !selectedWord && styles.cluePlaceholder,
-              ]}
-            >
-              {activeClue
-                ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
-                : selectedWord
-                  ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
-                  : t('play.clue.placeholder')}
+        <SwipeableClueStrip
+          text={clueStripText}
+          placeholder={clueStripPlaceholder}
+          canSwipe={unfoundClues.length > 1}
+          onSwipe={goClue}
+          backgroundColor={ww.clueBg}
+          borderColor={ww.borderStrong}
+          textColor={
+            clueStripPlaceholder
+              ? ww.textMuted || ww.clueText
+              : ww.clueText || ww.text
+          }
+          prevA11y={t('play.clue.prev')}
+          nextA11y={t('play.clue.next')}
+          active={Boolean(selectedWheelWord)}
+          overlay={
+            selectedWheelWord ? (
+              <View style={styles.wordOverlay}>
+                <ClueLetterRow word={selectedWheelWord} />
+              </View>
+            ) : null
+          }
+        />
+
+        {timerEnabled ? (
+          <View
+            style={styles.playTimerRow}
+            accessibilityRole="text"
+            accessibilityLabel={t('play.timer.a11y', { time: elapsedLabel })}
+          >
+            <Clock color={ww.textMuted || ww.clueText || ww.text} size={14} strokeWidth={2.2} />
+            <Text style={[styles.playTimerText, { color: ww.clueText || ww.text }]}>
+              {elapsedLabel}
             </Text>
-            {unfoundClues.length > 1 ? (
-              <Pressable
-                style={styles.clueArrowBtn}
-                onPress={() => goClue(1)}
-                hitSlop={8}
-                accessibilityLabel={t('play.clue.next')}
-              >
-                <ChevronRight color={ww.textOnSurface || '#334155'} size={22} strokeWidth={2.4} />
-              </Pressable>
-            ) : (
-              <View style={styles.clueArrowSpacer} />
-            )}
           </View>
-          {selectedWheelWord ? (
-            <View style={styles.wordOverlay}>
-              <ClueLetterRow word={selectedWheelWord} />
-            </View>
-          ) : null}
-        </View>
+        ) : null}
 
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
@@ -1199,45 +1201,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
-  clueBox: {
-    marginTop: 14,
-    marginBottom: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    minHeight: 52,
-    paddingHorizontal: 6,
-    paddingVertical: 10,
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  clueBoxActive: {
-    minHeight: 60,
-  },
-  clueRow: {
+  playTimerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-  },
-  clueArrowBtn: {
-    width: 32,
-    height: 36,
-    alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    marginTop: 2,
+    marginBottom: 4,
+    minHeight: 22,
   },
-  clueArrowSpacer: {
-    width: 8,
-  },
-  clueText: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  cluePlaceholder: {
-    fontStyle: 'italic',
-    fontWeight: '500',
-    color: 'rgba(15, 61, 54, 0.55)',
+  playTimerText: {
+    fontSize: 15,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 0.4,
   },
   wordOverlay: {
     ...StyleSheet.absoluteFillObject,

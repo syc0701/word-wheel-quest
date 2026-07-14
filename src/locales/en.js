@@ -27,6 +27,8 @@ export default {
   'home.dailyPuzzle.lockedBody':
     'Reach Level {n} in the Season Journey to unlock the Daily Puzzle.',
   'home.dailyPuzzle.lockedOk': 'Got it',
+  'home.shop.label': 'Shop',
+  'home.shop.subtitle': 'Buy coins and bundles',
   'home.footer':
     'Progress is saved on this device. Sign in once to move guest progress to your account.',
 
@@ -68,6 +70,7 @@ export default {
   'play.error.hintFailed': 'Could not use hint',
   'play.titleFallback': 'Word Wheel Quest',
   'play.clue.missing': 'No clue available.',
+  'play.timer.a11y': 'Time played {time}',
   'play.a11y.useHint': 'Use hint',
   'play.a11y.shuffle': 'Shuffle',
   'play.a11y.dictionary': 'Dictionary',
@@ -77,6 +80,9 @@ export default {
   'settings.section.appearance': 'Appearance',
   'settings.section.language': 'Language',
   'settings.section.sound': 'Sound',
+  'settings.section.play': 'Play',
+  'settings.timer.label': 'Show timer',
+  'settings.timer.subtitle': 'Play clock and completion time',
   'settings.section.account': 'Account',
   'settings.section.score': 'Score',
   'settings.section.shop': 'Shop',
@@ -98,7 +104,7 @@ export default {
   'settings.account.signOut': 'Sign out',
   'settings.account.signIn': 'Sign in',
   'settings.account.signInSubtitle': 'Move guest progress to your account',
-  'settings.shop.label': 'In-app purchases',
+  'settings.shop.label': 'Shop',
   'settings.shop.subtitle': 'Buy coins and bundles',
   'settings.dev.hint': 'Dev builds only — preview between-level screens',
   'settings.dev.wordMaster': 'Word Master',
@@ -180,6 +186,8 @@ export default {
   'intermission.streak.bonusCoins': '+{n}',
   'intermission.wordMaster.title': 'Word Master',
   'intermission.wordMaster.headline': 'Level Complete!',
+  'intermission.wordMaster.message':
+    "Congratulations! You've completed the entire journey.",
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.timeTaken': 'Time Taken',
   'intermission.wordMaster.starWord': 'Star Word',

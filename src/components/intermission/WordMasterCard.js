@@ -117,9 +117,12 @@ export default function WordMasterCard({
   timeLabel,
   starWord,
   title,
+  message,
   timeCaption,
   starCaption,
 }) {
+  const isJourneyComplete = Boolean(message);
+  const showTime = !isJourneyComplete && Boolean(timeCaption && timeLabel != null && timeLabel !== '');
   const showStar = Boolean(starCaption && starWord != null && starWord !== '');
 
   return (
@@ -131,17 +134,35 @@ export default function WordMasterCard({
       >
         {title}
       </Animated.Text>
-      <View style={styles.statsRow}>
-        <MarbleStat
-          label={timeCaption}
-          value={timeLabel}
-          delay={320}
-          fullWidth={!showStar}
-        />
-        {showStar ? (
-          <MarbleStat label={starCaption} value={starWord} highlight delay={420} />
-        ) : null}
-      </View>
+      {isJourneyComplete ? (
+        <Animated.Text
+          entering={FadeInUp.duration(700).delay(280)}
+          style={styles.message}
+        >
+          {message}
+        </Animated.Text>
+      ) : null}
+      {showTime || showStar ? (
+        <View style={styles.statsRow}>
+          {showTime ? (
+            <MarbleStat
+              label={timeCaption}
+              value={timeLabel}
+              delay={320}
+              fullWidth={!showStar}
+            />
+          ) : null}
+          {showStar ? (
+            <MarbleStat
+              label={starCaption}
+              value={starWord}
+              highlight
+              delay={isJourneyComplete ? 360 : 420}
+              fullWidth={!showTime}
+            />
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -193,8 +214,18 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: INTERMISSION.titleGold,
     textAlign: 'center',
-    marginBottom: 18,
+    marginBottom: 10,
     letterSpacing: 0.3,
+  },
+  message: {
+    fontFamily: INTERMISSION.serif,
+    fontSize: 16,
+    fontWeight: '600',
+    color: INTERMISSION.titleTeal,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 16,
+    paddingHorizontal: 8,
   },
   statsRow: {
     flexDirection: 'row',

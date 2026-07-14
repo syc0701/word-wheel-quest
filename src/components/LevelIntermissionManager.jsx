@@ -4,6 +4,7 @@ import {
   LevelScreenPolicy,
   MILESTONE_BONUS_COINS,
 } from '../lib/LevelScreenPolicy';
+import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 import IntermissionCardShell from './intermission/IntermissionCardShell';
 import WordMasterCard from './intermission/WordMasterCard';
@@ -33,6 +34,7 @@ export default function LevelIntermissionManager({
   onNextLevel,
 }) {
   const t = useT();
+  const { timerEnabled } = usePlayTimer();
 
   const screenType = useMemo(() => {
     if (
@@ -72,8 +74,7 @@ export default function LevelIntermissionManager({
     body = (
       <WordMasterCard
         title={t('intermission.wordMaster.title')}
-        timeLabel={formatDuration(timeSpentSeconds)}
-        timeCaption={t('intermission.wordMaster.timeTaken')}
+        message={t('intermission.wordMaster.message')}
         starCaption={t('intermission.wordMaster.starWord')}
         starWord={(starWord || t('common.emDash')).toUpperCase()}
       />
@@ -82,8 +83,8 @@ export default function LevelIntermissionManager({
     body = (
       <WordMasterCard
         title={t('intermission.levelComplete.headline')}
-        timeLabel={formatDuration(timeSpentSeconds)}
-        timeCaption={t('intermission.wordMaster.timeTaken')}
+        timeLabel={timerEnabled ? formatDuration(timeSpentSeconds) : undefined}
+        timeCaption={timerEnabled ? t('intermission.wordMaster.timeTaken') : undefined}
         starCaption={t('intermission.wordMaster.starWord')}
         starWord={(starWord || t('common.emDash')).toUpperCase()}
       />

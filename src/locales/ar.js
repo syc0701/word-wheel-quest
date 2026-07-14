@@ -174,6 +174,8 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'اكتمل المستوى!',
+  'intermission.wordMaster.message':
+    'تهانينا! لقد أكملت الرحلة بأكملها.',
   'intermission.wordMaster.timeTaken': 'الوقت المستغرق',
   'intermission.wordMaster.starWord': 'الكلمة النجمية',
   'intermission.duration.seconds': '{n}ث',
