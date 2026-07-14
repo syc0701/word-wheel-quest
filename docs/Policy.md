@@ -37,9 +37,9 @@ On journey level complete, extra coins may be added:
 
 | Screen type | When | Bonus coins |
 | --- | --- | --- |
-| **Brain Power** | Level is a multiple of **10** (but not 100 / 1000) | **+5** |
-| **Streak Sparks** | Level is a multiple of **100** (but not 1000) | **+10** |
-| **Word Master** | Level **1000** | **+0** (celebration only) |
+| **Brain Power** | Level is a multiple of **10** (but not 100 / 1100) | **+5** |
+| **Streak Sparks** | Level is a multiple of **100** (but not 1100) | **+10** |
+| **Word Master** | Level **1100** | **+0** (celebration only) |
 | **Level Complete** | All other levels | **+0** |
 
 Source: `LevelScreenPolicy` / `MILESTONE_BONUS_COINS`.
@@ -85,9 +85,9 @@ Hints used are tracked as `hintCoinsSpent` on the completion dialog (display onl
 | Bonus | Amount | Trigger |
 | --- | --- | --- |
 | Treasure / off-grid word | **+1** coin | Valid dictionary word not on the grid; once per unique word per puzzle |
-| Brain Power milestone | **+5** coins | Journey level ÷ 10 (not ÷ 100 / 1000) |
-| Streak Sparks milestone | **+10** coins | Journey level ÷ 100 (not 1000) |
-| Word Master | — | Level 1000 celebration |
+| Brain Power milestone | **+5** coins | Journey level ÷ 10 (not ÷ 100 / 1100) |
+| Streak Sparks milestone | **+10** coins | Journey level ÷ 100 (not 1100) |
+| Word Master | — | Level 1100 celebration |
 
 ---
 

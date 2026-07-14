@@ -5,11 +5,11 @@ import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
-import { LEVEL_SCREEN_TYPES } from '../lib/LevelScreenPolicy';
+import { LEVEL_SCREEN_TYPES, MAX_JOURNEY_LEVEL } from '../lib/LevelScreenPolicy';
 
 const PREVIEW_PROPS = {
   [LEVEL_SCREEN_TYPES.WORD_MASTER]: {
-    levelNumber: 1000,
+    levelNumber: MAX_JOURNEY_LEVEL,
     timeSpentSeconds: 95,
     starWord: 'QUEST',
   },

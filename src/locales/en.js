@@ -102,7 +102,7 @@ export default {
   'settings.shop.subtitle': 'Buy coins and bundles',
   'settings.dev.hint': 'Dev builds only — preview between-level screens',
   'settings.dev.wordMaster': 'Word Master',
-  'settings.dev.wordMaster.subtitle': 'Level 1000 · Word Master popup',
+  'settings.dev.wordMaster.subtitle': 'Level 1100 · Word Master popup',
   'settings.dev.streaksSparks': 'Streak Sparks',
   'settings.dev.streaksSparks.subtitle': 'Levels 100, 200… · +10 coins',
   'settings.dev.brainPower': 'Brain Power',

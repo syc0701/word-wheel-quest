@@ -13,6 +13,9 @@ export const LEVEL_SCREEN_TYPES = {
 /** @deprecated Use STREAK_SPARKS */
 export const STREAKS_SPARKS_ALIAS = LEVEL_SCREEN_TYPES.STREAK_SPARKS;
 
+/** Season journey catalog / Word Master end level. */
+export const MAX_JOURNEY_LEVEL = 1100;
+
 /** Extra coins on top of regular word-length rewards. */
 export const MILESTONE_BONUS_COINS = {
   [LEVEL_SCREEN_TYPES.STREAK_SPARKS]: 10,
@@ -25,15 +28,15 @@ export const MILESTONE_BONUS_COINS = {
  * Picks the completion popup from journey level.
  *
  * Priority:
- * 1. Level 1000 → Word Master
- * 2. Multiples of 100 (not 1000) → Streak Sparks (+10)
+ * 1. Max journey level → Word Master
+ * 2. Multiples of 100 (not max) → Streak Sparks (+10)
  * 3. Multiples of 10 (not 100s) → Brain Power (+5)
  * 4. Otherwise → standard Level Complete
  */
 export const LevelScreenPolicy = {
   determineScreenType({ levelNumber }) {
     const level = Number(levelNumber) || 0;
-    if (level === 1000) {
+    if (level === MAX_JOURNEY_LEVEL) {
       return LEVEL_SCREEN_TYPES.WORD_MASTER;
     }
     if (level > 0 && level % 100 === 0) {
