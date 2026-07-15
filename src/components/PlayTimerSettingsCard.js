@@ -6,7 +6,7 @@ import { useT } from '../context/LanguageContext';
 /** Settings toggle for the on-play / completion timer. */
 export default function PlayTimerSettingsCard() {
   const { colors } = useAppearance();
-  const { timerEnabled, setTimerEnabled } = usePlayTimer();
+  const { timerEnabled, setTimerEnabled, ready } = usePlayTimer();
   const t = useT();
 
   return (
@@ -26,8 +26,9 @@ export default function PlayTimerSettingsCard() {
           </Text>
         </View>
         <Switch
-          value={timerEnabled}
+          value={timerEnabled === true}
           onValueChange={setTimerEnabled}
+          disabled={!ready}
           trackColor={{ false: colors.segmentTrackBorder, true: colors.primary }}
           thumbColor="#ffffff"
           ios_backgroundColor={colors.segmentTrackBorder}

@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': 'Claro',
   'settings.appearance.dark': 'Escuro',
   'settings.appearance.random': 'Imagem',
-  'settings.appearance.randomHint': 'Uma nova foto de cena a cada semana',
+  'settings.appearance.randomHint': 'Uma nova foto de cena a cada 3 dias',
   'settings.sound.music': 'Tocar música de fundo',
   'settings.sound.musicSubtitle': 'Repete em Início e Jogar',
   'settings.sound.sfx': 'Tocar efeitos sonoros',

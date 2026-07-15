@@ -4,19 +4,19 @@
 
 | Script | Scenes | Locales | Devices |
 |--------|--------|---------|---------|
-| `npm run screenshots:ios:faster` | 01–10 | English only (`en-US` → mirrored to `en-CA`) | iPhone 15 Plus + iPad Pro 13-inch (M4) |
-| `npm run screenshots:ios` | 01–10 | All 10 (en-US, fr-FR, zh-Hans, hi, es-ES, ar-SA, pt-BR, de-DE, ja, ko) | Same two devices |
+| `npm run ios:screenshots:faster` | 01–10 | English only (`en-US` → mirrored to `en-CA`) | iPhone 15 Plus + iPad Pro 13-inch (M4) |
+| `npm run ios:screenshots` | 01–10 | All 10 (en-US, fr-FR, zh-Hans, hi, es-ES, ar-SA, pt-BR, de-DE, ja, ko) | Same two devices |
 
 ```bash
-npm run screenshots:ios:install   # first time only (Playwright + Chromium)
-npm run screenshots:ios:faster    # English: 20 PNGs (10 scenes × 2 devices)
-npm run screenshots:ios           # All languages: 200 PNGs
+npm run ios:screenshots:install   # first time only (Playwright + Chromium)
+npm run ios:screenshots:faster    # English: 20 PNGs (10 scenes × 2 devices)
+npm run ios:screenshots           # All languages: 200 PNGs
 ```
 
 Phone only, all languages:
 
 ```bash
-SNAPSHOT_IPHONE_ONLY=1 npm run screenshots:ios
+SNAPSHOT_IPHONE_ONLY=1 npm run ios:screenshots
 ```
 
 Source URLs: https://www.puzzleinteract.com/prototype/mobile/word-wheel/screenshot/01?lang=en … /10
@@ -34,8 +34,8 @@ ios/fastlane/screenshots/en-CA/   # auto-mirrored from en-US
 Place PNG files here before uploading:
 
 ```bash
-npm run upload:ios:screenshots    # screenshots only
-npm run upload:ios:metadata       # listing text + screenshots
+npm run ios:upload:screenshots    # screenshots only
+npm run ios:upload:metadata       # listing text + screenshots
 ```
 
 ```

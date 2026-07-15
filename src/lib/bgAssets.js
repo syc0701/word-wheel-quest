@@ -1,71 +1,51 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export const WEEKLY_BG_KEY = 'ww.bg.weekly';
-
-/** All scene backgrounds available for the Random theme. */
+/** All scene backgrounds available for the Image appearance. */
 export const BG_IMAGE_CATALOG = {
   beach: require('../assets/bg_image/beach.png'),
+  classroom: require('../assets/bg_image/classroom.png'),
   deep_sea: require('../assets/bg_image/deep_sea.png'),
+  flowers: require('../assets/bg_image/flowers.png'),
+  island: require('../assets/bg_image/island.png'),
   mountain: require('../assets/bg_image/mountain.png'),
   road: require('../assets/bg_image/road.png'),
+  tropical_island: require('../assets/bg_image/tropical_island.png'),
+  urban: require('../assets/bg_image/urban.png'),
+  village: require('../assets/bg_image/village.png'),
 };
 
-export const BG_IMAGE_IDS = Object.keys(BG_IMAGE_CATALOG);
+/** Stable alphabetical order so the 3-day rotation stays deterministic. */
+export const BG_IMAGE_IDS = Object.keys(BG_IMAGE_CATALOG).sort();
 
-/** ISO-like week key: `2026-W28` — same image stays for the whole week. */
-export function getWeekKey(date = new Date()) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+const DAYS_PER_SCENE = 3;
+const MS_PER_DAY = 86400000;
+
+/** Epoch-day bucket: each scene stays visible for {@link DAYS_PER_SCENE} days. */
+export function getScenePeriodIndex(date = new Date()) {
+  const utcDay = Math.floor(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / MS_PER_DAY
+  );
+  return Math.floor(utcDay / DAYS_PER_SCENE);
 }
 
-function pickRandomId(excludeId) {
-  const pool =
-    excludeId && BG_IMAGE_IDS.length > 1
-      ? BG_IMAGE_IDS.filter((id) => id !== excludeId)
-      : BG_IMAGE_IDS;
-  return pool[Math.floor(Math.random() * pool.length)] || BG_IMAGE_IDS[0];
+export function getScenePeriodKey(date = new Date()) {
+  return `P${getScenePeriodIndex(date)}`;
 }
 
 /**
- * Returns `{ id, source, week }` for this calendar week.
- * Picks a new random scene when the week rolls over.
+ * Returns `{ id, source, period }` for the current 3-day window.
+ * Cycles through every catalog image in order.
  */
-export async function resolveWeeklyBackground() {
-  const week = getWeekKey();
-  let previousId = null;
-
-  try {
-    const raw = await AsyncStorage.getItem(WEEKLY_BG_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      previousId = parsed?.id || null;
-      if (parsed?.week === week && parsed?.id && BG_IMAGE_CATALOG[parsed.id]) {
-        return {
-          id: parsed.id,
-          source: BG_IMAGE_CATALOG[parsed.id],
-          week,
-        };
-      }
-    }
-  } catch {
-    /* ignore */
-  }
-
-  const id = pickRandomId(previousId);
-  const payload = { week, id };
-  try {
-    await AsyncStorage.setItem(WEEKLY_BG_KEY, JSON.stringify(payload));
-  } catch {
-    /* ignore */
-  }
-
+export function resolveSceneBackground(date = new Date()) {
+  const period = getScenePeriodIndex(date);
+  const id = BG_IMAGE_IDS[period % BG_IMAGE_IDS.length] || BG_IMAGE_IDS[0];
   return {
     id,
     source: BG_IMAGE_CATALOG[id],
-    week,
+    period,
+    periodKey: getScenePeriodKey(date),
   };
+}
+
+/** @deprecated Prefer {@link resolveSceneBackground}. */
+export async function resolveWeeklyBackground() {
+  return resolveSceneBackground();
 }

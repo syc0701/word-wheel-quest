@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': '라이트',
   'settings.appearance.dark': '다크',
   'settings.appearance.random': '이미지',
-  'settings.appearance.randomHint': '매주 새로운 장면 사진',
+  'settings.appearance.randomHint': '3일마다 새로운 장면 사진',
   'settings.sound.music': '배경 음악 재생',
   'settings.sound.musicSubtitle': '홈과 플레이에서 반복',
   'settings.sound.sfx': '효과음 재생',

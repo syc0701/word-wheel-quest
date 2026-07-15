@@ -298,8 +298,8 @@ def log_screenshot_inventory!
   if by_locale.empty?
     UI.user_error!(
       "No PNGs in ios/fastlane/screenshots/<locale>/ — run:\n" \
-      "  npm run screenshots:ios:faster\n" \
-      "  npm run screenshots:ios:check"
+      "  npm run ios:screenshots:faster\n" \
+      "  npm run ios:screenshots:check"
     )
   end
 
@@ -313,7 +313,7 @@ def log_screenshot_inventory!
   iphone_count = en_ca ? en_ca[:devices].select { |k, _| k.start_with?("iPhone") }.values.sum : 0
   if iphone_count < 3
     UI.user_error!(
-      "en-CA needs at least 3 iPhone screenshots. Run: npm run screenshots:ios:faster"
+      "en-CA needs at least 3 iPhone screenshots. Run: npm run ios:screenshots:faster"
     )
   end
 

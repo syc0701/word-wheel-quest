@@ -72,7 +72,7 @@ function buildGallery() {
   }
 
   if (sections.length === 0) {
-    throw new Error('No PNG screenshots found. Run npm run screenshots:ios first.');
+    throw new Error('No PNG screenshots found. Run npm run ios:screenshots first.');
   }
 
   const nav = locales

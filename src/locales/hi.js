@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': 'लाइट',
   'settings.appearance.dark': 'डार्क',
   'settings.appearance.random': 'इमेज',
-  'settings.appearance.randomHint': 'हर सप्ताह एक नया सीन फ़ोटो',
+  'settings.appearance.randomHint': 'हर 3 दिन में एक नया सीन फ़ोटो',
   'settings.sound.music': 'बैकग्राउंड संगीत चलाएँ',
   'settings.sound.musicSubtitle': 'होम और प्ले पर लूप',
   'settings.sound.sfx': 'साउंड इफ़ेक्ट चलाएँ',

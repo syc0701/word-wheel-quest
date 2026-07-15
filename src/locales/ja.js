@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': 'ライト',
   'settings.appearance.dark': 'ダーク',
   'settings.appearance.random': '画像',
-  'settings.appearance.randomHint': '毎週新しいシーン写真',
+  'settings.appearance.randomHint': '3日ごとに新しいシーン写真',
   'settings.sound.music': 'BGMを再生',
   'settings.sound.musicSubtitle': 'ホームとプレイでループ',
   'settings.sound.sfx': '効果音を再生',

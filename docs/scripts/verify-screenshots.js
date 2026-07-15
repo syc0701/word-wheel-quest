@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Preflight check before npm run upload:ios:screenshots
+ * Preflight check before npm run ios:upload:screenshots
  */
 const fs = require('fs');
 const path = require('path');
@@ -37,7 +37,7 @@ for (const locale of locales) {
 console.log(`Screenshots in ${root}`);
 if (lines.length === 0) {
   console.error('\nNo PNG files found.');
-  console.error('Capture first:  npm run screenshots:ios:faster');
+  console.error('Capture first:  npm run ios:screenshots:faster');
   process.exit(1);
 }
 
@@ -51,7 +51,7 @@ const enCaIphone = fs.existsSync(enCaDir)
 
 if (enCaIphone.length < 3) {
   console.error('\nen-CA needs at least 3 iPhone screenshots (App Store primary locale).');
-  console.error('Run:  npm run screenshots:ios:faster');
+  console.error('Run:  npm run ios:screenshots:faster');
   process.exit(1);
 }
 

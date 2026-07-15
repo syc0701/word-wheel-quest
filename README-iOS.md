@@ -17,7 +17,7 @@ This app does **not** use SwiftUI for its UI.
 | **Framework** | **Expo SDK 53** |
 | **Native iOS shell** | **UIKit** — `ios/WordWheelQuest/AppDelegate.swift` hosts the React Native bridge |
 
-Swift appears only in the thin Expo bootstrap (`AppDelegate.swift`, `UIWindow`, `ExpoAppDelegate`). Gameplay, navigation, shop, and styling are React components. Edit UI in the repo root `.js` files, then run `npm run run:ios` — no SwiftUI views to change in Xcode for normal feature work.
+Swift appears only in the thin Expo bootstrap (`AppDelegate.swift`, `UIWindow`, `ExpoAppDelegate`). Gameplay, navigation, shop, and styling are React components. Edit UI in the repo root `.js` files, then run `npm run ios:run` — no SwiftUI views to change in Xcode for normal feature work.
 
 ## In-app purchases (RevenueCat)
 
@@ -36,7 +36,7 @@ RevenueCat **default** offering — configured in `constants/store.js` with iOS 
 After adding native modules (`react-native-purchases`, `react-native-webview`), rebuild native project:
 
 ```bash
-npm run run:ios:sync
+npm run ios:run:sync
 ```
 
 Legal WebView URLs (also in `constants/store.js`):
@@ -51,28 +51,28 @@ Legal WebView URLs (also in `constants/store.js`):
 ```bash
 cd /Users/syc/Puzzle-iOS/word-wheel-quest
 npm install
-npm run build:ios      # full clean prebuild (App Store / Xcode archive)
+npm run ios:build      # full clean prebuild (App Store / Xcode archive)
 ```
 
 Simulator / device (first time or after `app.json` changes):
 
 ```bash
-npm run run:ios:sync   # prebuild + pods + build + simulator
+npm run ios:run:sync   # prebuild + pods + build + simulator
 ```
 
 Daily dev (after native project exists):
 
 ```bash
 open -a Simulator    # open simulator first
-npm run run:ios        # build + install + launch (~5–15 min first time)
+npm run ios:run        # build + install + launch (~5–15 min first time)
 ```
 
-If `run:ios` looks stuck after pod install: it is compiling — wait for `› Compiling` lines, then the simulator opens.
+If `ios:run` looks stuck after pod install: it is compiling — wait for `› Compiling` lines, then the simulator opens.
 
 Opens Xcode:
 
 ```bash
-npm run xcode:ios
+npm run ios:xcode
 ```
 
 ## 2. Archive in Xcode
@@ -127,7 +127,7 @@ npm run metadata:ios
 Add PNGs under `ios/fastlane/screenshots/en-CA/` (primary locale; see `screenshots/README.txt`), then:
 
 ```bash
-npm run upload:ios:metadata
+npm run ios:upload:metadata
 ```
 
 ### Metadata summary (en-CA — primary locale)
@@ -158,7 +158,7 @@ After build shows **Ready to Submit** (~10–30 min):
 Bump in `app.json` → `ios.buildNumber` (2, 3, …), then:
 
 ```bash
-npm run build:ios
+npm run ios:build
 ```
 
 Clean → Archive → Upload in Xcode.
@@ -167,11 +167,11 @@ Clean → Archive → Upload in Xcode.
 
 ```bash
 npm run clean            # ios/build, metro cache, .expo
-npm run clean:ios-cache  # + Pods, Podfile.lock, simulator reset
+npm run ios:clean-cache  # + Pods, Podfile.lock, simulator reset
 npm run clean:all      # both
 ```
 
-Then rebuild: `npm run run:ios` or `npm run build:ios`
+Then rebuild: `npm run ios:run` or `npm run ios:build`
 
 ## Hermes dSYM warning
 

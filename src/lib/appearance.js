@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const APPEARANCE_KEY = 'ww.appearance';
 export const APPEARANCE_LIGHT = 'light';
 export const APPEARANCE_DARK = 'dark';
-/** Weekly random scene photo from `assets/bg_image`. */
+/** Scene photo from `assets/bg_image` (3 days per image). */
 export const APPEARANCE_RANDOM = 'random';
 
 const MODES = new Set([APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_RANDOM]);
@@ -43,6 +43,7 @@ export const WW_LIGHT = {
   toolBtnBg: 'rgba(224, 242, 254, 0.2)',
   toolIcon: '#e0f2fe',
   clueBg: 'rgba(8, 47, 73, 0.72)',
+  clueGradient: ['rgba(56, 189, 248, 0.28)', 'rgba(14, 116, 144, 0.55)', 'rgba(8, 47, 73, 0.85)'],
   clueText: '#f0f9ff',
   coinLabel: '#e0f2fe',
   letterBg: 'rgba(240, 249, 255, 0.96)',
@@ -95,6 +96,7 @@ export const WW_DARK = {
   toolBtnBg: 'rgba(224, 242, 254, 0.18)',
   toolIcon: '#e0f2fe',
   clueBg: 'rgba(2, 6, 23, 0.72)',
+  clueGradient: ['rgba(34, 211, 238, 0.22)', 'rgba(14, 116, 144, 0.5)', 'rgba(2, 6, 23, 0.88)'],
   clueText: '#f0f9ff',
   coinLabel: '#e0f2fe',
   letterBg: 'rgba(240, 249, 255, 0.96)',
@@ -115,7 +117,7 @@ export const WW_DARK = {
 };
 
 /**
- * Random theme play chrome — light frosted UI over weekly photo scenes.
+ * Random theme play chrome — light frosted UI over rotating scene photos.
  */
 export const WW_RANDOM = {
   gradient: ['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0'],
@@ -149,6 +151,7 @@ export const WW_RANDOM = {
   toolBtnBg: 'rgba(255, 255, 255, 0.95)',
   toolIcon: '#475569',
   clueBg: 'rgba(255, 255, 255, 0.94)',
+  clueGradient: ['rgba(255, 255, 255, 0.98)', 'rgba(241, 245, 249, 0.96)', 'rgba(226, 232, 240, 0.92)'],
   clueText: '#0f172a',
   coinLabel: '#64748b',
   letterBg: 'rgba(255, 255, 255, 0.98)',
@@ -256,7 +259,7 @@ export async function loadAppearance() {
   try {
     const raw = await AsyncStorage.getItem(APPEARANCE_KEY);
     if (raw == null || String(raw).trim() === '') {
-      // Default: Image (weekly scene photos).
+      // Default: Image (scene photos, 3 days each).
       await AsyncStorage.setItem(APPEARANCE_KEY, APPEARANCE_RANDOM);
       return APPEARANCE_RANDOM;
     }

@@ -1,1 +1,1 @@
-word,crossword,wheel,puzzle,hint,shuffle,dictionary,vocabulary,brain,clues,grid,wordgame
+word,crossword,clues,wheel,puzzle,bonus,wordscapes,hint,shuffle,dictionary,vocabulary,brain

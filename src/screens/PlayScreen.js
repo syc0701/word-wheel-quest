@@ -968,6 +968,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           canSwipe={unfoundClues.length > 1}
           onSwipe={goClue}
           backgroundColor={ww.clueBg}
+          gradientColors={ww.clueGradient}
           borderColor={ww.borderStrong}
           textColor={
             clueStripPlaceholder
@@ -1220,7 +1221,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.72)',
   },
   wheelRow: {
     flexDirection: 'row',

@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': 'Hell',
   'settings.appearance.dark': 'Dunkel',
   'settings.appearance.random': 'Bild',
-  'settings.appearance.randomHint': 'Jede Woche ein neues Szenenbild',
+  'settings.appearance.randomHint': 'Alle 3 Tage ein neues Szenenbild',
   'settings.sound.music': 'Hintergrundmusik abspielen',
   'settings.sound.musicSubtitle': 'Wiederholt auf Home und Play',
   'settings.sound.sfx': 'Soundeffekte abspielen',

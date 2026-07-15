@@ -2,7 +2,7 @@ import { Image, StyleSheet, View } from 'react-native';
 import { useAppearance } from '../context/AppearanceContext';
 
 /**
- * App backdrop: solid theme color, or weekly random scene when Appearance = Random.
+ * App backdrop: solid theme color, or rotating scene photo when Appearance = Image.
  */
 export default function AppBackground({ children, scrim, style }) {
   const { colors, isRandomScene, weeklyBg } = useAppearance();

@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': 'فاتح',
   'settings.appearance.dark': 'داكن',
   'settings.appearance.random': 'صورة',
-  'settings.appearance.randomHint': 'صورة مشهد جديدة كل أسبوع',
+  'settings.appearance.randomHint': 'صورة مشهد جديدة كل 3 أيام',
   'settings.sound.music': 'تشغيل موسيقى الخلفية',
   'settings.sound.musicSubtitle': 'تتكرر في الرئيسية واللعب',
   'settings.sound.sfx': 'تشغيل المؤثرات الصوتية',

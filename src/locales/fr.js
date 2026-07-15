@@ -106,7 +106,7 @@ export default {
   'settings.appearance.light': 'Clair',
   'settings.appearance.dark': 'Sombre',
   'settings.appearance.random': 'Image',
-  'settings.appearance.randomHint': 'Une nouvelle photo de scène chaque semaine',
+  'settings.appearance.randomHint': 'Une nouvelle photo de scène tous les 3 jours',
   'settings.sound.music': 'Lire la musique de fond',
   'settings.sound.musicSubtitle': 'En boucle sur Accueil et Jouer',
   'settings.sound.sfx': 'Lire les effets sonores',

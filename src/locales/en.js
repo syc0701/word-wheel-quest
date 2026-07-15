@@ -120,7 +120,7 @@ export default {
   'settings.appearance.light': 'Light',
   'settings.appearance.dark': 'Dark',
   'settings.appearance.random': 'Image',
-  'settings.appearance.randomHint': 'A new scene photo each week',
+  'settings.appearance.randomHint': 'A new scene photo every 3 days',
   'settings.sound.music': 'Play background music',
   'settings.sound.musicSubtitle': 'Loops on Home and Play',
   'settings.sound.sfx': 'Play sound effects',

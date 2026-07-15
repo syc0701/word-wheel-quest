@@ -9,7 +9,7 @@ import {
   loadAppearance,
   saveAppearance,
 } from '../lib/appearance';
-import { resolveWeeklyBackground } from '../lib/bgAssets';
+import { resolveSceneBackground } from '../lib/bgAssets';
 
 const AppearanceContext = createContext(null);
 
@@ -25,7 +25,7 @@ export function AppearanceProvider({ children }) {
       if (cancelled) return;
       setModeState(loaded);
       if (loaded === APPEARANCE_RANDOM) {
-        const bg = await resolveWeeklyBackground();
+        const bg = resolveSceneBackground();
         if (!cancelled) setWeeklyBg(bg);
       }
       if (!cancelled) setReady(true);
@@ -39,8 +39,7 @@ export function AppearanceProvider({ children }) {
     const normalized = await saveAppearance(nextMode);
     setModeState(normalized);
     if (normalized === APPEARANCE_RANDOM) {
-      const bg = await resolveWeeklyBackground();
-      setWeeklyBg(bg);
+      setWeeklyBg(resolveSceneBackground());
     } else {
       setWeeklyBg(null);
     }

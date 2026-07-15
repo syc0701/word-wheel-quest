@@ -19,7 +19,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const SPLASH_BG = require('../assets/bg_image/deep_sea.png');
+const SPLASH_BG = require('../assets/icon_donut.png');
 const COPYRIGHT = '© 2026 Puzzle Interact. All rights reserved.';
 
 function makeMistBanks(count, screenW, screenH) {
@@ -90,7 +90,7 @@ function MistOrb({ size, top, duration, delay, goingRight, opacity, screenW }) {
 }
 
 /**
- * Covers the cold-start gap with the same reef as the native splash.
+ * Covers the cold-start gap with the cookie-wheel splash art.
  * No progress bar — leaves as soon as the background has loaded and
  * startup interactions settle (no fixed hold).
  */
@@ -138,10 +138,10 @@ export default function LaunchSplashOverlay({ onDone }) {
       >
         <LinearGradient
           colors={[
-            'rgba(6, 32, 38, 0.42)',
-            'rgba(6, 32, 38, 0.18)',
-            'rgba(6, 32, 38, 0.28)',
-            'rgba(6, 32, 38, 0.5)',
+            'rgba(61, 35, 20, 0.38)',
+            'rgba(61, 35, 20, 0.12)',
+            'rgba(61, 35, 20, 0.2)',
+            'rgba(61, 35, 20, 0.45)',
           ]}
           locations={[0, 0.35, 0.7, 1]}
           style={StyleSheet.absoluteFill}
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-    backgroundColor: '#031525',
+    backgroundColor: '#E8D4B8',
   },
   backgroundImage: {
     width: '100%',

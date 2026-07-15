@@ -21,18 +21,18 @@
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SPLASH-SCRIM" userLabel="Scrim">
                                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-                                <color key="backgroundColor" red="0.024" green="0.125" blue="0.149" alpha="0.32" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="backgroundColor" red="0.220" green="0.145" blue="0.090" alpha="0.22" colorSpace="custom" customColorSpace="sRGB"/>
                             </view>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Word Wheel Quest" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SPLASH-TITLE">
                                 <rect key="frame" x="24" y="120" width="345" height="48"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="36"/>
-                                <color key="textColor" red="0.941" green="0.973" blue="1.000" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="textColor" red="1.000" green="0.976" blue="0.945" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="© 2026 Puzzle Interact. All rights reserved." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SPLASH-BRAND">
                                 <rect key="frame" x="24" y="752" width="345" height="36"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="13"/>
-                                <color key="textColor" red="0.729" green="0.871" blue="0.984" alpha="0.8" colorSpace="custom" customColorSpace="sRGB"/>
+                                <color key="textColor" red="1.000" green="0.965" blue="0.910" alpha="0.88" colorSpace="custom" customColorSpace="sRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
@@ -64,7 +64,7 @@
     <resources>
         <image name="SplashScreenReef" width="1290" height="2796"/>
         <namedColor name="SplashScreenBackground">
-            <color alpha="1.000" blue="0.145" green="0.090" red="0.012" customColorSpace="sRGB" colorSpace="custom"/>
+            <color alpha="1.000" blue="0.722" green="0.831" red="0.910" customColorSpace="sRGB" colorSpace="custom"/>
         </namedColor>
     </resources>
 </document>

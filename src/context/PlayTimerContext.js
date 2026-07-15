@@ -1,10 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { loadPlayTimerEnabled, savePlayTimerEnabled } from '../lib/playTimerSettings';
+import { loadPlayTimerEnabled, savePlayTimerEnabled, PLAY_TIMER_DEFAULT } from '../lib/playTimerSettings';
 
 const PlayTimerContext = createContext(null);
 
 export function PlayTimerProvider({ children }) {
-  const [timerEnabled, setTimerState] = useState(false);
+  const [timerEnabled, setTimerState] = useState(PLAY_TIMER_DEFAULT);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function usePlayTimer() {
   if (!ctx) {
     return {
       ready: true,
-      timerEnabled: false,
+      timerEnabled: PLAY_TIMER_DEFAULT,
       setTimerEnabled: async () => {},
     };
   }
