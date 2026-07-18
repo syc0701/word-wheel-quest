@@ -191,9 +191,11 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: '#E8D4B8',
   },
   container: {
     flex: 1,
+    backgroundColor: '#E8D4B8',
   },
   screenLayer: {
     flex: 1,

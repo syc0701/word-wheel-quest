@@ -5,11 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/assets/icon_donut.png",
-      "resizeMode": "cover",
+      "image": "./src/assets/splash-launch.png",
+      "resizeMode": "contain",
       "backgroundColor": "#E8D4B8"
     },
     "ios": {
