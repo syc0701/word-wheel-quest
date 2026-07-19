@@ -132,7 +132,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           productId: rcPackage.product.identifier,
           transactionId: readPurchaseTransactionId(purchaseResult),
           rawPayload: {
-            platform: 'apple',
+            platform: 'google',
             storeProductId: rcPackage.product.identifier,
             packageKey: meta.packageId,
           },

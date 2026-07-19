@@ -1,13 +1,10 @@
 import 'react-native-get-random-values';
-import { Platform } from 'react-native';
 import {
   AuthenticationDetails,
   CognitoUser,
   CognitoUserPool,
 } from 'amazon-cognito-identity-js';
 import {
-  APPLE_NATIVE_EXCHANGE_URL,
-  APPLE_NATIVE_JWT_AUDIENCE,
   COGNITO_MOBILE_CLIENT_ID,
   COGNITO_USER_POOL_ID,
 } from '../constants/cognito';
@@ -78,19 +75,16 @@ function usernameCandidates(username) {
 
 function cognitoAuthenticate(username, password) {
   return new Promise((resolve, reject) => {
-    const cognitoUser = new CognitoUser({ Username: username, Pool: userPool });
+    const user = new CognitoUser({ Username: username, Pool: userPool });
     const authDetails = new AuthenticationDetails({
       Username: username,
       Password: password,
     });
-
-    cognitoUser.authenticateUser(authDetails, {
+    user.authenticateUser(authDetails, {
       onSuccess: (session) => {
         resolve(session.getIdToken().getJwtToken());
       },
-      onFailure: (error) => {
-        reject(error);
-      },
+      onFailure: (err) => reject(err),
       newPasswordRequired: () => {
         const error = new Error('Password reset required');
         error.name = 'PasswordResetRequiredException';
@@ -98,32 +92,6 @@ function cognitoAuthenticate(username, password) {
       },
     });
   });
-}
-
-function pickTokenField(obj, ...keys) {
-  for (const key of keys) {
-    const value = obj?.[key];
-    if (value != null && String(value).trim()) return String(value).trim();
-  }
-  return null;
-}
-
-function parseAppleExchangeResponse(json) {
-  const nested =
-    json?.AuthenticationResult || json?.authenticationResult || json?.tokens || json?.data;
-  const ar = nested && typeof nested === 'object' ? nested : json;
-  const idToken = pickTokenField(ar, 'IdToken', 'idToken', 'id_token');
-  if (!idToken) {
-    throw new Error(json?.message || json?.error || t('auth.apple.exchangeFailed'));
-  }
-  return idToken;
-}
-
-function isAppleSignInCancelled(error) {
-  if (!error) return false;
-  if (error.code === 'ERR_REQUEST_CANCELED') return true;
-  const msg = String(error.message || '').toLowerCase();
-  return msg.includes('cancel');
 }
 
 export async function loginWithPassword(email, password) {
@@ -162,67 +130,6 @@ export async function loginWithPassword(email, password) {
     message: lastError?.message,
     error: lastError,
   };
-}
-
-export async function signInWithApple() {
-  if (Platform.OS !== 'ios') {
-    throw new Error(t('auth.apple.iosOnly'));
-  }
-
-  const AppleAuthentication = await import('expo-apple-authentication');
-
-  const available = await AppleAuthentication.isAvailableAsync();
-  if (!available) {
-    throw new Error(t('auth.apple.unavailable'));
-  }
-
-  let credential;
-  try {
-    credential = await AppleAuthentication.signInAsync({
-      requestedScopes: [
-        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-        AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      ],
-    });
-  } catch (error) {
-    if (isAppleSignInCancelled(error)) {
-      return { success: false, cancelled: true };
-    }
-    throw error;
-  }
-
-  const appleIdentityToken = credential?.identityToken;
-  if (!appleIdentityToken) {
-    throw new Error(t('auth.apple.noIdentityToken'));
-  }
-
-  const response = await fetch(APPLE_NATIVE_EXCHANGE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({
-      appleIdentityToken,
-      iosJwtAudience: APPLE_NATIVE_JWT_AUDIENCE,
-    }),
-  });
-
-  const text = await response.text();
-  let json = {};
-  try {
-    json = text ? JSON.parse(text) : {};
-  } catch {
-    throw new Error(text?.slice(0, 200) || t('auth.apple.httpFailed', { status: response.status }));
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      json.message || json.error || t('auth.apple.httpFailed', { status: response.status })
-    );
-  }
-
-  const idToken = parseAppleExchangeResponse(json);
-  await signInWithToken(idToken);
-  await ensureUserAfterSignup();
-  return { success: true };
 }
 
 export async function signOutAll() {

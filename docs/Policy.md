@@ -59,7 +59,7 @@ Spell a **real dictionary word** that is **not** one of this puzzle’s target w
 
 ### 4. Shop (IAP)
 
-Settings → Shop (RevenueCat). Packages add coins to the player balance (bundles + fixed packs such as **300** and **1,000** coins). Purchases are verified with the credit/IAP backend.
+Home → Shop (RevenueCat / Google Play). Packages add coins to the player balance (bundles + fixed packs such as **300** and **1,000** coins). Purchases are verified with the credit/IAP backend.
 
 ---
 

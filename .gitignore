@@ -13,6 +13,7 @@ expo-env.d.ts
 .kotlin/
 *.orig.*
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
@@ -33,13 +34,13 @@ yarn-error.*
 # local env files
 .env*.local
 
-# Fastlane secrets & generated screenshots
-ios/fastlane/asc_api_key.env
-ios/fastlane/asc_review_contact.env
-ios/fastlane/screenshots/**/*.png
-ios/fastlane/screenshots/**/*.html
-ios/vendor/
-ios/.bundle/
+# Android local secrets / build
+android/local.properties
+android/keystore.properties
+android/app/release/
+android/.gradle/
+android/app/build/
+android/build/
 
 # typescript
 *.tsbuildinfo

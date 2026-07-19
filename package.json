@@ -5,36 +5,22 @@
   "scripts": {
     "start": "expo start",
     "run:metro": "expo start --clear",
-    "android": "expo run:android",
-    "ios": "npm run ios:run",
-    "ios:run": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios",
-    "ios:run:sync": "npm run ios:sync:pods && npm run ios:run",
-    "ios:run:release": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios --configuration Release",
-    "ios:build": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo prebuild --platform ios --clean && npm run ios:pod:install",
-    "ios:xcode": "npm run ios:build && open ios/WordWheelQuest.xcworkspace",
-    "ios:pod:install": "cd ios && export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && pod install",
-    "ios:sync:pods": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo prebuild --platform ios && npm run ios:pod:install",
-    "ios:metadata": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && cd ios/fastlane && set -a && . ./asc_api_key.env && { [ -f ./asc_review_contact.env ] && . ./asc_review_contact.env || true; } && set +a && fastlane metadata",
-    "ios:metadata:upload": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && cd ios/fastlane && set -a && . ./asc_api_key.env && { [ -f ./asc_review_contact.env ] && . ./asc_review_contact.env || true; } && set +a && fastlane metadata_and_screenshots --verbose",
-    "ios:kill-simulator": "killall Simulator 2>/dev/null; killall com.apple.CoreSimulator.CoreSimulatorService 2>/dev/null; xcrun simctl shutdown all 2>/dev/null; true",
-    "ios:clean-cache": "npm run ios:kill-simulator; rm -rf ios/build ios/Pods ios/Podfile.lock node_modules/.cache",
-    "ios:screenshots": "node docs/scripts/capture-screenshots.js",
-    "ios:screenshots:faster": "SNAPSHOT_LANGUAGES=en-US node docs/scripts/capture-screenshots.js",
-    "ios:screenshots:install": "npx playwright install chromium",
-    "ios:screenshots:check": "node docs/scripts/verify-screenshots.js",
-    "ios:screenshots:upload": "npm run ios:screenshots:check && export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && cd ios/fastlane && set -a && . ./asc_api_key.env && { [ -f ./asc_review_contact.env ] && . ./asc_review_contact.env || true; } && set +a && fastlane screenshots --verbose",   
-    "clean": "rm -rf ios/build node_modules/.cache .expo dist web-build",
-    "clean:all": "npm run clean && npm run ios:clean-cache",
-    "fastlane:install": "brew list fastlane >/dev/null 2>&1 || brew install fastlane; brew upgrade fastlane 2>/dev/null || true",
-    "screenshots:view": "node docs/scripts/view-screenshots.js"
+    "android": "npm run android:run",
+    "android:run": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && expo run:android",
+    "android:run:release": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && expo run:android --variant release",
+    "android:emulator": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && emulator -avd Pixel_6",
+    "android:prebuild": "expo prebuild --platform android --clean",
+    "android:sync": "expo prebuild --platform android && npm run android:run",
+    "android:studio": "npm run android:prebuild && open -a 'Android Studio' android",
+    "clean": "rm -rf android/app/build android/build node_modules/.cache .expo dist web-build",
+    "clean:all": "npm run clean && rm -rf android/.gradle"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "amazon-cognito-identity-js": "^6.3.20",
     "buffer": "^6.0.3",
     "crypto-js": "^4.2.0",
     "expo": "~53.0.27",
-    "expo-apple-authentication": "~7.2.4",
     "expo-asset": "~11.1.7",
     "expo-audio": "~0.4.9",
     "expo-linear-gradient": "~14.1.5",
@@ -51,8 +37,7 @@
     "react-native-webview": "13.13.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "playwright": "^1.52.0"
+    "@babel/core": "^7.20.0"
   },
   "private": true
 }

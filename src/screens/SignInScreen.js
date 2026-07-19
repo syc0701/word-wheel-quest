@@ -18,7 +18,6 @@ import { useT } from '../context/LanguageContext';
 import {
   loginWithPassword,
   signInErrorMessage,
-  signInWithApple,
 } from '../services/cognitoAuth';
 
 export default function SignInScreen({ navigate, routeParams = {} }) {
@@ -32,7 +31,6 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [appleBusy, setAppleBusy] = useState(false);
   const [error, setError] = useState('');
 
   const finishSignIn = () => {
@@ -64,22 +62,6 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
       setError(e?.message || signInErrorMessage('generic'));
     } finally {
       setBusy(false);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    setError('');
-    setAppleBusy(true);
-    try {
-      const result = await signInWithApple();
-      if (result.cancelled) return;
-      if (result.success) {
-        finishSignIn();
-      }
-    } catch (e) {
-      setError(e?.message || signInErrorMessage('generic'));
-    } finally {
-      setAppleBusy(false);
     }
   };
 
@@ -148,7 +130,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             autoCorrect={false}
             keyboardType="email-address"
             textContentType="username"
-            editable={!busy && !appleBusy}
+            editable={!busy}
           />
 
           <View style={styles.passwordWrap}>
@@ -164,7 +146,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               textContentType="password"
-              editable={!busy && !appleBusy}
+              editable={!busy}
             />
             <Pressable
               style={styles.eyeBtn}
@@ -180,9 +162,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           </View>
 
           <Pressable
-            style={[styles.primaryBtn, (busy || appleBusy) && styles.btnDisabled]}
+            style={[styles.primaryBtn, busy && styles.btnDisabled]}
             onPress={handleEmailSignIn}
-            disabled={busy || appleBusy}
+            disabled={busy}
           >
             {busy ? (
               <ActivityIndicator color={colors.text} />
@@ -190,28 +172,6 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               <Text style={styles.primaryBtnText}>{t('signIn.button.email')}</Text>
             )}
           </Pressable>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>{t('signIn.divider')}</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {Platform.OS === 'ios' ? (
-            <Pressable
-              style={[styles.appleBtn, (busy || appleBusy) && styles.btnDisabled]}
-              onPress={handleAppleSignIn}
-              disabled={busy || appleBusy}
-            >
-              {appleBusy ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.appleBtnText}>{t('signIn.button.apple')}</Text>
-              )}
-            </Pressable>
-          ) : (
-            <Text style={styles.appleHint}>{t('signIn.apple.hint')}</Text>
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -307,39 +267,6 @@ function createStyles(colors) {
     color: colors.text,
     fontSize: 17,
     fontWeight: '700',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-    gap: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.surfaceLight,
-  },
-  dividerText: {
-    color: colors.textMuted,
-    fontSize: 13,
-  },
-  appleBtn: {
-    width: '100%',
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  appleBtnText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  appleHint: {
-    color: colors.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
   },
 });
 }

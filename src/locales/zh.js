@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': '邮箱',
   'signIn.placeholder.password': '密码',
   'signIn.button.email': '登录',
-  'signIn.divider': '— 或 —',
-  'signIn.button.apple': ' 通过 Apple 登录',
-  'signIn.apple.hint': '通过 Apple 登录可在 iPhone 上使用。',
 
   // shop
   'shop.title': '商店',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': '你的购买已恢复。',
   'shop.alert.restoreFailed.title': '恢复失败',
   'shop.alert.restoreFailed.body': '无法恢复购买。',
-  'shop.offeringHint': '商品 `{id}` · 价格来自 App Store。',
+  'shop.offeringHint': '商品 `{id}` · 价格来自 Google Play。',
   'shop.restore': '恢复购买',
 
   // webview
@@ -235,10 +232,6 @@ export default {
   'wallet.error.loadFailed': '加载钱包失败',
 
   // auth
-  'auth.error.userNotFound':
-    '未找到此邮箱的账户。如果您在网站上使用 Google 或 Apple 注册，请在此使用通过 Apple 登录。',
-  'auth.error.wrongPassword':
-    '密码错误，或此账户使用网站的 Google/Apple 登录。请尝试通过 Apple 登录，或在 puzzleinteract.com 重置密码。',
   'auth.error.userNotConfirmed': '登录前请先确认邮箱。',
   'auth.error.passwordResetRequired':
     '登录前必须重置密码。',
@@ -249,9 +242,4 @@ export default {
     '尝试次数过多。请稍等几分钟后再试。',
   'auth.error.generic': '登录失败。请重试。',
   'auth.error.noToken': '登录未返回令牌。',
-  'auth.apple.iosOnly': '通过 Apple 登录仅在 iPhone 上可用。',
-  'auth.apple.unavailable': '此设备不支持通过 Apple 登录。',
-  'auth.apple.noIdentityToken': '通过 Apple 登录未返回身份令牌。',
-  'auth.apple.exchangeFailed': 'Apple 登录交换失败。',
-  'auth.apple.httpFailed': 'Apple 登录失败 (HTTP {status})',
 };

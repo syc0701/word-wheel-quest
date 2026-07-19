@@ -1,5 +1,0 @@
-source "https://rubygems.org"
-
-# Optional — npm scripts use Homebrew fastlane directly.
-# To use Bundler instead: bundle config set --local path vendor/bundle && bundle install
-gem "fastlane"

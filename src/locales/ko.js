@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': '이메일',
   'signIn.placeholder.password': '비밀번호',
   'signIn.button.email': '로그인',
-  'signIn.divider': '— 또는 —',
-  'signIn.button.apple': ' Apple로 로그인',
-  'signIn.apple.hint': 'Apple로 로그인은 iPhone에서 사용할 수 있습니다.',
 
   // shop
   'shop.title': '상점',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': '구매 내역이 복원되었습니다.',
   'shop.alert.restoreFailed.title': '복원 실패',
   'shop.alert.restoreFailed.body': '구매를 복원할 수 없습니다.',
-  'shop.offeringHint': '오퍼링 `{id}` · 가격은 App Store 기준.',
+  'shop.offeringHint': '오퍼링 `{id}` · 가격은 Google Play 기준.',
   'shop.restore': '구매 복원',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': '지갑 불러오기 실패',
 
   // auth
-  'auth.error.userNotFound':
-    '이 이메일의 계정을 찾을 수 없습니다. 웹사이트에서 Google 또는 Apple로 가입했다면 여기서 Apple로 로그인하세요.',
-  'auth.error.wrongPassword':
-    '비밀번호가 틀렸거나, 이 계정은 웹사이트의 Google/Apple 로그인을 사용합니다. Apple로 로그인을 시도하거나 puzzleinteract.com에서 비밀번호를 재설정하세요.',
   'auth.error.userNotConfirmed': '로그인 전에 이메일을 확인하세요.',
   'auth.error.passwordResetRequired':
     '로그인 전에 비밀번호를 재설정해야 합니다.',
@@ -250,9 +243,4 @@ export default {
     '시도가 너무 많습니다. 몇 분 기다린 후 다시 시도하세요.',
   'auth.error.generic': '로그인에 실패했습니다. 다시 시도하세요.',
   'auth.error.noToken': '로그인이 토큰을 반환하지 않았습니다.',
-  'auth.apple.iosOnly': 'Apple로 로그인은 iPhone에서만 사용할 수 있습니다.',
-  'auth.apple.unavailable': '이 기기에서는 Apple로 로그인을 사용할 수 없습니다.',
-  'auth.apple.noIdentityToken': 'Apple로 로그인이 ID 토큰을 반환하지 않았습니다.',
-  'auth.apple.exchangeFailed': 'Apple 로그인 교환에 실패했습니다.',
-  'auth.apple.httpFailed': 'Apple 로그인 실패 (HTTP {status})',
 };

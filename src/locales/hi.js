@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'ईमेल',
   'signIn.placeholder.password': 'पासवर्ड',
   'signIn.button.email': 'साइन इन',
-  'signIn.divider': '— या —',
-  'signIn.button.apple': ' Apple से साइन इन',
-  'signIn.apple.hint': 'Apple से साइन इन iPhone पर उपलब्ध है।',
 
   // shop
   'shop.title': 'दुकान',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': 'आपकी खरीदारियाँ पुनर्स्थापित हो गईं।',
   'shop.alert.restoreFailed.title': 'पुनर्स्थापना विफल',
   'shop.alert.restoreFailed.body': 'खरीदारियाँ पुनर्स्थापित नहीं हो सकीं।',
-  'shop.offeringHint': 'ऑफ़र `{id}` · कीमतें App Store से।',
+  'shop.offeringHint': 'ऑफ़र `{id}` · कीमतें Google Play से।',
   'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'वॉलेट लोड करने में विफल',
 
   // auth
-  'auth.error.userNotFound':
-    'इस ईमेल के लिए कोई खाता नहीं मिला। यदि आपने वेबसाइट पर Google या Apple से साइन अप किया है, तो यहाँ Apple से साइन इन करें।',
-  'auth.error.wrongPassword':
-    'गलत पासवर्ड, या यह खाता वेबसाइट से Google/Apple साइन-इन इस्तेमाल करता है। Apple से साइन इन आज़माएँ, या puzzleinteract.com पर पासवर्ड रीसेट करें।',
   'auth.error.userNotConfirmed': 'साइन इन से पहले अपना ईमेल पुष्टि करें।',
   'auth.error.passwordResetRequired':
     'साइन इन से पहले आपको पासवर्ड रीसेट करना होगा।',
@@ -250,9 +243,4 @@ export default {
     'बहुत ज़्यादा प्रयास। कुछ मिनट प्रतीक्षा करें और फिर कोशिश करें।',
   'auth.error.generic': 'साइन इन विफल। कृपया फिर कोशिश करें।',
   'auth.error.noToken': 'साइन इन ने टोकन नहीं लौटाया।',
-  'auth.apple.iosOnly': 'Apple से साइन इन केवल iPhone पर उपलब्ध है।',
-  'auth.apple.unavailable': 'इस डिवाइस पर Apple से साइन इन उपलब्ध नहीं है।',
-  'auth.apple.noIdentityToken': 'Apple से साइन इन ने आइडेंटिटी टोकन नहीं लौटाया।',
-  'auth.apple.exchangeFailed': 'Apple साइन-इन एक्सचेंज विफल।',
-  'auth.apple.httpFailed': 'Apple साइन-इन विफल (HTTP {status})',
 };

@@ -5,7 +5,15 @@ import { REVENUECAT_API_KEY, REVENUECAT_OFFERING } from '../constants/store';
 let configured = false;
 
 export function configurePurchases() {
-  if (configured || Platform.OS !== 'ios') return;
+  if (configured || Platform.OS !== 'android') return;
+  if (!REVENUECAT_API_KEY || REVENUECAT_API_KEY.includes('REPLACE')) {
+    if (__DEV__) {
+      console.warn(
+        '[Purchases] Set REVENUECAT_API_KEY to your RevenueCat Google Play public SDK key (goog_…).'
+      );
+    }
+    return;
+  }
   Purchases.configure({ apiKey: REVENUECAT_API_KEY });
   configured = true;
 }
@@ -20,11 +28,13 @@ export async function purchasePackage(rcPackage) {
   return result;
 }
 
+/** Best-effort purchase / order id for backend IAP verify (Google Play). */
 export function readPurchaseTransactionId(purchaseResult) {
   const tx =
-    purchaseResult?.transaction?.transactionIdentifier
+    purchaseResult?.transaction?.purchaseToken
+    ?? purchaseResult?.transaction?.transactionIdentifier
     ?? purchaseResult?.transactionIdentifier
-    ?? purchaseResult?.customerInfo?.originalPurchaseDate
+    ?? purchaseResult?.productIdentifier
     ?? null;
   if (tx) return String(tx);
   return `rc-${Date.now()}`;

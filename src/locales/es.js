@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'Correo',
   'signIn.placeholder.password': 'Contraseña',
   'signIn.button.email': 'Iniciar sesión',
-  'signIn.divider': '— o —',
-  'signIn.button.apple': ' Iniciar sesión con Apple',
-  'signIn.apple.hint': 'Iniciar sesión con Apple está disponible en iPhone.',
 
   // shop
   'shop.title': 'Tienda',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': 'Tus compras se han restaurado.',
   'shop.alert.restoreFailed.title': 'Restauración fallida',
   'shop.alert.restoreFailed.body': 'No se pudieron restaurar las compras.',
-  'shop.offeringHint': 'Oferta `{id}` · Precios de la App Store.',
+  'shop.offeringHint': 'Oferta `{id}` · Precios de Google Play.',
   'shop.restore': 'Restaurar compras',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'Error al cargar la billetera',
 
   // auth
-  'auth.error.userNotFound':
-    'No hay cuenta para este correo. Si te registraste con Google o Apple en la web, usa Iniciar sesión con Apple aquí.',
-  'auth.error.wrongPassword':
-    'Contraseña incorrecta, o esta cuenta usa inicio de sesión con Google/Apple de la web. Prueba Iniciar sesión con Apple, o restablece tu contraseña en puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Confirma tu correo antes de iniciar sesión.',
   'auth.error.passwordResetRequired':
     'Debes restablecer tu contraseña antes de iniciar sesión.',
@@ -250,9 +243,4 @@ export default {
     'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
   'auth.error.generic': 'Error al iniciar sesión. Inténtalo de nuevo.',
   'auth.error.noToken': 'El inicio de sesión no devolvió un token.',
-  'auth.apple.iosOnly': 'Iniciar sesión con Apple solo está disponible en iPhone.',
-  'auth.apple.unavailable': 'Iniciar sesión con Apple no está disponible en este dispositivo.',
-  'auth.apple.noIdentityToken': 'Iniciar sesión con Apple no devolvió un token de identidad.',
-  'auth.apple.exchangeFailed': 'Falló el intercambio de inicio de sesión con Apple.',
-  'auth.apple.httpFailed': 'Falló el inicio de sesión con Apple (HTTP {status})',
 };

@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'E-Mail',
   'signIn.placeholder.password': 'Passwort',
   'signIn.button.email': 'Anmelden',
-  'signIn.divider': '— oder —',
-  'signIn.button.apple': ' Mit Apple anmelden',
-  'signIn.apple.hint': 'Mit Apple anmelden ist auf dem iPhone verfügbar.',
 
   // shop
   'shop.title': 'Shop',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': 'Deine Käufe wurden wiederhergestellt.',
   'shop.alert.restoreFailed.title': 'Wiederherstellung fehlgeschlagen',
   'shop.alert.restoreFailed.body': 'Käufe konnten nicht wiederhergestellt werden.',
-  'shop.offeringHint': 'Angebot `{id}` · Preise aus dem App Store.',
+  'shop.offeringHint': 'Angebot `{id}` · Preise aus dem Google Play.',
   'shop.restore': 'Käufe wiederherstellen',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'Geldbörse konnte nicht geladen werden',
 
   // auth
-  'auth.error.userNotFound':
-    'Kein Konto für diese E-Mail gefunden. Wenn du dich auf der Website mit Google oder Apple registriert hast, nutze hier Mit Apple anmelden.',
-  'auth.error.wrongPassword':
-    'Falsches Passwort, oder dieses Konto nutzt Google-/Apple-Anmeldung von der Website. Versuche Mit Apple anmelden oder setze dein Passwort auf puzzleinteract.com zurück.',
   'auth.error.userNotConfirmed': 'Bitte bestätige deine E-Mail vor der Anmeldung.',
   'auth.error.passwordResetRequired':
     'Du musst dein Passwort zurücksetzen, bevor du dich anmelden kannst.',
@@ -250,9 +243,4 @@ export default {
     'Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.',
   'auth.error.generic': 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
   'auth.error.noToken': 'Anmeldung hat kein Token zurückgegeben.',
-  'auth.apple.iosOnly': 'Mit Apple anmelden ist nur auf dem iPhone verfügbar.',
-  'auth.apple.unavailable': 'Mit Apple anmelden ist auf diesem Gerät nicht verfügbar.',
-  'auth.apple.noIdentityToken': 'Mit Apple anmelden hat kein Identity-Token zurückgegeben.',
-  'auth.apple.exchangeFailed': 'Apple-Anmelde-Austausch fehlgeschlagen.',
-  'auth.apple.httpFailed': 'Apple-Anmeldung fehlgeschlagen (HTTP {status})',
 };

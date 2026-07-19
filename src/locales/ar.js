@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'البريد الإلكتروني',
   'signIn.placeholder.password': 'كلمة المرور',
   'signIn.button.email': 'تسجيل الدخول',
-  'signIn.divider': '— أو —',
-  'signIn.button.apple': ' تسجيل الدخول عبر Apple',
-  'signIn.apple.hint': 'تسجيل الدخول عبر Apple متاح على iPhone.',
 
   // shop
   'shop.title': 'المتجر',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': 'تمت استعادة مشترياتك.',
   'shop.alert.restoreFailed.title': 'فشلت الاستعادة',
   'shop.alert.restoreFailed.body': 'تعذّر استعادة المشتريات.',
-  'shop.offeringHint': 'العرض `{id}` · الأسعار من App Store.',
+  'shop.offeringHint': 'العرض `{id}` · الأسعار من Google Play.',
   'shop.restore': 'استعادة المشتريات',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'فشل تحميل المحفظة',
 
   // auth
-  'auth.error.userNotFound':
-    'لم يُعثر على حساب لهذا البريد. إذا سجّلت عبر Google أو Apple على الموقع، استخدم تسجيل الدخول عبر Apple هنا.',
-  'auth.error.wrongPassword':
-    'كلمة مرور خاطئة، أو هذا الحساب يستخدم تسجيل Google/Apple من الموقع. جرّب تسجيل الدخول عبر Apple، أو أعد تعيين كلمة المرور على puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.',
   'auth.error.passwordResetRequired':
     'يجب إعادة تعيين كلمة المرور قبل تسجيل الدخول.',
@@ -250,9 +243,4 @@ export default {
     'محاولات كثيرة جداً. انتظر بضع دقائق وحاول مجدداً.',
   'auth.error.generic': 'فشل تسجيل الدخول. يرجى المحاولة مجدداً.',
   'auth.error.noToken': 'تسجيل الدخول لم يُرجع رمزاً.',
-  'auth.apple.iosOnly': 'تسجيل الدخول عبر Apple متاح على iPhone فقط.',
-  'auth.apple.unavailable': 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.',
-  'auth.apple.noIdentityToken': 'تسجيل الدخول عبر Apple لم يُرجع رمز هوية.',
-  'auth.apple.exchangeFailed': 'فشل تبادل تسجيل الدخول عبر Apple.',
-  'auth.apple.httpFailed': 'فشل تسجيل الدخول عبر Apple (HTTP {status})',
 };

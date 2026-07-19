@@ -146,9 +146,6 @@ export default {
   'signIn.placeholder.email': 'Email',
   'signIn.placeholder.password': 'Password',
   'signIn.button.email': 'Sign in',
-  'signIn.divider': '— or —',
-  'signIn.button.apple': ' Sign in with Apple',
-  'signIn.apple.hint': 'Sign in with Apple is available on iPhone.',
 
   // shop
   'shop.title': 'Shop',
@@ -177,9 +174,9 @@ export default {
   'shop.alert.restored.body': 'Your purchases have been restored.',
   'shop.alert.restoreFailed.title': 'Restore failed',
   'shop.alert.restoreFailed.body': 'Could not restore purchases.',
-  'shop.offeringHint': 'Offering `{id}` · Prices from the App Store.',
+  'shop.offeringHint': 'Offering `{id}` · Prices from Google Play.',
   'shop.restore': 'Restore purchases',
-  'shop.restore.subtitle': 'Already bought on this Apple ID? Restore here.',
+  'shop.restore.subtitle': 'Already bought on this Google Play account? Restore here.',
 
   // webview
   'webview.titleFallback': 'Page',
@@ -290,9 +287,9 @@ export default {
 
   // auth
   'auth.error.userNotFound':
-    'No account found for this email. If you signed up with Google or Apple on the website, use Sign in with Apple here.',
+    'No account found for this email. If you signed up with Google on the website, set a password at puzzleinteract.com or use that email/password here.',
   'auth.error.wrongPassword':
-    'Incorrect password, or this account uses Google/Apple sign-in from the website. Try Sign in with Apple, or reset your password at puzzleinteract.com.',
+    'Incorrect password, or this account uses Google sign-in from the website. Reset your password at puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Please confirm your email before signing in.',
   'auth.error.passwordResetRequired':
     'You must reset your password before signing in.',
@@ -303,9 +300,4 @@ export default {
     'Too many attempts. Please wait a few minutes and try again.',
   'auth.error.generic': 'Sign-in failed. Please try again.',
   'auth.error.noToken': 'Sign-in did not return a token.',
-  'auth.apple.iosOnly': 'Sign in with Apple is available on iPhone only.',
-  'auth.apple.unavailable': 'Sign in with Apple is not available on this device.',
-  'auth.apple.noIdentityToken': 'Sign in with Apple did not return an identity token.',
-  'auth.apple.exchangeFailed': 'Apple sign-in exchange failed.',
-  'auth.apple.httpFailed': 'Apple sign-in failed (HTTP {status})',
 };

@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'E-mail',
   'signIn.placeholder.password': 'Mot de passe',
   'signIn.button.email': 'Se connecter',
-  'signIn.divider': '— ou —',
-  'signIn.button.apple': ' Se connecter avec Apple',
-  'signIn.apple.hint': 'Se connecter avec Apple est disponible sur iPhone.',
 
   // shop
   'shop.title': 'Boutique',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': 'Vos achats ont été restaurés.',
   'shop.alert.restoreFailed.title': 'Restauration échouée',
   'shop.alert.restoreFailed.body': 'Impossible de restaurer les achats.',
-  'shop.offeringHint': 'Offre `{id}` · Prix de l’App Store.',
+  'shop.offeringHint': 'Offre `{id}` · Prix de l’Google Play.',
   'shop.restore': 'Restaurer les achats',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'Échec du chargement du portefeuille',
 
   // auth
-  'auth.error.userNotFound':
-    'Aucun compte trouvé pour cet e-mail. Si vous vous êtes inscrit avec Google ou Apple sur le site, utilisez Se connecter avec Apple ici.',
-  'auth.error.wrongPassword':
-    'Mot de passe incorrect, ou ce compte utilise la connexion Google/Apple du site. Essayez Se connecter avec Apple, ou réinitialisez votre mot de passe sur puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Veuillez confirmer votre e-mail avant de vous connecter.',
   'auth.error.passwordResetRequired':
     'Vous devez réinitialiser votre mot de passe avant de vous connecter.',
@@ -250,9 +243,4 @@ export default {
     'Trop de tentatives. Attendez quelques minutes et réessayez.',
   'auth.error.generic': 'Échec de la connexion. Veuillez réessayer.',
   'auth.error.noToken': 'La connexion n’a pas renvoyé de jeton.',
-  'auth.apple.iosOnly': 'Se connecter avec Apple est disponible uniquement sur iPhone.',
-  'auth.apple.unavailable': 'Se connecter avec Apple n’est pas disponible sur cet appareil.',
-  'auth.apple.noIdentityToken': 'Se connecter avec Apple n’a pas renvoyé de jeton d’identité.',
-  'auth.apple.exchangeFailed': 'Échec de l’échange de connexion Apple.',
-  'auth.apple.httpFailed': 'Échec de la connexion Apple (HTTP {status})',
 };

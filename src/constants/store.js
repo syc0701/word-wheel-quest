@@ -1,14 +1,19 @@
-/** App Store Connect identifiers — Word Wheel Quest */
-export const APP_STORE = {
-  bundleId: 'com.puzint.wordwheel.app',
-  sku: 'wordwheel_quest_2026',
-  ascAppId: '6787691583',
-  appStoreUrl: 'https://apps.apple.com/app/id6787691583',
+/** Google Play / app identity — Word Wheel Quest (Android) */
+export const PLAY_STORE = {
+  packageName: 'com.puzint.wordwheel.app',
+  playStoreUrl:
+    'https://play.google.com/store/apps/details?id=com.puzint.wordwheel.app',
   appSiteId: 'word_wheel_quest',
 };
 
-/** RevenueCat iOS public API key */
-export const REVENUECAT_API_KEY = 'appl_dhJZZjrCKdpiAzYdjcJHddBLEmt';
+/** @deprecated Prefer PLAY_STORE — kept for credit/user API call sites. */
+export const APP_STORE = PLAY_STORE;
+
+/**
+ * RevenueCat Google Play public SDK key.
+ * Replace with the `goog_…` key from RevenueCat → Project → API keys (Android).
+ */
+export const REVENUECAT_API_KEY = 'goog_REPLACE_WITH_ANDROID_PUBLIC_SDK_KEY';
 
 /** In-app WebView URLs — append ?platform=app for minimal chrome on puzzleinteract.com */
 export const APP_URLS = {
@@ -32,7 +37,7 @@ export const REVENUECAT_OFFERING = {
   displayName: 'The standard set of packages',
 };
 
-/** Packages in default offering (RevenueCat package ID → App Store product ID) */
+/** Packages in default offering (RevenueCat package ID → Play product ID) */
 export const IAP_PACKAGES = [
   {
     packageId: 'bundle_starter',

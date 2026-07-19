@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'E-mail',
   'signIn.placeholder.password': 'Senha',
   'signIn.button.email': 'Entrar',
-  'signIn.divider': '— ou —',
-  'signIn.button.apple': ' Entrar com a Apple',
-  'signIn.apple.hint': 'Entrar com a Apple está disponível no iPhone.',
 
   // shop
   'shop.title': 'Loja',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': 'Suas compras foram restauradas.',
   'shop.alert.restoreFailed.title': 'Restauração falhou',
   'shop.alert.restoreFailed.body': 'Não foi possível restaurar as compras.',
-  'shop.offeringHint': 'Oferta `{id}` · Preços da App Store.',
+  'shop.offeringHint': 'Oferta `{id}` · Preços da Google Play.',
   'shop.restore': 'Restaurar compras',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'Falha ao carregar a carteira',
 
   // auth
-  'auth.error.userNotFound':
-    'Nenhuma conta encontrada para este e-mail. Se você se cadastrou com Google ou Apple no site, use Entrar com a Apple aqui.',
-  'auth.error.wrongPassword':
-    'Senha incorreta, ou esta conta usa login Google/Apple do site. Tente Entrar com a Apple, ou redefina sua senha em puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Confirme seu e-mail antes de entrar.',
   'auth.error.passwordResetRequired':
     'Você deve redefinir sua senha antes de entrar.',
@@ -250,9 +243,4 @@ export default {
     'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
   'auth.error.generic': 'Falha ao entrar. Tente novamente.',
   'auth.error.noToken': 'O login não retornou um token.',
-  'auth.apple.iosOnly': 'Entrar com a Apple está disponível apenas no iPhone.',
-  'auth.apple.unavailable': 'Entrar com a Apple não está disponível neste dispositivo.',
-  'auth.apple.noIdentityToken': 'Entrar com a Apple não retornou um token de identidade.',
-  'auth.apple.exchangeFailed': 'Falha na troca do login da Apple.',
-  'auth.apple.httpFailed': 'Falha no login da Apple (HTTP {status})',
 };

@@ -131,9 +131,6 @@ export default {
   'signIn.placeholder.email': 'メール',
   'signIn.placeholder.password': 'パスワード',
   'signIn.button.email': 'サインイン',
-  'signIn.divider': '— または —',
-  'signIn.button.apple': ' Appleでサインイン',
-  'signIn.apple.hint': 'AppleでサインインはiPhoneで利用できます。',
 
   // shop
   'shop.title': 'ショップ',
@@ -150,7 +147,7 @@ export default {
   'shop.alert.restored.body': '購入内容を復元しました。',
   'shop.alert.restoreFailed.title': '復元に失敗しました',
   'shop.alert.restoreFailed.body': '購入内容を復元できませんでした。',
-  'shop.offeringHint': 'オファリング `{id}` · 価格はApp Storeより。',
+  'shop.offeringHint': 'オファリング `{id}` · 価格はGoogle Playより。',
   'shop.restore': '購入を復元',
 
   // webview
@@ -236,10 +233,6 @@ export default {
   'wallet.error.loadFailed': 'ウォレットの読み込みに失敗しました',
 
   // auth
-  'auth.error.userNotFound':
-    'このメールのアカウントが見つかりません。ウェブサイトでGoogleまたはAppleで登録した場合は、ここでAppleでサインインしてください。',
-  'auth.error.wrongPassword':
-    'パスワードが違うか、このアカウントはウェブサイトのGoogle/Appleサインインを使っています。Appleでサインインするか、puzzleinteract.comでパスワードをリセットしてください。',
   'auth.error.userNotConfirmed': 'サインイン前にメールを確認してください。',
   'auth.error.passwordResetRequired':
     'サインイン前にパスワードをリセットする必要があります。',
@@ -250,9 +243,4 @@ export default {
     '試行回数が多すぎます。数分待ってから再試行してください。',
   'auth.error.generic': 'サインインに失敗しました。もう一度お試しください。',
   'auth.error.noToken': 'サインインがトークンを返しませんでした。',
-  'auth.apple.iosOnly': 'AppleでサインインはiPhoneでのみ利用できます。',
-  'auth.apple.unavailable': 'この端末ではAppleでサインインを利用できません。',
-  'auth.apple.noIdentityToken': 'AppleでサインインがIDトークンを返しませんでした。',
-  'auth.apple.exchangeFailed': 'Appleサインインの交換に失敗しました。',
-  'auth.apple.httpFailed': 'Appleサインインに失敗しました (HTTP {status})',
 };

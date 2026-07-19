@@ -12,25 +12,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#E8D4B8"
     },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.puzint.wordwheel.app",
-      "buildNumber": "1"
-    },
     "android": {
+      "package": "com.puzint.wordwheel.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#E8D4B8"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.puzint.wordwheel.app"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
       "expo-asset",
-      "expo-apple-authentication",
       "expo-audio"
     ]
   }
