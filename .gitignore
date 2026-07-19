@@ -42,5 +42,16 @@ android/.gradle/
 android/app/build/
 android/build/
 
+# fastlane / Google Play secrets + outputs (kept outside android/ so
+# `expo prebuild --clean` does not wipe them)
+vendor/bundle/
+fastlane/play-store-service-account.json
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+fastlane/README.md
+**/*service-account*.json
+
 # typescript
 *.tsbuildinfo

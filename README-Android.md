@@ -4,7 +4,7 @@
 | --- | --- |
 | Package name | `com.puzint.wordwheel.app` |
 | versionName | `1.0.0` |
-| versionCode | `1` |
+| versionCode | `2` |
 | Play Store URL | https://play.google.com/store/apps/details?id=com.puzint.wordwheel.app |
 
 ## Architecture
@@ -63,6 +63,20 @@ Configure a release keystore for Play uploads (do not commit keystores). Typical
 
 - `android/keystore.properties` (gitignored locally)
 - Play App Signing in Play Console
+
+> ⚠️ `android/app/build.gradle` currently signs the `release` build with the **debug** keystore. Google Play will reject a debug-signed upload — create a real upload keystore and point the `release` `signingConfig` at it before running the upload lanes below.
+
+## Fastlane (Play Store metadata)
+
+Fastlane lives at the **repo root** (not under `android/`) so `expo prebuild --clean` / `npm run android:studio` does not delete it.
+
+- **Service account key**: `fastlane/play-store-service-account.json` (gitignored)
+- **Listing files**: `fastlane/metadata/android/en-US/`
+
+```bash
+bundle install                # first time / after Gemfile changes
+npm run fastlane:metadata     # upload title / descriptions / images
+```
 
 ## Backend notes
 

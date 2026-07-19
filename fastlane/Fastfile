@@ -1,0 +1,40 @@
+default_platform(:android)
+
+platform :android do
+  desc "Upload metadata, images, and screenshots to Google Play"
+  lane :metadata do
+    # supply normally requires an existing track release even for listing-only
+    # updates (title/description/images). Patch that so metadata can upload
+    # before / without relying on a specific binary version on a track.
+    Supply::Uploader.class_eval do
+      def perform_upload_meta(_version_codes, _track_name)
+        skip_all = Supply.config[:skip_upload_metadata] &&
+                   Supply.config[:skip_upload_images] &&
+                   Supply.config[:skip_upload_screenshots]
+        return if skip_all || metadata_path.nil?
+        UI.user_error!("Could not find folder #{metadata_path}") unless File.directory?(metadata_path)
+
+        release_notes_queue = Queue.new
+        upload_worker = create_meta_upload_worker
+        upload_worker.batch_enqueue(
+          all_languages.reject { |lang| lang.start_with?(".") }.map do |lang|
+            Supply::Uploader::UploadJob.new(lang, nil, release_notes_queue)
+          end
+        )
+        upload_worker.start
+      end
+    end
+
+    upload_to_play_store(
+      metadata_path: "fastlane/metadata/android",
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      changes_not_sent_for_review: true
+    )
+    UI.success("Uploaded Play Store metadata / images / screenshots.")
+  end
+end
