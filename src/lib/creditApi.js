@@ -1,9 +1,19 @@
 import { APP_STORE } from '../constants/store';
 import { apiGet, apiPost } from './http';
+import { ensurePlayIntegrityPassed } from './playIntegrity';
 
 function readBalance(payload) {
   const n = Number(payload?.creditBalance);
   return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+async function requirePlayIntegrity(actionLabel) {
+  const gate = await ensurePlayIntegrityPassed();
+  if (gate.ok) return;
+  const detail = gate.reason ? ` (${gate.reason})` : '';
+  throw new Error(
+    `Device integrity check failed for ${actionLabel}${detail}. Try again from an official Play Store install.`
+  );
 }
 
 const CreditApi = {
@@ -24,11 +34,15 @@ const CreditApi = {
   },
 
   verifyIapPurchase: async ({ appCode = APP_STORE.appSiteId, productId, transactionId, rawPayload }) => {
+    await requirePlayIntegrity('verifyIapPurchase');
     const data = await apiPost('/home/credit/iap/verify', {
       appCode,
       productId,
       transactionId,
-      rawPayload,
+      rawPayload: {
+        ...rawPayload,
+        platform: 'google',
+      },
     });
     if (data?.code === 'FAILURE') {
       throw new Error(data.message || 'Purchase verification failed');
@@ -37,6 +51,7 @@ const CreditApi = {
   },
 
   consumeCredits: async ({ appCode = APP_STORE.appSiteId, featureUsed, creditsConsumed }) => {
+    await requirePlayIntegrity('consumeCredits');
     const data = await apiPost('/home/credit/consume', {
       appCode,
       featureUsed,

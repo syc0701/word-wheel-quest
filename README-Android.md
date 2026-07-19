@@ -4,7 +4,7 @@
 | --- | --- |
 | Package name | `com.puzint.wordwheel.app` |
 | versionName | `1.0.0` |
-| versionCode | `2` |
+| versionCode | `3` |
 | Play Store URL | https://play.google.com/store/apps/details?id=com.puzint.wordwheel.app |
 
 ## Architecture
@@ -66,6 +66,25 @@ Configure a release keystore for Play uploads (do not commit keystores). Typical
 
 > ⚠️ `android/app/build.gradle` currently signs the `release` build with the **debug** keystore. Google Play will reject a debug-signed upload — create a real upload keystore and point the `release` `signingConfig` at it before running the upload lanes below.
 
+## Play Integrity
+
+Release builds gate credit IAP verify and credit consume behind Google Play Integrity, verified by puzzle-be (`POST /home/android/security/verify-integrity`). See `Puzzle-iOS/puzzle-be/docs/android-play-integrity.md`.
+
+| Client | Value |
+| --- | --- |
+| `appCode` | `word_wheel_quest` |
+| `packageName` | `com.puzint.wordwheel.app` |
+| Native module | `modules/play-integrity` (Expo local module) |
+
+Debug (`__DEV__`) builds skip the check. Production requires a Play Store install with Play Integrity enabled in Play Console → App integrity.
+
+After adding the module:
+
+```bash
+npm install
+npm run android:prebuild   # or android:run — autolinks play-integrity
+```
+
 ## Fastlane (Play Store metadata)
 
 Fastlane lives at the **repo root** (not under `android/`) so `expo prebuild --clean` / `npm run android:studio` does not delete it.
@@ -82,4 +101,4 @@ npm run fastlane:metadata     # upload title / descriptions / images only
 
 ## Backend notes
 
-Shop verify payloads send `platform: 'google'`. Ensure `/home/credit/iap/verify` accepts Google Play purchase tokens.
+Shop verify payloads send `platform: 'google'`. Ensure `/home/credit/iap/verify` accepts Google Play purchase tokens. Integrity must pass before verify/consume on release builds.

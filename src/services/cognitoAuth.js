@@ -134,4 +134,10 @@ export async function loginWithPassword(email, password) {
 
 export async function signOutAll() {
   await clearStoredAuthToken();
+  try {
+    const { clearPlayIntegrityCache } = require('../lib/playIntegrity');
+    clearPlayIntegrityCache();
+  } catch {
+    /* ignore */
+  }
 }

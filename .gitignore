@@ -41,6 +41,8 @@ android/app/release/
 android/.gradle/
 android/app/build/
 android/build/
+modules/**/android/build/
+modules/**/.gradle/
 
 # fastlane / Google Play secrets + outputs (kept outside android/ so
 # `expo prebuild --clean` does not wipe them)

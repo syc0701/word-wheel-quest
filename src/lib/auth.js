@@ -92,4 +92,10 @@ export async function signInWithToken(token) {
 
 export async function signOut() {
   await clearStoredAuthToken();
+  try {
+    const { clearPlayIntegrityCache } = require('./playIntegrity');
+    clearPlayIntegrityCache();
+  } catch {
+    /* ignore */
+  }
 }
