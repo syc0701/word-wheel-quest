@@ -24,19 +24,14 @@ function ToggleRow({ label, subtitle, value, onValueChange, colors }) {
   );
 }
 
-/** Settings toggles for background music and sound effects. */
+/** Settings toggles for background music and sound effects (no outer card). */
 export default function AudioSettingsCard() {
   const { colors } = useAppearance();
   const { musicEnabled, sfxEnabled, setMusicEnabled, setSfxEnabled, playSfx } = useAudio();
   const t = useT();
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-      ]}
-    >
+    <View>
       <ToggleRow
         label={t('settings.sound.music')}
         subtitle={t('settings.sound.musicSubtitle')}
@@ -60,13 +55,6 @@ export default function AudioSettingsCard() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    marginBottom: 4,
-    borderWidth: 1,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

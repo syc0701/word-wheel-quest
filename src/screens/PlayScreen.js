@@ -48,6 +48,13 @@ import {
   saveStoredBonusWords,
 } from '../lib/bonusWordsStorage';
 import {
+  addGuestPuzzleCoins,
+  loadGuestPuzzleCoins,
+  saveGuestPuzzleCoins,
+  spendGuestPuzzleCoins,
+} from '../lib/guestCoinsStorage';
+import { isLoggedIn } from '../lib/auth';
+import {
   formatWordWheelPlayDuration,
   parseWordWheelCatalog,
   readCoinsEarned,
@@ -266,7 +273,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   const lifetimeCoinsRemaining = wallet.loggedIn
     ? Math.max(0, wallet.lifetimePoints)
-    : Math.max(0, playSessionCoins - hintCoinsSpent);
+    : Math.max(0, playSessionCoins);
   const totalHintCoinsAvailable = lifetimeCoinsRemaining + wallet.creditBalance;
   const canUseHint =
     !puzzleComplete
@@ -393,6 +400,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         wallet.addLifetimePoints?.(gift);
       } else {
         setPlaySessionCoins((prev) => prev + gift);
+        addGuestPuzzleCoins(gift).catch(() => {});
       }
       playSfx('bonus');
       // Let the new total paint, then pulse icon + number.
@@ -500,9 +508,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             }
           }
           const baseCoins = Number(play.totalPuzzleCoins) || 0;
-          // Guest puzzle-coin balance isn’t on the server for bonus gifts — restore +1 per saved find.
-          const restoredBonusCoins = bonus.length * WORD_WHEEL_BONUS_WORD_GIFT;
-          setPlaySessionCoins(baseCoins + restoredBonusCoins);
+          const authed = await isLoggedIn();
+          if (authed) {
+            setPlaySessionCoins(baseCoins);
+          } else {
+            // Guest balance is durable across levels (bonus gifts + hint spends).
+            const stored = await loadGuestPuzzleCoins();
+            if (stored == null) {
+              const seeded = bonus.length * WORD_WHEEL_BONUS_WORD_GIFT;
+              await saveGuestPuzzleCoins(seeded);
+              setPlaySessionCoins(seeded);
+            } else {
+              setPlaySessionCoins(stored);
+            }
+          }
         } else if (!cancelled) {
           // Still time the attempt even if play session start fails.
           const startedAt = Date.now();
@@ -552,7 +571,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         const updated = await WordWheelApi.updateProgress(puzzle.id, words, bonusWords);
         if (updated && !updated.code) {
           setPlaySession(updated);
-          if (updated.totalPuzzleCoins != null) {
+          // Guest coin HUD is local/durable — don't let server totals wipe bonus gifts.
+          if (wallet.loggedIn && updated.totalPuzzleCoins != null) {
             setPlaySessionCoins(Number(updated.totalPuzzleCoins) || 0);
           }
           return updated;
@@ -563,7 +583,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         return null;
       }
     },
-    [puzzle, t, bonusWordsFound]
+    [puzzle, t, bonusWordsFound, wallet.loggedIn]
   );
 
   const persistBonusWords = useCallback(
@@ -818,6 +838,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
         if (wallet.loggedIn) {
           wallet.spendLifetimePoints?.(WORD_WHEEL_HINT_COST);
+        } else {
+          const next = await spendGuestPuzzleCoins(WORD_WHEEL_HINT_COST);
+          setPlaySessionCoins(next);
         }
       } else if (wallet.creditBalance >= WORD_WHEEL_HINT_COST) {
         await wallet.consumeHintCredits({

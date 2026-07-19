@@ -78,6 +78,7 @@ export default {
 
   // settings
   'settings.title': 'Settings',
+  'settings.section.preferences': 'Preferences',
   'settings.section.appearance': 'Appearance',
   'settings.section.language': 'Language',
   'settings.section.sound': 'Sound',
@@ -151,6 +152,18 @@ export default {
 
   // shop
   'shop.title': 'Shop',
+  'shop.headline': 'Boost Your Quest!',
+  'shop.subheader': 'Grab the perfect pack to keep your word wheel spinning.',
+  'shop.pack.starter.name': 'Starter Fun Bundle',
+  'shop.pack.starter.description': 'Jumpstart your journey with extra coins!',
+  'shop.pack.classic.name': 'Classic Challenge',
+  'shop.pack.classic.description': 'Fuel your brain and conquer tough levels.',
+  'shop.pack.master.name': 'Master Quest',
+  'shop.pack.master.description': 'The ultimate stash for serious word smiths.',
+  'shop.pack.coinsSmall.name': '300 Coins',
+  'shop.pack.coinsSmall.description': 'Adds 300 coins to player balance',
+  'shop.pack.coinsLarge.name': '1,000 Coins',
+  'shop.pack.coinsLarge.description': 'Adds 1,000 coins to player balance',
   'shop.alert.unavailable.title': 'Shop unavailable',
   'shop.alert.unavailable.body': 'Could not load products.',
   'shop.alert.productUnavailable.title': 'Unavailable',
@@ -166,6 +179,7 @@ export default {
   'shop.alert.restoreFailed.body': 'Could not restore purchases.',
   'shop.offeringHint': 'Offering `{id}` · Prices from the App Store.',
   'shop.restore': 'Restore purchases',
+  'shop.restore.subtitle': 'Already bought on this Apple ID? Restore here.',
 
   // webview
   'webview.titleFallback': 'Page',

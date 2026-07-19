@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, Star, Trophy } from 'lucide-react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AudioSettingsCard from '../components/AudioSettingsCard';
 import PlayTimerSettingsCard from '../components/PlayTimerSettingsCard';
@@ -15,6 +15,7 @@ import { LEVEL_SCREEN_TYPES } from '../lib/LevelScreenPolicy';
 import { isLoggedIn } from '../lib/auth';
 import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
 import { signOutAll } from '../services/cognitoAuth';
+import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 
 const DEV_INTERMISSION_LINKS = [
@@ -38,14 +39,18 @@ const DEV_INTERMISSION_LINKS = [
   },
 ];
 
-function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
+function MenuRow({ icon: Icon, label, subtitle, onPress, colors, embedded = false, loading = false }) {
   return (
     <Pressable
       style={[
-        styles.row,
-        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
+        embedded ? styles.rowEmbedded : styles.row,
+        !embedded && {
+          backgroundColor: colors.surface,
+          borderColor: colors.surfaceLight,
+        },
       ]}
       onPress={onPress}
+      disabled={loading}
     >
       <View style={[styles.rowIcon, { backgroundColor: colors.surfaceLight }]}>
         <Icon color={colors.primaryGlow} size={20} strokeWidth={1.8} />
@@ -56,7 +61,11 @@ function MenuRow({ icon: Icon, label, subtitle, onPress, colors }) {
           <Text style={[styles.rowSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
         ) : null}
       </View>
-      <ChevronRight color={colors.textMuted} size={20} />
+      {loading ? (
+        <ActivityIndicator color={colors.primaryGlow} size="small" />
+      ) : (
+        <ChevronRight color={colors.textMuted} size={20} />
+      )}
     </Pressable>
   );
 }
@@ -80,12 +89,13 @@ function BalanceCard({ label, value, loading, suffix = '', colors }) {
 export default function SettingsScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.PLAY;
   const wallet = useWordWheelWallet();
-  const { colors, mode, isRandomScene } = useAppearance();
+  const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
   const [scoreStanding, setScoreStanding] = useState(null);
   const [scoreLoading, setScoreLoading] = useState(false);
+  const [restoringPurchases, setRestoringPurchases] = useState(false);
 
   const refreshScore = async (isAuthed) => {
     if (!isAuthed) {
@@ -130,6 +140,21 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
 
   const handleSignIn = () => {
     navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.SETTINGS });
+  };
+
+  const handleRestorePurchases = async () => {
+    setRestoringPurchases(true);
+    try {
+      await restorePurchases();
+      Alert.alert(t('shop.alert.restored.title'), t('shop.alert.restored.body'));
+    } catch (error) {
+      Alert.alert(
+        t('shop.alert.restoreFailed.title'),
+        error.message ?? t('shop.alert.restoreFailed.body')
+      );
+    } finally {
+      setRestoringPurchases(false);
+    }
   };
 
   const themed = useMemo(
@@ -215,9 +240,10 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
-        {authed || wallet.loggedIn ? (
-          <>
-            <View style={[styles.walletCard, themed.walletCard]}>
+        <View style={[styles.groupCard, themed.walletCard]}>
+          {authed || wallet.loggedIn ? (
+            <>
+              <View style={styles.accountSection}>
               <Text style={[styles.walletTitle, themed.walletTitle]}>{t('settings.wallet.title')}</Text>
               <BalanceCard
                 label={t('settings.wallet.puzzleCoins')}
@@ -235,30 +261,99 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
               <Text style={[styles.walletHint, themed.walletHint]}>
                 {t('settings.wallet.hint')}
               </Text>
-            </View>
-            {wallet.accountLabel ? (
-              <View style={styles.accountBlock}>
+              </View>
+
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              <View style={styles.accountSection}>
+                <View style={styles.scoreHeader}>
+                  <Trophy color={colors.primaryGlow} size={18} strokeWidth={1.8} />
+                  <Text style={[styles.walletTitle, themed.walletTitle, styles.scoreTitle]}>
+                    {t('settings.section.score')}
+                  </Text>
+                </View>
+                <BalanceCard
+                  label={t('settings.score.wordsFound')}
+                  value={scoreStanding?.wordsFound ?? 0}
+                  loading={scoreLoading}
+                  colors={colors}
+                />
+                <BalanceCard
+                  label={t('settings.score.rank')}
+                  value={
+                    scoreStanding?.rank != null
+                      ? t('settings.score.rankValue', { n: scoreStanding.rank })
+                      : t('common.emDash')
+                  }
+                  loading={scoreLoading}
+                  colors={colors}
+                />
+                <Text style={[styles.walletHint, themed.walletHint]}>
+                  {scoreStanding?.wordsFound
+                    ? t('settings.score.hint')
+                    : t('settings.score.empty')}
+                </Text>
+              </View>
+
+              {wallet.accountLabel ? (
+                <>
+                  <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+                  <View style={[styles.accountBlock, styles.accountSection]}>
                 <Text style={[styles.accountCaption, themed.accountCaption]}>{t('settings.account.signedInAs')}</Text>
                 <Text style={[styles.accountLabel, themed.accountLabel]} numberOfLines={2}>
                   {wallet.accountLabel}
                 </Text>
-              </View>
-            ) : null}
-            <MenuRow icon={LogOut} label={t('settings.account.signOut')} onPress={handleSignOut} colors={colors} />
-          </>
-        ) : (
+                  </View>
+                </>
+              ) : null}
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              <MenuRow
+                icon={LogOut}
+                label={t('settings.account.signOut')}
+                onPress={handleSignOut}
+                colors={colors}
+                embedded
+              />
+            </>
+          ) : (
+            <>
+              <MenuRow
+                icon={LogIn}
+                label={t('settings.account.signIn')}
+                subtitle={t('settings.account.signInSubtitle')}
+                onPress={handleSignIn}
+                colors={colors}
+                embedded
+              />
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              <Text style={[styles.signedOutScoreHint, themed.walletHint]}>
+                {t('settings.score.signInHint')}
+              </Text>
+            </>
+          )}
+          <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
           <MenuRow
-            icon={LogIn}
-            label={t('settings.account.signIn')}
-            subtitle={t('settings.account.signInSubtitle')}
-            onPress={handleSignIn}
+            icon={RotateCcw}
+            label={t('shop.restore')}
+            subtitle={t('shop.restore.subtitle')}
+            onPress={handleRestorePurchases}
             colors={colors}
+            embedded
+            loading={restoringPurchases}
           />
-        )}
+        </View>
 
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.appearance')}</Text>
-        <View style={[styles.appearanceCard, themed.appearanceCard]}>
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.preferences')}</Text>
+        <View style={[styles.preferencesCard, themed.appearanceCard]}>
           <AppearancePicker />
+          {isRandomScene ? (
+            <Text style={[styles.appearanceHint, themed.appearanceHint]}>
+              {t('settings.appearance.randomHint')}
+            </Text>
+          ) : null}
+          <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
+          <AudioSettingsCard />
+          <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
+          <PlayTimerSettingsCard />
         </View>
 
         {/* Language picker — re-enable when shipping multi-language UI
@@ -268,65 +363,29 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         </View>
         */}
 
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.sound')}</Text>
-        <AudioSettingsCard />
-
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.play')}</Text>
-        <PlayTimerSettingsCard />
-
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.score')}</Text>
-        <View style={[styles.walletCard, themed.walletCard]}>
-          <View style={styles.scoreHeader}>
-            <Trophy color={colors.primaryGlow} size={18} strokeWidth={1.8} />
-            <Text style={[styles.walletTitle, themed.walletTitle, styles.scoreTitle]}>
-              {t('settings.section.score')}
-            </Text>
-          </View>
-          {authed || wallet.loggedIn ? (
-            <>
-              <BalanceCard
-                label={t('settings.score.wordsFound')}
-                value={scoreStanding?.wordsFound ?? 0}
-                loading={scoreLoading}
-                colors={colors}
-              />
-              <BalanceCard
-                label={t('settings.score.rank')}
-                value={
-                  scoreStanding?.rank != null
-                    ? t('settings.score.rankValue', { n: scoreStanding.rank })
-                    : t('common.emDash')
-                }
-                loading={scoreLoading}
-                colors={colors}
-              />
-              <Text style={[styles.walletHint, themed.walletHint]}>
-                {scoreStanding?.wordsFound
-                  ? t('settings.score.hint')
-                  : t('settings.score.empty')}
-              </Text>
-            </>
-          ) : (
-            <Text style={[styles.walletHint, themed.walletHint]}>{t('settings.score.signInHint')}</Text>
-          )}
-        </View>
-
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.legal')}</Text>
-        {LEGAL_LINKS.map((link) => (
-          <MenuRow
-            key={link.id}
-            icon={FileText}
-            label={t(link.labelKey)}
-            onPress={() =>
-              navigate(SCREENS.WEBVIEW, {
-                url: link.url,
-                title: t(link.labelKey),
-                backScreen: SCREENS.SETTINGS,
-              })
-            }
-            colors={colors}
-          />
-        ))}
+        <View style={[styles.groupCard, themed.walletCard]}>
+          {LEGAL_LINKS.map((link, index) => (
+            <View key={link.id}>
+              {index > 0 ? (
+                <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              ) : null}
+              <MenuRow
+                icon={FileText}
+                label={t(link.labelKey)}
+                onPress={() =>
+                  navigate(SCREENS.WEBVIEW, {
+                    url: link.url,
+                    title: t(link.labelKey),
+                    backScreen: SCREENS.SETTINGS,
+                  })
+                }
+                colors={colors}
+                embedded
+              />
+            </View>
+          ))}
+        </View>
 
         {__DEV__ ? (
           <>
@@ -348,28 +407,37 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             >
               {t('settings.dev.hint')}
             </Text>
-            {DEV_INTERMISSION_LINKS.map((link) => (
+            <View style={[styles.groupCard, themed.walletCard]}>
+              {DEV_INTERMISSION_LINKS.map((link, index) => (
+                <View key={link.id}>
+                  {index > 0 ? (
+                    <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+                  ) : null}
+                  <MenuRow
+                    icon={link.icon}
+                    label={t(link.labelKey)}
+                    subtitle={t(link.subtitleKey)}
+                    onPress={() =>
+                      navigate(SCREENS.DEV_INTERMISSION, {
+                        previewType: link.id,
+                        backScreen: SCREENS.SETTINGS,
+                      })
+                    }
+                    colors={colors}
+                    embedded
+                  />
+                </View>
+              ))}
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
               <MenuRow
-                key={link.id}
-                icon={link.icon}
-                label={t(link.labelKey)}
-                subtitle={t(link.subtitleKey)}
-                onPress={() =>
-                  navigate(SCREENS.DEV_INTERMISSION, {
-                    previewType: link.id,
-                    backScreen: SCREENS.SETTINGS,
-                  })
-                }
+                icon={PartyPopper}
+                label={t('settings.dev.completeDialog')}
+                subtitle={t('settings.dev.completeDialog.subtitle')}
+                onPress={() => setCompletePreviewVisible(true)}
                 colors={colors}
+                embedded
               />
-            ))}
-            <MenuRow
-              icon={PartyPopper}
-              label={t('settings.dev.completeDialog')}
-              subtitle={t('settings.dev.completeDialog.subtitle')}
-              onPress={() => setCompletePreviewVisible(true)}
-              colors={colors}
-            />
+            </View>
           </>
         ) : null}
       </ScrollView>
@@ -410,11 +478,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderWidth: 1,
   },
+  preferencesCard: {
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 4,
+    marginBottom: 4,
+    borderWidth: 1,
+  },
   appearanceHint: {
     fontSize: 12,
     lineHeight: 18,
+    marginTop: 8,
     marginBottom: 4,
     marginHorizontal: 2,
+  },
+  preferenceDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginTop: 8,
   },
   walletCard: {
     borderRadius: 14,
@@ -455,9 +536,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 18,
   },
+  accountSection: {
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+  },
+  signedOutScoreHint: {
+    fontSize: 12,
+    lineHeight: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+  },
   accountBlock: {
-    marginBottom: 12,
-    marginHorizontal: 4,
+    marginHorizontal: 0,
   },
   accountCaption: {
     fontSize: 12,
@@ -476,6 +566,24 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
+  },
+  groupCard: {
+    borderRadius: 14,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    marginBottom: 4,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  groupDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: 10,
+  },
+  rowEmbedded: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
   },
   rowIcon: {
     width: 40,

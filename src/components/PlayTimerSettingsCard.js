@@ -3,50 +3,36 @@ import { useAppearance } from '../context/AppearanceContext';
 import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 
-/** Settings toggle for the on-play / completion timer. */
+/** Settings toggle for the on-play / completion timer (no outer card). */
 export default function PlayTimerSettingsCard() {
   const { colors } = useAppearance();
   const { timerEnabled, setTimerEnabled, ready } = usePlayTimer();
   const t = useT();
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-      ]}
-    >
-      <View style={styles.row}>
-        <View style={styles.body}>
-          <Text style={[styles.label, { color: colors.text }]}>
-            {t('settings.timer.label')}
-          </Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {t('settings.timer.subtitle')}
-          </Text>
-        </View>
-        <Switch
-          value={timerEnabled === true}
-          onValueChange={setTimerEnabled}
-          disabled={!ready}
-          trackColor={{ false: colors.segmentTrackBorder, true: colors.primary }}
-          thumbColor="#ffffff"
-          ios_backgroundColor={colors.segmentTrackBorder}
-          accessibilityLabel={t('settings.timer.label')}
-        />
+    <View style={styles.row}>
+      <View style={styles.body}>
+        <Text style={[styles.label, { color: colors.text }]}>
+          {t('settings.timer.label')}
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          {t('settings.timer.subtitle')}
+        </Text>
       </View>
+      <Switch
+        value={timerEnabled === true}
+        onValueChange={setTimerEnabled}
+        disabled={!ready}
+        trackColor={{ false: colors.segmentTrackBorder, true: colors.primary }}
+        thumbColor="#ffffff"
+        ios_backgroundColor={colors.segmentTrackBorder}
+        accessibilityLabel={t('settings.timer.label')}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    marginBottom: 4,
-    borderWidth: 1,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

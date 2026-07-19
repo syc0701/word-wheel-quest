@@ -1,4 +1,5 @@
 import { getOrCreateWordWheelSession, getWordWheelSession, clearWordWheelSession } from './session';
+import { clearGuestPuzzleCoins } from './guestCoinsStorage';
 import { isLoggedIn } from './auth';
 import { apiGet, apiPost, apiPut } from './http';
 
@@ -13,6 +14,7 @@ async function getSessionForRequest() {
 function clearSessionAfterLoginMigration(loggedIn, session) {
   if (loggedIn && session?.sessionId) {
     clearWordWheelSession();
+    clearGuestPuzzleCoins();
   }
 }
 

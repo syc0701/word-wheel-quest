@@ -7,8 +7,8 @@ import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
-import { IAP_PACKAGES, REVENUECAT_OFFERING, APP_STORE } from '../constants/store';
-import { getDefaultOffering, purchasePackage, readPurchaseTransactionId, restorePurchases } from '../services/purchases';
+import { IAP_PACKAGES, APP_STORE } from '../constants/store';
+import { getDefaultOffering, purchasePackage, readPurchaseTransactionId } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 
@@ -77,7 +77,6 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
-  const [restoring, setRestoring] = useState(false);
 
   const sceneText = isRandomScene
     ? {
@@ -139,7 +138,8 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           },
         });
       }
-      Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: meta.name }));
+      const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
+      Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));
@@ -148,28 +148,16 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     }
   };
 
-  const handleRestore = async () => {
-    setRestoring(true);
-    try {
-      await restorePurchases();
-      Alert.alert(t('shop.alert.restored.title'), t('shop.alert.restored.body'));
-    } catch (error) {
-      Alert.alert(t('shop.alert.restoreFailed.title'), error.message ?? t('shop.alert.restoreFailed.body'));
-    } finally {
-      setRestoring(false);
-    }
-  };
-
   return (
     <View style={styles.container}>
       <ScreenHeader title={t('shop.title')} onBack={() => navigate(backScreen, routeParams)} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.subtitle, { color: colors.text }, sceneText]}>
-          {REVENUECAT_OFFERING.displayName}
+        <Text style={[styles.headline, { color: colors.text }, sceneText]}>
+          {t('shop.headline')}
         </Text>
-        <Text style={[styles.hint, { color: colors.textMuted }, sceneChip]}>
-          {t('shop.offeringHint', { id: REVENUECAT_OFFERING.identifier })}
+        <Text style={[styles.subheader, { color: colors.textMuted }, sceneChip]}>
+          {t('shop.subheader')}
         </Text>
 
         {loading ? (
@@ -181,8 +169,8 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
             return (
               <ProductRow
                 key={meta.packageId}
-                name={meta.name}
-                description={meta.description}
+                name={meta.nameKey ? t(meta.nameKey) : meta.name}
+                description={meta.descriptionKey ? t(meta.descriptionKey) : meta.description}
                 priceLabel={priceLabel}
                 purchasing={purchasingId === meta.packageId}
                 onBuy={() => handleBuy(meta)}
@@ -193,15 +181,6 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           })
         )}
 
-        <Pressable style={styles.restoreBtn} onPress={handleRestore} disabled={restoring}>
-          {restoring ? (
-            <ActivityIndicator color={colors.textMuted} size="small" />
-          ) : (
-            <Text style={[styles.restoreText, { color: colors.textMuted }, sceneChip]}>
-              {t('shop.restore')}
-            </Text>
-          )}
-        </Pressable>
       </ScrollView>
     </View>
   );
@@ -216,14 +195,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
   },
-  subtitle: {
-    fontSize: 22,
-    fontWeight: '700',
+  headline: {
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.3,
     marginBottom: 8,
   },
-  hint: {
-    fontSize: 13,
-    lineHeight: 20,
+  subheader: {
+    fontSize: 15,
+    lineHeight: 22,
     marginBottom: 20,
   },
   loader: {
@@ -277,14 +257,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
-  },
-  restoreBtn: {
-    marginTop: 28,
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  restoreText: {
-    fontSize: 14,
-    fontWeight: '600',
   },
 });
