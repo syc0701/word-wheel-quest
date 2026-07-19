@@ -13,8 +13,10 @@
     "android:sync": "expo prebuild --platform android && npm run android:run",
     "android:studio": "npm run android:prebuild && open -a 'Android Studio' android",
     "clean": "rm -rf android/app/build android/build node_modules/.cache .expo dist web-build",
-    "clean:all": "npm run clean && rm -rf android/.gradle",
+    "clean:all": "npm run clean && rm -rf android/.gradle fastlane/metadata/android/*/images/phoneScreenshots",
     "fastlane:metadata": "unset BUNDLE_GEMFILE; bundle exec fastlane metadata",
+    "screenshots": "npx playwright install chromium && node docs/scripts/capture-screenshots.js",
+    "screenshots:upload": "npm run screenshots && npm run fastlane:metadata",
     "ios": "expo run:ios"
   },
   "dependencies": {
@@ -39,7 +41,8 @@
     "react-native-webview": "13.13.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "playwright": "^1.61.1"
   },
   "private": true
 }

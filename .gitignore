@@ -52,6 +52,7 @@ fastlane/screenshots/
 fastlane/test_output/
 fastlane/README.md
 **/*service-account*.json
+fastlane/metadata/
 
 # typescript
 *.tsbuildinfo
