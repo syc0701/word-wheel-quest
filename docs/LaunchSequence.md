@@ -2,37 +2,31 @@
 
 ## 1. Native splash
 
-Android shows the Expo splash theme immediately:
+Android shows the Expo splash theme immediately (held until the JS overlay is ready via `expo-splash-screen`):
 
-- Cream background (`#E8D4B8`)
-- Splash image (`splash-launch.png`) centered with contain sizing
+- Deep-sea blue background (`#0A2A4A`)
+- Splash image (`splash-launch.png` — WORD logo on deep blue) centered with contain sizing
 
 ## 2. JavaScript launch overlay
 
-When React Native starts, `LaunchSplashOverlay` covers the app with a matching cream→gold gradient, title, logo, and copyright so the handoff stays seamless.
+`LaunchSplashOverlay` paints the reef background (`splash-reef-bg.png`), animates the WORD logo in, fades the title with extra spacing, and fills an animated rope progress bar. Tip text is not shown.
 
 ## 3. Overlay dismissal
 
-The overlay waits until the splash image has loaded, initial interactions have finished, and a short hold (~180 ms) has elapsed, then reveals Home.
+After native splash hide + short hold (~2.2 s), the overlay reveals Home. Tap dismisses early.
 
 ## Flow
 
 ```text
 Android native splash
-(cream + logo)
+(deep-sea blue + WORD logo)
         |
-        | JavaScript bundle loads
+        | JS ready + reef image loaded → SplashScreen.hideAsync()
         v
 JavaScript launch overlay
-(matching gradient + logo + copyright)
+(reef + logo bounce + title + animated progress)
         |
-        | image ready + app ready + 180 ms
+        | ~2.2 s
         v
 Home screen
 ```
-
-## Expected behavior
-
-- No black frame between splash and app
-- No full-screen crop/zoom of the logo
-- Smooth transition from native splash → JS overlay → home

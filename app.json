@@ -10,14 +10,14 @@
     "splash": {
       "image": "./src/assets/splash-launch.png",
       "resizeMode": "contain",
-      "backgroundColor": "#E8D4B8"
+      "backgroundColor": "#0A2A4A"
     },
     "android": {
       "package": "com.puzint.wordwheel.app",
       "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
-        "backgroundColor": "#E8D4B8"
+        "backgroundColor": "#0A2A4A"
       },
       "edgeToEdgeEnabled": true
     },
@@ -26,7 +26,8 @@
     },
     "plugins": [
       "expo-asset",
-      "expo-audio"
+      "expo-audio",
+      "expo-splash-screen"
     ]
   }
 }
