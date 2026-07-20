@@ -2,7 +2,8 @@ import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
-  useAnimatedStyle,
+  cancelAnimation,
+  useAnimatedProps,
   useSharedValue,
   withRepeat,
   withTiming,
@@ -10,6 +11,7 @@ import Animated, {
 import Svg, {
   Circle,
   Defs,
+  G,
   Line,
   LinearGradient,
   Path,
@@ -18,10 +20,12 @@ import Svg, {
 } from 'react-native-svg';
 import { useAppearance } from '../context/AppearanceContext';
 
+const AnimatedG = Animated.createAnimatedComponent(G);
+
 const CROSSHAIR_COUNT = 4;
 const TICK_COUNT = 8;
 /** Full rotation period — slow radar search feel. */
-const SWEEP_MS = 22000;
+const SWEEP_MS = 14000;
 
 /**
  * Radar-style backdrop for the letter wheel.
@@ -38,6 +42,7 @@ export default function ShipHelm({ size, inset = 0 }) {
       -1,
       false
     );
+    return () => cancelAnimation(rotation);
   }, [rotation]);
 
   const geometry = useMemo(() => {
@@ -123,8 +128,12 @@ export default function ShipHelm({ size, inset = 0 }) {
   const hub = ww.radarHub || 'rgba(45, 212, 191, 0.55)';
   const sweepMid = ww.radarSweepMid || 'rgba(153,246,228,0.18)';
 
-  const sweepStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
+  // Rotate the SVG group itself — View transforms often don't move
+  // react-native-svg children on Android.
+  const sweepProps = useAnimatedProps(() => ({
+    rotation: rotation.value,
+    originX: c,
+    originY: c,
   }));
 
   return (
@@ -136,35 +145,20 @@ export default function ShipHelm({ size, inset = 0 }) {
             <Stop offset="40%" stopColor={glassMid} />
             <Stop offset="100%" stopColor={glassOuter} />
           </RadialGradient>
-          <LinearGradient id="radarRim" x1="0%" y1="0%" x2="100%" y2="100%">
+          <RadialGradient id="radarSweep" cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+            <Stop offset="55%" stopColor={sweepMid} />
+            <Stop offset="100%" stopColor="rgba(148,163,184,0)" />
+          </RadialGradient>
+          <LinearGradient id="radarRimTop" x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
             <Stop offset="100%" stopColor={rim} />
           </LinearGradient>
         </Defs>
 
         <Circle cx={c} cy={c} r={outerR} fill="url(#radarGlass)" />
-      </Svg>
 
-      <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            overflow: 'hidden',
-          },
-          sweepStyle,
-        ]}
-      >
-        <Svg width={size} height={size}>
-          <Defs>
-            <RadialGradient id="radarSweep" cx="50%" cy="50%" r="50%">
-              <Stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
-              <Stop offset="55%" stopColor={sweepMid} />
-              <Stop offset="100%" stopColor="rgba(148,163,184,0)" />
-            </RadialGradient>
-          </Defs>
+        <AnimatedG animatedProps={sweepProps}>
           <Path d={sweepPath} fill="url(#radarSweep)" opacity={0.9} />
           <Line
             x1={c}
@@ -182,16 +176,7 @@ export default function ShipHelm({ size, inset = 0 }) {
             r={Math.max(2.5, size * 0.012)}
             fill={stroke}
           />
-        </Svg>
-      </Animated.View>
-
-      <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
-        <Defs>
-          <LinearGradient id="radarRimTop" x1="0%" y1="0%" x2="100%" y2="100%">
-            <Stop offset="0%" stopColor="rgba(255,255,255,0.98)" />
-            <Stop offset="100%" stopColor={rim} />
-          </LinearGradient>
-        </Defs>
+        </AnimatedG>
 
         {rings.map((r, i) => (
           <Circle
