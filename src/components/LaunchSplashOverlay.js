@@ -27,7 +27,15 @@ export default function LaunchSplashOverlay({ onDone }) {
     const task = InteractionManager.runAfterInteractions(() => {
       setAppReady(true);
     });
-    return () => task.cancel();
+    // Hard cap so a busy JS thread / huge image decode cannot hold splash for 30s+.
+    const maxWait = setTimeout(() => {
+      setBgReady(true);
+      setAppReady(true);
+    }, 1500);
+    return () => {
+      task.cancel();
+      clearTimeout(maxWait);
+    };
   }, []);
 
   useEffect(() => {

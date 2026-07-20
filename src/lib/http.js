@@ -2,6 +2,9 @@ import { API_BASE_URL } from '../constants/api';
 import { buildAuthHeaders } from './auth';
 import { encryptText, parseApiJson } from './crypto';
 
+/** Abort hung requests so the UI can show an error instead of spinning for 30s+. */
+const DEFAULT_TIMEOUT_MS = 12000;
+
 function buildUrl(path, params) {
   const url = new URL(path, API_BASE_URL);
   if (params) {
@@ -34,9 +37,26 @@ async function parseResponse(result) {
   return parseApiJson(json);
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (err?.name === 'AbortError') {
+      const timeoutError = new Error('Request timed out. Check your connection and try again.');
+      timeoutError.status = 408;
+      throw timeoutError;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function apiGet(path, params) {
   const headers = await buildAuthHeaders();
-  const result = await fetch(buildUrl(path, params), { method: 'GET', headers });
+  const result = await fetchWithTimeout(buildUrl(path, params), { method: 'GET', headers });
   return parseResponse(result);
 }
 
@@ -50,13 +70,13 @@ export async function apiPost(path, data) {
   } else {
     body = JSON.stringify(data ?? {});
   }
-  const result = await fetch(url, { method: 'POST', headers, body });
+  const result = await fetchWithTimeout(url, { method: 'POST', headers, body });
   return parseResponse(result);
 }
 
 export async function apiPut(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
-  const result = await fetch(buildUrl(path), {
+  const result = await fetchWithTimeout(buildUrl(path), {
     method: 'PUT',
     headers,
     body: JSON.stringify(data ?? {}),

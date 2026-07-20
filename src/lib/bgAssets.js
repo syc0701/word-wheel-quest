@@ -1,15 +1,15 @@
 /** All scene backgrounds available for the Image appearance. */
 export const BG_IMAGE_CATALOG = {
-  beach: require('../assets/bg_image/beach.png'),
-  classroom: require('../assets/bg_image/classroom.png'),
-  deep_sea: require('../assets/bg_image/deep_sea.png'),
-  flowers: require('../assets/bg_image/flowers.png'),
-  island: require('../assets/bg_image/island.png'),
-  mountain: require('../assets/bg_image/mountain.png'),
-  road: require('../assets/bg_image/road.png'),
-  tropical_island: require('../assets/bg_image/tropical_island.png'),
-  urban: require('../assets/bg_image/urban.png'),
-  village: require('../assets/bg_image/village.png'),
+  beach: require('../assets/bg_image/beach.jpg'),
+  classroom: require('../assets/bg_image/classroom.jpg'),
+  deep_sea: require('../assets/bg_image/deep_sea.jpg'),
+  flowers: require('../assets/bg_image/flowers.jpg'),
+  island: require('../assets/bg_image/island.jpg'),
+  mountain: require('../assets/bg_image/mountain.jpg'),
+  road: require('../assets/bg_image/road.jpg'),
+  tropical_island: require('../assets/bg_image/tropical_island.jpg'),
+  urban: require('../assets/bg_image/urban.jpg'),
+  village: require('../assets/bg_image/village.jpg'),
 };
 
 /** Stable alphabetical order so the 3-day rotation stays deterministic. */

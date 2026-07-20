@@ -80,6 +80,7 @@ const WHEEL_SIZE = Math.min(SCREEN_W - 120, Math.max(200, SCREEN_H * 0.28), 260)
 export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
   const dailyDate = routeParams.date;
+  const seededPuzzle = routeParams.puzzle;
   const wallet = useWordWheelWallet();
   const { ww, isRandomScene } = useAppearance();
   const { playSfx } = useAudio();
@@ -431,7 +432,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       try {
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
-          : await WordWheelApi.fetchNext();
+          : (reloadKey === 0 && seededPuzzle?.id
+            ? seededPuzzle
+            : await WordWheelApi.fetchNext());
 
         if (!isDaily) {
           const completedId = completedPuzzleIdRef.current;
@@ -484,6 +487,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         completedLevelRef.current = null;
         completedSeasonRef.current = null;
         setPuzzle(data);
+        // Show the grid immediately; session start can finish in the background.
+        setLoading(false);
 
         const play = await WordWheelApi.startPlay(data.id);
         if (!cancelled && play && !play.code) {
@@ -542,7 +547,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, dailyDate, reloadKey, resetPlayState]);
+  }, [isDaily, dailyDate, reloadKey, resetPlayState, seededPuzzle, t]);
 
   const handleNextPuzzle = useCallback(() => {
     if (isDaily) {

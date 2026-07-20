@@ -230,7 +230,12 @@ export default function HomeScreen({ navigate }) {
               !canPlay && styles.primaryBtnDisabled,
             ]}
             disabled={!canPlay}
-            onPress={() => navigate(SCREENS.PLAY, { mode: PLAY_MODE.JOURNEY })}
+            onPress={() =>
+              navigate(SCREENS.PLAY, {
+                mode: PLAY_MODE.JOURNEY,
+                puzzle: canPlay ? puzzle : undefined,
+              })
+            }
           >
             <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
             <Text style={styles.primaryBtnText}>{t('common.play')}</Text>
