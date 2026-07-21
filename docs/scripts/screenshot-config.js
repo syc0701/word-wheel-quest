@@ -64,11 +64,11 @@ function buildSceneUrl(slug, lang) {
 
 function parseLocaleFilter() {
   const raw = process.env.SNAPSHOT_LANGUAGES?.trim();
-  if (!raw) return LOCALES;
+  if (!raw || raw === 'all') return LOCALES;
   const wanted = raw.split(',').map((s) => s.trim()).filter(Boolean);
   const filtered = LOCALES.filter(({ locale }) => wanted.includes(locale));
   if (filtered.length === 0) {
-    throw new Error(`SNAPSHOT_LANGUAGES matched nothing. Use: ${LOCALES.map((l) => l.locale).join(', ')}`);
+    throw new Error(`SNAPSHOT_LANGUAGES matched nothing. Use: all or ${LOCALES.map((l) => l.locale).join(', ')}`);
   }
   return filtered;
 }

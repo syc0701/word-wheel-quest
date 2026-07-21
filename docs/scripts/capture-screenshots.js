@@ -8,7 +8,7 @@
  *   SNAPSHOT_DEVICES=iPhone 15 Plus,iPad Pro 13-inch (M4)
  *   SNAPSHOT_IPHONE_ONLY=1           — skip iPad
  *   SCREENSHOT_START / SCREENSHOT_END — scene range (default 1–10)
- *   CLEAR_SCREENSHOTS=1              — wipe locale output folders before capture
+ *   KEEP_SCREENSHOTS=1              — keep existing PNGs (default: wipe before capture)
  */
 
 const fs = require('fs');
@@ -76,9 +76,13 @@ async function capture() {
   const root = screenshotsRoot();
   const localeCodes = locales.map((l) => l.locale);
 
-  if (process.env.CLEAR_SCREENSHOTS === '1') {
-    clearLocaleDirs(root, localeCodes);
-    console.log(`Cleared PNGs in ${localeCodes.join(', ')}`);
+  // Clear stale PNGs by default so a smaller new set (e.g. 8 vs 10) does not
+  // leave leftover shots on disk that get uploaded into extra store slots.
+  // en-CA is mirrored from en-US, so always clear it too.
+  if (process.env.KEEP_SCREENSHOTS !== '1') {
+    const toClear = Array.from(new Set([...localeCodes, 'en-CA']));
+    clearLocaleDirs(root, toClear);
+    console.log(`Cleared existing PNGs in ${toClear.join(', ')}`);
   }
 
   const expected = locales.length * deviceList.length * slugs.length;

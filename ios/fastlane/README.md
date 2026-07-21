@@ -29,7 +29,7 @@ Read back listing text from App Store Connect (debug)
 [bundle exec] fastlane ios metadata
 ```
 
-Upload App Store text metadata only (description, keywords, URLs, etc.)
+Upload App Store text metadata only (description, keywords, URLs, etc.) for all locales
 
 ### ios screenshots
 

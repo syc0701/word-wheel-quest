@@ -155,8 +155,17 @@ def read_metadata_txt(*parts)
   read_utf8_file(File.join(__dir__, "metadata", *parts))
 end
 
+# Locales under metadata/ that have a description.txt (listing text ready to upload).
+def metadata_locales
+  Dir.children(METADATA_PATH)
+     .select { |name| File.directory?(File.join(METADATA_PATH, name)) }
+     .reject { |name| name == "review_information" }
+     .select { |name| File.file?(File.join(METADATA_PATH, name, "description.txt")) }
+     .sort
+end
+
 # Push listing text directly via App Store Connect API so it always lands.
-def upload_listing_text_metadata!(locale: ASC_LOCALE)
+def upload_listing_text_metadata!(locale: ASC_LOCALE, skip_copyright: false)
   load_asc_api_key
   require "spaceship/connect_api"
 
@@ -176,6 +185,18 @@ def upload_listing_text_metadata!(locale: ASC_LOCALE)
 
   info_loc = app_info.get_app_info_localizations.find { |l| l.locale == locale }
 
+  if info_loc.nil?
+    name = read_metadata_txt(locale, "name.txt")
+    if name
+      UI.message("Creating App Info localization (#{locale})...")
+      begin
+        info_loc = app_info.create_app_info_localization(attributes: { locale: locale, name: name })
+      rescue StandardError => e
+        UI.important("Could not create App Info localization for #{locale}: #{e.message}")
+      end
+    end
+  end
+
   if info_loc
     info_attrs = {}
     name = read_metadata_txt(locale, "name.txt")
@@ -191,8 +212,7 @@ def upload_listing_text_metadata!(locale: ASC_LOCALE)
     end
   else
     UI.important(
-      "No #{locale} App Info localization in App Store Connect — skipping name/subtitle. " \
-      "Add English (Canada) under App Information in ASC if missing."
+      "No #{locale} App Info localization in App Store Connect — skipping name/subtitle."
     )
   end
 
@@ -218,7 +238,7 @@ def upload_listing_text_metadata!(locale: ASC_LOCALE)
   ).count
   if version_count == 1
     version_attrs.delete("whats_new")
-    UI.message("Skipping release_notes (first App Store version)")
+    UI.message("Skipping release_notes for #{locale} (first App Store version)")
   end
 
   UI.user_error!("No version metadata files found for #{locale}") if version_attrs.empty? && read_metadata_txt(locale, "promotional_text.txt").nil?
@@ -230,28 +250,39 @@ def upload_listing_text_metadata!(locale: ASC_LOCALE)
 
   promo = read_metadata_txt(locale, "promotional_text.txt")
   if promo
-    UI.message("Uploading promotional text (#{promo.length} chars)...")
+    UI.message("Uploading promotional text for #{locale} (#{promo.length} chars)...")
     version_loc.update(attributes: { promotional_text: promo })
 
-    sleep(2)
+    sleep(1)
     refreshed = Spaceship::ConnectAPI::AppStoreVersionLocalization.get(
       app_store_version_localization_id: version_loc.id
     ).first
     stored = refreshed.promotional_text.to_s.strip
     if stored.empty?
-      UI.user_error!(
-        "promotional_text did not save on App Store Connect. " \
-        "Open ASC → Distribution → iOS App → 1.0 → English (Canada) → Promotional Text and paste manually, " \
-        "or check API key has Admin/App Manager role."
+      UI.important(
+        "promotional_text did not save for #{locale}. You can paste it manually in ASC if needed."
       )
+    else
+      UI.success("Verified promotional_text for #{locale} (#{stored.length} chars)")
     end
-    UI.success("Verified promotional_text on ASC (#{stored.length} chars)")
   end
 
   UI.success("Listing text uploaded (#{locale})")
 
-  copyright = read_metadata_txt("copyright.txt")
-  version.update(attributes: { "copyright" => copyright }) if copyright
+  unless skip_copyright
+    copyright = read_metadata_txt("copyright.txt")
+    version.update(attributes: { "copyright" => copyright }) if copyright
+  end
+end
+
+def upload_all_listing_text_metadata!
+  locales = metadata_locales
+  UI.user_error!("No locale folders with description.txt under #{METADATA_PATH}") if locales.empty?
+
+  UI.message("Uploading listing text for #{locales.length} locale(s): #{locales.join(', ')}")
+  locales.each_with_index do |locale, index|
+    upload_listing_text_metadata!(locale: locale, skip_copyright: index < locales.length - 1)
+  end
 end
 
 def deliver_options(skip_screenshots:, skip_metadata: true, include_review_info: true)
@@ -393,10 +424,10 @@ platform :ios do
     UI.message("Keywords: #{fresh.keywords}")
   end
 
-  desc "Upload App Store text metadata only (description, keywords, URLs, etc.)"
+  desc "Upload App Store text metadata only (description, keywords, URLs, etc.) for all locales"
   lane :metadata do
     prepare_metadata_upload!
-    upload_listing_text_metadata!
+    upload_all_listing_text_metadata!
     deliver(**deliver_options(skip_screenshots: true))
   end
 
@@ -413,7 +444,7 @@ platform :ios do
   desc "Upload metadata and screenshots from fastlane/screenshots/"
   lane :metadata_and_screenshots do
     prepare_metadata_upload!
-    upload_listing_text_metadata!
+    upload_all_listing_text_metadata!
     mirror_en_us_screenshots_to_en_ca
     log_screenshot_inventory!
 

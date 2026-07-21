@@ -38,6 +38,7 @@ ios/fastlane/asc_api_key.env
 ios/fastlane/asc_review_contact.env
 ios/fastlane/screenshots/**/*.png
 ios/fastlane/screenshots/**/*.html
+ios/fastlane/metadata/
 ios/vendor/
 ios/.bundle/
 
