@@ -94,8 +94,9 @@ Fastlane lives at the **repo root** (not under `android/`) so `expo prebuild --c
 
 ```bash
 bundle install                # first time / after Gemfile changes
-npm run screenshots           # capture /01–/08 into phoneScreenshots/
+npm run screenshots           # phone + 7" + 10" tablet /01–/08 for all 10 langs
 npm run screenshots:upload    # capture + upload listing / screenshots to Play
+# Optional: SCREENSHOT_DEVICES=tenInch  or  SNAPSHOT_LANGUAGES=en-US,ko-KR
 npm run fastlane:metadata     # upload title / descriptions / images only
 ```
 
