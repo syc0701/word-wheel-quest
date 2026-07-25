@@ -273,7 +273,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 </View>
                 <BalanceCard
                   label={t('settings.score.wordsFound')}
-                  value={scoreStanding?.wordsFound ?? 0}
+                  value={scoreStanding?.score ?? 0}
                   loading={scoreLoading}
                   colors={colors}
                 />
@@ -288,7 +288,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                   colors={colors}
                 />
                 <Text style={[styles.walletHint, themed.walletHint]}>
-                  {scoreStanding?.wordsFound
+                  {scoreStanding?.score
                     ? t('settings.score.hint')
                     : t('settings.score.empty')}
                 </Text>
