@@ -42,8 +42,13 @@ Purchases use `react-native-purchases`. Restore lives under Settings → Account
 ```bash
 npm install
 npm run android:prebuild   # generates android/ (first time / after native dep changes)
-npm run android:run        # debug build on emulator or device
+npm run android:studio     # sync native project + open Android Studio
+npm run android:studio:open # open Studio only (skip prebuild)
+npm run android:build      # native rebuild + install (when native deps change)
+npm run android:run        # starts Metro and opens the app (day-to-day)
 ```
+
+Debug builds need Metro (`npm run android:run` or `npm start`). Opening the app from Android Studio alone without Metro causes the red “Unable to load script” screen.
 
 Release build:
 
@@ -56,6 +61,17 @@ Open in Android Studio:
 ```bash
 npm run android:studio
 ```
+
+Studio opens the `android/` folder, but Git lives at the **repo root**. If the Git menu says the folder has no repository: **Settings → Version Control → Directory Mappings** → map `/Users/syc/Puzzle-Andriod/word-wheel-quest` to Git (already set in `android/.idea/vcs.xml`), then restart Studio.
+
+### Shared Maven / Gradle (all Android projects on this Mac)
+
+Repos use official Google + Maven Central (+ JitPack). Machine-wide config:
+
+- `~/.gradle/init.d/shared-repos.gradle` — shared Maven repos
+- `~/.gradle/gradle.properties` — shared JVM / cache settings
+
+Project `android/build.gradle` already lists the same repos (`google()`, `mavenCentral()`, JitPack, plus the local React Native Maven dir). If Studio says “No space left on device” while downloading libraries, free disk first — Maven settings are fine; the failure is ENOSPC.
 
 ## Signing
 

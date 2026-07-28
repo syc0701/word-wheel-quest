@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.puzint.wordwheel.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#0A2A4A"
