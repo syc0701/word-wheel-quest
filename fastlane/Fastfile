@@ -1,8 +1,15 @@
 default_platform(:android)
 
 platform :android do
-  desc "Upload metadata, images, and screenshots to Google Play"
-  lane :metadata do
+  # Play Console allows only one open "edit" at a time. Parallel locale
+  # workers race and produce: "This Edit has been deleted."
+  before_all do
+    ENV["FL_NUMBER_OF_THREADS"] = "1"
+    ENV["DELIVER_NUMBER_OF_THREADS"] = "1"
+    ENV["FL_MAX_NUMBER_OF_THREADS"] = "1"
+  end
+
+  def patch_supply_metadata_without_release!
     # supply normally requires an existing track release even for listing-only
     # updates (title/description/images). Patch that so metadata can upload
     # before / without relying on a specific binary version on a track.
@@ -15,7 +22,19 @@ platform :android do
         UI.user_error!("Could not find folder #{metadata_path}") unless File.directory?(metadata_path)
 
         release_notes_queue = Queue.new
-        upload_worker = create_meta_upload_worker
+        # concurrency: 1 — serial per-locale uploads (avoids deleted-edit races)
+        upload_worker = FastlaneCore::QueueWorker.new(1) do |job|
+          UI.message("Preparing uploads for language '#{job.language}'...")
+          start_time = Time.now
+          listing = client.listing_for_language(job.language)
+          upload_metadata(job.language, listing) unless Supply.config[:skip_upload_metadata]
+          upload_images(job.language) unless Supply.config[:skip_upload_images]
+          upload_screenshots(job.language) unless Supply.config[:skip_upload_screenshots]
+          job.release_notes_queue << upload_changelog(job.language, job.version_code) unless Supply.config[:skip_upload_changelogs]
+          UI.message("Uploaded all items for language '#{job.language}'... (#{Time.now - start_time} secs)")
+        rescue => error
+          UI.abort_with_message!("#{job.language} - #{error}")
+        end
         upload_worker.batch_enqueue(
           all_languages.reject { |lang| lang.start_with?(".") }.map do |lang|
             Supply::Uploader::UploadJob.new(lang, nil, release_notes_queue)
@@ -24,18 +43,61 @@ platform :android do
         upload_worker.start
       end
     end
+  end
 
-    upload_to_play_store(
-      metadata_path: "fastlane/metadata/android",
-      skip_upload_apk: true,
-      skip_upload_aab: true,
-      skip_upload_changelogs: true,
-      skip_upload_metadata: false,
-      skip_upload_images: false,
-      skip_upload_screenshots: false,
-      sync_image_upload: true,
-      changes_not_sent_for_review: true
+  def upload_listing!(skip_metadata:, skip_images:, skip_screenshots:)
+    patch_supply_metadata_without_release!
+    attempts = 0
+    begin
+      attempts += 1
+      upload_to_play_store(
+        metadata_path: "fastlane/metadata/android",
+        skip_upload_apk: true,
+        skip_upload_aab: true,
+        skip_upload_changelogs: true,
+        skip_upload_metadata: skip_metadata,
+        skip_upload_images: skip_images,
+        skip_upload_screenshots: skip_screenshots,
+        sync_image_upload: true,
+        changes_not_sent_for_review: true
+      )
+    rescue => e
+      if attempts < 3 && e.message.to_s.include?("Edit has been deleted")
+        UI.important("Play edit race (attempt #{attempts}/3): #{e.message}. Retrying in 8s…")
+        sleep(8)
+        retry
+      end
+      raise
+    end
+  end
+
+  desc "Upload metadata, images, and screenshots to Google Play"
+  lane :metadata do
+    upload_listing!(
+      skip_metadata: false,
+      skip_images: false,
+      skip_screenshots: false
     )
     UI.success("Uploaded Play Store metadata / images / screenshots.")
+  end
+
+  desc "Upload listing text only (title / short / full description)"
+  lane :store_listing_text do
+    upload_listing!(
+      skip_metadata: false,
+      skip_images: true,
+      skip_screenshots: true
+    )
+    UI.success("Uploaded Play Store listing text for all locales.")
+  end
+
+  desc "Upload store icon + feature graphic only (no screenshots)"
+  lane :store_images do
+    upload_listing!(
+      skip_metadata: true,
+      skip_images: false,
+      skip_screenshots: true
+    )
+    UI.success("Uploaded Play Store icon / feature graphic.")
   end
 end

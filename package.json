@@ -16,9 +16,9 @@
     "android:studio:open": "open -a 'Android Studio' \"$PWD/android\"",
     "clean": "rm -rf android/app/build android/build node_modules/.cache .expo dist web-build",
     "clean:all": "npm run clean && rm -rf android/.gradle fastlane/metadata/android/*/images/phoneScreenshots",
-    "fastlane:metadata": "unset BUNDLE_GEMFILE; bundle exec fastlane metadata",
+    "metadata:upload": "unset BUNDLE_GEMFILE; bundle exec fastlane metadata",
     "screenshots": "npx playwright install chromium && node docs/scripts/capture-screenshots.js",
-    "screenshots:upload": "npm run screenshots && npm run fastlane:metadata",
+    "screenshots:upload": "npm run screenshots && npm run metadata:upload",
     "ios": "expo run:ios"
   },
   "dependencies": {

@@ -24,24 +24,27 @@ const LOCALES = [
   { locale: 'ko-KR', lang: 'ko' },
 ];
 
-/** Match puzzle-app Play screenshot sizes */
+/** Play screenshot sizes (portrait) */
 const DEVICES = {
   phone: {
     name: 'phone',
     playFolder: 'phoneScreenshots',
-    viewport: { width: 1080, height: 1920 },
+    // 9:20 — modern Android phones
+    viewport: { width: 430, height: 960 },
     deviceScaleFactor: 1,
   },
   sevenInch: {
     name: 'sevenInch',
     playFolder: 'sevenInchScreenshots',
-    viewport: { width: 1200, height: 1920 },
+    // 5:8 — small tablet / large phone
+    viewport: { width: 600, height: 960 },
     deviceScaleFactor: 1,
   },
   tenInch: {
     name: 'tenInch',
     playFolder: 'tenInchScreenshots',
-    viewport: { width: 1600, height: 2560 },
+    // 5:8 — 7" tablet (Play tenInch slot)
+    viewport: { width: 800, height: 1280 },
     deviceScaleFactor: 1,
   },
 };
