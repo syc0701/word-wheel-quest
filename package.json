@@ -8,6 +8,7 @@
     "android": "expo run:android",
     "ios": "npm run ios:run",
     "ios:run": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios",
+    "ios:run:quiet": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && SIMCTL_CHILD_OS_ACTIVITY_MODE=disable expo run:ios 2>&1 | grep --line-buffered -Ev 'MediaToolbox|FigFilePlayer|FigFileAnalyzer|libFontParser'",
     "ios:run:sync": "npm run ios:sync:pods && npm run ios:run",
     "ios:run:release": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios --configuration Release",
     "ios:build": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo prebuild --platform ios --clean && npm run ios:pod:install",

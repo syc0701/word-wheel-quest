@@ -9,28 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		58261C5B22D8A518D5263D42 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DB4F1B92E86A9E8A9F945B /* ExpoModulesProvider.swift */; };
-		6677788C73D04BE460CC298D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0C9E1A639B2F3AA0303EE785 /* PrivacyInfo.xcprivacy */; };
-		874CAB3CC8794BEF96FA9184 /* libPods-WordWheelQuest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FD405D00024948B5F62381B2 /* libPods-WordWheelQuest.a */; };
+		B2E2410310FCED51700E7625 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B624D550C1538D08E1746DE7 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		D3EF23901CA8896E11EA9AD2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8DA151BC478562D085A1E08 /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F75EA78F054FA74D83C6B178 /* libPods-WordWheelQuest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 557AF36305784EDB811F35A3 /* libPods-WordWheelQuest.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0C9E1A639B2F3AA0303EE785 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WordWheelQuest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* WordWheelQuest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WordWheelQuest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = WordWheelQuest/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = WordWheelQuest/Info.plist; sourceTree = "<group>"; };
-		84DB4F1B92E86A9E8A9F945B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WordWheelQuest/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		26EF227442307AED46F72B0F /* Pods-WordWheelQuest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.debug.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.debug.xcconfig"; sourceTree = "<group>"; };
+		557AF36305784EDB811F35A3 /* libPods-WordWheelQuest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WordWheelQuest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7ED01664BEAD4E150ED4D813 /* Pods-WordWheelQuest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.release.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = WordWheelQuest/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B624D550C1538D08E1746DE7 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WordWheelQuest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		E70F6D1AFD99E951752C96D8 /* Pods-WordWheelQuest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.debug.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.debug.xcconfig"; sourceTree = "<group>"; };
-		EADEC8FC009A291E6CC2BB17 /* Pods-WordWheelQuest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.release.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.release.xcconfig"; sourceTree = "<group>"; };
+		E8DA151BC478562D085A1E08 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WordWheelQuest/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WordWheelQuest/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* WordWheelQuest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "WordWheelQuest-Bridging-Header.h"; path = "WordWheelQuest/WordWheelQuest-Bridging-Header.h"; sourceTree = "<group>"; };
-		F1A2B3C401234567890ABCD /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = Products.storekit; path = WordWheelQuest/Products.storekit; sourceTree = "<group>"; };
-		FD405D00024948B5F62381B2 /* libPods-WordWheelQuest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WordWheelQuest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				874CAB3CC8794BEF96FA9184 /* libPods-WordWheelQuest.a in Frameworks */,
+				F75EA78F054FA74D83C6B178 /* libPods-WordWheelQuest.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -54,26 +53,16 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				0C9E1A639B2F3AA0303EE785 /* PrivacyInfo.xcprivacy */,
-				F1A2B3C401234567890ABCD /* Products.storekit */,
+				B624D550C1538D08E1746DE7 /* PrivacyInfo.xcprivacy */,
 			);
 			name = WordWheelQuest;
-			sourceTree = "<group>";
-		};
-		1FABC4181EA4089ACEF8A359 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				E70F6D1AFD99E951752C96D8 /* Pods-WordWheelQuest.debug.xcconfig */,
-				EADEC8FC009A291E6CC2BB17 /* Pods-WordWheelQuest.release.xcconfig */,
-			);
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				FD405D00024948B5F62381B2 /* libPods-WordWheelQuest.a */,
+				557AF36305784EDB811F35A3 /* libPods-WordWheelQuest.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -92,8 +81,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				1FABC4181EA4089ACEF8A359 /* Pods */,
-				B62226A67B571FBD55C283EA /* ExpoModulesProviders */,
+				999DAFBEB78851EBED1DD71C /* Pods */,
+				8C0C226008BC81738268CF6B /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -108,12 +97,29 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		B62226A67B571FBD55C283EA /* ExpoModulesProviders */ = {
+		8C0C226008BC81738268CF6B /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				DD86A0B977C9B51E125AE0EF /* WordWheelQuest */,
+				A2E59A7C0D78C60BDB2F0D89 /* WordWheelQuest */,
 			);
 			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		999DAFBEB78851EBED1DD71C /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				26EF227442307AED46F72B0F /* Pods-WordWheelQuest.debug.xcconfig */,
+				7ED01664BEAD4E150ED4D813 /* Pods-WordWheelQuest.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		A2E59A7C0D78C60BDB2F0D89 /* WordWheelQuest */ = {
+			isa = PBXGroup;
+			children = (
+				E8DA151BC478562D085A1E08 /* ExpoModulesProvider.swift */,
+			);
+			name = WordWheelQuest;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -125,14 +131,6 @@
 			path = WordWheelQuest/Supporting;
 			sourceTree = "<group>";
 		};
-		DD86A0B977C9B51E125AE0EF /* WordWheelQuest */ = {
-			isa = PBXGroup;
-			children = (
-				84DB4F1B92E86A9E8A9F945B /* ExpoModulesProvider.swift */,
-			);
-			name = WordWheelQuest;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -141,14 +139,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "WordWheelQuest" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				6425A5D881EBD779B88D4D60 /* [Expo] Configure project */,
+				F34DE3568EC14382A936EFFF /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				08BF170136C640E2AB09ED37 /* [CP] Embed Pods Frameworks */,
-				A7H3RM3SDYM000000000001 /* Generate Hermes dSYM */,
+				C0BD7F0754E5D8BFCFF83F3C /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -198,7 +195,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				6677788C73D04BE460CC298D /* PrivacyInfo.xcprivacy in Resources */,
+				B2E2410310FCED51700E7625 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,43 +239,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		08BF170136C640E2AB09ED37 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		6425A5D881EBD779B88D4D60 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-WordWheelQuest/expo-configure-project.sh\"\n";
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -317,22 +277,42 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A7H3RM3SDYM000000000001 /* Generate Hermes dSYM */ = {
+		C0BD7F0754E5D8BFCFF83F3C /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework/hermes",
+				"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "Generate Hermes dSYM";
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/hermes.framework.dSYM",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "bash \"${PROJECT_DIR}/scripts/generate-hermes-dsym.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		F34DE3568EC14382A936EFFF /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-WordWheelQuest/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -342,7 +322,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				58261C5B22D8A518D5263D42 /* ExpoModulesProvider.swift in Sources */,
+				D3EF23901CA8896E11EA9AD2 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,7 +331,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E70F6D1AFD99E951752C96D8 /* Pods-WordWheelQuest.debug.xcconfig */;
+			baseConfigurationReference = 26EF227442307AED46F72B0F /* Pods-WordWheelQuest.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -388,7 +368,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = EADEC8FC009A291E6CC2BB17 /* Pods-WordWheelQuest.release.xcconfig */;
+			baseConfigurationReference = 7ED01664BEAD4E150ED4D813 /* Pods-WordWheelQuest.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -472,10 +452,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -530,10 +507,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
