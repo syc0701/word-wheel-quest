@@ -29,8 +29,8 @@ const DEVICES = {
   phone: {
     name: 'phone',
     playFolder: 'phoneScreenshots',
-    // 9:20 — modern Android phones
-    viewport: { width: 430, height: 960 },
+    // 430×940 phone screenshots
+    viewport: { width: 430, height: 940 },
     deviceScaleFactor: 1,
   },
   sevenInch: {
