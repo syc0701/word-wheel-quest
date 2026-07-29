@@ -11,6 +11,7 @@ import { PlayTimerProvider } from './context/PlayTimerContext';
 import AppBackground from './components/AppBackground';
 import LaunchSplashOverlay from './components/LaunchSplashOverlay';
 import { configurePurchases } from './services/purchases';
+import PushNotificationService from './services/PushNotificationService';
 import HomeScreen from './screens/HomeScreen';
 import PlayScreen from './screens/PlayScreen';
 import DailyScreen from './screens/DailyScreen';
@@ -54,6 +55,24 @@ function AppShell() {
   const navigate = useCallback((screen, params = {}) => {
     setRoute({ screen, params });
   }, []);
+
+  useEffect(() => {
+    PushNotificationService.setPushNavigateHandler(navigate);
+    void PushNotificationService.syncPushNotificationsIfNeeded();
+    return () => {
+      PushNotificationService.setPushNavigateHandler(null);
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (
+      route.screen === SCREENS.SETTINGS
+      || route.params?.signedIn
+      || route.params?.authTick
+    ) {
+      void PushNotificationService.syncPushNotificationsIfNeeded();
+    }
+  }, [route.screen, route.params?.signedIn, route.params?.authTick]);
 
   /** Soft scrim hides outgoing screen UI but keeps the reef background visible. */
   const opaqueScreenStyle = [styles.screen, styles.screenScrim];

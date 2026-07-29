@@ -56,10 +56,28 @@ export async function apiPost(path, data) {
 
 export async function apiPut(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
-  const result = await fetch(buildUrl(path), {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify(data ?? {}),
-  });
+  let body;
+  const url = buildUrl(path);
+  if (shouldEncryptHomeBody(url) && data) {
+    const encrypted = encryptText(JSON.stringify(data));
+    body = encrypted ? JSON.stringify({ encrypted }) : JSON.stringify(data);
+  } else {
+    body = JSON.stringify(data ?? {});
+  }
+  const result = await fetch(url, { method: 'PUT', headers, body });
+  return parseResponse(result);
+}
+
+export async function apiDelete(path, data) {
+  const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
+  let body;
+  const url = buildUrl(path);
+  if (shouldEncryptHomeBody(url) && data) {
+    const encrypted = encryptText(JSON.stringify(data));
+    body = encrypted ? JSON.stringify({ encrypted }) : JSON.stringify(data);
+  } else {
+    body = data != null ? JSON.stringify(data) : undefined;
+  }
+  const result = await fetch(url, { method: 'DELETE', headers, body });
   return parseResponse(result);
 }

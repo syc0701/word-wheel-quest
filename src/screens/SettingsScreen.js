@@ -3,7 +3,9 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable
 import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AudioSettingsCard from '../components/AudioSettingsCard';
+import NotificationsSettingsCard from '../components/NotificationsSettingsCard';
 import PlayTimerSettingsCard from '../components/PlayTimerSettingsCard';
+import PushNotificationService from '../services/PushNotificationService';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
@@ -136,6 +138,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
     setAuthed(false);
     setScoreStanding(null);
     wallet.refresh({ silent: true }).catch(() => {});
+    void PushNotificationService.syncPushNotificationsIfNeeded();
   };
 
   const handleSignIn = () => {
@@ -354,6 +357,14 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           <AudioSettingsCard />
           <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
           <PlayTimerSettingsCard />
+          {PushNotificationService.isPushSupported() && (authed || wallet.loggedIn) ? (
+            <>
+              <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
+              <NotificationsSettingsCard
+                authTick={routeParams.authTick || routeParams.signedIn ? 1 : 0}
+              />
+            </>
+          ) : null}
         </View>
 
         {/* Language picker — re-enable when shipping multi-language UI

@@ -39,6 +39,7 @@
     "expo-asset": "~11.1.7",
     "expo-audio": "~0.4.9",
     "expo-linear-gradient": "~14.1.5",
+    "expo-notifications": "~0.31.4",
     "expo-status-bar": "~2.2.3",
     "lucide-react-native": "1.22.0",
     "react": "19.0.0",
