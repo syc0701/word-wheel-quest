@@ -14,6 +14,7 @@
     },
     "android": {
       "package": "com.puzint.wordwheel.app",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 5,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
@@ -29,7 +30,13 @@
     "plugins": [
       "expo-asset",
       "expo-audio",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      [
+        "expo-notifications",
+        {
+          "color": "#0A2A4A"
+        }
+      ]
     ]
   }
 }

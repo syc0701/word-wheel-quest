@@ -126,6 +126,14 @@ export default {
   'settings.sound.musicSubtitle': 'Loops on Home and Play',
   'settings.sound.sfx': 'Play sound effects',
   'settings.sound.sfxSubtitle': 'Clicks, correct, wrong, and win sounds',
+  'settings.notifications.label': 'Notifications',
+  'settings.notifications.subtitle': 'Get notified when a new puzzle is published.',
+  'settings.notifications.deniedTitle': 'Notifications blocked',
+  'settings.notifications.deniedBody':
+    'Notifications are off in device Settings. Enable them there to get alerts for new puzzles.',
+  'settings.notifications.saveFailedTitle': 'Could not update',
+  'settings.notifications.saveFailedBody':
+    'Could not update notification settings. Try again.',
   'settings.language.a11y': 'Language',
 
   // legal
