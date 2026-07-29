@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "845957927924",
+    "project_id": "word-wheel-quest",
+    "storage_bucket": "word-wheel-quest.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845957927924:android:bdfd5192f75592906e1fa1",
+        "android_client_info": {
+          "package_name": "com.puzint.wordwheel.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQLfRQoezN7CIS_IoOAwv_MBZBbzWrlEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
