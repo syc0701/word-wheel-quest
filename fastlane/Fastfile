@@ -100,4 +100,25 @@ platform :android do
     )
     UI.success("Uploaded Play Store icon / feature graphic.")
   end
+
+  desc "Upload release notes / changelogs for the current version to Google Play"
+  lane :changelog do |options|
+    # Changelogs attach to a version code that already exists on a track.
+    # Pass version_code:N to target a specific build, otherwise supply
+    # resolves it from the track.
+    version_code = options[:version_code]
+    upload_to_play_store(
+      metadata_path: "fastlane/metadata/android",
+      track: options[:track] || "production",
+      version_code: version_code,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: false,
+      changes_not_sent_for_review: true
+    )
+    UI.success("Uploaded Play Store release notes.")
+  end
 end
