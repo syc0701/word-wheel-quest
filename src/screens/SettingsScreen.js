@@ -357,11 +357,12 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           <AudioSettingsCard />
           <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
           <PlayTimerSettingsCard />
-          {PushNotificationService.isPushSupported() && (authed || wallet.loggedIn) ? (
+          {PushNotificationService.isPushSupported() ? (
             <>
               <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
               <NotificationsSettingsCard
                 authTick={routeParams.authTick || routeParams.signedIn ? 1 : 0}
+                onRequireSignIn={handleSignIn}
               />
             </>
           ) : null}

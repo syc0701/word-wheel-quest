@@ -2,6 +2,7 @@
 export default {
   // common
   'common.emDash': '—',
+  'common.cancel': 'Cancel',
   'common.level': 'Level {n}',
   'common.levelFallback': 'Level',
   'common.play': 'Play',
@@ -128,6 +129,10 @@ export default {
   'settings.sound.sfxSubtitle': 'Clicks, correct, wrong, and win sounds',
   'settings.notifications.label': 'Notifications',
   'settings.notifications.subtitle': 'Get notified when a new puzzle is published.',
+  'settings.notifications.signInSubtitle': 'Sign in to get notified when a new puzzle is published.',
+  'settings.notifications.signInTitle': 'Sign in required',
+  'settings.notifications.signInBody':
+    'Sign in to turn on notifications for new Word Wheel puzzles.',
   'settings.notifications.deniedTitle': 'Notifications blocked',
   'settings.notifications.deniedBody':
     'Notifications are off in device Settings. Enable them there to get alerts for new puzzles.',
