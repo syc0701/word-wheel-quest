@@ -50,6 +50,10 @@ npm run android:run        # starts Metro and opens the app (day-to-day)
 
 Debug builds need Metro (`npm run android:run` or `npm start`). Opening the app from Android Studio alone without Metro causes the red “Unable to load script” screen.
 
+`android:studio` only syncs the native project and opens Studio — it does **not** build, install, or launch the app. To actually start the app use `android:run` (app already installed) or `android:build` (first run / native deps changed).
+
+If the app seems not to launch, check the emulator is awake — a sleeping emulator swallows the launch intent silently. `android:run` now sends `KEYCODE_WAKEUP` and dismisses the keyguard first.
+
 Release build:
 
 ```bash

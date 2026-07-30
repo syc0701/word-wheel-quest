@@ -6,7 +6,7 @@
     "start": "npx expo start",
     "run:metro": "npx expo start --clear",
     "android": "npm run android:run",
-    "android:run": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && adb reverse tcp:8081 tcp:8081 >/dev/null 2>&1; adb shell monkey -p com.puzint.wordwheel.app -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1; npx expo start",
+    "android:run": "bash scripts/android-run.sh",
     "android:build": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && npx expo run:android",
     "android:run:release": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && npx expo run:android --variant release",
     "android:emulator": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && emulator -avd Pixel_6",
@@ -18,8 +18,7 @@
     "clean:all": "npm run clean && rm -rf android/.gradle fastlane/metadata/android/*/images/phoneScreenshots",
     "metadata:upload": "unset BUNDLE_GEMFILE; bundle exec fastlane metadata",
     "screenshots": "npx playwright install chromium && node docs/scripts/capture-screenshots.js",
-    "screenshots:upload": "npm run screenshots && npm run metadata:upload",
-    "ios": "expo run:ios"
+    "screenshots:upload": "npm run screenshots && npm run metadata:upload"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",
