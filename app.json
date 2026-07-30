@@ -18,6 +18,9 @@
       "versionCode": 5,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#0A2A4A"

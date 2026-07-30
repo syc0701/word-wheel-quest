@@ -5,8 +5,15 @@ import { useT } from '../context/LanguageContext';
 import { isLoggedIn } from '../lib/auth';
 import PushNotificationService from '../services/PushNotificationService';
 
-/** Settings toggle for per-app push notifications (signed-in users only). */
-export default function NotificationsSettingsCard({ authTick = 0 }) {
+/**
+ * Settings toggle for per-app push notifications.
+ * Always visible when push is supported; guests are prompted to sign in
+ * because preference + device-token APIs require a Cognito JWT.
+ */
+export default function NotificationsSettingsCard({
+  authTick = 0,
+  onRequireSignIn,
+}) {
   const { colors } = useAppearance();
   const t = useT();
   const [authed, setAuthed] = useState(false);
@@ -22,7 +29,7 @@ export default function NotificationsSettingsCard({ authTick = 0 }) {
       const loggedIn = await isLoggedIn();
       setAuthed(loggedIn);
       if (!loggedIn) {
-        setEnabled(true);
+        setEnabled(false);
         return;
       }
       try {
@@ -39,10 +46,28 @@ export default function NotificationsSettingsCard({ authTick = 0 }) {
     load();
   }, [load, authTick]);
 
+  const promptSignIn = () => {
+    Alert.alert(
+      t('settings.notifications.signInTitle'),
+      t('settings.notifications.signInBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('settings.account.signIn'),
+          onPress: () => onRequireSignIn?.(),
+        },
+      ]
+    );
+  };
+
   const onToggle = async (next) => {
-    if (!authed || saving || loading) {
+    if (saving || loading) return;
+
+    if (!authed) {
+      promptSignIn();
       return;
     }
+
     const previous = enabled;
     setEnabled(next);
     setSaving(true);
@@ -74,7 +99,7 @@ export default function NotificationsSettingsCard({ authTick = 0 }) {
     }
   };
 
-  if (!showPush || !authed) {
+  if (!showPush) {
     return null;
   }
 
@@ -85,7 +110,9 @@ export default function NotificationsSettingsCard({ authTick = 0 }) {
           {t('settings.notifications.label')}
         </Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          {t('settings.notifications.subtitle')}
+          {authed
+            ? t('settings.notifications.subtitle')
+            : t('settings.notifications.signInSubtitle')}
         </Text>
       </View>
       <Switch

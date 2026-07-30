@@ -18,7 +18,8 @@
     "clean:all": "npm run clean && rm -rf android/.gradle fastlane/metadata/android/*/images/phoneScreenshots",
     "metadata:upload": "unset BUNDLE_GEMFILE; bundle exec fastlane metadata",
     "screenshots": "npx playwright install chromium && node docs/scripts/capture-screenshots.js",
-    "screenshots:upload": "npm run screenshots && npm run metadata:upload"
+    "screenshots:upload": "npm run screenshots && npm run metadata:upload",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",

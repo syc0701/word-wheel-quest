@@ -366,6 +366,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setTreasureOpen(false);
   }, []);
 
+  /**
+   * Restore the guest HUD from storage. Runs before the play session starts so a
+   * failed `startPlay` can't leave the balance on its initial 0. Returns the
+   * stored value, or `null` when this device has no guest balance yet.
+   */
+  const restoreGuestCoinBalance = useCallback(async () => {
+    if (await isLoggedIn()) return null;
+    const stored = await loadGuestPuzzleCoins();
+    setPlaySessionCoins(stored ?? 0);
+    return stored;
+  }, []);
+
   const pulseCoinBalance = useCallback(() => {
     coinPulse.stopAnimation();
     coinPulse.setValue(1);
@@ -400,8 +412,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (wallet.loggedIn) {
         wallet.addLifetimePoints?.(gift);
       } else {
+        // Show the gift right away, then settle on the persisted total. Without
+        // the reconcile a failed write left the HUD ahead of storage, and the
+        // coin appeared to vanish when the next puzzle re-read the balance.
         setPlaySessionCoins((prev) => prev + gift);
-        addGuestPuzzleCoins(gift).catch(() => {});
+        addGuestPuzzleCoins(gift)
+          .then((total) => setPlaySessionCoins(total))
+          .catch(() => setPlaySessionCoins((prev) => Math.max(0, prev - gift)));
       }
       playSfx('bonus');
       // Let the new total paint, then pulse icon + number.
@@ -490,6 +507,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         // Show the grid immediately; session start can finish in the background.
         setLoading(false);
 
+        const storedGuestCoins = await restoreGuestCoinBalance();
+
         const play = await WordWheelApi.startPlay(data.id);
         if (!cancelled && play && !play.code) {
           setPlaySession(play);
@@ -512,19 +531,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               WordWheelApi.updateProgress(data.id, saved, bonus).catch(() => {});
             }
           }
-          const baseCoins = Number(play.totalPuzzleCoins) || 0;
           const authed = await isLoggedIn();
           if (authed) {
-            setPlaySessionCoins(baseCoins);
-          } else {
-            // Guest balance is durable across levels (bonus gifts + hint spends).
-            const stored = await loadGuestPuzzleCoins();
-            if (stored == null) {
-              const seeded = bonus.length * WORD_WHEEL_BONUS_WORD_GIFT;
-              await saveGuestPuzzleCoins(seeded);
+            setPlaySessionCoins(Number(play.totalPuzzleCoins) || 0);
+          } else if (storedGuestCoins == null && bonus.length) {
+            // Nothing stored on this device yet, but this puzzle already has
+            // bonus words credited — rebuild the balance from them rather than
+            // starting the player back at zero.
+            const seeded = bonus.length * WORD_WHEEL_BONUS_WORD_GIFT;
+            try {
+              setPlaySessionCoins(await saveGuestPuzzleCoins(seeded));
+            } catch {
               setPlaySessionCoins(seeded);
-            } else {
-              setPlaySessionCoins(stored);
             }
           }
         } else if (!cancelled) {
@@ -547,7 +565,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, dailyDate, reloadKey, resetPlayState, seededPuzzle, t]);
+  }, [isDaily, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
 
   const handleNextPuzzle = useCallback(() => {
     if (isDaily) {
@@ -840,13 +858,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setHintPending(true);
     try {
       if (lifetimeCoinsRemaining >= WORD_WHEEL_HINT_COST) {
-        setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
         if (wallet.loggedIn) {
           wallet.spendLifetimePoints?.(WORD_WHEEL_HINT_COST);
         } else {
-          const next = await spendGuestPuzzleCoins(WORD_WHEEL_HINT_COST);
-          setPlaySessionCoins(next);
+          // Only charge the session counter once the deduction is persisted.
+          setPlaySessionCoins(await spendGuestPuzzleCoins(WORD_WHEEL_HINT_COST));
         }
+        setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
       } else if (wallet.creditBalance >= WORD_WHEEL_HINT_COST) {
         await wallet.consumeHintCredits({
           playId: playSession?.id,
