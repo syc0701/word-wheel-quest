@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
   },
   letter: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '900',
     color: WW.successText,
   },
   letterHint: {

@@ -15,9 +15,9 @@ import { useAppearance } from '../context/AppearanceContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-function makeSmogBanks(count = 12) {
+function makeSmogBanks(count = 14) {
   return Array.from({ length: count }, (_, i) => {
-    const size = SCREEN_W * (0.08 + (i % 5) * 0.035);
+    const size = SCREEN_W * (0.12 + (i % 5) * 0.045);
     const goingRight = i % 2 === 0;
     // Spread across the full screen so mist shows through transparent grid gaps.
     const band = i % 3;
@@ -34,7 +34,7 @@ function makeSmogBanks(count = 12) {
       duration: 18000 + (i % 5) * 4000,
       delay: (i % 6) * 800,
       goingRight,
-      opacity: 0.22 + (i % 5) * 0.05,
+      opacity: 0.34 + (i % 5) * 0.06,
     };
   });
 }
@@ -104,14 +104,15 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
  */
 export default function HomeSmogEffect() {
   const { mode } = useAppearance();
-  const banks = useMemo(() => makeSmogBanks(12), []);
+  const banks = useMemo(() => makeSmogBanks(14), []);
 
+  // Light mint UI needs stronger/cooler mist or white fog disappears into the bg.
   const color =
     mode === APPEARANCE_RANDOM
-      ? 'rgba(226, 242, 255, 0.38)'
+      ? 'rgba(236, 248, 255, 0.48)'
       : mode === APPEARANCE_DARK
-        ? 'rgba(186, 230, 253, 0.28)'
-        : 'rgba(255, 255, 255, 0.52)';
+        ? 'rgba(186, 230, 253, 0.34)'
+        : 'rgba(255, 255, 255, 0.78)';
 
   return (
     <View style={styles.layer} pointerEvents="none">

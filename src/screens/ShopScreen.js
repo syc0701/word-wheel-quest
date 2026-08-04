@@ -8,7 +8,12 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
-import { getDefaultOffering, purchasePackage, readPurchaseTransactionId } from '../services/purchases';
+import {
+  getDefaultOffering,
+  isPurchasesConfigured,
+  purchasePackage,
+  readPurchaseTransactionId,
+} from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 
@@ -97,17 +102,24 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       }
     : null;
 
+  const shopReady = isPurchasesConfigured();
+
   const loadOfferings = useCallback(async () => {
+    if (!isPurchasesConfigured()) {
+      setRcPackages([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const offering = await getDefaultOffering();
       setRcPackages(offering?.availablePackages ?? []);
-    } catch (error) {
-      Alert.alert(t('shop.alert.unavailable.title'), error.message ?? t('shop.alert.unavailable.body'));
+    } catch {
+      setRcPackages([]);
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     loadOfferings();
@@ -162,6 +174,10 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
 
         {loading ? (
           <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
+        ) : !shopReady ? (
+          <Text style={[styles.unavailable, { color: colors.textMuted }, sceneChip]}>
+            {t('shop.alert.unavailable.body')}
+          </Text>
         ) : (
           IAP_PACKAGES.map((meta) => {
             const rcPackage = findRcPackage(meta.packageId);
@@ -208,6 +224,11 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 24,
+  },
+  unavailable: {
+    marginTop: 16,
+    fontSize: 15,
+    lineHeight: 22,
   },
   productRow: {
     flexDirection: 'row',

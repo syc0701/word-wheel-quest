@@ -1,22 +1,35 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Calendar, ChevronRight, Lock, Play, Settings, ShoppingBag } from 'lucide-react-native';
+import {
+  Calendar,
+  ChevronRight,
+  Cloud,
+  Lock,
+  Play,
+  Search,
+  Settings,
+  ShoppingCart,
+} from 'lucide-react-native';
 import DailyLockedModal from '../components/DailyLockedModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
+import { isLoggedIn } from '../lib/auth';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
+import { APPEARANCE_DARK } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+
+const WHEEL_ART = require('../assets/icon.png');
 
 function logHomePuzzle(data, source) {
   const wordsInUse = data?.wordsInUse;
@@ -39,67 +52,137 @@ function logHomePuzzle(data, source) {
   });
 }
 
-function MenuRow({ icon: Icon, label, subtitle, onPress, colors, locked }) {
-  const TrailingIcon = locked ? Lock : ChevronRight;
-  return (
-    <Pressable
-      style={[
-        styles.row,
-        { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-        locked && styles.rowLocked,
-      ]}
-      onPress={onPress}
-    >
-      <View style={[styles.rowIcon, { backgroundColor: colors.surfaceLight }]}>
-        <Icon
-          color={locked ? colors.textMuted : colors.primaryGlow}
-          size={20}
-          strokeWidth={1.8}
-        />
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
-        {subtitle ? (
-          <Text style={[styles.rowSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
-        ) : null}
-      </View>
-      <TrailingIcon color={colors.textMuted} size={20} />
-    </Pressable>
-  );
+function resolveFoundWordCount(puzzle) {
+  if (!puzzle) return 0;
+  const raw = puzzle.wordsFound ?? puzzle.foundWords;
+  if (Array.isArray(raw)) return raw.filter(Boolean).length;
+  if (typeof raw === 'string') {
+    return raw
+      .split(/[\s,|]+/)
+      .map((w) => w.trim())
+      .filter(Boolean).length;
+  }
+  const n = Number(puzzle.wordsFoundCount ?? puzzle.foundCount);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+function useHomePalette() {
+  const { colors, mode, isRandomScene } = useAppearance();
+  const isDark = mode === APPEARANCE_DARK;
+
+  return useMemo(() => {
+    const title = isRandomScene
+      ? {
+          color: '#ffffff',
+          textShadowColor: 'rgba(0, 0, 0, 0.55)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 6,
+        }
+      : { color: colors.text };
+
+    const comment = isRandomScene
+      ? {
+          color: 'rgba(255, 255, 255, 0.9)',
+          textShadowColor: 'rgba(0, 0, 0, 0.45)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 4,
+        }
+      : { color: colors.textMuted };
+
+    // Continue hero: light card in light theme; deep green over image; surface in dark.
+    let continueCard;
+    let continueText;
+    let continueMuted;
+    let continueCta;
+    let progressTrack;
+    let progressFill;
+    let levelBadgeBg;
+    let levelBadgeText;
+
+    if (isRandomScene) {
+      continueCard = {
+        backgroundColor: '#1b4d3e',
+        borderColor: 'rgba(255,255,255,0.08)',
+      };
+      continueText = '#f4faf7';
+      continueMuted = 'rgba(244, 250, 247, 0.78)';
+      continueCta = { backgroundColor: '#3d9b74' };
+      progressTrack = 'rgba(255,255,255,0.18)';
+      progressFill = '#7dcea0';
+      levelBadgeBg = 'rgba(0,0,0,0.22)';
+      levelBadgeText = '#ffffff';
+    } else if (isDark) {
+      continueCard = {
+        backgroundColor: colors.surface,
+        borderColor: colors.surfaceLight,
+      };
+      continueText = colors.text;
+      continueMuted = colors.textMuted;
+      continueCta = { backgroundColor: colors.primary };
+      progressTrack = 'rgba(255,255,255,0.12)';
+      progressFill = colors.primaryGlow;
+      levelBadgeBg = 'rgba(0,0,0,0.28)';
+      levelBadgeText = '#ffffff';
+    } else {
+      continueCard = {
+        backgroundColor: '#ffffff',
+        borderColor: 'rgba(6, 78, 59, 0.1)',
+        shadowColor: '#0f3d32',
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 3,
+      };
+      continueText = colors.text;
+      continueMuted = colors.textMuted;
+      continueCta = { backgroundColor: colors.primary };
+      progressTrack = 'rgba(13, 148, 136, 0.14)';
+      progressFill = colors.primary;
+      levelBadgeBg = 'rgba(13, 148, 136, 0.12)';
+      levelBadgeText = colors.primaryGlow;
+    }
+
+    const tile = {
+      backgroundColor: colors.surface,
+      borderColor: isRandomScene ? 'rgba(255,255,255,0.55)' : colors.surfaceLight,
+    };
+
+    return {
+      colors,
+      isDark,
+      isRandomScene,
+      title,
+      comment,
+      continueCard,
+      continueText,
+      continueMuted,
+      continueCta,
+      progressTrack,
+      progressFill,
+      levelBadgeBg,
+      levelBadgeText,
+      tile,
+      settingsBg: isRandomScene ? 'rgba(255,255,255,0.92)' : colors.surface,
+      settingsIcon: colors.text,
+      dailyIconBg: isDark ? 'rgba(45, 212, 191, 0.16)' : 'rgba(61, 155, 116, 0.14)',
+      shopIconBg: isDark ? 'rgba(251, 191, 36, 0.14)' : 'rgba(234, 179, 148, 0.35)',
+      lockBadgeBg: isDark ? 'rgba(45, 212, 191, 0.14)' : 'rgba(61, 155, 116, 0.14)',
+      lockBadgeText: isDark ? colors.primaryGlow : '#1b4d3e',
+      signInBorder: isDark ? colors.primary : '#1b4d3e',
+      signInText: isDark ? colors.primaryGlow : '#1b4d3e',
+    };
+  }, [colors, isDark, isRandomScene]);
 }
 
 export default function HomeScreen({ navigate }) {
-  const { colors, isRandomScene } = useAppearance();
+  const palette = useHomePalette();
+  const { colors } = palette;
   const t = useT();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
   const [dailyLockedVisible, setDailyLockedVisible] = useState(false);
-
-  const sceneText = useMemo(
-    () =>
-      isRandomScene
-        ? {
-            color: '#ffffff',
-            textShadowColor: 'rgba(0, 0, 0, 0.8)',
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 5,
-          }
-        : null,
-    [isRandomScene]
-  );
-  const sceneMuted = useMemo(
-    () =>
-      isRandomScene
-        ? {
-            color: 'rgba(255, 255, 255, 0.88)',
-            textShadowColor: 'rgba(0, 0, 0, 0.75)',
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 4,
-          }
-        : null,
-    [isRandomScene]
-  );
+  const [guest, setGuest] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,6 +220,17 @@ export default function HomeScreen({ navigate }) {
     return () => {
       cancelled = true;
     };
+  }, [t]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const loggedIn = await isLoggedIn();
+      if (!cancelled) setGuest(!loggedIn);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
@@ -144,15 +238,17 @@ export default function HomeScreen({ navigate }) {
     () => (puzzle?.id ? resolvePuzzleWordCount(puzzle) : 0),
     [puzzle]
   );
+  const foundCount = useMemo(() => resolveFoundWordCount(puzzle), [puzzle]);
+  const progress =
+    wordCount > 0 ? Math.min(1, Math.max(0, foundCount / wordCount)) : 0;
   const dailyUnlocked =
     journeyLevel != null && journeyLevel >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
+  const canPlay = Boolean(puzzle) && !loading && !error;
 
   useEffect(() => {
     if (!puzzle) return;
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
-
-  const canPlay = Boolean(puzzle) && !loading && !error;
 
   const openDaily = () => {
     if (dailyUnlocked) {
@@ -164,119 +260,179 @@ export default function HomeScreen({ navigate }) {
 
   return (
     <GradientBackground variant="home">
-    <View style={styles.container}>
-      <View style={styles.topBar}>
-        <View style={styles.topBarSpacer} />
-        <Pressable
-          style={[styles.topIconBtn, { backgroundColor: colors.surface }]}
-          onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
-          accessibilityLabel={t('home.a11y.settings')}
-          hitSlop={8}
-        >
-          <Settings color={colors.text} size={22} strokeWidth={1.8} />
-        </Pressable>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[styles.kicker, { color: colors.textMuted }, sceneMuted]}>
-          {t('home.kicker')}
-        </Text>
-        <Text style={[styles.title, { color: colors.text }, sceneText]}>
-          {t('home.title')}
-        </Text>
-        <Text style={[styles.tagline, { color: colors.textMuted }, sceneMuted]}>
-          {t('home.tagline')}
-        </Text>
-
-        <Text style={[styles.sectionTitle, { color: colors.textMuted }, sceneMuted]}>
-          {t('home.section.seasonJourney')}
-        </Text>
-        <View
-          style={[
-            styles.journeyCard,
-            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-          ]}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.primaryGlow} style={styles.cardLoader} />
-          ) : error ? (
-            <Text style={styles.cardError}>{error}</Text>
-          ) : puzzle ? (
-            <>
-              <View style={styles.levelRow}>
-                {journeyLevel != null ? (
-                  <Text style={[styles.levelHero, { color: colors.text }]}>
-                    {t('common.level', { n: journeyLevel })}
-                  </Text>
-                ) : (
-                  <View style={styles.levelHeroSpacer} />
-                )}
-              </View>
-              {wordCount > 0 ? (
-                <Text style={[styles.meta, { color: colors.textMuted }]}>
-                  {t('common.words', { n: wordCount })}
-                </Text>
-              ) : null}
-            </>
-          ) : null}
-
+      <View style={styles.container}>
+        <View style={styles.topBar}>
+          <View style={styles.topBarSpacer} />
           <Pressable
-            style={[
-              styles.primaryBtn,
-              { backgroundColor: colors.primary },
-              !canPlay && styles.primaryBtnDisabled,
-            ]}
-            disabled={!canPlay}
-            onPress={() =>
-              navigate(SCREENS.PLAY, {
-                mode: PLAY_MODE.JOURNEY,
-                puzzle: canPlay ? puzzle : undefined,
-              })
-            }
+            style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
+            onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
+            accessibilityLabel={t('home.a11y.settings')}
+            hitSlop={8}
           >
-            <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
-            <Text style={styles.primaryBtnText}>{t('common.play')}</Text>
+            <Settings color={palette.settingsIcon} size={20} strokeWidth={1.9} />
           </Pressable>
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.textMuted }, sceneMuted]}>
-          {t('home.section.more')}
-        </Text>
-        <MenuRow
-          icon={Calendar}
-          label={t('home.dailyPuzzle.label')}
-          subtitle={
-            dailyUnlocked
-              ? t('home.dailyPuzzle.subtitle')
-              : t('home.dailyPuzzle.lockedSubtitle', { n: WORD_WHEEL_DAILY_UNLOCK_LEVEL })
-          }
-          onPress={openDaily}
-          colors={colors}
-          locked={!dailyUnlocked}
-        />
-        <MenuRow
-          icon={ShoppingBag}
-          label={t('home.shop.label')}
-          subtitle={t('home.shop.subtitle')}
-          onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
-          colors={colors}
-        />
-        <Text style={[styles.footer, { color: colors.textMuted }, sceneMuted]}>
-          {t('home.footer')}
-        </Text>
-        <Text style={[styles.copyright, { color: colors.textMuted }, sceneMuted]}>
-          {t('home.copyright')}
-        </Text>
-      </ScrollView>
+        <View style={styles.body}>
+          <View style={styles.headerBlock}>
+            <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
+            <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
+              {t('home.title.line2')}
+            </Text>
+            <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
+          </View>
 
-      <DailyLockedModal
-        visible={dailyLockedVisible}
-        onClose={() => setDailyLockedVisible(false)}
-      />
-    </View>
+          <View style={styles.middleBlock}>
+            <View style={[styles.continueCard, palette.continueCard]}>
+              {loading ? (
+                <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
+              ) : error ? (
+                <Text style={styles.cardError}>{error}</Text>
+              ) : (
+                <>
+                  <View style={styles.continueTop}>
+                    <Image source={WHEEL_ART} style={styles.wheelArt} />
+                    <View style={styles.continueMeta}>
+                      <View style={[styles.levelBadge, { backgroundColor: palette.levelBadgeBg }]}>
+                        <Text style={[styles.levelBadgeText, { color: palette.levelBadgeText }]}>
+                          {t('home.continue.badge')}
+                        </Text>
+                      </View>
+                      <Text style={[styles.levelTitle, { color: palette.continueText }]}>
+                        {journeyLevel != null
+                          ? t('common.level', { n: journeyLevel })
+                          : t('common.levelFallback')}
+                      </Text>
+                      <View
+                        style={[styles.progressTrack, { backgroundColor: palette.progressTrack }]}
+                      >
+                        <View
+                          style={[
+                            styles.progressFill,
+                            {
+                              backgroundColor: palette.progressFill,
+                              width: `${Math.round(progress * 100)}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <View style={styles.wordsRow}>
+                        <Search color={palette.continueMuted} size={14} strokeWidth={2.2} />
+                        <Text style={[styles.wordsText, { color: palette.continueMuted }]}>
+                          {t('home.continue.wordsFound', {
+                            found: Math.min(foundCount, wordCount || 0),
+                            total: wordCount || 0,
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <Pressable
+                    style={[
+                      styles.continueBtn,
+                      palette.continueCta,
+                      !canPlay && styles.btnDisabled,
+                    ]}
+                    disabled={!canPlay}
+                    onPress={() =>
+                      navigate(SCREENS.PLAY, {
+                        mode: PLAY_MODE.JOURNEY,
+                        puzzle: canPlay ? puzzle : undefined,
+                      })
+                    }
+                    accessibilityLabel={t('home.continue.cta')}
+                  >
+                    <Play color="#fff" size={17} strokeWidth={2.4} fill="#fff" />
+                    <Text style={styles.continueBtnText}>{t('home.continue.cta')}</Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.bottomBlock}>
+            <View style={styles.tileRow}>
+              <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
+                <View style={styles.tileHeader}>
+                  <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
+                    <Calendar color={colors.primaryGlow} size={20} strokeWidth={1.9} />
+                  </View>
+                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
+                    {t('home.dailyPuzzle.label')}
+                  </Text>
+                </View>
+                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]}>
+                  {t('home.dailyPuzzle.subtitle')}
+                </Text>
+                {!dailyUnlocked ? (
+                  <View style={[styles.lockPill, { backgroundColor: palette.lockBadgeBg }]}>
+                    <Lock color={palette.lockBadgeText} size={12} strokeWidth={2.4} />
+                    <Text style={[styles.lockPillText, { color: palette.lockBadgeText }]}>
+                      {t('home.dailyPuzzle.lockedSubtitle', {
+                        n: WORD_WHEEL_DAILY_UNLOCK_LEVEL,
+                      })}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.tileSpacer} />
+                )}
+              </Pressable>
+
+              <Pressable
+                style={[styles.tile, palette.tile]}
+                onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
+              >
+                <View style={styles.tileHeader}>
+                  <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
+                    <ShoppingCart color={colors.text} size={20} strokeWidth={1.9} />
+                  </View>
+                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
+                    {t('home.shop.label')}
+                  </Text>
+                  <ChevronRight color={colors.textMuted} size={18} />
+                </View>
+                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]}>
+                  {t('home.shop.subtitle')}
+                </Text>
+              </Pressable>
+            </View>
+
+            {guest ? (
+              <View style={[styles.guestCard, palette.tile]}>
+                <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
+                  <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
+                </View>
+                <View style={styles.guestBody}>
+                  <Text style={[styles.guestTitle, { color: colors.text }]}>
+                    {t('home.guest.title')}
+                  </Text>
+                  <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
+                    {t('home.guest.body')}
+                  </Text>
+                </View>
+                <Pressable
+                  style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
+                  onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
+                >
+                  <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
+                    {t('home.guest.signIn')}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+
+            <Text style={[styles.copyright, { color: colors.textMuted }, palette.comment]}>
+              {t('home.copyright')}
+            </Text>
+          </View>
+        </View>
+
+        <DailyLockedModal
+          visible={dailyLockedVisible}
+          onClose={() => setDailyLockedVisible(false)}
+        />
+      </View>
     </GradientBackground>
   );
 }
@@ -292,143 +448,225 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingTop: 52,
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
   topBarSpacer: {
     flex: 1,
   },
-  topIconBtn: {
+  settingsBtn: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+  body: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingBottom: 16,
   },
-  kicker: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginTop: 8,
-    marginBottom: 8,
+  headerBlock: {
+    paddingTop: 4,
   },
-  title: {
-    fontSize: 28,
+  middleBlock: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  bottomBlock: {
+    gap: 12,
+    paddingBottom: 4,
+  },
+  titleLine: {
+    fontSize: 34,
     fontWeight: '800',
-    letterSpacing: -0.4,
+    letterSpacing: -0.6,
+    lineHeight: 38,
   },
-  tagline: {
+  titleLine2: {
+    marginTop: -2,
+  },
+  comment: {
+    marginTop: 10,
     fontSize: 15,
-    marginTop: 6,
-    marginBottom: 8,
-    lineHeight: 22,
+    lineHeight: 21,
   },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginTop: 22,
-    marginBottom: 10,
-  },
-  journeyCard: {
-    borderRadius: 16,
+  continueCard: {
+    borderRadius: 22,
     borderWidth: 1,
-    padding: 18,
+    padding: 16,
   },
   cardLoader: {
-    marginVertical: 28,
+    marginVertical: 36,
   },
   cardError: {
     color: '#dc2626',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 12,
   },
-  levelHero: {
-    fontSize: 44,
-    fontWeight: '800',
-    letterSpacing: -0.8,
-    flexShrink: 1,
-  },
-  levelHeroSpacer: {
-    flex: 1,
-  },
-  levelRow: {
+  continueTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    gap: 14,
   },
-  meta: {
-    fontSize: 15,
-    fontWeight: '500',
+  wheelArt: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+  },
+  continueMeta: {
+    flex: 1,
+    minWidth: 0,
+  },
+  levelBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginBottom: 6,
+  },
+  levelBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.1,
+  },
+  levelTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  progressTrack: {
+    marginTop: 10,
+    height: 6,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+  },
+  wordsRow: {
     marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  primaryBtn: {
-    marginTop: 20,
-    minHeight: 52,
-    borderRadius: 12,
+  wordsText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  continueBtn: {
+    marginTop: 16,
+    minHeight: 50,
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  primaryBtnDisabled: {
+  continueBtnText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  btnDisabled: {
     opacity: 0.5,
   },
-  primaryBtnText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
+  tileRow: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  row: {
+  tile: {
+    flex: 1,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+    minHeight: 128,
+  },
+  tileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
+    gap: 10,
+    marginBottom: 8,
   },
-  rowIcon: {
+  tileIcon: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
   },
-  rowBody: {
+  tileTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  tileSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  lockPill: {
+    marginTop: 'auto',
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  lockPillText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  tileSpacer: {
+    marginTop: 'auto',
+    height: 8,
+  },
+  guestCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  guestIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestBody: {
     flex: 1,
     minWidth: 0,
   },
-  rowLabel: {
+  guestTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '800',
   },
-  rowSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  rowLocked: {
-    opacity: 0.78,
-  },
-  footer: {
+  guestBodyText: {
+    marginTop: 3,
     fontSize: 12,
-    lineHeight: 18,
-    marginTop: 16,
+    lineHeight: 17,
+  },
+  signInBtn: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: 'transparent',
+  },
+  signInBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   copyright: {
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
-    marginTop: 18,
-    marginBottom: 8,
+    paddingTop: 4,
     letterSpacing: 0.2,
   },
 });

@@ -201,8 +201,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   letter: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '900',
   },
   numberBadge: {
     position: 'absolute',
