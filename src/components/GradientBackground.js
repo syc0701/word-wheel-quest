@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { APPEARANCE_LIGHT, APPEARANCE_RANDOM } from '../lib/appearance';
+import { APPEARANCE_RANDOM } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import HomeSmogEffect from './HomeSmogEffect';
 import PlayAmbientBubbles from './PlayAmbientBubbles';
@@ -15,8 +15,6 @@ export default function GradientBackground({ children, variant = 'home' }) {
   const { mode, ww } = useAppearance();
   const isPlay = variant === 'play';
   const showUnderwater = isPlay && mode !== APPEARANCE_RANDOM;
-  // Mist sits between backdrop and chrome on light, and over random scene images.
-  const showMist = mode === APPEARANCE_LIGHT || mode === APPEARANCE_RANDOM;
   const gradientColors = ww?.playGradient?.length >= 2 ? ww.playGradient : DEEP_WATER;
 
   return (
@@ -36,11 +34,9 @@ export default function GradientBackground({ children, variant = 'home' }) {
         </View>
       ) : null}
 
-      {showMist ? (
-        <View style={styles.mist} pointerEvents="none">
-          <HomeSmogEffect />
-        </View>
-      ) : null}
+      <View style={styles.mist} pointerEvents="none">
+        <HomeSmogEffect />
+      </View>
 
       <View style={styles.content} pointerEvents="box-none">
         {children}

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  ReduceMotion,
   cancelAnimation,
   useAnimatedProps,
   useSharedValue,
@@ -38,7 +39,12 @@ export default function ShipHelm({ size, inset = 0 }) {
   useEffect(() => {
     rotation.value = 0;
     rotation.value = withRepeat(
-      withTiming(360, { duration: SWEEP_MS, easing: Easing.linear }),
+      withTiming(360, {
+        duration: SWEEP_MS,
+        easing: Easing.linear,
+        // Ambient decor — keep sweeping even when OS “Animator duration” is 0.
+        reduceMotion: ReduceMotion.Never,
+      }),
       -1,
       false
     );
