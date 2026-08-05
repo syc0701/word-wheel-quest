@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Image,
   ImageBackground,
   InteractionManager,
   Pressable,
@@ -16,17 +15,15 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
 const SPLASH_BG = require('../assets/splash-reef-bg.png');
-const LOGO = require('../assets/splash-logo-word.png');
 const SEA_FALLBACK = '#0A2A4A';
 const COPYRIGHT = '© 2026 Puzzle Interact';
 
 /**
- * Immersive reef launch: logo bounce-in, spaced title, animated rope progress.
+ * Immersive reef launch: title + animated rope progress (no square logo asset).
  */
 export default function LaunchSplashOverlay({ onDone }) {
   const [visible, setVisible] = useState(true);
@@ -34,8 +31,6 @@ export default function LaunchSplashOverlay({ onDone }) {
   const [appReady, setAppReady] = useState(false);
   const [nativeHidden, setNativeHidden] = useState(false);
 
-  const logoOpacity = useSharedValue(0);
-  const logoScale = useSharedValue(0.35);
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -79,17 +74,11 @@ export default function LaunchSplashOverlay({ onDone }) {
 
   useEffect(() => {
     if (!bgReady) return;
-    logoOpacity.value = withTiming(1, { duration: 280 });
-    logoScale.value = withSequence(
-      withTiming(1.08, { duration: 520, easing: Easing.out(Easing.cubic) }),
-      withTiming(0.96, { duration: 160, easing: Easing.inOut(Easing.quad) }),
-      withTiming(1, { duration: 180, easing: Easing.out(Easing.quad) })
-    );
     progress.value = withDelay(
-      280,
+      120,
       withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.cubic) })
     );
-  }, [bgReady, logoOpacity, logoScale, progress]);
+  }, [bgReady, progress]);
 
   useEffect(() => {
     if (!visible || !bgReady || !appReady || !nativeHidden) return;
@@ -99,11 +88,6 @@ export default function LaunchSplashOverlay({ onDone }) {
     }, 2200);
     return () => clearTimeout(t);
   }, [visible, bgReady, appReady, nativeHidden, onDone]);
-
-  const logoStyle = useAnimatedStyle(() => ({
-    opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
-  }));
 
   const ropeFillStyle = useAnimatedStyle(() => ({
     width: `${interpolate(progress.value, [0, 1], [6, 100])}%`,
@@ -134,12 +118,8 @@ export default function LaunchSplashOverlay({ onDone }) {
         <View style={styles.scrim} />
 
         <View style={styles.hero}>
-          <Animated.View style={[styles.logoWrap, logoStyle]}>
-            <Image source={LOGO} style={styles.logo} resizeMode="contain" />
-          </Animated.View>
-
           <Animated.Text
-            entering={FadeInDown.delay(520).duration(420)}
+            entering={FadeInDown.delay(160).duration(420)}
             style={styles.title}
           >
             Word Wheel Quest
@@ -183,16 +163,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingBottom: 40,
   },
-  logoWrap: {
-    width: 200,
-    height: 200,
-  },
-  logo: {
-    width: '100%',
-    height: '100%',
-  },
   title: {
-    marginTop: 64,
     color: '#F4E6C8',
     fontSize: 32,
     fontWeight: '700',
