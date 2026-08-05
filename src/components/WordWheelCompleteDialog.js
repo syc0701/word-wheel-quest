@@ -46,6 +46,7 @@ export default function WordWheelCompleteDialog({
   hintCoinsSpent = 0,
   levelNumber,
   forceScreenType,
+  unlockedFeature = null,
 }) {
   const t = useT();
   const { timerEnabled } = usePlayTimer();
@@ -164,6 +165,12 @@ export default function WordWheelCompleteDialog({
               onContinue={handleContinue}
             >
               {body}
+              {unlockedFeature === 'dailyPuzzle' ? (
+                <View style={styles.unlockBox}>
+                  <Text style={styles.unlockTitle}>{t('complete.unlock.dailyPuzzle')}</Text>
+                  <Text style={styles.unlockBody}>{t('complete.unlock.dailyPuzzle.body')}</Text>
+                </View>
+              ) : null}
               {showScoreHint ? (
                 <Text style={styles.scoreNote}>
                   {t('complete.stat.score')}: {scoreLabel}
@@ -211,6 +218,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: INTERMISSION.titleTeal,
     textAlign: 'center',
+  },
+  unlockBox: {
+    marginTop: 14,
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(234, 179, 8, 0.55)',
+    backgroundColor: 'rgba(250, 204, 21, 0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  unlockTitle: {
+    fontFamily: INTERMISSION.serifBold || INTERMISSION.serif,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#a16207',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  unlockBody: {
+    fontFamily: INTERMISSION.serif,
+    fontSize: 13,
+    color: INTERMISSION.bodyMuted,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   hintsNote: {
     marginTop: 12,

@@ -67,6 +67,8 @@ export default {
   'play.clue.placeholder': 'Swipe the clue strip, or tap a numbered cell',
   'play.clue.prev': 'Previous clue',
   'play.clue.next': 'Next clue',
+  'play.wordUnlocked.label': 'Unlocked',
+  'play.wordUnlocked.a11y': 'Unlocked {word}',
   'play.error.noDaily': 'No daily puzzle available.',
   'play.error.noPuzzle': 'No puzzle available.',
   'play.error.loadFailed': 'Could not load puzzle.',
@@ -131,7 +133,7 @@ export default {
   'settings.appearance.light': 'Light',
   'settings.appearance.dark': 'Dark',
   'settings.appearance.random': 'Image',
-  'settings.appearance.randomHint': 'A new scene photo every 3 days',
+  'settings.appearance.randomHint': 'Scene photo changes every 50 levels',
   'settings.sound.music': 'Play background music',
   'settings.sound.musicSubtitle': 'Loops on Home and Play',
   'settings.sound.sfx': 'Play sound effects',
@@ -253,6 +255,8 @@ export default {
   'complete.hintsUsed': 'Hints used: −{n} coins',
   'complete.close': 'Close',
   'complete.next': 'Next',
+  'complete.unlock.dailyPuzzle': 'Unlocked: Daily Puzzle',
+  'complete.unlock.dailyPuzzle.body': 'A new puzzle every day is now available from Home.',
 
   // dictionary
   'dictionary.error.load': 'Could not load definition.',

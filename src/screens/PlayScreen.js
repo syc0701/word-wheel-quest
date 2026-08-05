@@ -4,6 +4,7 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Easing,
   Pressable,
   StyleSheet,
   Text,
@@ -25,6 +26,7 @@ import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
+import { WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { validateBonusWord } from '../lib/dictionary';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
@@ -82,7 +84,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const dailyDate = routeParams.date;
   const seededPuzzle = routeParams.puzzle;
   const wallet = useWordWheelWallet();
-  const { ww, isRandomScene } = useAppearance();
+  const { ww, isRandomScene, setSceneLevel } = useAppearance();
   const { playSfx } = useAudio();
   const { timerEnabled } = usePlayTimer();
   const t = useT();
@@ -314,6 +316,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     )
   );
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
+
+  useEffect(() => {
+    if (!isDaily && journeyLevel != null) setSceneLevel(journeyLevel);
+  }, [isDaily, journeyLevel, setSceneLevel]);
   const dailyLabel = useMemo(() => {
     if (!isDaily) return '';
     return formatShortDisplayDate(dailyDate || puzzle?.dailyPlayDate) || t('toast.dailyFallback');
@@ -379,22 +385,23 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, []);
 
   const pulseCoinBalance = useCallback(() => {
-    coinPulse.stopAnimation();
-    coinPulse.setValue(1);
-    Animated.sequence([
-      Animated.spring(coinPulse, {
-        toValue: 1.45,
-        friction: 4,
-        tension: 180,
-        useNativeDriver: true,
-      }),
-      Animated.spring(coinPulse, {
-        toValue: 1,
-        friction: 5,
-        tension: 140,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    coinPulse.stopAnimation((current = 1) => {
+      coinPulse.setValue(typeof current === 'number' ? current : 1);
+      Animated.sequence([
+        Animated.timing(coinPulse, {
+          toValue: 1.22,
+          duration: 200,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(coinPulse, {
+          toValue: 1,
+          duration: 340,
+          easing: Easing.inOut(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
 
     if (coinSparkClearRef.current) clearTimeout(coinSparkClearRef.current);
     setCoinSparkVisible(true);
@@ -622,17 +629,23 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [puzzle?.id, foundWords]
   );
 
+  const celebrateClearRef = useRef(null);
   const triggerCellRevealEffect = useCallback((keys, mode = 'new') => {
     const cellKeys = (keys || []).filter(Boolean);
     if (!cellKeys.length) return;
+    if (celebrateClearRef.current) {
+      clearTimeout(celebrateClearRef.current);
+      celebrateClearRef.current = null;
+    }
     setCelebrateMode(mode);
     setCelebrateOrder(cellKeys);
     setCelebratingCellKeys(new Set(cellKeys));
     setRevealBurstId((id) => id + 1);
-    setTimeout(() => {
+    celebrateClearRef.current = setTimeout(() => {
       setCelebratingCellKeys(new Set());
       setCelebrateOrder([]);
       setCelebrateMode('new');
+      celebrateClearRef.current = null;
     }, mode === 'already' ? 900 : 1100);
   }, []);
 
@@ -948,7 +961,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   return (
     <GradientBackground variant="play">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <Pressable
             style={[
@@ -1045,7 +1063,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             </Text>
           </View>
         ) : null}
+      </ScrollView>
 
+      {/* Wheel lives outside ScrollView so pan gestures are never stolen mid-drag. */}
+      <View style={styles.wheelDock}>
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
             <View style={styles.coinBurstWrap}>
@@ -1069,7 +1090,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
                 !canUseHint && styles.toolBtnDisabled,
               ]}
-              onPress={handleHint}
+              onPress={() => {
+                setSelectedIndices([]);
+                handleHint();
+              }}
               disabled={hintPending}
               accessibilityLabel={t('play.a11y.useHint')}
             >
@@ -1084,7 +1108,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 styles.toolBtn,
                 { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
               ]}
-              onPress={() => setTreasureOpen(true)}
+              onPress={() => {
+                setSelectedIndices([]);
+                setTreasureOpen(true);
+              }}
               accessibilityLabel={t('play.a11y.treasureChest')}
             >
               <PiTreasureChest size={18} color={ww.toolIcon} />
@@ -1109,6 +1136,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 !selectedWord && styles.toolBtnDisabled,
               ]}
               onPress={() => {
+                setSelectedIndices([]);
                 setDictionaryWord(selectedWord || '');
                 setDictionaryOpen(true);
               }}
@@ -1126,7 +1154,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       <WordWheelDictionarySheet
         visible={dictionaryOpen}
@@ -1148,6 +1176,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}
         levelNumber={completionStats?.levelNumber}
         forceScreenType={completionStats?.screenType}
+        unlockedFeature={
+          !isDaily
+          && completionStats?.levelNumber != null
+          && Number(completionStats.levelNumber) === WORD_WHEEL_DAILY_UNLOCK_LEVEL
+            ? 'dailyPuzzle'
+            : null
+        }
       />
 
       <BonusWordModal
@@ -1175,10 +1210,19 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   scroll: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 52,
-    paddingBottom: 48,
+    paddingBottom: 12,
+  },
+  wheelDock: {
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+    paddingTop: 4,
   },
   centered: {
     flex: 1,

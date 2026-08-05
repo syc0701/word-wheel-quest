@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const APPEARANCE_KEY = 'ww.appearance';
 export const APPEARANCE_LIGHT = 'light';
 export const APPEARANCE_DARK = 'dark';
-/** Scene photo from `assets/bg_image` (3 days per image). */
+/** Scene photo from `assets/bg_image` (changes every 50 journey levels). */
 export const APPEARANCE_RANDOM = 'random';
 
 const MODES = new Set([APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_RANDOM]);
@@ -259,7 +259,7 @@ export async function loadAppearance() {
   try {
     const raw = await AsyncStorage.getItem(APPEARANCE_KEY);
     if (raw == null || String(raw).trim() === '') {
-      // Default: Image (scene photos, 3 days each).
+      // Default: Image (scene photos, every 50 journey levels).
       await AsyncStorage.setItem(APPEARANCE_KEY, APPEARANCE_RANDOM);
       return APPEARANCE_RANDOM;
     }

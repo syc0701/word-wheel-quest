@@ -21,7 +21,7 @@ import {
 } from '../services/cognitoAuth';
 
 export default function SignInScreen({ navigate, routeParams = {} }) {
-  const { colors } = useAppearance();
+  const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const backScreen = SCREENS.SETTINGS;
 
@@ -32,6 +32,31 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  const sceneText = isRandomScene
+    ? {
+        color: '#ffffff',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
+      }
+    : null;
+  const sceneMuted = isRandomScene
+    ? {
+        color: 'rgba(255, 255, 255, 0.92)',
+        textShadowColor: 'rgba(0, 0, 0, 0.7)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+      }
+    : null;
+  const sceneLink = isRandomScene
+    ? {
+        color: '#fde68a',
+        textShadowColor: 'rgba(0, 0, 0, 0.7)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+      }
+    : null;
 
   const finishSignIn = () => {
     navigate(backScreen, {
@@ -79,11 +104,14 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   return (
     <View style={styles.container}>
       <Pressable
-        style={styles.settingsBtn}
+        style={[
+          styles.settingsBtn,
+          isRandomScene && styles.settingsBtnOnScene,
+        ]}
         onPress={() => navigate(backScreen, routeParams)}
         hitSlop={8}
       >
-        <Settings color={colors.textMuted} size={22} />
+        <Settings color={isRandomScene ? '#0b3d36' : colors.textMuted} size={22} />
       </Pressable>
 
       <KeyboardAvoidingView
@@ -95,19 +123,19 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{t('signIn.title')}</Text>
+          <Text style={[styles.title, sceneText]}>{t('signIn.title')}</Text>
 
-          <Text style={styles.legal}>
+          <Text style={[styles.legal, sceneMuted]}>
             {t('signIn.legal.prefix')}
             <Text
-              style={styles.legalLink}
+              style={[styles.legalLink, sceneLink]}
               onPress={() => openLegal(APP_URLS.terms, t('signIn.legal.termsTitle'))}
             >
               {t('signIn.legal.termsLink')}
             </Text>
             {t('signIn.legal.and')}
             <Text
-              style={styles.legalLink}
+              style={[styles.legalLink, sceneLink]}
               onPress={() => openLegal(APP_URLS.privacy, t('signIn.legal.privacyTitle'))}
             >
               {t('signIn.legal.privacyLink')}
@@ -118,9 +146,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <TextInput
-            style={styles.input}
+            style={[styles.input, isRandomScene && styles.inputOnScene]}
             placeholder={t('signIn.placeholder.email')}
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={isRandomScene ? '#64748b' : colors.textMuted}
             value={email}
             onChangeText={(value) => {
               emailRef.current = value;
@@ -128,16 +156,23 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             }}
             autoCapitalize="none"
             autoCorrect={false}
+            spellCheck={false}
             keyboardType="email-address"
-            textContentType="username"
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
             editable={!busy}
           />
 
           <View style={styles.passwordWrap}>
             <TextInput
-              style={[styles.input, styles.passwordInput]}
+              style={[
+                styles.input,
+                styles.passwordInput,
+                isRandomScene && styles.inputOnScene,
+              ]}
               placeholder={t('signIn.placeholder.password')}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={isRandomScene ? '#64748b' : colors.textMuted}
               value={password}
               onChangeText={(value) => {
                 passwordRef.current = value;
@@ -145,7 +180,11 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               }}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
-              textContentType="password"
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
               editable={!busy}
             />
             <Pressable
@@ -154,9 +193,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               hitSlop={8}
             >
               {showPassword ? (
-                <EyeOff color={colors.textMuted} size={20} />
+                <EyeOff color={isRandomScene ? '#475569' : colors.textMuted} size={20} />
               ) : (
-                <Eye color={colors.textMuted} size={20} />
+                <Eye color={isRandomScene ? '#475569' : colors.textMuted} size={20} />
               )}
             </Pressable>
           </View>
@@ -167,7 +206,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             disabled={busy}
           >
             {busy ? (
-              <ActivityIndicator color={colors.text} />
+              <ActivityIndicator color="#ffffff" />
             ) : (
               <Text style={styles.primaryBtnText}>{t('signIn.button.email')}</Text>
             )}
@@ -197,6 +236,9 @@ function createStyles(colors) {
     justifyContent: 'center',
     borderRadius: 12,
     backgroundColor: colors.surface,
+  },
+  settingsBtnOnScene: {
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
   },
   scroll: {
     flexGrow: 1,
@@ -239,6 +281,11 @@ function createStyles(colors) {
     fontSize: 16,
     marginBottom: 12,
   },
+  inputOnScene: {
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    color: '#0f172a',
+  },
   passwordWrap: {
     position: 'relative',
     marginBottom: 12,
@@ -264,7 +311,7 @@ function createStyles(colors) {
     opacity: 0.7,
   },
   primaryBtnText: {
-    color: colors.text,
+    color: '#ffffff',
     fontSize: 17,
     fontWeight: '700',
   },

@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   APPEARANCE_DARK,
@@ -9,7 +9,11 @@ import {
   loadAppearance,
   saveAppearance,
 } from '../lib/appearance';
-import { resolveSceneBackground } from '../lib/bgAssets';
+import {
+  loadStoredSceneLevel,
+  resolveSceneBackground,
+  saveStoredSceneLevel,
+} from '../lib/bgAssets';
 
 const AppearanceContext = createContext(null);
 
@@ -17,16 +21,22 @@ export function AppearanceProvider({ children }) {
   const [mode, setModeState] = useState(APPEARANCE_RANDOM);
   const [ready, setReady] = useState(false);
   const [weeklyBg, setWeeklyBg] = useState(null);
+  const [sceneLevel, setSceneLevelState] = useState(0);
+  const sceneLevelRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const loaded = await loadAppearance();
+      const [loaded, storedLevel] = await Promise.all([
+        loadAppearance(),
+        loadStoredSceneLevel(),
+      ]);
       if (cancelled) return;
       setModeState(loaded);
+      sceneLevelRef.current = storedLevel;
+      setSceneLevelState(storedLevel);
       if (loaded === APPEARANCE_RANDOM) {
-        const bg = resolveSceneBackground();
-        if (!cancelled) setWeeklyBg(bg);
+        setWeeklyBg(resolveSceneBackground(storedLevel));
       }
       if (!cancelled) setReady(true);
     })();
@@ -39,12 +49,28 @@ export function AppearanceProvider({ children }) {
     const normalized = await saveAppearance(nextMode);
     setModeState(normalized);
     if (normalized === APPEARANCE_RANDOM) {
-      setWeeklyBg(resolveSceneBackground());
+      setWeeklyBg(resolveSceneBackground(sceneLevelRef.current));
     } else {
       setWeeklyBg(null);
     }
     return normalized;
   }, []);
+
+  /** Keep Image theme scene in sync with season journey level (changes every 50 levels). */
+  const setSceneLevel = useCallback((level) => {
+    const n = Number(level);
+    if (!Number.isFinite(n) || n <= 0) return;
+    const next = Math.floor(n);
+    if (next === sceneLevelRef.current) return;
+    sceneLevelRef.current = next;
+    setSceneLevelState(next);
+    saveStoredSceneLevel(next);
+  }, []);
+
+  useEffect(() => {
+    if (mode !== APPEARANCE_RANDOM) return;
+    setWeeklyBg(resolveSceneBackground(sceneLevel));
+  }, [mode, sceneLevel]);
 
   const value = useMemo(
     () => ({
@@ -54,10 +80,12 @@ export function AppearanceProvider({ children }) {
       isDark: mode === APPEARANCE_DARK,
       isRandomScene: mode === APPEARANCE_RANDOM,
       weeklyBg,
+      sceneLevel,
+      setSceneLevel,
       ww: getWW(mode),
       colors: getColors(mode),
     }),
-    [mode, setMode, ready, weeklyBg]
+    [mode, setMode, ready, weeklyBg, sceneLevel, setSceneLevel]
   );
 
   return (
@@ -78,6 +106,8 @@ export function useAppearance() {
       isDark: false,
       isRandomScene: true,
       weeklyBg: null,
+      sceneLevel: 0,
+      setSceneLevel: () => {},
       ww: getWW(APPEARANCE_RANDOM),
       colors: getColors(APPEARANCE_RANDOM),
     };

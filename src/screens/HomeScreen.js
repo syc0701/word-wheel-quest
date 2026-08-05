@@ -177,6 +177,7 @@ function useHomePalette() {
 export default function HomeScreen({ navigate }) {
   const palette = useHomePalette();
   const { colors } = palette;
+  const { setSceneLevel } = useAppearance();
   const t = useT();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -244,6 +245,10 @@ export default function HomeScreen({ navigate }) {
   const dailyUnlocked =
     journeyLevel != null && journeyLevel >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
   const canPlay = Boolean(puzzle) && !loading && !error;
+
+  useEffect(() => {
+    if (journeyLevel != null) setSceneLevel(journeyLevel);
+  }, [journeyLevel, setSceneLevel]);
 
   useEffect(() => {
     if (!puzzle) return;
