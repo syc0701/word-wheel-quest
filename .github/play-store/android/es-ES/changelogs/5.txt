@@ -1,0 +1,7 @@
+¡Bienvenido a Word Wheel Quest! Nuestra primera versión.
+
+- Resuelve pistas tipo crucigrama deslizando letras en la rueda
+- Las palabras extra dan monedas
+- Pistas suaves y un ritmo relajado, sin presión
+
+¡Gracias por jugar! Nos encantaría conocer tu opinión.

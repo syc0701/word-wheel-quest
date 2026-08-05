@@ -7,6 +7,12 @@ platform :android do
     ENV["FL_NUMBER_OF_THREADS"] = "1"
     ENV["DELIVER_NUMBER_OF_THREADS"] = "1"
     ENV["FL_MAX_NUMBER_OF_THREADS"] = "1"
+    sync_play_store_text!
+  end
+
+  def sync_play_store_text!
+    root = File.expand_path("..", __dir__)
+    sh("bash", File.join(root, "scripts/sync-play-store-text.sh"))
   end
 
   def patch_supply_metadata_without_release!
@@ -106,6 +112,7 @@ platform :android do
     # Changelogs attach to a version code that already exists on a track.
     # Pass version_code:N to target a specific build, otherwise supply
     # resolves it from the track.
+    sync_play_store_text!
     version_code = options[:version_code]
     upload_to_play_store(
       metadata_path: "fastlane/metadata/android",

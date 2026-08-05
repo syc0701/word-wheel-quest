@@ -110,14 +110,16 @@ npm run android:prebuild   # or android:run — autolinks play-integrity
 Fastlane lives at the **repo root** (not under `android/`) so `expo prebuild --clean` / `npm run android:studio` does not delete it.
 
 - **Service account key**: `fastlane/play-store-service-account.json` (gitignored)
-- **Listing files**: `fastlane/metadata/android/en-US/`
+- **Listing text (source of truth)**: `.github/play-store/android/<locale>/`
+- **Images / screenshots**: `fastlane/metadata/android/<locale>/images/`
+- Text is synced into `fastlane/metadata` before upload via `npm run metadata:sync`
 
 ```bash
 bundle install                # first time / after Gemfile changes
 npm run screenshots           # phone + 7" + 10" tablet /01–/08 for all 10 langs
 npm run screenshots:upload    # capture + upload listing / screenshots to Play
 # Optional: SCREENSHOT_DEVICES=tenInch  or  SNAPSHOT_LANGUAGES=en-US,ko-KR
-npm run metadata:upload       # upload title / descriptions / images only
+npm run metadata:upload       # sync text from .github, then upload listing / images
 ```
 
 ## Backend notes
