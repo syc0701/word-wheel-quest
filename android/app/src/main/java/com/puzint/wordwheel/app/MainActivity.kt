@@ -1,8 +1,13 @@
 package com.puzint.wordwheel.app
 import expo.modules.splashscreen.SplashScreenManager
 
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -13,14 +18,28 @@ import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Set the theme to AppTheme BEFORE onCreate to support
-    // coloring the background, status bar, and navigation bar.
-    // This is required for expo-splash-screen.
-    // setTheme(R.style.AppTheme);
+    // Apply AppTheme before splash so system bars don't use the light window default.
+    // setTheme(R.style.AppTheme)
     // @generated begin expo-splashscreen - expo prebuild (DO NOT MODIFY) sync-f3ff59a738c56c9a6119210cb55f0b613eb8b6af
     SplashScreenManager.registerOnActivity(this)
     // @generated end expo-splashscreen
     super.onCreate(null)
+
+    // Draw under status/nav bars; transparent bars + light icons (dark UI).
+    enableEdgeToEdge(
+      statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+      navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+    )
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    @Suppress("DEPRECATION")
+    run {
+      window.statusBarColor = Color.TRANSPARENT
+      window.navigationBarColor = Color.TRANSPARENT
+    }
+
+    // Hide native activity title / ActionBar.
+    title = ""
+    supportActionBar?.hide()
   }
 
   /**

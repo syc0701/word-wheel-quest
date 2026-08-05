@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SCREENS } from './constants/theme';
 import { AppearanceProvider } from './context/AppearanceContext';
@@ -195,15 +196,17 @@ function AppShell() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AppearanceProvider>
-        <AudioProvider>
-          <PlayTimerProvider>
-            <AppShell />
-          </PlayTimerProvider>
-        </AudioProvider>
-      </AppearanceProvider>
-    </LanguageProvider>
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#0A2A4A' }}>
+      <LanguageProvider>
+        <AppearanceProvider>
+          <AudioProvider>
+            <PlayTimerProvider>
+              <AppShell />
+            </PlayTimerProvider>
+          </AudioProvider>
+        </AppearanceProvider>
+      </LanguageProvider>
+    </SafeAreaProvider>
   );
 }
 

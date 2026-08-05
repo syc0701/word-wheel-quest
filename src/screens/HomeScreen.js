@@ -28,6 +28,7 @@ import { SCREENS, PLAY_MODE } from '../constants/theme';
 import { APPEARANCE_DARK } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WHEEL_ART = require('../assets/icon.png');
 
@@ -179,6 +180,7 @@ export default function HomeScreen({ navigate }) {
   const { colors } = palette;
   const { setSceneLevel } = useAppearance();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
@@ -266,7 +268,7 @@ export default function HomeScreen({ navigate }) {
   return (
     <GradientBackground variant="home">
       <View style={styles.container}>
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}>
           <View style={styles.topBarSpacer} />
           <Pressable
             style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
@@ -278,7 +280,7 @@ export default function HomeScreen({ navigate }) {
           </Pressable>
         </View>
 
-        <View style={styles.body}>
+        <View style={[styles.body, { paddingBottom: 16 + insets.bottom }]}>
           <View style={styles.headerBlock}>
             <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
             <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
@@ -451,7 +453,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingTop: 52,
     paddingHorizontal: 16,
     paddingBottom: 2,
   },
@@ -468,7 +469,6 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     paddingHorizontal: 18,
-    paddingBottom: 16,
   },
   headerBlock: {
     paddingTop: 4,

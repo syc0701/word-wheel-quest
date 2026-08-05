@@ -22,6 +22,7 @@ import {
 import { PLAY_MODE, SCREENS } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEEKDAY_KEYS = [
   'daily.weekday.sun',
@@ -51,6 +52,7 @@ function buildMonthDays(year, month, minYmd, maxYmd) {
 export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const [accessChecked, setAccessChecked] = useState(false);
   const [dailyAllowed, setDailyAllowed] = useState(false);
 
@@ -171,7 +173,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}>
         <Pressable
           style={[
             styles.backBtn,
@@ -353,7 +355,6 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 52,
     paddingHorizontal: 16,
     paddingBottom: 4,
   },

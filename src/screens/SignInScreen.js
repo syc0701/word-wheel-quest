@@ -15,6 +15,7 @@ import { APP_URLS } from '../constants/store';
 import { SCREENS } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   loginWithPassword,
   signInErrorMessage,
@@ -23,6 +24,7 @@ import {
 export default function SignInScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const backScreen = SCREENS.SETTINGS;
 
   const emailRef = useRef('');
@@ -99,7 +101,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     });
   };
 
-  const styles = createStyles(colors);
+  const styles = createStyles(colors, insets);
 
   return (
     <View style={styles.container}>
@@ -217,7 +219,8 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   );
 }
 
-function createStyles(colors) {
+function createStyles(colors, insets) {
+  const top = Math.max(insets?.top ?? 0, 12);
   return StyleSheet.create({
   container: {
     flex: 1,
@@ -227,7 +230,7 @@ function createStyles(colors) {
   },
   settingsBtn: {
     position: 'absolute',
-    top: 52,
+    top: top + 8,
     right: 16,
     zIndex: 2,
     width: 44,
@@ -244,8 +247,8 @@ function createStyles(colors) {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingTop: 96,
-    paddingBottom: 40,
+    paddingTop: top + 56,
+    paddingBottom: 40 + (insets?.bottom ?? 0),
   },
   title: {
     color: colors.text,

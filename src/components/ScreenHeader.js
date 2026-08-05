@@ -1,13 +1,15 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useAppearance } from '../context/AppearanceContext';
 
 /** Shared top bar with back button — `onBack` defaults to no-op if omitted. */
 export default function ScreenHeader({ title, onBack }) {
   const { colors, isRandomScene } = useAppearance();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.topBar}>
+    <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}>
       <Pressable
         style={[
           styles.backBtn,
@@ -37,7 +39,6 @@ const styles = StyleSheet.create({
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 52,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },

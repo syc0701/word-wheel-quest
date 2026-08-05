@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { SystemBars } from 'react-native-edge-to-edge';
 import {
   APPEARANCE_DARK,
   APPEARANCE_LIGHT,
@@ -90,7 +90,7 @@ export function AppearanceProvider({ children }) {
 
   return (
     <AppearanceContext.Provider value={value}>
-      <StatusBar style={value.ww.statusBar === 'dark' ? 'dark' : 'light'} />
+      <SystemBars style={value.ww.statusBar === 'dark' ? 'dark' : 'light'} />
       {children}
     </AppearanceContext.Provider>
   );

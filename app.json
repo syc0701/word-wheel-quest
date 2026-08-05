@@ -3,7 +3,7 @@
     "name": "Word Wheel Quest",
     "slug": "word-wheel-quest",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -12,10 +12,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A2A4A"
     },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#00000000",
+      "translucent": true
+    },
     "android": {
       "package": "com.puzint.wordwheel.app",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 5,
+      "versionCode": 6,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
       "permissions": [
@@ -40,6 +45,7 @@
       "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
+      "./plugins/withEnableEdgeToEdge",
       "expo-asset",
       [
         "expo-audio",

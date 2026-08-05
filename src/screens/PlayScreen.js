@@ -73,6 +73,7 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useAudio } from '../context/AudioContext';
 import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 /** Keep wheel clear of the home indicator. */
@@ -87,6 +88,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const { playSfx } = useAudio();
   const { timerEnabled } = usePlayTimer();
   const t = useT();
+  const insets = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -963,7 +965,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     <GradientBackground variant="play">
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingTop: Math.max(insets.top, 12) + 8 },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -1060,7 +1065,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       </ScrollView>
 
       {/* Wheel lives outside ScrollView so pan gestures are never stolen mid-drag. */}
-      <View style={styles.wheelDock}>
+      <View style={[styles.wheelDock, { paddingBottom: 28 + insets.bottom }]}>
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
             <View style={styles.coinBurstWrap}>
@@ -1212,12 +1217,10 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 52,
     paddingBottom: 12,
   },
   wheelDock: {
     paddingHorizontal: 16,
-    paddingBottom: 28,
     paddingTop: 4,
   },
   centered: {
