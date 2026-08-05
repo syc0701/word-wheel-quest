@@ -9,7 +9,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { WW } from '../constants/theme';
+import { useAppearance } from '../context/AppearanceContext';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
 
 const SPRING_POP = { damping: 8, stiffness: 280, mass: 0.55 };
@@ -32,6 +32,7 @@ export default function RevealCell({
   celebrateDelay = 0,
   onPress,
 }) {
+  const { ww } = useAppearance();
   const scale = useSharedValue(1);
   const lift = useSharedValue(0);
   const glow = useSharedValue(0);
@@ -115,8 +116,17 @@ export default function RevealCell({
         style={[
           styles.cell,
           { width: size, height: size },
-          isHint ? styles.cellHint : styles.cellFound,
-          isSelected && styles.cellSelected,
+          isHint
+            ? { backgroundColor: ww.hintSoft, borderWidth: 2, borderColor: '#fcd34d' }
+            : {
+                backgroundColor: ww.successSoft,
+                borderWidth: 2,
+                borderColor: ww.gridRevealedBorder || '#bbf7d0',
+              },
+          isSelected && {
+            borderWidth: 3.5,
+            borderColor: ww.wheelLine || '#f59e0b',
+          },
           celebrate && (mode === 'already' ? styles.cellAlready : styles.cellCelebrate),
         ]}
       >
@@ -128,7 +138,14 @@ export default function RevealCell({
           </View>
         ) : null}
         {letter ? (
-          <Text style={[styles.letter, isHint && styles.letterHint]}>{letter}</Text>
+          <Text
+            style={[
+              styles.letter,
+              { color: isHint ? ww.hintText : ww.successText },
+            ]}
+          >
+            {letter}
+          </Text>
         ) : null}
       </Pressable>
     </Animated.View>
@@ -152,20 +169,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     position: 'relative',
   },
-  cellFound: {
-    backgroundColor: WW.successSoft,
-    borderWidth: 2,
-    borderColor: '#bbf7d0',
-  },
-  cellHint: {
-    backgroundColor: WW.hintSoft,
-    borderWidth: 2,
-    borderColor: '#fcd34d',
-  },
-  cellSelected: {
-    borderWidth: 3.5,
-    borderColor: WW.wheelLine || '#f59e0b',
-  },
   cellCelebrate: {
     backgroundColor: '#d9f99d',
     borderColor: '#84cc16',
@@ -178,10 +181,6 @@ const styles = StyleSheet.create({
   letter: {
     fontSize: 17,
     fontWeight: '900',
-    color: WW.successText,
-  },
-  letterHint: {
-    color: WW.hintText,
   },
   numberBadge: {
     position: 'absolute',

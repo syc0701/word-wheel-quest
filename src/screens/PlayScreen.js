@@ -15,13 +15,12 @@ import { ArrowLeft, BookOpen, ChevronRight, Clock, Lightbulb, Tornado } from 'lu
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
-import ClueLetterRow from '../components/ClueLetterRow';
 import SwipeableClueStrip from '../components/SwipeableClueStrip';
 import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
-import BonusWordModal from '../components/BonusWordModal';
+// import BonusWordModal from '../components/BonusWordModal';
 import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
@@ -258,7 +257,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return keys;
   }, [hintLetters, foundWords, wordPositions]);
   const puzzleComplete = foundWords.length >= targetWords.length && targetWords.length > 0;
-  const selectedWheelWord = selectedIndices.map((i) => wheelTiles[i]?.letter || '').join('');
 
   useEffect(() => {
     if (!timerEnabled || !timerStartedAt) {
@@ -749,13 +747,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             return next;
           });
           playSfx('chime');
-          // Gift applies when the modal closes so the coin row can animate 3 → 4.
-          setBonusWordModal({
-            visible: true,
-            word,
-            awardedGift: true,
-            pendingGift: WORD_WHEEL_BONUS_WORD_GIFT,
-          });
+          // Bonus-word popup disabled — still award coins + coin pulse.
+          // setBonusWordModal({
+          //   visible: true,
+          //   word,
+          //   awardedGift: true,
+          //   pendingGift: WORD_WHEEL_BONUS_WORD_GIFT,
+          // });
+          applyBonusWordGift(WORD_WHEEL_BONUS_WORD_GIFT);
           return true;
         } finally {
           bonusWordLookupRef.current = false;
@@ -800,6 +799,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       wallet,
       bonusWordsFound,
       persistBonusWords,
+      applyBonusWordGift,
     ]
   );
 
@@ -1041,14 +1041,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           }
           prevA11y={t('play.clue.prev')}
           nextA11y={t('play.clue.next')}
-          active={Boolean(selectedWheelWord)}
-          overlay={
-            selectedWheelWord ? (
-              <View style={styles.wordOverlay}>
-                <ClueLetterRow word={selectedWheelWord} />
-              </View>
-            ) : null
-          }
+          active={false}
+          overlay={null}
         />
 
         {timerEnabled ? (
@@ -1185,6 +1179,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         }
       />
 
+      {/* Bonus-word discovery popup disabled
       <BonusWordModal
         visible={bonusWordModal.visible}
         word={bonusWordModal.word}
@@ -1192,6 +1187,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         giftCoins={bonusWordModal.pendingGift || WORD_WHEEL_BONUS_WORD_GIFT}
         onClose={handleBonusWordClose}
       />
+      */}
 
       <TreasureBonusWordsModal
         visible={treasureOpen}
@@ -1306,12 +1302,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.4,
-  },
-  wordOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.72)',
   },
   wheelRow: {
     flexDirection: 'row',

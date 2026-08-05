@@ -263,15 +263,15 @@ export default function LetterWheel({
     clearDragWatchdog,
   ]);
 
-  const syncPath = useCallback((nextPath) => {
+  /** Local path only — never push to parent mid-drag (parent re-renders freeze the gesture). */
+  const syncPathLocal = useCallback((nextPath) => {
     pathRef.current = nextPath;
     setDisplayIndices(nextPath);
-    onSelectionChangeRef.current(nextPath);
   }, []);
 
   useEffect(() => {
     // Parent cleared selection — drop a stuck drag line.
-    if (selectedIndices.length === 0 && pathRef.current.length > 0) {
+    if (selectedIndices.length === 0 && pathRef.current.length > 0 && phaseRef.current !== 'dragging') {
       clearWheelSelection();
       return;
     }
@@ -286,9 +286,13 @@ export default function LetterWheel({
       const word = pathRef.current.map((i) => tilesRef.current[i]?.letter || '').join('');
       // Always snap-clear first — never leave a frozen orange line while parent updates.
       clearWheelSelection();
+      onSelectionChangeRef.current([]);
       if (shouldSubmit && !submittedRef.current) {
         submittedRef.current = true;
-        onDragEndRef.current?.(word);
+        // Defer submit so clear paints before PlayScreen heavy updates.
+        requestAnimationFrame(() => {
+          onDragEndRef.current?.(word);
+        });
       }
     },
     [clearWheelSelection]
@@ -298,12 +302,14 @@ export default function LetterWheel({
     (x, y) => {
       if (phaseRef.current === 'shuffling' || shufflingRef.current) return;
       submittedRef.current = false;
+      // Ensure parent isn't holding a stale selection overlay.
+      onSelectionChangeRef.current([]);
       setPhaseBoth('dragging');
       fingerX.value = x;
       fingerY.value = y;
       fingerVisible.value = 1;
       const hit = findNodeAtPoint(nodesRef.current, x, y, hitRadiusRef.current);
-      syncPath(hit ? [hit.index] : []);
+      syncPathLocal(hit ? [hit.index] : []);
 
       clearDragWatchdog();
       dragWatchdogRef.current = setTimeout(() => {
@@ -314,7 +320,7 @@ export default function LetterWheel({
         }
       }, DRAG_WATCHDOG_MS);
     },
-    [syncPath, setPhaseBoth, fingerX, fingerY, fingerVisible, clearDragWatchdog, finishDrag]
+    [syncPathLocal, setPhaseBoth, fingerX, fingerY, fingerVisible, clearDragWatchdog, finishDrag]
   );
 
   const handleTouchMove = useCallback(
@@ -323,9 +329,9 @@ export default function LetterWheel({
       const hit = findNodeAtPoint(nodesRef.current, x, y, hitRadiusRef.current);
       if (!hit) return;
       const next = updateSelectionPath(pathRef.current, hit.index);
-      if (next !== pathRef.current) syncPath(next);
+      if (next !== pathRef.current) syncPathLocal(next);
     },
-    [syncPath]
+    [syncPathLocal]
   );
 
   const handleTouchEnd = useCallback(() => {
