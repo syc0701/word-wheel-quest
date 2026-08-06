@@ -43,6 +43,7 @@ export const IAP_PACKAGES = [
     description: 'Jumpstart your journey with extra coins!',
     priceUsd: '$3.99',
     icon: 'starterChest',
+    purchasable: true,
   },
   {
     packageId: 'bundle_classic',
@@ -53,6 +54,7 @@ export const IAP_PACKAGES = [
     description: 'Fuel your brain and conquer tough levels.',
     priceUsd: '$1.99',
     icon: 'classicSwords',
+    purchasable: true,
   },
   {
     packageId: 'bundle_master',
@@ -63,6 +65,7 @@ export const IAP_PACKAGES = [
     description: 'The ultimate stash for serious word smiths.',
     priceUsd: '$2.99',
     icon: 'masterScroll',
+    purchasable: true,
   },
   {
     packageId: 'coins_small',
@@ -73,6 +76,7 @@ export const IAP_PACKAGES = [
     description: 'Adds 300 coins to player balance',
     priceUsd: '$0.99',
     icon: 'goldCoins',
+    purchasable: true,
   },
   {
     packageId: 'coins_large',
@@ -83,6 +87,7 @@ export const IAP_PACKAGES = [
     description: 'Adds 1,000 coins to player balance',
     priceUsd: '$2.49',
     icon: 'goldCoins',
+    purchasable: true,
   },
 ];
 

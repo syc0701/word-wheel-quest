@@ -10,11 +10,8 @@ import {
 import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
 import WordWheelApi from '../lib/api';
 import { WORD_WHEEL_DAILY_CALENDAR_MIN, WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
-import { resolveWordWheelGridSize } from '../lib/constants';
-import { parseWords } from '../lib/gridReveal';
-import { resolveJourneyLevel } from '../lib/puzzleLevel';
+import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import {
-  addMontrealCalendarDays,
   clampYmd,
   formatDisplayDate,
   montrealYmdFromDate,
@@ -32,6 +29,33 @@ const WEEKDAY_KEYS = [
   'daily.weekday.fri',
   'daily.weekday.sat',
 ];
+
+function formatDifficulty(level) {
+  const raw = String(level || '').trim();
+  if (!raw) return '';
+  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+}
+
+function ymKey(ymd) {
+  return String(ymd || '').slice(0, 7);
+}
+
+function shiftCalendarMonth(ymd, deltaMonths) {
+  const [y0, m0, d0] = ymd.split('-').map(Number);
+  let y = y0;
+  let m = m0 + deltaMonths;
+  while (m < 1) {
+    m += 12;
+    y -= 1;
+  }
+  while (m > 12) {
+    m -= 12;
+    y += 1;
+  }
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const day = Math.min(d0, daysInMonth);
+  return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
 
 function buildMonthDays(year, month, minYmd, maxYmd) {
   const first = new Date(Date.UTC(year, month - 1, 1));
@@ -114,6 +138,15 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     () => buildMonthDays(year, month, minYmd, todayYmd),
     [year, month, minYmd, todayYmd]
   );
+  const monthLabel = useMemo(
+    () =>
+      new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(undefined, {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      }),
+    [year, month]
+  );
 
   const setDate = useCallback(
     (ymd) => {
@@ -122,8 +155,8 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     [minYmd, todayYmd]
   );
 
-  const shiftDay = useCallback(
-    (delta) => setDate(addMontrealCalendarDays(selectedDate, delta)),
+  const shiftMonth = useCallback(
+    (delta) => setDate(shiftCalendarMonth(selectedDate, delta)),
     [selectedDate, setDate]
   );
 
@@ -153,12 +186,15 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     };
   }, [selectedDate, t, dailyAllowed]);
 
-  const words = useMemo(() => parseWords(puzzle?.wordsInUse), [puzzle]);
-  const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
   const puzzleCompleted = Boolean(puzzle?.completed);
-  const isToday = selectedDate === todayYmd;
-  const canGoPrev = selectedDate > minYmd;
-  const canGoNext = selectedDate < todayYmd;
+  const puzzleTitle = String(puzzle?.title || '').trim();
+  const difficultyLabel = formatDifficulty(puzzle?.difficultyLevel);
+  const wordCount = useMemo(
+    () => (puzzle?.id ? resolvePuzzleWordCount(puzzle) : 0),
+    [puzzle]
+  );
+  const canGoPrevMonth = ymKey(selectedDate) > ymKey(minYmd);
+  const canGoNextMonth = ymKey(selectedDate) < ymKey(todayYmd);
   const canPlay = Boolean(puzzle?.id) && !loading;
 
   if (!accessChecked || !dailyAllowed) {
@@ -171,22 +207,23 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.topBar}>
-        <Pressable
-          style={[
-            styles.backBtn,
-            { backgroundColor: isRandomScene ? 'rgba(255,255,255,0.94)' : colors.surface },
-          ]}
-          onPress={() => navigate(SCREENS.HOME)}
-          accessibilityLabel={t('daily.a11y.back')}
-        >
-          <ArrowLeft color={isRandomScene ? '#0b3d36' : colors.text} size={22} />
-        </Pressable>
-        <View style={styles.topBarSpacer} />
-      </View>
-
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>{t('daily.kicker')}</Text>
+        <View style={styles.headerRow}>
+          <Pressable
+            style={[
+              styles.backBtn,
+              { backgroundColor: isRandomScene ? 'rgba(255,255,255,0.94)' : colors.surface },
+            ]}
+            onPress={() => navigate(SCREENS.HOME)}
+            accessibilityLabel={t('daily.a11y.back')}
+          >
+            <ArrowLeft color={isRandomScene ? '#0b3d36' : colors.text} size={22} />
+          </Pressable>
+          <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>
+            {t('daily.kicker')}
+          </Text>
+        </View>
+
         <Text style={[styles.title, { color: colors.text }, sceneText]}>{t('daily.title')}</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText]}>
           {t('daily.subtitle')}
@@ -198,55 +235,26 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
           ]}
         >
-          <View style={styles.dateRow}>
+          <View style={styles.monthNav}>
             <Pressable
-              style={[
-                styles.navBtn,
-                { backgroundColor: colors.surfaceLight },
-                !canGoPrev && styles.navBtnDisabled,
-              ]}
-              disabled={!canGoPrev || loading}
-              onPress={() => shiftDay(-1)}
+              style={[styles.navBtn, !canGoPrevMonth && styles.navBtnDisabled]}
+              disabled={!canGoPrevMonth || loading}
+              onPress={() => shiftMonth(-1)}
+              hitSlop={8}
             >
               <ChevronLeft color={colors.text} size={22} />
             </Pressable>
-            <View style={styles.dateCenter}>
-              <Text style={[styles.dateText, { color: colors.text }]}>
-                {formatDisplayDate(selectedDate)}
-              </Text>
-              {isToday ? (
-                <View style={[styles.todayChip, { backgroundColor: colors.surfaceLight }]}>
-                  <Text style={[styles.todayChipText, { color: colors.primaryGlow }]}>{t('daily.today')}</Text>
-                </View>
-              ) : null}
-            </View>
+            <Text style={[styles.monthLabel, { color: colors.text }]}>{monthLabel}</Text>
             <Pressable
-              style={[
-                styles.navBtn,
-                { backgroundColor: colors.surfaceLight },
-                !canGoNext && styles.navBtnDisabled,
-              ]}
-              disabled={!canGoNext || loading}
-              onPress={() => shiftDay(1)}
+              style={[styles.navBtn, !canGoNextMonth && styles.navBtnDisabled]}
+              disabled={!canGoNextMonth || loading}
+              onPress={() => shiftMonth(1)}
+              hitSlop={8}
             >
               <ChevronRight color={colors.text} size={22} />
             </Pressable>
           </View>
-        </View>
 
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-          ]}
-        >
-          <Text style={[styles.monthLabel, { color: colors.text }]}>
-            {new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(undefined, {
-              month: 'long',
-              year: 'numeric',
-              timeZone: 'UTC',
-            })}
-          </Text>
           <View style={styles.weekRow}>
             {WEEKDAY_KEYS.map((key, index) => (
               <Text key={`weekday-${index}`} style={[styles.weekDay, { color: colors.textMuted }]}>
@@ -261,30 +269,30 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                   key={cell.ymd}
                   disabled={cell.disabled}
                   onPress={() => setDate(cell.ymd)}
-                  style={[
-                    styles.dayCell,
-                    cell.ymd === selectedDate && {
-                      backgroundColor: colors.primary,
-                      borderRadius: 999,
-                    },
-                    cell.disabled && styles.dayCellDisabled,
-                  ]}
+                  style={[styles.dayCell, cell.disabled && styles.dayCellDisabled]}
                 >
-                  <Text
+                  <View
                     style={[
-                      styles.dayText,
-                      {
-                        color:
-                          cell.ymd === selectedDate
-                            ? '#fff'
-                            : cell.disabled
-                              ? colors.textMuted
-                              : colors.text,
-                      },
+                      styles.dayCircle,
+                      cell.ymd === selectedDate && { backgroundColor: colors.primary },
                     ]}
                   >
-                    {cell.day}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.dayText,
+                        {
+                          color:
+                            cell.ymd === selectedDate
+                              ? '#fff'
+                              : cell.disabled
+                                ? colors.textMuted
+                                : colors.text,
+                        },
+                      ]}
+                    >
+                      {cell.day}
+                    </Text>
+                  </View>
                 </Pressable>
               ) : (
                 <View key={`pad-${idx}`} style={styles.dayCell} />
@@ -296,27 +304,61 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
         <View
           style={[
             styles.card,
-            styles.previewCard,
+            styles.selectedCard,
             { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
           ]}
         >
+          <View style={styles.selectedHeader}>
+            <Text style={[styles.selectedKicker, { color: colors.textMuted }]}>
+              {t('daily.selectedPuzzle')}
+            </Text>
+            {puzzleCompleted ? (
+              <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
+                <Text style={[styles.completedChipText, { color: colors.success }]}>
+                  {t('daily.completed')}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+
+          <Text style={[styles.selectedDate, { color: colors.text }]}>
+            {formatDisplayDate(selectedDate)}
+          </Text>
+
           {loading ? (
-            <ActivityIndicator color={colors.primaryGlow} style={{ marginVertical: 8 }} />
+            <ActivityIndicator color={colors.primaryGlow} style={{ marginTop: 12 }} />
           ) : puzzle ? (
-            <>
-              {puzzleCompleted ? (
-                <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
-                  <Text style={[styles.completedChipText, { color: colors.success }]}>
-                    {t('daily.completed')}
+            <View style={styles.puzzleInfo}>
+              {difficultyLabel ? (
+                <View
+                  style={[
+                    styles.difficultyChip,
+                    {
+                      backgroundColor: colors.surfaceLight,
+                      borderColor: colors.primary,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
+                    {difficultyLabel}
                   </Text>
                 </View>
               ) : null}
-              <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
-                {t('daily.meta', { n: words.length, size: gridSize })}
-              </Text>
-            </>
+              <View style={styles.puzzleCopy}>
+                {puzzleTitle ? (
+                  <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
+                    {puzzleTitle}
+                  </Text>
+                ) : null}
+                {wordCount > 0 ? (
+                  <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
+                    {t('common.words', { n: wordCount })}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
           ) : (
-            <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
+            <Text style={[styles.puzzleMeta, { color: colors.textMuted, marginTop: 10 }]}>
               {error || t('daily.empty')}
             </Text>
           )}
@@ -334,7 +376,9 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           }
         >
           <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
-          <Text style={styles.primaryBtnText}>{puzzleCompleted ? t('daily.replay') : t('common.play')}</Text>
+          <Text style={styles.primaryBtnText}>
+            {puzzleCompleted ? t('daily.replay') : t('common.play')}
+          </Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -350,12 +394,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topBar: {
+  scroll: {
+    paddingTop: 52,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 52,
-    paddingHorizontal: 16,
-    paddingBottom: 4,
+    gap: 12,
+    marginBottom: 10,
   },
   backBtn: {
     width: 40,
@@ -364,20 +412,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topBarSpacer: {
-    flex: 1,
-  },
-  scroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
   kicker: {
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    marginTop: 8,
-    marginBottom: 8,
   },
   title: {
     fontSize: 28,
@@ -396,44 +435,26 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
-  dateRow: {
+  monthNav: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   navBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   navBtnDisabled: {
-    opacity: 0.4,
-  },
-  dateCenter: {
-    flex: 1,
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  dateText: {
-    fontSize: 15,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  todayChip: {
-    marginTop: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  todayChipText: {
-    fontSize: 11,
-    fontWeight: '700',
+    opacity: 0.35,
   },
   monthLabel: {
+    flex: 1,
     fontWeight: '700',
     fontSize: 15,
-    marginBottom: 10,
     textAlign: 'center',
   },
   weekRow: {
@@ -459,36 +480,79 @@ const styles = StyleSheet.create({
   dayCellDisabled: {
     opacity: 0.45,
   },
+  dayCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   dayText: {
     fontSize: 14,
     fontWeight: '600',
+    lineHeight: 16,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
-  previewCard: {
+  selectedCard: {
+    alignItems: 'stretch',
+  },
+  selectedHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 96,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 8,
   },
-  puzzleTitle: {
-    flexShrink: 1,
+  selectedKicker: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+  },
+  selectedDate: {
     fontSize: 16,
     fontWeight: '700',
-    textAlign: 'left',
+  },
+  puzzleInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 12,
+  },
+  puzzleCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  puzzleTitle: {
+    fontSize: 16,
+    fontWeight: '700',
   },
   puzzleMeta: {
     fontSize: 14,
-    marginTop: 10,
-    textAlign: 'center',
+    marginTop: 4,
   },
   completedChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 999,
-    marginBottom: 10,
   },
   completedChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  difficultyChip: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginTop: 2,
+  },
+  difficultyChipText: {
     fontSize: 12,
     fontWeight: '700',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   primaryBtn: {
     marginTop: 4,

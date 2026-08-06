@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  ReduceMotion,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +10,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { APPEARANCE_LIGHT, APPEARANCE_RANDOM } from '../lib/appearance';
+import { APPEARANCE_DARK, APPEARANCE_RANDOM } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -46,7 +47,11 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
     progress.value = withDelay(
       delay,
       withRepeat(
-        withTiming(1, { duration, easing: Easing.linear }),
+        withTiming(1, {
+          duration,
+          easing: Easing.linear,
+          reduceMotion: ReduceMotion.Never,
+        }),
         -1,
         false
       )
@@ -95,16 +100,18 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
 
 /**
  * Soft drifting mist — rendered between background and UI chrome.
+ * Visibility is controlled by the parent (GradientBackground).
  */
 export default function HomeSmogEffect() {
   const { mode } = useAppearance();
   const banks = useMemo(() => makeSmogBanks(12), []);
-  if (mode !== APPEARANCE_LIGHT && mode !== APPEARANCE_RANDOM) return null;
 
   const color =
     mode === APPEARANCE_RANDOM
       ? 'rgba(226, 242, 255, 0.38)'
-      : 'rgba(255, 255, 255, 0.52)';
+      : mode === APPEARANCE_DARK
+        ? 'rgba(186, 230, 253, 0.28)'
+        : 'rgba(255, 255, 255, 0.52)';
 
   return (
     <View style={styles.layer} pointerEvents="none">

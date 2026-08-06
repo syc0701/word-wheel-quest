@@ -5,7 +5,6 @@
   "scripts": {
     "start": "expo start",
     "run:metro": "expo start --clear",
-    "android": "expo run:android",
     "ios": "npm run ios:run",
     "ios:run": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios",
     "ios:run:quiet": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && SIMCTL_CHILD_OS_ACTIVITY_MODE=disable expo run:ios 2>&1 | grep --line-buffered -Ev 'MediaToolbox|FigFilePlayer|FigFileAnalyzer|libFontParser'",

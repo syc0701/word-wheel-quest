@@ -22,7 +22,7 @@ import {
 } from '../services/cognitoAuth';
 
 export default function SignInScreen({ navigate, routeParams = {} }) {
-  const { colors } = useAppearance();
+  const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const backScreen = SCREENS.SETTINGS;
 
@@ -34,6 +34,20 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   const [busy, setBusy] = useState(false);
   const [appleBusy, setAppleBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // Image theme: dark chrome colors wash out on scene photos — use light over-photo type.
+  const onScene = isRandomScene;
+  const titleColor = onScene ? '#ffffff' : colors.text;
+  const mutedColor = onScene ? 'rgba(255, 255, 255, 0.9)' : colors.textMuted;
+  const linkColor = onScene ? '#5eead4' : colors.primaryGlow;
+  const iconColor = onScene ? '#ffffff' : colors.textMuted;
+  const sceneShadow = onScene
+    ? {
+        textShadowColor: 'rgba(0, 0, 0, 0.55)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 5,
+      }
+    : null;
 
   const finishSignIn = () => {
     navigate(backScreen, {
@@ -97,11 +111,11 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   return (
     <View style={styles.container}>
       <Pressable
-        style={styles.settingsBtn}
+        style={[styles.settingsBtn, onScene && styles.settingsBtnScene]}
         onPress={() => navigate(backScreen, routeParams)}
         hitSlop={8}
       >
-        <Settings color={colors.textMuted} size={22} />
+        <Settings color={iconColor} size={22} />
       </Pressable>
 
       <KeyboardAvoidingView
@@ -113,19 +127,21 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{t('signIn.title')}</Text>
+          <Text style={[styles.title, { color: titleColor }, sceneShadow]}>
+            {t('signIn.title')}
+          </Text>
 
-          <Text style={styles.legal}>
+          <Text style={[styles.legal, { color: mutedColor }, sceneShadow]}>
             {t('signIn.legal.prefix')}
             <Text
-              style={styles.legalLink}
+              style={[styles.legalLink, { color: linkColor }]}
               onPress={() => openLegal(APP_URLS.terms, t('signIn.legal.termsTitle'))}
             >
               {t('signIn.legal.termsLink')}
             </Text>
             {t('signIn.legal.and')}
             <Text
-              style={styles.legalLink}
+              style={[styles.legalLink, { color: linkColor }]}
               onPress={() => openLegal(APP_URLS.privacy, t('signIn.legal.privacyTitle'))}
             >
               {t('signIn.legal.privacyLink')}
@@ -133,7 +149,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             {t('signIn.legal.period')}
           </Text>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? (
+            <Text style={[styles.error, sceneShadow]}>{error}</Text>
+          ) : null}
 
           <TextInput
             style={styles.input}
@@ -185,16 +203,18 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             disabled={busy || appleBusy}
           >
             {busy ? (
-              <ActivityIndicator color={colors.text} />
+              <ActivityIndicator color="#ffffff" />
             ) : (
               <Text style={styles.primaryBtnText}>{t('signIn.button.email')}</Text>
             )}
           </Pressable>
 
           <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>{t('signIn.divider')}</Text>
-            <View style={styles.dividerLine} />
+            <View style={[styles.dividerLine, onScene && styles.dividerLineScene]} />
+            <Text style={[styles.dividerText, { color: mutedColor }, sceneShadow]}>
+              {t('signIn.divider')}
+            </Text>
+            <View style={[styles.dividerLine, onScene && styles.dividerLineScene]} />
           </View>
 
           {Platform.OS === 'ios' ? (
@@ -210,7 +230,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               )}
             </Pressable>
           ) : (
-            <Text style={styles.appleHint}>{t('signIn.apple.hint')}</Text>
+            <Text style={[styles.appleHint, { color: mutedColor }, sceneShadow]}>
+              {t('signIn.apple.hint')}
+            </Text>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -238,6 +260,11 @@ function createStyles(colors) {
     borderRadius: 12,
     backgroundColor: colors.surface,
   },
+  settingsBtnScene: {
+    backgroundColor: 'rgba(6, 32, 38, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+  },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -246,25 +273,24 @@ function createStyles(colors) {
     paddingBottom: 40,
   },
   title: {
-    color: colors.text,
     fontSize: 24,
     fontWeight: '800',
     lineHeight: 32,
     marginBottom: 16,
   },
   legal: {
-    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 24,
   },
   legalLink: {
-    color: colors.primaryGlow,
-    fontWeight: '600',
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   error: {
-    color: '#f87171',
+    color: '#fecaca',
     fontSize: 14,
+    fontWeight: '600',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -304,7 +330,7 @@ function createStyles(colors) {
     opacity: 0.7,
   },
   primaryBtnText: {
-    color: colors.text,
+    color: '#ffffff',
     fontSize: 17,
     fontWeight: '700',
   },
@@ -319,8 +345,10 @@ function createStyles(colors) {
     height: 1,
     backgroundColor: colors.surfaceLight,
   },
+  dividerLineScene: {
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+  },
   dividerText: {
-    color: colors.textMuted,
     fontSize: 13,
   },
   appleBtn: {
@@ -337,7 +365,6 @@ function createStyles(colors) {
     fontWeight: '600',
   },
   appleHint: {
-    color: colors.textMuted,
     fontSize: 13,
     textAlign: 'center',
   },

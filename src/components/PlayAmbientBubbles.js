@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  ReduceMotion,
   interpolate,
   useAnimatedStyle,
   useSharedValue,
@@ -41,7 +42,11 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
     progress.value = withDelay(
       delay,
       withRepeat(
-        withTiming(1, { duration, easing: Easing.linear }),
+        withTiming(1, {
+          duration,
+          easing: Easing.linear,
+          reduceMotion: ReduceMotion.Never,
+        }),
         -1,
         false
       )

@@ -182,33 +182,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       },
       walletTitle: { color: colors.text },
       walletHint: { color: colors.textMuted },
-      accountCaption: {
-        color: isRandomScene ? '#0b3d36' : colors.textMuted,
-        ...(isRandomScene
-          ? {
-              alignSelf: 'flex-start',
-              backgroundColor: 'rgba(255, 255, 255, 0.92)',
-              overflow: 'hidden',
-              borderRadius: 8,
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-            }
-          : null),
-      },
-      accountLabel: {
-        color: isRandomScene ? '#0b3d36' : colors.text,
-        ...(isRandomScene
-          ? {
-              alignSelf: 'flex-start',
-              backgroundColor: 'rgba(255, 255, 255, 0.92)',
-              overflow: 'hidden',
-              borderRadius: 8,
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              marginTop: 4,
-            }
-          : null),
-      },
       appearanceCard: {
         backgroundColor: colors.surface,
         borderColor: colors.surfaceLight,
@@ -243,10 +216,11 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
-        <View style={[styles.groupCard, themed.walletCard]}>
-          {authed || wallet.loggedIn ? (
-            <>
-              <View style={styles.accountSection}>
+
+        {authed || wallet.loggedIn ? (
+          <>
+            {/* Card 1: Wallet / Balance */}
+            <View style={[styles.walletCard, themed.walletCard]}>
               <Text style={[styles.walletTitle, themed.walletTitle]}>{t('settings.wallet.title')}</Text>
               <BalanceCard
                 label={t('settings.wallet.puzzleCoins')}
@@ -264,51 +238,54 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
               <Text style={[styles.walletHint, themed.walletHint]}>
                 {t('settings.wallet.hint')}
               </Text>
-              </View>
+            </View>
 
-              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
-              <View style={styles.accountSection}>
-                <View style={styles.scoreHeader}>
-                  <Trophy color={colors.primaryGlow} size={18} strokeWidth={1.8} />
-                  <Text style={[styles.walletTitle, themed.walletTitle, styles.scoreTitle]}>
-                    {t('settings.section.score')}
+            {/* Card 2: Player Stats */}
+            <View style={[styles.walletCard, themed.walletCard]}>
+              <View style={styles.scoreHeader}>
+                <Trophy color={colors.primaryGlow} size={18} strokeWidth={1.8} />
+                <Text style={[styles.walletTitle, themed.walletTitle, styles.scoreTitle]}>
+                  {t('settings.section.score')}
+                </Text>
+              </View>
+              <BalanceCard
+                label={t('settings.score.wordsFound')}
+                value={scoreStanding?.score ?? 0}
+                loading={scoreLoading}
+                colors={colors}
+              />
+              <BalanceCard
+                label={t('settings.score.rank')}
+                value={
+                  scoreStanding?.rank != null
+                    ? t('settings.score.rankValue', { n: scoreStanding.rank })
+                    : t('common.emDash')
+                }
+                loading={scoreLoading}
+                colors={colors}
+              />
+              <Text style={[styles.walletHint, themed.walletHint]}>
+                {scoreStanding?.score
+                  ? t('settings.score.hint')
+                  : t('settings.score.empty')}
+              </Text>
+            </View>
+
+            {/* Card 3: Profile & Actions */}
+            <View style={[styles.groupCard, themed.walletCard]}>
+              {wallet.accountLabel ? (
+                <View style={styles.accountBlock}>
+                  <Text style={[styles.accountCaption, { color: colors.textMuted }]}>
+                    {t('settings.account.signedInAs')}
+                  </Text>
+                  <Text style={[styles.accountLabel, { color: colors.text }]} numberOfLines={2}>
+                    {wallet.accountLabel}
                   </Text>
                 </View>
-                <BalanceCard
-                  label={t('settings.score.wordsFound')}
-                  value={scoreStanding?.score ?? 0}
-                  loading={scoreLoading}
-                  colors={colors}
-                />
-                <BalanceCard
-                  label={t('settings.score.rank')}
-                  value={
-                    scoreStanding?.rank != null
-                      ? t('settings.score.rankValue', { n: scoreStanding.rank })
-                      : t('common.emDash')
-                  }
-                  loading={scoreLoading}
-                  colors={colors}
-                />
-                <Text style={[styles.walletHint, themed.walletHint]}>
-                  {scoreStanding?.score
-                    ? t('settings.score.hint')
-                    : t('settings.score.empty')}
-                </Text>
-              </View>
-
-              {wallet.accountLabel ? (
-                <>
-                  <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
-                  <View style={[styles.accountBlock, styles.accountSection]}>
-                <Text style={[styles.accountCaption, themed.accountCaption]}>{t('settings.account.signedInAs')}</Text>
-                <Text style={[styles.accountLabel, themed.accountLabel]} numberOfLines={2}>
-                  {wallet.accountLabel}
-                </Text>
-                  </View>
-                </>
               ) : null}
-              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              {wallet.accountLabel ? (
+                <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              ) : null}
               <MenuRow
                 icon={LogOut}
                 label={t('settings.account.signOut')}
@@ -316,34 +293,44 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
                 embedded
               />
-            </>
-          ) : (
-            <>
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
               <MenuRow
-                icon={LogIn}
-                label={t('settings.account.signIn')}
-                subtitle={t('settings.account.signInSubtitle')}
-                onPress={handleSignIn}
+                icon={RotateCcw}
+                label={t('shop.restore')}
+                subtitle={t('shop.restore.subtitle')}
+                onPress={handleRestorePurchases}
                 colors={colors}
                 embedded
+                loading={restoringPurchases}
               />
-              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
-              <Text style={[styles.signedOutScoreHint, themed.walletHint]}>
-                {t('settings.score.signInHint')}
-              </Text>
-            </>
-          )}
-          <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
-          <MenuRow
-            icon={RotateCcw}
-            label={t('shop.restore')}
-            subtitle={t('shop.restore.subtitle')}
-            onPress={handleRestorePurchases}
-            colors={colors}
-            embedded
-            loading={restoringPurchases}
-          />
-        </View>
+            </View>
+          </>
+        ) : (
+          <View style={[styles.groupCard, themed.walletCard]}>
+            <MenuRow
+              icon={LogIn}
+              label={t('settings.account.signIn')}
+              subtitle={t('settings.account.signInSubtitle')}
+              onPress={handleSignIn}
+              colors={colors}
+              embedded
+            />
+            <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+            <Text style={[styles.signedOutScoreHint, themed.walletHint]}>
+              {t('settings.score.signInHint')}
+            </Text>
+            <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+            <MenuRow
+              icon={RotateCcw}
+              label={t('shop.restore')}
+              subtitle={t('shop.restore.subtitle')}
+              onPress={handleRestorePurchases}
+              colors={colors}
+              embedded
+              loading={restoringPurchases}
+            />
+          </View>
+        )}
 
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.preferences')}</Text>
         <View style={[styles.preferencesCard, themed.appearanceCard]}>
@@ -548,10 +535,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 18,
   },
-  accountSection: {
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-  },
   signedOutScoreHint: {
     fontSize: 12,
     lineHeight: 18,
@@ -559,7 +542,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   accountBlock: {
-    marginHorizontal: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
   },
   accountCaption: {
     fontSize: 12,
@@ -583,7 +567,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 4,
     paddingVertical: 2,
-    marginBottom: 4,
+    marginBottom: 10,
     borderWidth: 1,
     overflow: 'hidden',
   },
