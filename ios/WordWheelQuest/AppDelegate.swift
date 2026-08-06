@@ -23,14 +23,10 @@ public class AppDelegate: ExpoAppDelegate {
 
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)
-    // Match LaunchSplashOverlay cream so RN handoff does not flash white.
-    let splashCream = UIColor(red: 0.910, green: 0.831, blue: 0.722, alpha: 1)
-    window?.backgroundColor = splashCream
     factory.startReactNative(
       withModuleName: "main",
       in: window,
       launchOptions: launchOptions)
-    window?.rootViewController?.view.backgroundColor = splashCream
 #endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)

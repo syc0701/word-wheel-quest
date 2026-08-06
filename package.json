@@ -26,7 +26,8 @@
     "clean": "rm -rf ios/build node_modules/.cache .expo dist web-build",
     "clean:all": "npm run clean && npm run ios:clean-cache",
     "fastlane:install": "brew list fastlane >/dev/null 2>&1 || brew install fastlane; brew upgrade fastlane 2>/dev/null || true",
-    "screenshots:view": "node docs/scripts/view-screenshots.js"
+    "screenshots:view": "node docs/scripts/view-screenshots.js",
+    "android": "expo run:android"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",
