@@ -11,6 +11,7 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { PlayTimerProvider } from './context/PlayTimerContext';
 import AppBackground from './components/AppBackground';
 import LaunchSplashOverlay from './components/LaunchSplashOverlay';
+import { initializeMobileAds } from './lib/ads';
 import { configurePurchases } from './services/purchases';
 import PushNotificationService from './services/PushNotificationService';
 import HomeScreen from './screens/HomeScreen';
@@ -29,6 +30,7 @@ function AppShell() {
 
   useEffect(() => {
     configurePurchases();
+    initializeMobileAds();
   }, []);
 
   useEffect(() => {

@@ -53,6 +53,7 @@
         }
       ],
       "./plugins/withEnableEdgeToEdge",
+      "./plugins/withAdsSdkPin",
       "expo-asset",
       [
         "expo-audio",
@@ -65,6 +66,13 @@
         "expo-notifications",
         {
           "color": "#0A2A4A"
+        }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-1539854949018984~3656372616",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
       ]
     ]

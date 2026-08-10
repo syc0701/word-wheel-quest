@@ -17,6 +17,7 @@ import {
   Settings,
   ShoppingCart,
 } from 'lucide-react-native';
+import AdBanner from '../components/AdBanner';
 import DailyLockedModal from '../components/DailyLockedModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
@@ -280,7 +281,7 @@ export default function HomeScreen({ navigate }) {
           </Pressable>
         </View>
 
-        <View style={[styles.body, { paddingBottom: 16 + insets.bottom }]}>
+        <View style={[styles.body, { paddingBottom: 16 }]}>
           <View style={styles.headerBlock}>
             <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
             <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
@@ -434,6 +435,8 @@ export default function HomeScreen({ navigate }) {
             </Text>
           </View>
         </View>
+
+        <AdBanner />
 
         <DailyLockedModal
           visible={dailyLockedVisible}

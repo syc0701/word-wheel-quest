@@ -293,9 +293,9 @@ const styles = StyleSheet.create({
   },
   clueText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: '600',
-    lineHeight: 20,
+    lineHeight: 24,
     textAlign: 'center',
   },
   cluePlaceholder: {
