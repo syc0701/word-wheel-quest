@@ -6,7 +6,7 @@ export const BG_IMAGE_CATALOG = {
   '0804_mountain': require('../assets/bg_image/0804-mountain.png'),
   '0804_plant': require('../assets/bg_image/0804-plant.png'),
   beach: require('../assets/bg_image/beach.jpg'),
-  classroom: require('../assets/bg_image/classroom.jpg'),
+  classroom: require('../assets/bg_image/classroom.png'),
   deep_sea: require('../assets/bg_image/deep_sea.jpg'),
   flowers: require('../assets/bg_image/flowers.jpg'),
   island: require('../assets/bg_image/island.jpg'),
