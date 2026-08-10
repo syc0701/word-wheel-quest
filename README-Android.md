@@ -23,17 +23,19 @@ Email + password via AWS Cognito (same mobile app client as iOS). Sign in with A
 
 ## In-app purchases (RevenueCat)
 
-1. Create matching in-app products in Google Play Console (same product IDs as below).
-2. Attach the Google Play app in RevenueCat and copy the **Google** public SDK key (`goog_…`).
-3. Set it in `src/constants/store.js` → `REVENUECAT_API_KEY`.
+1. Create matching in-app products in Google Play Console (same product IDs as below), or run:
+   `python3 scripts/create-play-iap-products.py` (uses `fastlane/play-store-service-account.json`).
+2. In RevenueCat → **Products**, import / attach the Google Play store products to the existing packages (same IDs as iOS).
+3. Attach the Google Play app in RevenueCat and copy the **Google** public SDK key (`goog_…`).
+4. Set it in `src/constants/store.js` → `REVENUECAT_API_KEY`.
 
-| RevenueCat package | Play product ID | Display name |
-| --- | --- | --- |
-| `coins_large` | `word_wheel_coins_large` | 1,000 Coins |
-| `coins_small` | `word_wheel_coins_small` | 300 Coins |
-| `bundle_master` | `word_wheel_pack_hard` | Master Quest |
-| `bundle_classic` | `word_wheel_pack_medium` | Classic Challenge |
-| `bundle_starter` | `word_wheel_pack_starter` | Starter Fun Bundle |
+| RevenueCat package | Play product ID | Display name | USD |
+| --- | --- | --- | --- |
+| `coins_large` | `word_wheel_coins_large` | 1,000 Coins | $2.49 |
+| `coins_small` | `word_wheel_coins_small` | 300 Coins | $0.99 |
+| `bundle_master` | `word_wheel_pack_hard` | Master Quest | $2.99 |
+| `bundle_classic` | `word_wheel_pack_medium` | Classic Challenge | $1.99 |
+| `bundle_starter` | `word_wheel_pack_starter` | Starter Fun Bundle | $3.99 |
 
 Purchases use `react-native-purchases`. Restore lives under Settings → Account.
 

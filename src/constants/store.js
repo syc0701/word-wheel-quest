@@ -13,7 +13,7 @@ export const APP_STORE = PLAY_STORE;
  * RevenueCat Google Play public SDK key.
  * Replace with the `goog_…` key from RevenueCat → Project → API keys (Android).
  */
-export const REVENUECAT_API_KEY = 'goog_REPLACE_WITH_ANDROID_PUBLIC_SDK_KEY';
+export const REVENUECAT_API_KEY = 'goog_RZUcdlyCACGHgxfkBuuCnYvMzLc';
 
 /** In-app WebView URLs — append ?platform=app for minimal chrome on puzzleinteract.com */
 export const APP_URLS = {
