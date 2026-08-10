@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "postinstall": "patch-package",
     "start": "npx expo start",
     "run:metro": "npx expo start --clear",
     "android": "npm run android:run",
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "patch-package": "^8.0.1",
     "playwright": "^1.61.1"
   },
   "overrides": {

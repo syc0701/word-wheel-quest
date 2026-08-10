@@ -13,9 +13,7 @@
       "backgroundColor": "#0A2A4A"
     },
     "androidStatusBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#0A2A4A",
-      "translucent": true
+      "barStyle": "light-content"
     },
     "android": {
       "package": "com.puzint.wordwheel.app",
@@ -45,6 +43,15 @@
       "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
+      [
+        "react-native-edge-to-edge",
+        {
+          "android": {
+            "parentTheme": "Default",
+            "enforceNavigationBarContrast": false
+          }
+        }
+      ],
       "./plugins/withEnableEdgeToEdge",
       "expo-asset",
       [

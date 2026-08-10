@@ -1,13 +1,11 @@
 package com.puzint.wordwheel.app
 import expo.modules.splashscreen.SplashScreenManager
 
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 
-import androidx.activity.SystemBarStyle
-import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -25,16 +23,17 @@ class MainActivity : ReactActivity() {
     // @generated end expo-splashscreen
     super.onCreate(null)
 
-    // Draw under status/nav bars; transparent bars + light icons (dark UI).
-    enableEdgeToEdge(
-      statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-      navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-    )
+    // Edge-to-edge without deprecated Window.setStatusBarColor / setNavigationBarColor.
+    // (androidx.activity.enableEdgeToEdge still calls those APIs internally.)
     WindowCompat.setDecorFitsSystemWindows(window, false)
-    @Suppress("DEPRECATION")
-    run {
-      window.statusBarColor = Color.TRANSPARENT
-      window.navigationBarColor = Color.TRANSPARENT
+    WindowInsetsControllerCompat(window, window.decorView).apply {
+      // Dark UI → light (white) status/nav icons.
+      isAppearanceLightStatusBars = false
+      isAppearanceLightNavigationBars = false
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      window.isStatusBarContrastEnforced = false
+      window.isNavigationBarContrastEnforced = false
     }
 
     // Hide native activity title / ActionBar.

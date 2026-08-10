@@ -1,0 +1,123 @@
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/checksums.lock b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/checksums.lock
+new file mode 100644
+index 0000000..d50514d
+Binary files /dev/null and b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/checksums.lock differ
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/md5-checksums.bin b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/md5-checksums.bin
+new file mode 100644
+index 0000000..6be379e
+Binary files /dev/null and b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/md5-checksums.bin differ
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/sha1-checksums.bin b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/sha1-checksums.bin
+new file mode 100644
+index 0000000..bf14439
+Binary files /dev/null and b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/checksums/sha1-checksums.bin differ
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/dependencies-accessors/gc.properties b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/dependencies-accessors/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/fileChanges/last-build.bin b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/fileChanges/last-build.bin
+new file mode 100644
+index 0000000..f76dd23
+Binary files /dev/null and b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/fileChanges/last-build.bin differ
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/fileHashes/fileHashes.lock b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/fileHashes/fileHashes.lock
+new file mode 100644
+index 0000000..41d3716
+Binary files /dev/null and b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/fileHashes/fileHashes.lock differ
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/8.9/gc.properties b/node_modules/react-native-edge-to-edge/android/.gradle/8.9/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock b/node_modules/react-native-edge-to-edge/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+new file mode 100644
+index 0000000..64dd6ab
+Binary files /dev/null and b/node_modules/react-native-edge-to-edge/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock differ
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/buildOutputCleanup/cache.properties b/node_modules/react-native-edge-to-edge/android/.gradle/buildOutputCleanup/cache.properties
+new file mode 100644
+index 0000000..d294ee4
+--- /dev/null
++++ b/node_modules/react-native-edge-to-edge/android/.gradle/buildOutputCleanup/cache.properties
+@@ -0,0 +1,2 @@
++#Mon Aug 10 05:50:35 EDT 2026
++gradle.version=8.9
+diff --git a/node_modules/react-native-edge-to-edge/android/.gradle/vcs-1/gc.properties b/node_modules/react-native-edge-to-edge/android/.gradle/vcs-1/gc.properties
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/react-native-edge-to-edge/android/.project b/node_modules/react-native-edge-to-edge/android/.project
+new file mode 100644
+index 0000000..827c9ed
+--- /dev/null
++++ b/node_modules/react-native-edge-to-edge/android/.project
+@@ -0,0 +1,28 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<projectDescription>
++	<name>react-native-edge-to-edge</name>
++	<comment>Project react-native-edge-to-edge created by Buildship.</comment>
++	<projects>
++	</projects>
++	<buildSpec>
++		<buildCommand>
++			<name>org.eclipse.buildship.core.gradleprojectbuilder</name>
++			<arguments>
++			</arguments>
++		</buildCommand>
++	</buildSpec>
++	<natures>
++		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
++	</natures>
++	<filteredResources>
++		<filter>
++			<id>1785232594176</id>
++			<name></name>
++			<type>30</type>
++			<matcher>
++				<id>org.eclipse.core.resources.regexFilterMatcher</id>
++				<arguments>node_modules|\.git|__CREATED_BY_JAVA_LANGUAGE_SERVER__</arguments>
++			</matcher>
++		</filter>
++	</filteredResources>
++</projectDescription>
+diff --git a/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt b/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt
+index 56e8653..72ff503 100644
+--- a/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt
++++ b/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt
+@@ -5,7 +5,6 @@ import android.os.Build.VERSION_CODES
+ 
+ import android.app.Activity
+ import android.content.res.Configuration
+-import android.graphics.Color
+ import android.util.TypedValue
+ import android.view.Window
+ import android.view.WindowManager
+@@ -18,9 +17,6 @@ import com.facebook.common.logging.FLog
+ import com.facebook.react.bridge.ReactApplicationContext
+ import com.facebook.react.common.ReactConstants
+ 
+-internal val LightNavigationBarColor = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+-internal val DarkNavigationBarColor = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
+-
+ object EdgeToEdgeModuleImpl {
+   const val NAME = "RNEdgeToEdge"
+ 
+@@ -71,11 +67,8 @@ object EdgeToEdgeModuleImpl {
+ 
+       WindowCompat.setDecorFitsSystemWindows(window, false)
+ 
+-      window.statusBarColor = Color.TRANSPARENT
+-
++      // Avoid Window.setStatusBarColor / setNavigationBarColor (deprecated on API 35+).
+       if (VERSION.SDK_INT >= VERSION_CODES.O_MR1 && isNavigationBarTransparent(activity)) {
+-        window.navigationBarColor = Color.TRANSPARENT
+-
+         if (VERSION.SDK_INT >= VERSION_CODES.Q) {
+           window.isStatusBarContrastEnforced = false
+           window.isNavigationBarContrastEnforced = false
+@@ -83,12 +76,6 @@ object EdgeToEdgeModuleImpl {
+       } else {
+         val light = isDefaultLightSystemBars(activity)
+ 
+-        window.navigationBarColor = when {
+-          VERSION.SDK_INT >= VERSION_CODES.Q -> Color.TRANSPARENT
+-          VERSION.SDK_INT >= VERSION_CODES.O_MR1 && light -> LightNavigationBarColor
+-          else -> DarkNavigationBarColor
+-        }
+-
+         insetsController.run {
+           isAppearanceLightNavigationBars = when {
+             VERSION.SDK_INT >= VERSION_CODES.O_MR1 -> light

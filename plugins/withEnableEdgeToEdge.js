@@ -2,23 +2,28 @@ const { withMainActivity, withAndroidManifest, AndroidConfig } = require('@expo/
 
 /**
  * Edge-to-edge + no native title bar.
- * Uses transparent system bars with dark style (light icons) so the status
- * bar region never shows the default light window background.
+ * Avoids androidx.activity.enableEdgeToEdge and Window.setStatusBarColor /
+ * setNavigationBarColor (deprecated on Android 15 / flagged by Play Console).
  */
 function withEnableEdgeToEdge(config) {
   config = withMainActivity(config, (cfg) => {
     let src = cfg.modResults.contents;
 
-    if (!src.includes('androidx.activity.enableEdgeToEdge')) {
+    if (!src.includes('WindowInsetsControllerCompat')) {
       src = src.replace(
         /^package [^\n]+\n/,
         (line) =>
-          `${line}\nimport android.graphics.Color\nimport androidx.activity.SystemBarStyle\nimport androidx.activity.enableEdgeToEdge\nimport androidx.core.view.WindowCompat\n`
+          `${line}\nimport androidx.core.view.WindowCompat\nimport androidx.core.view.WindowInsetsControllerCompat\n`
       );
     }
 
-    // Prefer a known-good onCreate body if our markers are missing.
-    if (!src.includes('SystemBarStyle.dark(Color.TRANSPARENT)')) {
+    // Strip deprecated edge-to-edge helpers if a prebuild reintroduced them.
+    src = src
+      .replace(/\nimport android\.graphics\.Color\n/g, '\n')
+      .replace(/\nimport androidx\.activity\.SystemBarStyle\n/g, '\n')
+      .replace(/\nimport androidx\.activity\.enableEdgeToEdge\n/g, '\n');
+
+    if (!src.includes('isAppearanceLightStatusBars = false')) {
       src = src.replace(
         /override fun onCreate\([^\)]*\)\s*\{[\s\S]*?\n  \}/,
         `override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,15 +33,14 @@ function withEnableEdgeToEdge(config) {
     // @generated end expo-splashscreen
     super.onCreate(null)
 
-    enableEdgeToEdge(
-      statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-      navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-    )
     WindowCompat.setDecorFitsSystemWindows(window, false)
-    @Suppress("DEPRECATION")
-    run {
-      window.statusBarColor = Color.TRANSPARENT
-      window.navigationBarColor = Color.TRANSPARENT
+    WindowInsetsControllerCompat(window, window.decorView).apply {
+      isAppearanceLightStatusBars = false
+      isAppearanceLightNavigationBars = false
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      window.isStatusBarContrastEnforced = false
+      window.isNavigationBarContrastEnforced = false
     }
 
     title = ""

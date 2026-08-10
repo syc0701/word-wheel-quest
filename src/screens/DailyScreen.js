@@ -8,10 +8,16 @@ import {
   View,
 } from 'react-native';
 import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
+import PuzzleGrid from '../components/PuzzleGrid';
 import WordWheelApi from '../lib/api';
 import { WORD_WHEEL_DAILY_CALENDAR_MIN, WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { resolveWordWheelGridSize } from '../lib/constants';
-import { parseWords } from '../lib/gridReveal';
+import {
+  buildCellWordNumbers,
+  buildDisplayGrid,
+  parseWordPositions,
+  puzzleCellKeys,
+} from '../lib/gridReveal';
 import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import {
   addMontrealCalendarDays,
@@ -24,29 +30,13 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const WEEKDAY_KEYS = [
-  'daily.weekday.sun',
-  'daily.weekday.mon',
-  'daily.weekday.tue',
-  'daily.weekday.wed',
-  'daily.weekday.thu',
-  'daily.weekday.fri',
-  'daily.weekday.sat',
-];
+const EMPTY_SET = new Set();
+const EMPTY_HINT_LETTERS = {};
 
-function buildMonthDays(year, month, minYmd, maxYmd) {
-  const first = new Date(Date.UTC(year, month - 1, 1));
-  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const startPad = first.getUTCDay();
-  const cells = [];
-
-  for (let i = 0; i < startPad; i += 1) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d += 1) {
-    const ymd = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const disabled = ymd < minYmd || ymd > maxYmd;
-    cells.push({ day: d, ymd, disabled });
-  }
-  return cells;
+function formatDifficulty(level) {
+  const raw = String(level || '').trim();
+  if (!raw) return '';
+  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
 }
 
 export default function DailyScreen({ navigate, routeParams = {} }) {
@@ -111,12 +101,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
 
-  const [year, month] = selectedDate.split('-').map(Number);
-  const monthCells = useMemo(
-    () => buildMonthDays(year, month, minYmd, todayYmd),
-    [year, month, minYmd, todayYmd]
-  );
-
   const setDate = useCallback(
     (ymd) => {
       setSelectedDate(clampYmd(ymd, minYmd, todayYmd));
@@ -155,13 +139,36 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     };
   }, [selectedDate, t, dailyAllowed]);
 
-  const words = useMemo(() => parseWords(puzzle?.wordsInUse), [puzzle]);
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
+  const wordPositions = useMemo(
+    () => parseWordPositions(puzzle?.filledCoordinates),
+    [puzzle]
+  );
+  const puzzleCells = useMemo(() => puzzleCellKeys(wordPositions), [wordPositions]);
+  const displayGrid = useMemo(
+    () => buildDisplayGrid([], wordPositions, EMPTY_HINT_LETTERS, gridSize),
+    [wordPositions, gridSize]
+  );
+  const cellWordNumbers = useMemo(
+    () =>
+      buildCellWordNumbers(
+        puzzle?.filledCoordinates,
+        [],
+        wordPositions,
+        EMPTY_SET,
+        displayGrid
+      ),
+    [puzzle?.filledCoordinates, wordPositions, displayGrid]
+  );
+
   const puzzleCompleted = Boolean(puzzle?.completed);
+  const puzzleTitle = String(puzzle?.title || '').trim();
+  const difficultyLabel = formatDifficulty(puzzle?.difficultyLevel);
   const isToday = selectedDate === todayYmd;
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
   const canPlay = Boolean(puzzle?.id) && !loading;
+  const showGrid = Boolean(puzzle?.id) && gridSize > 0 && puzzleCells.size > 0;
 
   if (!accessChecked || !dailyAllowed) {
     return (
@@ -239,65 +246,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-          ]}
-        >
-          <Text style={[styles.monthLabel, { color: colors.text }]}>
-            {new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(undefined, {
-              month: 'long',
-              year: 'numeric',
-              timeZone: 'UTC',
-            })}
-          </Text>
-          <View style={styles.weekRow}>
-            {WEEKDAY_KEYS.map((key, index) => (
-              <Text key={`weekday-${index}`} style={[styles.weekDay, { color: colors.textMuted }]}>
-                {t(key)}
-              </Text>
-            ))}
-          </View>
-          <View style={styles.daysGrid}>
-            {monthCells.map((cell, idx) =>
-              cell ? (
-                <Pressable
-                  key={cell.ymd}
-                  disabled={cell.disabled}
-                  onPress={() => setDate(cell.ymd)}
-                  style={[
-                    styles.dayCell,
-                    cell.ymd === selectedDate && {
-                      backgroundColor: colors.primary,
-                      borderRadius: 999,
-                    },
-                    cell.disabled && styles.dayCellDisabled,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.dayText,
-                      {
-                        color:
-                          cell.ymd === selectedDate
-                            ? '#fff'
-                            : cell.disabled
-                              ? colors.textMuted
-                              : colors.text,
-                      },
-                    ]}
-                  >
-                    {cell.day}
-                  </Text>
-                </Pressable>
-              ) : (
-                <View key={`pad-${idx}`} style={styles.dayCell} />
-              )
-            )}
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.card,
             styles.previewCard,
             { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
           ]}
@@ -306,16 +254,49 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             <ActivityIndicator color={colors.primaryGlow} style={{ marginVertical: 8 }} />
           ) : puzzle ? (
             <>
-              {puzzleCompleted ? (
-                <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
-                  <Text style={[styles.completedChipText, { color: colors.success }]}>
-                    {t('daily.completed')}
-                  </Text>
+              <View style={styles.previewHeader}>
+                {puzzleCompleted ? (
+                  <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
+                    <Text style={[styles.completedChipText, { color: colors.success }]}>
+                      {t('daily.completed')}
+                    </Text>
+                  </View>
+                ) : null}
+                {difficultyLabel ? (
+                  <View
+                    style={[
+                      styles.difficultyChip,
+                      {
+                        backgroundColor: colors.surfaceLight,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
+                      {difficultyLabel}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              {puzzleTitle ? (
+                <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
+                  {puzzleTitle}
+                </Text>
+              ) : null}
+              {showGrid ? (
+                <View style={styles.gridPreview}>
+                  <PuzzleGrid
+                    gridSize={gridSize}
+                    displayGrid={displayGrid}
+                    puzzleCells={puzzleCells}
+                    cellWordNumbers={cellWordNumbers}
+                    selectedWordCells={EMPTY_SET}
+                    hintOnlyCells={EMPTY_SET}
+                    celebratingCellKeys={EMPTY_SET}
+                    onCellPress={() => {}}
+                  />
                 </View>
               ) : null}
-              <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
-                {t('daily.meta', { n: words.length, size: gridSize })}
-              </Text>
             </>
           ) : (
             <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
@@ -431,65 +412,52 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  monthLabel: {
-    fontWeight: '700',
-    fontSize: 15,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  weekRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  weekDay: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  dayCell: {
-    width: `${100 / 7}%`,
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayCellDisabled: {
-    opacity: 0.45,
-  },
-  dayText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
   previewCard: {
-    alignItems: 'center',
     minHeight: 96,
     justifyContent: 'center',
   },
+  previewHeader: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   puzzleTitle: {
-    flexShrink: 1,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     textAlign: 'left',
+    marginBottom: 12,
   },
   puzzleMeta: {
     fontSize: 14,
     marginTop: 10,
     textAlign: 'center',
   },
+  gridPreview: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
   completedChip: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 999,
-    marginBottom: 10,
   },
   completedChipText: {
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
+  },
+  difficultyChip: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  difficultyChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   primaryBtn: {
     marginTop: 4,
