@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': '효과음 재생',
   'settings.sound.sfxSubtitle': '클릭, 정답, 오답, 승리 사운드',
   'settings.language.a11y': '언어',
+  'settings.section.feedback': '피드백',
+  'settings.feedback.rowDesc': '마음에 드는 점이나 개선할 점을 알려 주세요.',
+  'settings.feedback.button': '피드백',
+  'settings.feedback.title': '개선에 도움을 주세요',
+  'settings.feedback.intro':
+    'Word Wheel Quest에 대한 생각을 공유해 주세요. 제안, 원하는 퍼즐, 일반적인 의견 모두 환영합니다.',
+  'settings.feedback.category': '카테고리',
+  'settings.feedback.category.puzzles': '퍼즐',
+  'settings.feedback.category.gameplay': '게임플레이',
+  'settings.feedback.category.bugs': '버그 및 충돌',
+  'settings.feedback.category.shop': '상점 및 구매',
+  'settings.feedback.category.other': '기타',
+  'settings.feedback.opinion': '의견',
+  'settings.feedback.opinionPlaceholder': '자세히 알려 주세요...',
+  'settings.feedback.opinionRequired': '보내기 전에 짧은 내용을 작성해 주세요.',
+  'settings.feedback.privacyNote':
+    '개인 데이터는 수집하지 않습니다. 앱 버전과 OS 같은 표준 진단 정보만 포함됩니다.',
+  'settings.feedback.cancel': '취소',
+  'settings.feedback.send': '보내기',
+  'settings.feedback.sendError': '피드백을 보내지 못했습니다. 다시 시도해 주세요.',
+  'settings.feedback.thanksTitle': '감사합니다',
+  'settings.feedback.thanksMessage':
+    '피드백 감사합니다! 앱을 더 좋게 만들기 위해 계속 노력하겠습니다.',
+  'settings.feedback.close': '닫기',
 
   // legal
   'legal.marketing': '마케팅',

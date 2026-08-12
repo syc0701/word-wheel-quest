@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'साउंड इफ़ेक्ट चलाएँ',
   'settings.sound.sfxSubtitle': 'क्लिक, सही, गलत और जीत की आवाज़ें',
   'settings.language.a11y': 'भाषा',
+  'settings.section.feedback': 'प्रतिक्रिया',
+  'settings.feedback.rowDesc': 'बताएँ कि आपको क्या पसंद है या हमें क्या सुधारना चाहिए।',
+  'settings.feedback.button': 'प्रतिक्रिया',
+  'settings.feedback.title': 'बेहतर बनाने में मदद करें',
+  'settings.feedback.intro':
+    'Word Wheel Quest पर अपने विचार साझा करें। सुझाव, पहेलियाँ या सामान्य प्रतिक्रिया सभी स्वागत योग्य हैं।',
+  'settings.feedback.category': 'श्रेणी',
+  'settings.feedback.category.puzzles': 'पहेलियाँ',
+  'settings.feedback.category.gameplay': 'गेमप्ले',
+  'settings.feedback.category.bugs': 'बग और क्रैश',
+  'settings.feedback.category.shop': 'दुकान और खरीदारी',
+  'settings.feedback.category.other': 'अन्य',
+  'settings.feedback.opinion': 'आपकी राय',
+  'settings.feedback.opinionPlaceholder': 'और बताएँ...',
+  'settings.feedback.opinionRequired': 'भेजने से पहले एक छोटी सी टिप्पणी लिखें।',
+  'settings.feedback.privacyNote':
+    'कोई व्यक्तिगत डेटा एकत्र नहीं किया जाता। केवल मानक डायग्नोस्टिक जानकारी (ऐप संस्करण और OS) शामिल है।',
+  'settings.feedback.cancel': 'रद्द करें',
+  'settings.feedback.send': 'भेजें',
+  'settings.feedback.sendError': 'प्रतिक्रिया नहीं भेजी जा सकी। फिर कोशिश करें।',
+  'settings.feedback.thanksTitle': 'धन्यवाद',
+  'settings.feedback.thanksMessage':
+    'आपकी प्रतिक्रिया के लिए धन्यवाद! हम ऐप को बेहतर बनाने पर काम करते रहेंगे।',
+  'settings.feedback.close': 'बंद करें',
 
   // legal
   'legal.marketing': 'मार्केटिंग',

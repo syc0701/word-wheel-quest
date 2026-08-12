@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
+import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
 import NotificationsSettingsCard from '../components/NotificationsSettingsCard';
 import PlayTimerSettingsCard from '../components/PlayTimerSettingsCard';
@@ -98,6 +99,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const [scoreStanding, setScoreStanding] = useState(null);
   const [scoreLoading, setScoreLoading] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const refreshScore = async (isAuthed) => {
     if (!isAuthed) {
@@ -375,6 +377,22 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         </View>
         */}
 
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.feedback')}</Text>
+        <View style={[styles.groupCard, themed.walletCard]}>
+          <View style={styles.feedbackSection}>
+            <Text style={[styles.walletHint, themed.walletHint, styles.feedbackDesc]}>
+              {t('settings.feedback.rowDesc')}
+            </Text>
+            <Pressable
+              style={[styles.feedbackButton, { backgroundColor: colors.primary }]}
+              onPress={() => setFeedbackOpen(true)}
+            >
+              <MessageSquare color="#fff" size={18} strokeWidth={2.1} />
+              <Text style={styles.feedbackButtonText}>{t('settings.feedback.button')}</Text>
+            </Pressable>
+          </View>
+        </View>
+
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.legal')}</Text>
         <View style={[styles.groupCard, themed.walletCard]}>
           {LEGAL_LINKS.map((link, index) => (
@@ -453,6 +471,8 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           </>
         ) : null}
       </ScrollView>
+
+      <AppFeedbackSheet visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
       {__DEV__ ? (
         <WordWheelCompleteDialog
@@ -551,6 +571,27 @@ const styles = StyleSheet.create({
   accountSection: {
     paddingHorizontal: 10,
     paddingVertical: 12,
+  },
+  feedbackSection: {
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+  },
+  feedbackDesc: {
+    marginTop: 0,
+    marginBottom: 12,
+  },
+  feedbackButton: {
+    minHeight: 48,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  feedbackButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '800',
   },
   signedOutScoreHint: {
     fontSize: 12,

@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'Lire les effets sonores',
   'settings.sound.sfxSubtitle': 'Clics, juste, faux et sons de victoire',
   'settings.language.a11y': 'Langue',
+  'settings.section.feedback': 'Commentaires',
+  'settings.feedback.rowDesc': 'Dites-nous ce que vous aimez ou ce que nous pourrions améliorer.',
+  'settings.feedback.button': 'Commentaires',
+  'settings.feedback.title': 'Aidez-nous à nous améliorer',
+  'settings.feedback.intro':
+    'Partagez vos impressions sur Word Wheel Quest. Suggestions, puzzles souhaités ou commentaires généraux sont les bienvenus.',
+  'settings.feedback.category': 'Catégorie',
+  'settings.feedback.category.puzzles': 'Puzzles',
+  'settings.feedback.category.gameplay': 'Gameplay',
+  'settings.feedback.category.bugs': 'Bugs et plantages',
+  'settings.feedback.category.shop': 'Boutique et achats',
+  'settings.feedback.category.other': 'Autre',
+  'settings.feedback.opinion': 'Votre avis',
+  'settings.feedback.opinionPlaceholder': 'Dites-nous en plus...',
+  'settings.feedback.opinionRequired': 'Veuillez écrire un court message avant d’envoyer.',
+  'settings.feedback.privacyNote':
+    'Aucune donnée personnelle n’est collectée. Seules des infos de diagnostic standard (version de l’app et OS) sont incluses.',
+  'settings.feedback.cancel': 'Annuler',
+  'settings.feedback.send': 'Envoyer',
+  'settings.feedback.sendError': 'Impossible d’envoyer le commentaire. Réessayez.',
+  'settings.feedback.thanksTitle': 'Merci',
+  'settings.feedback.thanksMessage':
+    'Merci pour votre retour ! Nous continuerons à améliorer l’app.',
+  'settings.feedback.close': 'Fermer',
 
   // legal
   'legal.marketing': 'Marketing',

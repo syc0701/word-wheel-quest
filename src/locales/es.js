@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'Reproducir efectos de sonido',
   'settings.sound.sfxSubtitle': 'Clics, acierto, error y sonidos de victoria',
   'settings.language.a11y': 'Idioma',
+  'settings.section.feedback': 'Comentarios',
+  'settings.feedback.rowDesc': 'Cuéntanos qué te gusta o qué deberíamos mejorar.',
+  'settings.feedback.button': 'Comentarios',
+  'settings.feedback.title': 'Ayúdanos a mejorar',
+  'settings.feedback.intro':
+    'Comparte tu opinión sobre Word Wheel Quest. Sugerencias, puzzles que te gustaría ver o comentarios generales son bienvenidos.',
+  'settings.feedback.category': 'Categoría',
+  'settings.feedback.category.puzzles': 'Puzzles',
+  'settings.feedback.category.gameplay': 'Jugabilidad',
+  'settings.feedback.category.bugs': 'Errores y cierres',
+  'settings.feedback.category.shop': 'Tienda y compras',
+  'settings.feedback.category.other': 'Otro',
+  'settings.feedback.opinion': 'Tu opinión',
+  'settings.feedback.opinionPlaceholder': 'Cuéntanos más...',
+  'settings.feedback.opinionRequired': 'Escribe una nota breve antes de enviar.',
+  'settings.feedback.privacyNote':
+    'No se recopilan datos personales. Solo se incluye información de diagnóstico estándar (versión de la app y sistema operativo).',
+  'settings.feedback.cancel': 'Cancelar',
+  'settings.feedback.send': 'Enviar',
+  'settings.feedback.sendError': 'No se pudo enviar el comentario. Inténtalo de nuevo.',
+  'settings.feedback.thanksTitle': 'Gracias',
+  'settings.feedback.thanksMessage':
+    '¡Gracias por tus comentarios! Seguiremos trabajando para mejorar la app.',
+  'settings.feedback.close': 'Cerrar',
 
   // legal
   'legal.marketing': 'Marketing',

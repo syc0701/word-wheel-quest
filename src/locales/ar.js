@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'تشغيل المؤثرات الصوتية',
   'settings.sound.sfxSubtitle': 'نقرات، صحيح، خطأ، وأصوات الفوز',
   'settings.language.a11y': 'اللغة',
+  'settings.section.feedback': 'ملاحظات',
+  'settings.feedback.rowDesc': 'أخبرنا بما يعجبك أو بما يجب تحسينه.',
+  'settings.feedback.button': 'ملاحظات',
+  'settings.feedback.title': 'ساعدنا على التحسين',
+  'settings.feedback.intro':
+    'شاركنا رأيك في Word Wheel Quest. الاقتراحات والألغاز التي تودّها أو الملاحظات العامة كلها مرحّب بها.',
+  'settings.feedback.category': 'الفئة',
+  'settings.feedback.category.puzzles': 'الألغاز',
+  'settings.feedback.category.gameplay': 'أسلوب اللعب',
+  'settings.feedback.category.bugs': 'الأخطاء والأعطال',
+  'settings.feedback.category.shop': 'المتجر والمشتريات',
+  'settings.feedback.category.other': 'أخرى',
+  'settings.feedback.opinion': 'رأيك',
+  'settings.feedback.opinionPlaceholder': 'أخبرنا بالمزيد...',
+  'settings.feedback.opinionRequired': 'يرجى كتابة ملاحظة قصيرة قبل الإرسال.',
+  'settings.feedback.privacyNote':
+    'لا يتم جمع بيانات شخصية. تُرفق فقط معلومات تشخيصية قياسية (إصدار التطبيق ونظام التشغيل).',
+  'settings.feedback.cancel': 'إلغاء',
+  'settings.feedback.send': 'إرسال',
+  'settings.feedback.sendError': 'تعذّر إرسال الملاحظات. حاول مرة أخرى.',
+  'settings.feedback.thanksTitle': 'شكرًا',
+  'settings.feedback.thanksMessage':
+    'شكرًا على ملاحظاتك! سنواصل العمل على تحسين التطبيق.',
+  'settings.feedback.close': 'إغلاق',
 
   // legal
   'legal.marketing': 'التسويق',

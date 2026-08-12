@@ -151,6 +151,30 @@ export default {
   'settings.notifications.saveFailedBody':
     'Could not update notification settings. Try again.',
   'settings.language.a11y': 'Language',
+  'settings.section.feedback': 'Feedback',
+  'settings.feedback.rowDesc': 'Tell us what you like or what we should improve.',
+  'settings.feedback.button': 'Feedback',
+  'settings.feedback.title': 'Help us improve',
+  'settings.feedback.intro':
+    "Share your thoughts on Word Wheel Quest. Suggestions, puzzles you'd like, or general feedback are all welcome.",
+  'settings.feedback.category': 'Category',
+  'settings.feedback.category.puzzles': 'Puzzles',
+  'settings.feedback.category.gameplay': 'Gameplay',
+  'settings.feedback.category.bugs': 'Bugs and crashes',
+  'settings.feedback.category.shop': 'Shop and purchases',
+  'settings.feedback.category.other': 'Other',
+  'settings.feedback.opinion': 'Your opinion',
+  'settings.feedback.opinionPlaceholder': 'Tell us more...',
+  'settings.feedback.opinionRequired': 'Please share a short note before sending.',
+  'settings.feedback.privacyNote':
+    'No personal data is collected. Only standard diagnostic info (app version and OS) is included with your feedback.',
+  'settings.feedback.cancel': 'Cancel',
+  'settings.feedback.send': 'Send',
+  'settings.feedback.sendError': 'Could not send feedback. Try again.',
+  'settings.feedback.thanksTitle': 'Thank you',
+  'settings.feedback.thanksMessage':
+    'Thank you for your feedback! We will continue working hard to improve the app.',
+  'settings.feedback.close': 'Close',
 
   // legal
   'legal.marketing': 'Marketing',

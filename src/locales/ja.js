@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': '効果音を再生',
   'settings.sound.sfxSubtitle': 'クリック、正解、不正解、クリア音',
   'settings.language.a11y': '言語',
+  'settings.section.feedback': 'フィードバック',
+  'settings.feedback.rowDesc': '気に入った点や改善してほしい点を教えてください。',
+  'settings.feedback.button': 'フィードバック',
+  'settings.feedback.title': '改善にご協力ください',
+  'settings.feedback.intro':
+    'Word Wheel Questについてのご意見をお聞かせください。ご提案、追加してほしいパズル、一般的な感想など、すべて歓迎します。',
+  'settings.feedback.category': 'カテゴリ',
+  'settings.feedback.category.puzzles': 'パズル',
+  'settings.feedback.category.gameplay': 'ゲームプレイ',
+  'settings.feedback.category.bugs': '不具合・クラッシュ',
+  'settings.feedback.category.shop': 'ショップと購入',
+  'settings.feedback.category.other': 'その他',
+  'settings.feedback.opinion': 'ご意見',
+  'settings.feedback.opinionPlaceholder': '詳しく教えてください…',
+  'settings.feedback.opinionRequired': '送信前に短いメッセージを入力してください。',
+  'settings.feedback.privacyNote':
+    '個人データは収集しません。アプリのバージョンとOSなどの標準的な診断情報のみが含まれます。',
+  'settings.feedback.cancel': 'キャンセル',
+  'settings.feedback.send': '送信',
+  'settings.feedback.sendError': 'フィードバックを送信できませんでした。もう一度お試しください。',
+  'settings.feedback.thanksTitle': 'ありがとうございます',
+  'settings.feedback.thanksMessage':
+    'フィードバックありがとうございます。アプリの改善に努めてまいります。',
+  'settings.feedback.close': '閉じる',
 
   // legal
   'legal.marketing': 'マーケティング',
