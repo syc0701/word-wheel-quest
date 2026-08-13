@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'E-mail',
   'signIn.placeholder.password': 'Senha',
   'signIn.button.email': 'Entrar',
+  'signIn.button.google': 'Entrar com o Google',
+  'signIn.divider': '— ou —',
+  'signIn.required.title': 'Login obrigatório',
+  'signIn.required.body':
+    'Entre com o Google para sincronizar esta compra com sua conta.',
 
   // shop
   'shop.title': 'Loja',
@@ -165,6 +170,10 @@ export default {
     'Este produto ainda não foi carregado. Tente novamente em um momento.',
   'shop.alert.success.title': 'Obrigado!',
   'shop.alert.success.body': '{name} comprado com sucesso.',
+  'shop.alert.signInRequired.title': 'Login obrigatório',
+  'shop.alert.signInRequired.body':
+    'Compra registrada. Entre com o Google para sincronizá-la com sua conta.',
+  'shop.alert.signInRequired.action': 'Entrar com o Google',
   'shop.alert.purchaseFailed.title': 'Compra falhou',
   'shop.alert.purchaseFailed.body': 'Algo deu errado.',
   'shop.alert.restored.title': 'Restaurado',
@@ -267,4 +276,8 @@ export default {
     'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
   'auth.error.generic': 'Falha ao entrar. Tente novamente.',
   'auth.error.noToken': 'O login não retornou um token.',
+  'auth.google.failed': 'Falha ao entrar com o Google. Tente novamente.',
+  'auth.google.exchangeFailed': 'Não foi possível concluir o login com o Google.',
+  'auth.google.noCode': 'O login com o Google não retornou um código de autorização.',
+  'auth.google.stateMismatch': 'Não foi possível verificar o login com o Google. Tente novamente.',
 };

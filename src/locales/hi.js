@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'ईमेल',
   'signIn.placeholder.password': 'पासवर्ड',
   'signIn.button.email': 'साइन इन',
+  'signIn.button.google': 'Google से साइन इन करें',
+  'signIn.divider': '— या —',
+  'signIn.required.title': 'साइन इन आवश्यक है',
+  'signIn.required.body':
+    'इस खरीदारी को अपने खाते से सिंक करने के लिए Google से साइन इन करें।',
 
   // shop
   'shop.title': 'दुकान',
@@ -165,6 +170,10 @@ export default {
     'यह उत्पाद अभी लोड नहीं हुआ। थोड़ी देर बाद फिर कोशिश करें।',
   'shop.alert.success.title': 'धन्यवाद!',
   'shop.alert.success.body': '{name} सफलतापूर्वक खरीदा गया।',
+  'shop.alert.signInRequired.title': 'साइन इन आवश्यक है',
+  'shop.alert.signInRequired.body':
+    'खरीदारी रिकॉर्ड हो गई। अपने खाते से सिंक करने के लिए Google से साइन इन करें।',
+  'shop.alert.signInRequired.action': 'Google से साइन इन करें',
   'shop.alert.purchaseFailed.title': 'खरीदारी विफल',
   'shop.alert.purchaseFailed.body': 'कुछ गलत हो गया।',
   'shop.alert.restored.title': 'पुनर्स्थापित',
@@ -267,4 +276,8 @@ export default {
     'बहुत ज़्यादा प्रयास। कुछ मिनट प्रतीक्षा करें और फिर कोशिश करें।',
   'auth.error.generic': 'साइन इन विफल। कृपया फिर कोशिश करें।',
   'auth.error.noToken': 'साइन इन ने टोकन नहीं लौटाया।',
+  'auth.google.failed': 'Google साइन इन असफल रहा। कृपया फिर कोशिश करें।',
+  'auth.google.exchangeFailed': 'Google साइन इन पूरा नहीं हो सका।',
+  'auth.google.noCode': 'Google साइन इन ने अनुमति कोड नहीं लौटाया।',
+  'auth.google.stateMismatch': 'Google साइन इन सत्यापित नहीं हो सका। फिर कोशिश करें।',
 };

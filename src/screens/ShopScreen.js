@@ -16,6 +16,7 @@ import {
 } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
+import { savePendingIap } from '../lib/pendingIap';
 
 const GOLD = '#facc15';
 
@@ -138,20 +139,44 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     try {
       const purchaseResult = await purchasePackage(rcPackage);
       const authed = await isLoggedIn();
+      const transactionId = readPurchaseTransactionId(purchaseResult);
+      const productId = rcPackage.product.identifier;
       if (authed) {
         await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
-          productId: rcPackage.product.identifier,
-          transactionId: readPurchaseTransactionId(purchaseResult),
+          productId,
+          transactionId,
           rawPayload: {
             platform: 'google',
-            storeProductId: rcPackage.product.identifier,
+            storeProductId: productId,
             packageKey: meta.packageId,
           },
         });
+        const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
+        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+      } else {
+        await savePendingIap({
+          productId,
+          transactionId,
+          packageKey: meta.packageId,
+        });
+        Alert.alert(
+          t('shop.alert.signInRequired.title'),
+          t('shop.alert.signInRequired.body'),
+          [
+            {
+              text: t('shop.alert.signInRequired.action'),
+              onPress: () =>
+                navigate(SCREENS.SIGN_IN, {
+                  backScreen: SCREENS.SHOP,
+                  returnBackScreen: backScreen,
+                  requireSignIn: true,
+                }),
+            },
+          ],
+          { cancelable: false }
+        );
       }
-      const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-      Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));

@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'البريد الإلكتروني',
   'signIn.placeholder.password': 'كلمة المرور',
   'signIn.button.email': 'تسجيل الدخول',
+  'signIn.button.google': 'تسجيل الدخول عبر Google',
+  'signIn.divider': '— أو —',
+  'signIn.required.title': 'تسجيل الدخول مطلوب',
+  'signIn.required.body':
+    'سجّل الدخول عبر Google لمزامنة هذا الشراء مع حسابك.',
 
   // shop
   'shop.title': 'المتجر',
@@ -165,6 +170,10 @@ export default {
     'هذا المنتج غير محمّل بعد. حاول مرة أخرى بعد لحظات.',
   'shop.alert.success.title': 'شكراً لك!',
   'shop.alert.success.body': 'تم شراء {name} بنجاح.',
+  'shop.alert.signInRequired.title': 'تسجيل الدخول مطلوب',
+  'shop.alert.signInRequired.body':
+    'تم تسجيل الشراء. سجّل الدخول عبر Google لمزامنته مع حسابك.',
+  'shop.alert.signInRequired.action': 'تسجيل الدخول عبر Google',
   'shop.alert.purchaseFailed.title': 'فشل الشراء',
   'shop.alert.purchaseFailed.body': 'حدث خطأ ما.',
   'shop.alert.restored.title': 'تمت الاستعادة',
@@ -267,4 +276,8 @@ export default {
     'محاولات كثيرة جداً. انتظر بضع دقائق وحاول مجدداً.',
   'auth.error.generic': 'فشل تسجيل الدخول. يرجى المحاولة مجدداً.',
   'auth.error.noToken': 'تسجيل الدخول لم يُرجع رمزاً.',
+  'auth.google.failed': 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.',
+  'auth.google.exchangeFailed': 'تعذّر إكمال تسجيل الدخول عبر Google.',
+  'auth.google.noCode': 'تسجيل الدخول عبر Google لم يُرجع رمز تفويض.',
+  'auth.google.stateMismatch': 'تعذّر التحقق من تسجيل الدخول عبر Google. حاول مرة أخرى.',
 };

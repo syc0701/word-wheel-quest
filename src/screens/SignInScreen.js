@@ -16,16 +16,44 @@ import { SCREENS } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { verifyPendingIapIfNeeded } from '../lib/pendingIap';
 import {
   loginWithPassword,
   signInErrorMessage,
+  signInWithGoogle,
 } from '../services/cognitoAuth';
+
+function GoogleMark() {
+  return (
+    <View style={googleMarkStyles.badge}>
+      <Text style={googleMarkStyles.letter}>G</Text>
+    </View>
+  );
+}
+
+const googleMarkStyles = StyleSheet.create({
+  badge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  letter: {
+    color: '#4285F4',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+});
 
 export default function SignInScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
-  const backScreen = SCREENS.SETTINGS;
+  const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
+  const requireSignIn = Boolean(routeParams.requireSignIn);
 
   const emailRef = useRef('');
   const passwordRef = useRef('');
@@ -33,6 +61,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError] = useState('');
 
   const sceneText = isRandomScene
@@ -60,12 +89,14 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
       }
     : null;
 
-  const finishSignIn = () => {
+  const finishSignIn = async () => {
+    await verifyPendingIapIfNeeded();
     navigate(backScreen, {
       ...routeParams,
-      backScreen: routeParams.backScreen ?? SCREENS.PLAY,
+      backScreen: routeParams.returnBackScreen ?? routeParams.backScreen ?? SCREENS.PLAY,
       signedIn: true,
       authTick: Date.now(),
+      requireSignIn: undefined,
     });
   };
 
@@ -81,7 +112,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     try {
       const result = await loginWithPassword(trimmedEmail, pwd);
       if (result.success) {
-        finishSignIn();
+        await finishSignIn();
         return;
       }
       setError(result.message || signInErrorMessage(result.errorKey));
@@ -89,6 +120,22 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
       setError(e?.message || signInErrorMessage('generic'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleBusy(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result.cancelled) return;
+      if (result.success) {
+        await finishSignIn();
+      }
+    } catch (e) {
+      setError(e?.message || t('auth.google.failed'));
+    } finally {
+      setGoogleBusy(false);
     }
   };
 
@@ -101,6 +148,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     });
   };
 
+  const locked = busy || googleBusy;
   const styles = createStyles(colors, insets);
 
   return (
@@ -125,7 +173,13 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.title, sceneText]}>{t('signIn.title')}</Text>
+          <Text style={[styles.title, sceneText]}>
+            {requireSignIn ? t('signIn.required.title') : t('signIn.title')}
+          </Text>
+
+          {requireSignIn ? (
+            <Text style={[styles.requiredBody, sceneMuted]}>{t('signIn.required.body')}</Text>
+          ) : null}
 
           <Text style={[styles.legal, sceneMuted]}>
             {t('signIn.legal.prefix')}
@@ -147,6 +201,27 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
+          <Pressable
+            style={[styles.googleBtn, locked && styles.btnDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={locked}
+          >
+            {googleBusy ? (
+              <ActivityIndicator color="#1f1f1f" />
+            ) : (
+              <>
+                <GoogleMark />
+                <Text style={styles.googleBtnText}>{t('signIn.button.google')}</Text>
+              </>
+            )}
+          </Pressable>
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.surfaceLight }]} />
+            <Text style={[styles.dividerText, sceneMuted]}>{t('signIn.divider')}</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.surfaceLight }]} />
+          </View>
+
           <TextInput
             style={[styles.input, isRandomScene && styles.inputOnScene]}
             placeholder={t('signIn.placeholder.email')}
@@ -163,7 +238,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             autoComplete="off"
             textContentType="none"
             importantForAutofill="no"
-            editable={!busy}
+            editable={!locked}
           />
 
           <View style={styles.passwordWrap}>
@@ -187,7 +262,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               autoComplete="off"
               textContentType="none"
               importantForAutofill="no"
-              editable={!busy}
+              editable={!locked}
             />
             <Pressable
               style={styles.eyeBtn}
@@ -203,9 +278,9 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           </View>
 
           <Pressable
-            style={[styles.primaryBtn, busy && styles.btnDisabled]}
+            style={[styles.primaryBtn, locked && styles.btnDisabled]}
             onPress={handleEmailSignIn}
-            disabled={busy}
+            disabled={locked}
           >
             {busy ? (
               <ActivityIndicator color="#ffffff" />
@@ -222,101 +297,136 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
 function createStyles(colors, insets) {
   const top = Math.max(insets?.top ?? 0, 12);
   return StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  settingsBtn: {
-    position: 'absolute',
-    top: top + 8,
-    right: 16,
-    zIndex: 2,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-  },
-  settingsBtnOnScene: {
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: top + 56,
-    paddingBottom: 40 + (insets?.bottom ?? 0),
-  },
-  title: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '800',
-    lineHeight: 32,
-    marginBottom: 16,
-  },
-  legal: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  legalLink: {
-    color: colors.primaryGlow,
-    fontWeight: '600',
-  },
-  error: {
-    color: '#f87171',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceLight,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    color: colors.text,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  inputOnScene: {
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-    color: '#0f172a',
-  },
-  passwordWrap: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  passwordInput: {
-    marginBottom: 0,
-    paddingRight: 48,
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 12,
-    top: 14,
-  },
-  primaryBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  btnDisabled: {
-    opacity: 0.7,
-  },
-  primaryBtnText: {
-    color: '#ffffff',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-});
+    container: {
+      flex: 1,
+    },
+    flex: {
+      flex: 1,
+    },
+    settingsBtn: {
+      position: 'absolute',
+      top: top + 8,
+      right: 16,
+      zIndex: 2,
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+    },
+    settingsBtnOnScene: {
+      backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+      paddingTop: top + 56,
+      paddingBottom: 40 + (insets?.bottom ?? 0),
+    },
+    title: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: '800',
+      lineHeight: 32,
+      marginBottom: 16,
+    },
+    requiredBody: {
+      color: colors.textMuted,
+      fontSize: 15,
+      lineHeight: 22,
+      marginBottom: 16,
+    },
+    legal: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 20,
+      marginBottom: 24,
+    },
+    legalLink: {
+      color: colors.primaryGlow,
+      fontWeight: '600',
+    },
+    error: {
+      color: '#f87171',
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    googleBtn: {
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(15, 23, 42, 0.12)',
+    },
+    googleBtnText: {
+      color: '#1f1f1f',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 18,
+      gap: 10,
+    },
+    dividerLine: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+    },
+    dividerText: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surfaceLight,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      color: colors.text,
+      fontSize: 16,
+      marginBottom: 12,
+    },
+    inputOnScene: {
+      backgroundColor: 'rgba(255, 255, 255, 0.96)',
+      borderColor: 'rgba(255, 255, 255, 0.9)',
+      color: '#0f172a',
+    },
+    passwordWrap: {
+      position: 'relative',
+      marginBottom: 12,
+    },
+    passwordInput: {
+      marginBottom: 0,
+      paddingRight: 48,
+    },
+    eyeBtn: {
+      position: 'absolute',
+      right: 12,
+      top: 14,
+    },
+    primaryBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 4,
+    },
+    btnDisabled: {
+      opacity: 0.7,
+    },
+    primaryBtnText: {
+      color: '#ffffff',
+      fontSize: 17,
+      fontWeight: '700',
+    },
+  });
 }

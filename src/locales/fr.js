@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'E-mail',
   'signIn.placeholder.password': 'Mot de passe',
   'signIn.button.email': 'Se connecter',
+  'signIn.button.google': 'Se connecter avec Google',
+  'signIn.divider': '— ou —',
+  'signIn.required.title': 'Connexion requise',
+  'signIn.required.body':
+    'Connectez-vous avec Google pour synchroniser cet achat avec votre compte.',
 
   // shop
   'shop.title': 'Boutique',
@@ -165,6 +170,10 @@ export default {
     'Ce produit n’est pas encore chargé. Réessayez dans un instant.',
   'shop.alert.success.title': 'Merci !',
   'shop.alert.success.body': '{name} acheté avec succès.',
+  'shop.alert.signInRequired.title': 'Connexion requise',
+  'shop.alert.signInRequired.body':
+    'Achat enregistré. Connectez-vous avec Google pour le synchroniser avec votre compte.',
+  'shop.alert.signInRequired.action': 'Se connecter avec Google',
   'shop.alert.purchaseFailed.title': 'Achat échoué',
   'shop.alert.purchaseFailed.body': 'Une erreur s’est produite.',
   'shop.alert.restored.title': 'Restauré',
@@ -267,4 +276,8 @@ export default {
     'Trop de tentatives. Attendez quelques minutes et réessayez.',
   'auth.error.generic': 'Échec de la connexion. Veuillez réessayer.',
   'auth.error.noToken': 'La connexion n’a pas renvoyé de jeton.',
+  'auth.google.failed': 'Échec de la connexion Google. Veuillez réessayer.',
+  'auth.google.exchangeFailed': 'Impossible de terminer la connexion Google.',
+  'auth.google.noCode': 'La connexion Google n’a pas renvoyé de code d’autorisation.',
+  'auth.google.stateMismatch': 'La connexion Google n’a pas pu être vérifiée. Réessayez.',
 };

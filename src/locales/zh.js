@@ -154,6 +154,10 @@ export default {
   'signIn.placeholder.email': '邮箱',
   'signIn.placeholder.password': '密码',
   'signIn.button.email': '登录',
+  'signIn.button.google': '使用 Google 登录',
+  'signIn.divider': '— 或 —',
+  'signIn.required.title': '需要登录',
+  'signIn.required.body': '请使用 Google 登录，以便将此次购买同步到你的账户。',
 
   // shop
   'shop.title': '商店',
@@ -164,6 +168,10 @@ export default {
     '该商品尚未加载。请稍后再试。',
   'shop.alert.success.title': '谢谢！',
   'shop.alert.success.body': '{name} 购买成功。',
+  'shop.alert.signInRequired.title': '需要登录',
+  'shop.alert.signInRequired.body':
+    '购买已记录。请使用 Google 登录以同步到你的账户。',
+  'shop.alert.signInRequired.action': '使用 Google 登录',
   'shop.alert.purchaseFailed.title': '购买失败',
   'shop.alert.purchaseFailed.body': '出了点问题。',
   'shop.alert.restored.title': '已恢复',
@@ -265,4 +273,8 @@ export default {
     '尝试次数过多。请稍等几分钟后再试。',
   'auth.error.generic': '登录失败。请重试。',
   'auth.error.noToken': '登录未返回令牌。',
+  'auth.google.failed': 'Google 登录失败，请重试。',
+  'auth.google.exchangeFailed': '无法完成 Google 登录。',
+  'auth.google.noCode': 'Google 登录未返回授权码。',
+  'auth.google.stateMismatch': '无法验证 Google 登录，请重试。',
 };

@@ -194,6 +194,11 @@ export default {
   'signIn.placeholder.email': 'Email',
   'signIn.placeholder.password': 'Password',
   'signIn.button.email': 'Sign in',
+  'signIn.button.google': 'Sign in with Google',
+  'signIn.divider': '— or —',
+  'signIn.required.title': 'Sign in required',
+  'signIn.required.body':
+    'Sign in with Google to sync this purchase to your account.',
 
   // shop
   'shop.title': 'Shop',
@@ -217,6 +222,10 @@ export default {
     'This product is not loaded yet. Try again in a moment.',
   'shop.alert.success.title': 'Thank you!',
   'shop.alert.success.body': '{name} purchased successfully.',
+  'shop.alert.signInRequired.title': 'Sign in required',
+  'shop.alert.signInRequired.body':
+    'Purchase recorded. Sign in with Google to sync it to your account.',
+  'shop.alert.signInRequired.action': 'Sign in with Google',
   'shop.alert.purchaseFailed.title': 'Purchase failed',
   'shop.alert.purchaseFailed.body': 'Something went wrong.',
   'shop.alert.restored.title': 'Restored',
@@ -351,4 +360,10 @@ export default {
     'Too many attempts. Please wait a few minutes and try again.',
   'auth.error.generic': 'Sign-in failed. Please try again.',
   'auth.error.noToken': 'Sign-in did not return a token.',
+  'auth.google.failed': 'Google sign-in failed. Please try again.',
+  'auth.google.exchangeFailed': 'Could not complete Google sign-in.',
+  'auth.google.noCode': 'Google sign-in did not return an ID token.',
+  'auth.google.developerError':
+    'Google Sign-In is not set up for this Android build. Add the app SHA-1 to the Google Cloud Android OAuth client.',
+  'auth.google.stateMismatch': 'Google sign-in could not be verified. Try again.',
 };

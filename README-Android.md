@@ -19,7 +19,14 @@ Gameplay, navigation, shop, and styling are React components. Edit UI in the rep
 
 ## Sign-in
 
-Email + password via AWS Cognito (same mobile app client as iOS). Sign in with Apple is **not** included on Android.
+Email + password via AWS Cognito (same mobile app client as iOS). **Sign in with Google** uses the native Android account picker (`@react-native-google-signin/google-signin`), then exchanges the Google ID token at `POST /google-native-cognito`. Sign in with Apple is **not** included on Android.
+
+Native Google Sign-In needs an **Android OAuth client** in the same Google Cloud project as the web client (`845957927924-3335s7vnvg2s92s620sor0e6t957kbvf`) for package `com.puzint.wordwheel.app`, with:
+
+- Local debug/release signing (`android/app/debug.keystore`): `5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25`
+- Play App Signing SHA-1 (from Play Console → App integrity) for store builds
+
+After adding `@react-native-google-signin/google-signin`, rebuild native code (`npm run android:build`). Metro reload is not enough.
 
 ## In-app purchases (RevenueCat)
 

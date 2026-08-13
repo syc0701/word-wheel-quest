@@ -12,7 +12,20 @@
           "package_name": "com.puzint.wordwheel.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "845957927924-inosflg5rhagho06im8deqfp71i1gdqj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.puzint.wordwheel.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "845957927924-3335s7vnvg2s92s620sor0e6t957kbvf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBQLfRQoezN7CIS_IoOAwv_MBZBbzWrlEc"

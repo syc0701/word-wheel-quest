@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'Correo',
   'signIn.placeholder.password': 'Contraseña',
   'signIn.button.email': 'Iniciar sesión',
+  'signIn.button.google': 'Iniciar sesión con Google',
+  'signIn.divider': '— o —',
+  'signIn.required.title': 'Inicio de sesión obligatorio',
+  'signIn.required.body':
+    'Inicia sesión con Google para sincronizar esta compra con tu cuenta.',
 
   // shop
   'shop.title': 'Tienda',
@@ -165,6 +170,10 @@ export default {
     'Este producto aún no está cargado. Inténtalo de nuevo en un momento.',
   'shop.alert.success.title': '¡Gracias!',
   'shop.alert.success.body': '{name} comprado correctamente.',
+  'shop.alert.signInRequired.title': 'Inicio de sesión obligatorio',
+  'shop.alert.signInRequired.body':
+    'Compra registrada. Inicia sesión con Google para sincronizarla con tu cuenta.',
+  'shop.alert.signInRequired.action': 'Iniciar sesión con Google',
   'shop.alert.purchaseFailed.title': 'Compra fallida',
   'shop.alert.purchaseFailed.body': 'Algo salió mal.',
   'shop.alert.restored.title': 'Restaurado',
@@ -267,4 +276,8 @@ export default {
     'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
   'auth.error.generic': 'Error al iniciar sesión. Inténtalo de nuevo.',
   'auth.error.noToken': 'El inicio de sesión no devolvió un token.',
+  'auth.google.failed': 'Error al iniciar sesión con Google. Inténtalo de nuevo.',
+  'auth.google.exchangeFailed': 'No se pudo completar el inicio de sesión con Google.',
+  'auth.google.noCode': 'El inicio de sesión con Google no devolvió un código de autorización.',
+  'auth.google.stateMismatch': 'No se pudo verificar el inicio de sesión con Google. Inténtalo de nuevo.',
 };

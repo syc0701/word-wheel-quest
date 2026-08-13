@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'メール',
   'signIn.placeholder.password': 'パスワード',
   'signIn.button.email': 'サインイン',
+  'signIn.button.google': 'Googleでサインイン',
+  'signIn.divider': '— または —',
+  'signIn.required.title': 'サインインが必要です',
+  'signIn.required.body':
+    'この購入をアカウントに同期するには、Googleでサインインしてください。',
 
   // shop
   'shop.title': 'ショップ',
@@ -165,6 +170,10 @@ export default {
     'この商品はまだ読み込まれていません。しばらくしてから再試行してください。',
   'shop.alert.success.title': 'ありがとうございます！',
   'shop.alert.success.body': '{name}の購入が完了しました。',
+  'shop.alert.signInRequired.title': 'サインインが必要です',
+  'shop.alert.signInRequired.body':
+    '購入を記録しました。アカウントに同期するにはGoogleでサインインしてください。',
+  'shop.alert.signInRequired.action': 'Googleでサインイン',
   'shop.alert.purchaseFailed.title': '購入に失敗しました',
   'shop.alert.purchaseFailed.body': '問題が発生しました。',
   'shop.alert.restored.title': '復元しました',
@@ -267,4 +276,8 @@ export default {
     '試行回数が多すぎます。数分待ってから再試行してください。',
   'auth.error.generic': 'サインインに失敗しました。もう一度お試しください。',
   'auth.error.noToken': 'サインインがトークンを返しませんでした。',
+  'auth.google.failed': 'Googleサインインに失敗しました。もう一度お試しください。',
+  'auth.google.exchangeFailed': 'Googleサインインを完了できませんでした。',
+  'auth.google.noCode': 'Googleサインインが認証コードを返しませんでした。',
+  'auth.google.stateMismatch': 'Googleサインインを確認できませんでした。もう一度お試しください。',
 };

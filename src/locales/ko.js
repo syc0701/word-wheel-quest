@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': '이메일',
   'signIn.placeholder.password': '비밀번호',
   'signIn.button.email': '로그인',
+  'signIn.button.google': 'Google로 로그인',
+  'signIn.divider': '— 또는 —',
+  'signIn.required.title': '로그인이 필요합니다',
+  'signIn.required.body':
+    '이 구매를 계정에 동기화하려면 Google로 로그인하세요.',
 
   // shop
   'shop.title': '상점',
@@ -165,6 +170,10 @@ export default {
     '이 상품이 아직 로드되지 않았습니다. 잠시 후 다시 시도하세요.',
   'shop.alert.success.title': '감사합니다!',
   'shop.alert.success.body': '{name} 구매가 완료되었습니다.',
+  'shop.alert.signInRequired.title': '로그인이 필요합니다',
+  'shop.alert.signInRequired.body':
+    '구매가 기록되었습니다. 계정에 동기화하려면 Google로 로그인하세요.',
+  'shop.alert.signInRequired.action': 'Google로 로그인',
   'shop.alert.purchaseFailed.title': '구매 실패',
   'shop.alert.purchaseFailed.body': '문제가 발생했습니다.',
   'shop.alert.restored.title': '복원됨',
@@ -267,4 +276,8 @@ export default {
     '시도가 너무 많습니다. 몇 분 기다린 후 다시 시도하세요.',
   'auth.error.generic': '로그인에 실패했습니다. 다시 시도하세요.',
   'auth.error.noToken': '로그인이 토큰을 반환하지 않았습니다.',
+  'auth.google.failed': 'Google 로그인에 실패했습니다. 다시 시도해 주세요.',
+  'auth.google.exchangeFailed': 'Google 로그인을 완료할 수 없습니다.',
+  'auth.google.noCode': 'Google 로그인이 인증 코드를 반환하지 않았습니다.',
+  'auth.google.stateMismatch': 'Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.',
 };

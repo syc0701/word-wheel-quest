@@ -2,6 +2,7 @@
   "expo": {
     "name": "Word Wheel Quest",
     "slug": "word-wheel-quest",
+    "scheme": "puzzleinteract",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./src/assets/icon.png",
@@ -74,7 +75,8 @@
           "androidAppId": "ca-app-pub-1539854949018984~3656372616",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ]
   }
 }

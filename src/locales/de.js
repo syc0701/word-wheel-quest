@@ -155,6 +155,11 @@ export default {
   'signIn.placeholder.email': 'E-Mail',
   'signIn.placeholder.password': 'Passwort',
   'signIn.button.email': 'Anmelden',
+  'signIn.button.google': 'Mit Google anmelden',
+  'signIn.divider': '— oder —',
+  'signIn.required.title': 'Anmeldung erforderlich',
+  'signIn.required.body':
+    'Melde dich mit Google an, um diesen Kauf mit deinem Konto zu synchronisieren.',
 
   // shop
   'shop.title': 'Shop',
@@ -165,6 +170,10 @@ export default {
     'Dieses Produkt ist noch nicht geladen. Bitte gleich erneut versuchen.',
   'shop.alert.success.title': 'Danke!',
   'shop.alert.success.body': '{name} erfolgreich gekauft.',
+  'shop.alert.signInRequired.title': 'Anmeldung erforderlich',
+  'shop.alert.signInRequired.body':
+    'Kauf gespeichert. Melde dich mit Google an, um ihn mit deinem Konto zu synchronisieren.',
+  'shop.alert.signInRequired.action': 'Mit Google anmelden',
   'shop.alert.purchaseFailed.title': 'Kauf fehlgeschlagen',
   'shop.alert.purchaseFailed.body': 'Etwas ist schiefgelaufen.',
   'shop.alert.restored.title': 'Wiederhergestellt',
@@ -267,4 +276,8 @@ export default {
     'Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.',
   'auth.error.generic': 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
   'auth.error.noToken': 'Anmeldung hat kein Token zurückgegeben.',
+  'auth.google.failed': 'Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
+  'auth.google.exchangeFailed': 'Google-Anmeldung konnte nicht abgeschlossen werden.',
+  'auth.google.noCode': 'Google-Anmeldung hat keinen Autorisierungscode zurückgegeben.',
+  'auth.google.stateMismatch': 'Google-Anmeldung konnte nicht bestätigt werden. Bitte erneut versuchen.',
 };
