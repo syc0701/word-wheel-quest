@@ -24,4 +24,17 @@
 -dontwarn com.google.android.play.core.**
 -dontwarn com.google.android.gms.**
 
-# Add any project specific keep options here:
+# Google Sign-In / Play Services Auth
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.reactnativegooglesignin.** { *; }
+
+# Google Mobile Ads
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.android.gms.internal.ads.** { *; }
+-dontwarn com.google.android.gms.ads.**
+
+# Keep native methods / JNI for New Architecture
+-keepclasseswithmembernames class * {
+    native <methods>;
+}

@@ -19,7 +19,7 @@
     "android": {
       "package": "com.puzint.wordwheel.app",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 7,
+      "versionCode": 8,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
       "permissions": [
@@ -44,6 +44,18 @@
       "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enablePngCrunchInReleaseBuilds": true
+          }
+        }
+      ],
       [
         "react-native-edge-to-edge",
         {
