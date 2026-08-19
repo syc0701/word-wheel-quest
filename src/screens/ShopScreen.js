@@ -11,6 +11,7 @@ import { IAP_PACKAGES, APP_STORE } from '../constants/store';
 import {
   getDefaultOffering,
   isPurchasesConfigured,
+  isStoreUnavailable,
   purchasePackage,
   readPurchaseTransactionId,
 } from '../services/purchases';
@@ -201,7 +202,11 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
         ) : !shopReady ? (
           <Text style={[styles.unavailable, { color: colors.textMuted }, sceneChip]}>
-            {t('shop.alert.unavailable.body')}
+            {t(
+              isStoreUnavailable()
+                ? 'shop.alert.deviceUnavailable.body'
+                : 'shop.alert.unavailable.body'
+            )}
           </Text>
         ) : (
           IAP_PACKAGES.map((meta) => {

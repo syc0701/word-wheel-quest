@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -281,7 +282,11 @@ export default function HomeScreen({ navigate }) {
           </Pressable>
         </View>
 
-        <View style={[styles.body, { paddingBottom: 16 }]}>
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={[styles.bodyContent, { paddingBottom: 16 }]}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.headerBlock}>
             <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
             <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
@@ -434,7 +439,7 @@ export default function HomeScreen({ navigate }) {
               {t('home.copyright')}
             </Text>
           </View>
-        </View>
+        </ScrollView>
 
         <AdBanner />
 
@@ -471,13 +476,20 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
+  },
+  bodyContent: {
+    flexGrow: 1,
     paddingHorizontal: 18,
   },
   headerBlock: {
     paddingTop: 4,
   },
   middleBlock: {
-    flex: 1,
+    // Grows to centre the card when there is room, but keeps its natural height
+    // on short screens instead of collapsing and spilling over the neighbours.
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: 'auto',
     justifyContent: 'center',
     paddingVertical: 8,
   },

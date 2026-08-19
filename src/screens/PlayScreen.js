@@ -3,12 +3,12 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Dimensions,
   Easing,
   Pressable,
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 import { ArrowLeft, BookOpen, ChevronRight, Clock, Lightbulb, Tornado } from 'lucide-react-native';
@@ -75,9 +75,39 @@ import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-/** Keep wheel clear of the home indicator. */
-const WHEEL_SIZE = Math.min(SCREEN_W - 120, Math.max(200, SCREEN_H * 0.28), 260);
+/**
+ * Vertical space the play chrome needs on top of the board: scroll padding,
+ * header, and the clue strip with its margins.
+ */
+const CHROME_H = 164;
+/** Extra row shown only while the timer setting is on. */
+const TIMER_ROW_H = 28;
+/** Padding and margins around the wheel inside its dock. */
+const WHEEL_DOCK_H = 40;
+
+/**
+ * The board is square and the wheel has a floor size, so on a short viewport
+ * they cannot both be laid out vertically. Landscape puts them side by side,
+ * which is also the only way an 8x8 board stays readable on a tablet.
+ */
+function usePlayMetrics(insets, timerEnabled) {
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+
+  const wheelSize = isLandscape
+    ? Math.min(260, Math.max(170, height - 220), width * 0.42)
+    : Math.min(width - 120, Math.max(200, height * 0.28), 260);
+
+  const verticalChrome =
+    insets.top + insets.bottom + CHROME_H + (timerEnabled ? TIMER_ROW_H : 0);
+  // In landscape the wheel sits beside the board, so it costs no height.
+  const gridMaxSize = Math.max(
+    150,
+    height - verticalChrome - (isLandscape ? 0 : wheelSize + WHEEL_DOCK_H)
+  );
+
+  return { isLandscape, wheelSize, gridMaxSize };
+}
 
 export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
@@ -89,6 +119,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const { timerEnabled } = usePlayTimer();
   const t = useT();
   const insets = useSafeAreaInsets();
+  const { isLandscape, wheelSize, gridMaxSize } = usePlayMetrics(insets, timerEnabled);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -963,6 +994,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   return (
     <GradientBackground variant="play">
+      <View style={[styles.shell, isLandscape && styles.shellLandscape]}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={[
@@ -1028,6 +1060,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           celebrateOrder={celebrateOrder}
           celebrateMode={celebrateMode}
           revealBurstId={revealBurstId}
+          maxBoardSize={gridMaxSize}
           onCellPress={handleCellPress}
         />
 
@@ -1065,7 +1098,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       </ScrollView>
 
       {/* Wheel lives outside ScrollView so pan gestures are never stolen mid-drag. */}
-      <View style={[styles.wheelDock, { paddingBottom: 28 + insets.bottom }]}>
+      <View
+        style={[
+          styles.wheelDock,
+          isLandscape && styles.wheelDockLandscape,
+          { paddingBottom: (isLandscape ? 12 : 28) + insets.bottom },
+        ]}
+      >
         <View style={styles.wheelRow}>
           <View style={styles.sideTools}>
             <View style={styles.coinBurstWrap}>
@@ -1124,7 +1163,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             onDragEnd={handleDragEnd}
             onShuffle={applyWheelShuffle}
             shuffleSignal={shuffleSignal}
-            wheelSize={WHEEL_SIZE}
+            wheelSize={wheelSize}
           />
 
           <View style={styles.sideTools}>
@@ -1153,6 +1192,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
         </View>
+      </View>
       </View>
 
       <WordWheelDictionarySheet
@@ -1211,6 +1251,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
+  shellLandscape: {
+    flexDirection: 'row',
+  },
   scrollView: {
     flex: 1,
   },
@@ -1222,6 +1268,10 @@ const styles = StyleSheet.create({
   wheelDock: {
     paddingHorizontal: 16,
     paddingTop: 4,
+  },
+  wheelDockLandscape: {
+    justifyContent: 'center',
+    paddingLeft: 0,
   },
   centered: {
     flex: 1,

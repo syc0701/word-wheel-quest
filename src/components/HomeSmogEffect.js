@@ -15,9 +15,18 @@ import { useAppearance } from '../context/AppearanceContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
+/**
+ * Scaling mist off the width blows the banks up on wide screens: a tablet at
+ * 960dp produced circles nearly 290dp across. The short edge keeps the mist
+ * proportionate (and identical in both orientations), and the cap keeps it
+ * subtle on large displays.
+ */
+const BANK_BASE = Math.min(SCREEN_W, SCREEN_H);
+const MAX_BANK = 120;
+
 function makeSmogBanks(count = 14) {
   return Array.from({ length: count }, (_, i) => {
-    const size = SCREEN_W * (0.12 + (i % 5) * 0.045);
+    const size = Math.min(BANK_BASE * (0.12 + (i % 5) * 0.045), MAX_BANK);
     const goingRight = i % 2 === 0;
     // Spread across the full screen so mist shows through transparent grid gaps.
     const band = i % 3;

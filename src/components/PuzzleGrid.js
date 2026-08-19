@@ -5,6 +5,8 @@ import { formatCellWordNumberLabel } from '../lib/gridReveal';
 import { useAppearance } from '../context/AppearanceContext';
 
 const GAP = 4;
+/** Stops a short word from rendering as a few giant cells on a large screen. */
+const MAX_CELL = 84;
 
 export default function PuzzleGrid({
   gridSize,
@@ -17,18 +19,50 @@ export default function PuzzleGrid({
   celebrateOrder = [],
   celebrateMode = 'new',
   revealBurstId = 0,
+  maxBoardSize = 0,
   onCellPress,
 }) {
   const { ww } = useAppearance();
   const [gridWidth, setGridWidth] = useState(0);
 
-  // Floor so N cells + gaps never exceed measured width (flexWrap would drop the last column).
-  const cellSize =
-    gridWidth > 0 && gridSize > 0
-      ? Math.floor((gridWidth - GAP * (gridSize - 1)) / gridSize)
-      : 0;
-  const boardSize =
-    cellSize > 0 ? cellSize * gridSize + GAP * (gridSize - 1) : 0;
+  // Words rarely span the whole gridSize x gridSize board, so rendering every
+  // row and column strands the puzzle in a corner surrounded by blank cells.
+  // Cropping to the used cells lets the puzzle centre and use the space.
+  const bounds = useMemo(() => {
+    let minRow = Infinity;
+    let maxRow = -Infinity;
+    let minCol = Infinity;
+    let maxCol = -Infinity;
+    puzzleCells?.forEach((key) => {
+      const [row, col] = key.split(',').map(Number);
+      if (row < minRow) minRow = row;
+      if (row > maxRow) maxRow = row;
+      if (col < minCol) minCol = col;
+      if (col > maxCol) maxCol = col;
+    });
+    if (!Number.isFinite(minRow)) {
+      return { minRow: 0, maxRow: gridSize - 1, minCol: 0, maxCol: gridSize - 1 };
+    }
+    return { minRow, maxRow, minCol, maxCol };
+  }, [puzzleCells, gridSize]);
+
+  const rowCount = Math.max(1, bounds.maxRow - bounds.minRow + 1);
+  const colCount = Math.max(1, bounds.maxCol - bounds.minCol + 1);
+
+  // Fit both axes: sizing on width alone overflows the screen on short/landscape
+  // viewports, which is what pushed the letter wheel out of view.
+  const cellFromWidth =
+    gridWidth > 0 ? Math.floor((gridWidth - GAP * (colCount - 1)) / colCount) : 0;
+  const cellFromHeight =
+    maxBoardSize > 0
+      ? Math.floor((maxBoardSize - GAP * (rowCount - 1)) / rowCount)
+      : cellFromWidth;
+  const cellSize = Math.max(0, Math.min(cellFromWidth, cellFromHeight, MAX_CELL));
+
+  const boardWidth = cellSize > 0 ? cellSize * colCount + GAP * (colCount - 1) : 0;
+  const boardHeight = cellSize > 0 ? cellSize * rowCount + GAP * (rowCount - 1) : 0;
+  // Cells shrink on small viewports, so the glyph has to follow or it clips.
+  const letterFontSize = cellSize > 0 ? Math.max(11, Math.round(cellSize * 0.42)) : 17;
 
   const celebrating = celebratingCellKeys instanceof Set ? celebratingCellKeys : new Set();
 
@@ -38,11 +72,11 @@ export default function PuzzleGrid({
       const [row, col] = key.split(',').map(Number);
       return {
         key,
-        x: col * (cellSize + GAP) + cellSize / 2,
-        y: row * (cellSize + GAP) + cellSize / 2,
+        x: (col - bounds.minCol) * (cellSize + GAP) + cellSize / 2,
+        y: (row - bounds.minRow) * (cellSize + GAP) + cellSize / 2,
       };
     });
-  }, [celebratingCellKeys, cellSize, celebrating.size]);
+  }, [celebratingCellKeys, cellSize, celebrating.size, bounds]);
 
   const orderIndex = useMemo(() => {
     const map = new Map();
@@ -129,7 +163,10 @@ export default function PuzzleGrid({
           <Text
             style={[
               styles.letter,
-              { color: isHintRevealed ? ww.hintText : ww.successText },
+              {
+                fontSize: letterFontSize,
+                color: isHintRevealed ? ww.hintText : ww.successText,
+              },
             ]}
           >
             {letter}
@@ -140,13 +177,16 @@ export default function PuzzleGrid({
   };
 
   const rows = [];
-  for (let row = 0; row < gridSize; row += 1) {
+  for (let row = bounds.minRow; row <= bounds.maxRow; row += 1) {
     const rowCells = [];
-    for (let col = 0; col < gridSize; col += 1) {
+    for (let col = bounds.minCol; col <= bounds.maxCol; col += 1) {
       rowCells.push(renderCell(row, col));
     }
     rows.push(
-      <View key={`row-${row}`} style={[styles.row, row > 0 && { marginTop: GAP }]}>
+      <View
+        key={`row-${row}`}
+        style={[styles.row, row > bounds.minRow && { marginTop: GAP }]}
+      >
         {rowCells}
       </View>
     );
@@ -165,7 +205,7 @@ export default function PuzzleGrid({
       <View
         style={[
           styles.grid,
-          boardSize > 0 && { width: boardSize, height: boardSize },
+          boardWidth > 0 && { width: boardWidth, height: boardHeight },
         ]}
       >
         {rows}
@@ -181,6 +221,11 @@ const styles = StyleSheet.create({
   gridWrap: {
     width: '100%',
     alignItems: 'center',
+    // Centre in the leftover space without collapsing when the screen is short.
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    justifyContent: 'center',
   },
   grid: {
     position: 'relative',

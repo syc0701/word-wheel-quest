@@ -217,6 +217,8 @@ export default {
   'shop.alert.unavailable.title': 'Shop unavailable',
   'shop.alert.unavailable.body':
     'In-app purchases are not set up yet. Add your RevenueCat Android API key to enable the shop.',
+  'shop.alert.deviceUnavailable.body':
+    'In-app purchases are not available on this device. Sign in to the Play Store and try again.',
   'shop.alert.productUnavailable.title': 'Unavailable',
   'shop.alert.productUnavailable.body':
     'This product is not loaded yet. Try again in a moment.',
