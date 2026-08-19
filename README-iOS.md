@@ -122,6 +122,14 @@ npm run fastlane:install   # Homebrew fastlane (no Bundler / no sudo)
 npm run metadata:ios
 ```
 
+### Capture + upload screenshots
+
+```bash
+npm run ios:screenshots:upload
+```
+
+This captures App Store shots (Playwright), verifies them, then uploads with Fastlane.
+
 ### Upload text + screenshots
 
 Add PNGs under `ios/fastlane/screenshots/en-CA/` (primary locale; see `screenshots/README.txt`), then:

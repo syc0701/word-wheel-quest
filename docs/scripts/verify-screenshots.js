@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Preflight check before npm run ios:upload:screenshots
+ * Preflight check before Fastlane screenshot upload.
  */
 const fs = require('fs');
 const path = require('path');
