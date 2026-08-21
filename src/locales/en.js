@@ -14,35 +14,41 @@ export default {
   'home.a11y.settings': 'Settings',
   'home.kicker': 'PUZZLE COLLECTION',
   'home.title': 'Word Wheel Quest',
+  'home.title.line1': 'Word',
+  'home.title.line2': 'Wheel Quest',
   'home.tagline': 'Swipe letters. Find every word.',
+  'home.comment': 'Continue your journey',
   'home.section.seasonJourney': 'Season Journey',
-  'home.journey.wordsFound': '{found} / {total} Words Found',
-  'home.journey.playLevel': 'PLAY',
+  'home.continue.badge': 'LEVEL',
+  'home.continue.cta': 'Continue',
+  'home.continue.wordsFound': '{found} / {total} words found',
+  'home.tutorial.link': 'Tutorial',
+  'home.a11y.tutorial': 'Open tutorial',
   'home.error.noData': 'No word wheel puzzle available yet.',
   'home.error.loadFailed': 'Could not load the next puzzle.',
   'home.error.missingData': 'Next puzzle response was missing puzzle data.',
   'home.error.generic': 'Failed to load puzzle',
   'home.section.more': 'More',
   'home.dailyPuzzle.label': 'Daily Puzzle',
-  'home.dailyPuzzle.subtitle': "Today's bonus — separate from the season journey",
+  'home.dailyPuzzle.subtitle': 'New puzzle every day',
   'home.dailyPuzzle.lockedSubtitle': 'Unlocks at Level {n}',
   'home.dailyPuzzle.lockedTitle': 'Daily Puzzle Locked',
   'home.dailyPuzzle.lockedBody':
     'Reach Level {n} in the Season Journey to unlock the Daily Puzzle.',
   'home.dailyPuzzle.lockedOk': 'Got it',
   'home.shop.label': 'Shop',
-  'home.shop.subtitle': 'Buy coins and bundles',
-  'home.guestPill': 'Guest Account • Tap to Sync',
+  'home.shop.subtitle': 'Coins, bundles and more',
+  'home.guest.title': 'Guest Mode',
+  'home.guest.body': 'Sign in to sync your progress and play on any device',
+  'home.guest.signIn': 'Sign In',
   'home.footer':
     'Progress is saved on this device. Sign in once to move guest progress to your account.',
-  'home.copyright': '© 2026 Puzzle Interact',
 
   // daily
   'daily.a11y.back': 'Back',
   'daily.kicker': 'BONUS PUZZLE',
   'daily.title': 'Daily Puzzle',
   'daily.subtitle': "Pick a date to preview and play that day's puzzle.",
-  'daily.selectedPuzzle': 'SELECTED PUZZLE',
   'daily.today': 'Today',
   'daily.weekday.sun': 'S',
   'daily.weekday.mon': 'M',
@@ -62,6 +68,8 @@ export default {
   'play.clue.placeholder': 'Swipe the clue strip, or tap a numbered cell',
   'play.clue.prev': 'Previous clue',
   'play.clue.next': 'Next clue',
+  'play.wordUnlocked.label': 'Unlocked',
+  'play.wordUnlocked.a11y': 'Unlocked {word}',
   'play.error.noDaily': 'No daily puzzle available.',
   'play.error.noPuzzle': 'No puzzle available.',
   'play.error.loadFailed': 'Could not load puzzle.',
@@ -80,6 +88,26 @@ export default {
   'play.a11y.useHint': 'Use hint',
   'play.a11y.shuffle': 'Shuffle',
   'play.a11y.dictionary': 'Dictionary',
+
+  // first-run onboarding (PlayScreen overlay)
+  'onboarding.title': 'Tutorial',
+  'onboarding.skip': 'Skip',
+  'onboarding.next': 'Next',
+  'onboarding.done': 'Got it',
+  'onboarding.stepLabel': 'Step {n}',
+  'onboarding.step.wheel': 'Drag D - O - G on the wheel',
+  'onboarding.step.clue': 'Check clues here to solve the grid.',
+  'onboarding.step.hint': 'Tap AI Assistant anytime for a hint!',
+  'onboarding.step.letter': 'You are all set.\nLet’s go!',
+  'onboarding.finish': "Let's go",
+  'onboarding.welcome.kicker': 'Welcome',
+  'onboarding.welcome.title': 'Let’s learn the game',
+  'onboarding.welcome.body':
+    'We’ll guide you through how to play Word Wheel Quest — clues, the letter wheel, and hints. It only takes a minute!',
+  'onboarding.welcome.start': 'Start',
+  'onboarding.success.kicker': 'Congratulations',
+  'onboarding.success.title': 'Good Job!!',
+  'onboarding.success.subtitle': 'You made it',
 
   // settings
   'settings.title': 'Settings',
@@ -126,7 +154,7 @@ export default {
   'settings.appearance.light': 'Light',
   'settings.appearance.dark': 'Dark',
   'settings.appearance.random': 'Image',
-  'settings.appearance.randomHint': 'A new scene photo every 3 days',
+  'settings.appearance.randomHint': 'Scene photo changes every 50 levels',
   'settings.sound.music': 'Play background music',
   'settings.sound.musicSubtitle': 'Loops on Home and Play',
   'settings.sound.sfx': 'Play sound effects',
@@ -144,6 +172,30 @@ export default {
   'settings.notifications.saveFailedBody':
     'Could not update notification settings. Try again.',
   'settings.language.a11y': 'Language',
+  'settings.section.feedback': 'Feedback',
+  'settings.feedback.rowDesc': 'Tell us what you like or what we should improve.',
+  'settings.feedback.button': 'Feedback',
+  'settings.feedback.title': 'Help us improve',
+  'settings.feedback.intro':
+    "Share your thoughts on Word Wheel Quest. Suggestions, puzzles you'd like, or general feedback are all welcome.",
+  'settings.feedback.category': 'Category',
+  'settings.feedback.category.puzzles': 'Puzzles',
+  'settings.feedback.category.gameplay': 'Gameplay',
+  'settings.feedback.category.bugs': 'Bugs and crashes',
+  'settings.feedback.category.shop': 'Shop and purchases',
+  'settings.feedback.category.other': 'Other',
+  'settings.feedback.opinion': 'Your opinion',
+  'settings.feedback.opinionPlaceholder': 'Tell us more...',
+  'settings.feedback.opinionRequired': 'Please share a short note before sending.',
+  'settings.feedback.privacyNote':
+    'No personal data is collected. Only standard diagnostic info (app version and OS) is included with your feedback.',
+  'settings.feedback.cancel': 'Cancel',
+  'settings.feedback.send': 'Send',
+  'settings.feedback.sendError': 'Could not send feedback. Try again.',
+  'settings.feedback.thanksTitle': 'Thank you',
+  'settings.feedback.thanksMessage':
+    'Thank you for your feedback! We will continue working hard to improve the app.',
+  'settings.feedback.close': 'Close',
 
   // legal
   'legal.marketing': 'Marketing',
@@ -163,9 +215,13 @@ export default {
   'signIn.placeholder.email': 'Email',
   'signIn.placeholder.password': 'Password',
   'signIn.button.email': 'Sign in',
-  'signIn.divider': '— or —',
-  'signIn.button.apple': ' Sign in with Apple',
+  'signIn.button.google': 'Sign in with Google',
+  'signIn.button.apple': 'Sign in with Apple',
   'signIn.apple.hint': 'Sign in with Apple is available on iPhone.',
+  'signIn.divider': '— or —',
+  'signIn.required.title': 'Sign in required',
+  'signIn.required.body':
+    'Sign in to sync this purchase to your account.',
 
   // shop
   'shop.title': 'Shop',
@@ -182,21 +238,28 @@ export default {
   'shop.pack.coinsLarge.name': '1,000 Coins',
   'shop.pack.coinsLarge.description': 'Adds 1,000 coins to player balance',
   'shop.alert.unavailable.title': 'Shop unavailable',
-  'shop.alert.unavailable.body': 'Could not load products.',
+  'shop.alert.unavailable.body':
+    'In-app purchases are not set up yet. Add your RevenueCat Android API key to enable the shop.',
+  'shop.alert.deviceUnavailable.body':
+    'In-app purchases are not available on this device. Sign in to the Play Store and try again.',
   'shop.alert.productUnavailable.title': 'Unavailable',
   'shop.alert.productUnavailable.body':
     'This product is not loaded yet. Try again in a moment.',
   'shop.alert.success.title': 'Thank you!',
   'shop.alert.success.body': '{name} purchased successfully.',
+  'shop.alert.signInRequired.title': 'Sign in required',
+  'shop.alert.signInRequired.body':
+    'Purchase recorded. Sign in with Google to sync it to your account.',
+  'shop.alert.signInRequired.action': 'Sign in with Google',
   'shop.alert.purchaseFailed.title': 'Purchase failed',
   'shop.alert.purchaseFailed.body': 'Something went wrong.',
   'shop.alert.restored.title': 'Restored',
   'shop.alert.restored.body': 'Your purchases have been restored.',
   'shop.alert.restoreFailed.title': 'Restore failed',
   'shop.alert.restoreFailed.body': 'Could not restore purchases.',
-  'shop.offeringHint': 'Offering `{id}` · Prices from the App Store.',
+  'shop.offeringHint': 'Offering `{id}` · Prices from Google Play.',
   'shop.restore': 'Restore purchases',
-  'shop.restore.subtitle': 'Already bought on this Apple ID? Restore here.',
+  'shop.restore.subtitle': 'Already bought on this Google Play account? Restore here.',
 
   // webview
   'webview.titleFallback': 'Page',
@@ -250,6 +313,8 @@ export default {
   'complete.hintsUsed': 'Hints used: −{n} coins',
   'complete.close': 'Close',
   'complete.next': 'Next',
+  'complete.unlock.dailyPuzzle': 'Unlocked: Daily Puzzle',
+  'complete.unlock.dailyPuzzle.body': 'A new puzzle every day is now available from Home.',
 
   // dictionary
   'dictionary.error.load': 'Could not load definition.',
@@ -285,6 +350,8 @@ export default {
   'treasureChest.close': 'Close',
   'treasureChest.openDictionary': 'Look up {word}',
   'play.a11y.treasureChest': 'Bonus words treasure chest',
+  'play.a11y.musicOn': 'Turn on background music',
+  'play.a11y.musicOff': 'Turn off background music',
 
   // points table
   'pointsTable.header.letters': 'Letters',
@@ -307,9 +374,9 @@ export default {
 
   // auth
   'auth.error.userNotFound':
-    'No account found for this email. If you signed up with Google or Apple on the website, use Sign in with Apple here.',
+    'No account found for this email. If you signed up with Google on the website, set a password at puzzleinteract.com or use that email/password here.',
   'auth.error.wrongPassword':
-    'Incorrect password, or this account uses Google/Apple sign-in from the website. Try Sign in with Apple, or reset your password at puzzleinteract.com.',
+    'Incorrect password, or this account uses Google sign-in from the website. Reset your password at puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Please confirm your email before signing in.',
   'auth.error.passwordResetRequired':
     'You must reset your password before signing in.',
@@ -320,6 +387,12 @@ export default {
     'Too many attempts. Please wait a few minutes and try again.',
   'auth.error.generic': 'Sign-in failed. Please try again.',
   'auth.error.noToken': 'Sign-in did not return a token.',
+  'auth.google.failed': 'Google sign-in failed. Please try again.',
+  'auth.google.exchangeFailed': 'Could not complete Google sign-in.',
+  'auth.google.noCode': 'Google sign-in did not return an ID token.',
+  'auth.google.developerError':
+    'Google Sign-In is not set up for this Android build. Add the app SHA-1 to the Google Cloud Android OAuth client.',
+  'auth.google.stateMismatch': 'Google sign-in could not be verified. Try again.',
   'auth.apple.iosOnly': 'Sign in with Apple is available on iPhone only.',
   'auth.apple.unavailable': 'Sign in with Apple is not available on this device.',
   'auth.apple.noIdentityToken': 'Sign in with Apple did not return an identity token.',

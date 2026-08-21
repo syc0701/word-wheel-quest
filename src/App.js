@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { SCREENS } from './constants/theme';
 import { AppearanceProvider } from './context/AppearanceContext';
@@ -10,6 +11,7 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { PlayTimerProvider } from './context/PlayTimerContext';
 import AppBackground from './components/AppBackground';
 import LaunchSplashOverlay from './components/LaunchSplashOverlay';
+import { initializeMobileAds } from './lib/ads';
 import { configurePurchases } from './services/purchases';
 import PushNotificationService from './services/PushNotificationService';
 import HomeScreen from './screens/HomeScreen';
@@ -27,7 +29,16 @@ function AppShell() {
   const { setBgmScene, ready: audioReady } = useAudio();
 
   useEffect(() => {
-    configurePurchases();
+    // Defer native SDK work slightly so first paint / splash can settle on cold start.
+    const t = setTimeout(() => {
+      try {
+        configurePurchases();
+      } catch {
+        /* ignore */
+      }
+      initializeMobileAds();
+    }, 400);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -38,8 +49,7 @@ function AppShell() {
       return;
     }
     if (
-      screen === SCREENS.HOME
-      || screen === SCREENS.DAILY
+      screen === SCREENS.DAILY
       || screen === SCREENS.SETTINGS
       || screen === SCREENS.SHOP
       || screen === SCREENS.SIGN_IN
@@ -85,7 +95,7 @@ function AppShell() {
       case SCREENS.DAILY_PLAY:
         return (
           <Animated.View
-            key={`play-${params.mode}-${params.date ?? 'journey'}-${params.t ?? 0}`}
+            key={`play-${params.mode}-${params.date ?? 'journey'}-${params.isOnboarding ? 'onb' : 'std'}-${params.t ?? 0}`}
             entering={SlideInRight.duration(350).springify()}
             exiting={SlideOutLeft.duration(250)}
             style={opaqueScreenStyle}
@@ -182,7 +192,13 @@ function AppShell() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <View style={[styles.container, { direction: isRtl ? 'rtl' : 'ltr' }]}>
-        <AppBackground>
+        <AppBackground
+          surface={
+            route.screen === SCREENS.PLAY || route.screen === SCREENS.DAILY_PLAY
+              ? 'play'
+              : 'home'
+          }
+        >
           <View style={styles.screenLayer} pointerEvents="box-none">
             {renderScreen()}
           </View>
@@ -195,26 +211,28 @@ function AppShell() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AppearanceProvider>
-        <AudioProvider>
-          <PlayTimerProvider>
-            <AppShell />
-          </PlayTimerProvider>
-        </AudioProvider>
-      </AppearanceProvider>
-    </LanguageProvider>
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: '#0A2A4A' }}>
+      <LanguageProvider>
+        <AppearanceProvider>
+          <AudioProvider>
+            <PlayTimerProvider>
+              <AppShell />
+            </PlayTimerProvider>
+          </AudioProvider>
+        </AppearanceProvider>
+      </LanguageProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#E8D4B8',
+    backgroundColor: '#0A2A4A',
   },
   container: {
     flex: 1,
-    backgroundColor: '#E8D4B8',
+    backgroundColor: '#0A2A4A',
   },
   screenLayer: {
     flex: 1,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   ReduceMotion,
   interpolate,
@@ -13,32 +14,54 @@ import Animated, {
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
-/** Keep bubbles mostly in the lower play area — below the grid. */
-const GRID_FLOOR_Y = SCREEN_H * 0.48;
+/** Keep play bubbles mostly in the lower area — below the grid. */
+const PLAY_FLOOR_Y = SCREEN_H * 0.48;
 
-function makeBubbles(count = 12) {
+function makePlayBubbles(count = 12) {
   return Array.from({ length: count }, (_, i) => {
-    const size = 8 + ((i * 11) % 18);
+    const size = 5 + ((i * 11) % 12);
     const startY = SCREEN_H * (0.62 + ((i * 13) % 32) / 100);
-    const travel = Math.min(startY - GRID_FLOOR_Y + size, 110 + (i % 5) * 22);
+    const travel = Math.min(startY - PLAY_FLOOR_Y + size, 110 + (i % 5) * 22);
     return {
       id: i,
       size,
-      left: ((i * 97 + 31) % 100) / 100 * (SCREEN_W - size),
+      left: (((i * 97 + 31) % 100) / 100) * (SCREEN_W - size),
       startY,
       travel: Math.max(56, travel),
-      duration: 9000 + (i % 5) * 2200,
-      delay: (i % 7) * 700,
-      drift: ((i % 2 === 0 ? 1 : -1) * (10 + (i % 4) * 6)),
-      opacity: 0.14 + (i % 4) * 0.05,
+      duration: 7000 + (i % 5) * 1600,
+      delay: (i % 7) * 500,
+      drift: (i % 2 === 0 ? 1 : -1) * (10 + (i % 4) * 6),
+      opacity: 0.18 + (i % 4) * 0.06,
     };
   });
 }
 
-function FloatingBubble({ size, left, startY, travel, duration, delay, drift, opacity }) {
+/** Larger, clearer orbs for home so motion reads over image backgrounds. */
+function makeHomeBubbles(count = 10) {
+  return Array.from({ length: count }, (_, i) => {
+    const size = 18 + ((i * 17) % 28);
+    const startY = SCREEN_H * (0.72 + ((i * 11) % 24) / 100);
+    const travel = SCREEN_H * (0.42 + ((i % 4) * 0.06));
+    return {
+      id: i,
+      size,
+      left: (((i * 89 + 19) % 100) / 100) * Math.max(8, SCREEN_W - size),
+      startY,
+      travel,
+      duration: 5200 + (i % 5) * 900,
+      delay: (i % 6) * 420,
+      drift: (i % 2 === 0 ? 1 : -1) * (18 + (i % 4) * 10),
+      opacity: 0.28 + (i % 4) * 0.07,
+    };
+  });
+}
+
+function FloatingBubble({ size, left, startY, travel, duration, delay, drift, opacity, soft }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
+    cancelAnimation(progress);
+    progress.value = 0;
     progress.value = withDelay(
       delay,
       withRepeat(
@@ -51,14 +74,21 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
         false
       )
     );
+    return () => cancelAnimation(progress);
   }, [progress, duration, delay]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(progress.value, [0, 0.1, 0.7, 1], [0, opacity, opacity * 0.75, 0]),
+    opacity: interpolate(progress.value, [0, 0.08, 0.65, 1], [0, opacity, opacity * 0.85, 0]),
     transform: [
       { translateY: interpolate(progress.value, [0, 1], [0, -travel]) },
-      { translateX: interpolate(progress.value, [0, 0.35, 0.7, 1], [0, drift, -drift * 0.4, drift * 0.6]) },
-      { scale: interpolate(progress.value, [0, 0.5, 1], [0.88, 1.05, 0.9]) },
+      {
+        translateX: interpolate(
+          progress.value,
+          [0, 0.35, 0.7, 1],
+          [0, drift, -drift * 0.45, drift * 0.55]
+        ),
+      },
+      { scale: interpolate(progress.value, [0, 0.5, 1], [0.85, 1.08, 0.92]) },
     ],
   }));
 
@@ -66,7 +96,7 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
     <Animated.View
       pointerEvents="none"
       style={[
-        styles.bubble,
+        soft ? styles.bubbleSoft : styles.bubble,
         {
           width: size,
           height: size,
@@ -80,14 +110,18 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
   );
 }
 
-/** Rising bubbles for the deep-water play backdrop. */
-export default function PlayAmbientBubbles() {
-  const bubbles = useMemo(() => makeBubbles(12), []);
+/** Rising bubbles for home / play backdrops. */
+export default function PlayAmbientBubbles({ variant = 'play' }) {
+  const isHome = variant === 'home';
+  const bubbles = useMemo(
+    () => (isHome ? makeHomeBubbles(10) : makePlayBubbles(12)),
+    [isHome]
+  );
 
   return (
     <View style={styles.layer} pointerEvents="none">
       {bubbles.map((bubble) => (
-        <FloatingBubble key={bubble.id} {...bubble} />
+        <FloatingBubble key={bubble.id} {...bubble} soft={isHome} />
       ))}
     </View>
   );
@@ -107,5 +141,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(224, 242, 254, 0.28)',
     borderWidth: 1,
     borderColor: 'rgba(186, 230, 253, 0.4)',
+  },
+  bubbleSoft: {
+    position: 'absolute',
+    zIndex: 0,
+    elevation: 0,
+    backgroundColor: 'rgba(255, 248, 238, 0.38)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.55)',
   },
 });

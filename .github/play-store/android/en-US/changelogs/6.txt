@@ -1,0 +1,8 @@
+What's new in this update:
+
+- Smoother full-screen experience on modern Android
+- Better performance and lower memory use
+- Improved support for tablets and large screens
+- Polish for launch, status bar, and display
+
+Thanks for playing! We'd love your feedback.

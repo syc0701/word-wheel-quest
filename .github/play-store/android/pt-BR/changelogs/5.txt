@@ -1,0 +1,7 @@
+Bem-vindo ao Word Wheel Quest! Nossa primeira versão.
+
+- Resolva dicas no estilo palavras cruzadas deslizando letras na roda
+- Palavras bônus rendem moedas extras
+- Dicas gentis e um ritmo relaxante, sem pressão
+
+Obrigado por jogar! Adoraríamos receber seu feedback.

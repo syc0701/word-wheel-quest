@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'Soundeffekte abspielen',
   'settings.sound.sfxSubtitle': 'Klicks, richtig, falsch und Sieg-Sounds',
   'settings.language.a11y': 'Sprache',
+  'settings.section.feedback': 'Feedback',
+  'settings.feedback.rowDesc': 'Sag uns, was dir gefällt oder was wir verbessern sollen.',
+  'settings.feedback.button': 'Feedback',
+  'settings.feedback.title': 'Hilf uns, besser zu werden',
+  'settings.feedback.intro':
+    'Teile deine Gedanken zu Word Wheel Quest. Vorschläge, gewünschte Rätsel oder allgemeines Feedback sind willkommen.',
+  'settings.feedback.category': 'Kategorie',
+  'settings.feedback.category.puzzles': 'Rätsel',
+  'settings.feedback.category.gameplay': 'Spielablauf',
+  'settings.feedback.category.bugs': 'Fehler und Abstürze',
+  'settings.feedback.category.shop': 'Shop und Käufe',
+  'settings.feedback.category.other': 'Sonstiges',
+  'settings.feedback.opinion': 'Deine Meinung',
+  'settings.feedback.opinionPlaceholder': 'Erzähl uns mehr …',
+  'settings.feedback.opinionRequired': 'Bitte schreibe eine kurze Nachricht, bevor du sendest.',
+  'settings.feedback.privacyNote':
+    'Es werden keine personenbezogenen Daten erfasst. Nur Standard-Diagnoseinfos (App-Version und Betriebssystem) werden mitgeschickt.',
+  'settings.feedback.cancel': 'Abbrechen',
+  'settings.feedback.send': 'Senden',
+  'settings.feedback.sendError': 'Feedback konnte nicht gesendet werden. Bitte erneut versuchen.',
+  'settings.feedback.thanksTitle': 'Danke',
+  'settings.feedback.thanksMessage':
+    'Danke für dein Feedback! Wir arbeiten weiter daran, die App zu verbessern.',
+  'settings.feedback.close': 'Schließen',
 
   // legal
   'legal.marketing': 'Marketing',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': 'E-Mail',
   'signIn.placeholder.password': 'Passwort',
   'signIn.button.email': 'Anmelden',
+  'signIn.button.google': 'Mit Google anmelden',
   'signIn.divider': '— oder —',
-  'signIn.button.apple': ' Mit Apple anmelden',
-  'signIn.apple.hint': 'Mit Apple anmelden ist auf dem iPhone verfügbar.',
+  'signIn.required.title': 'Anmeldung erforderlich',
+  'signIn.required.body':
+    'Melde dich mit Google an, um diesen Kauf mit deinem Konto zu synchronisieren.',
 
   // shop
   'shop.title': 'Shop',
@@ -144,13 +170,17 @@ export default {
     'Dieses Produkt ist noch nicht geladen. Bitte gleich erneut versuchen.',
   'shop.alert.success.title': 'Danke!',
   'shop.alert.success.body': '{name} erfolgreich gekauft.',
+  'shop.alert.signInRequired.title': 'Anmeldung erforderlich',
+  'shop.alert.signInRequired.body':
+    'Kauf gespeichert. Melde dich mit Google an, um ihn mit deinem Konto zu synchronisieren.',
+  'shop.alert.signInRequired.action': 'Mit Google anmelden',
   'shop.alert.purchaseFailed.title': 'Kauf fehlgeschlagen',
   'shop.alert.purchaseFailed.body': 'Etwas ist schiefgelaufen.',
   'shop.alert.restored.title': 'Wiederhergestellt',
   'shop.alert.restored.body': 'Deine Käufe wurden wiederhergestellt.',
   'shop.alert.restoreFailed.title': 'Wiederherstellung fehlgeschlagen',
   'shop.alert.restoreFailed.body': 'Käufe konnten nicht wiederhergestellt werden.',
-  'shop.offeringHint': 'Angebot `{id}` · Preise aus dem App Store.',
+  'shop.offeringHint': 'Angebot `{id}` · Preise aus dem Google Play.',
   'shop.restore': 'Käufe wiederherstellen',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': 'Geldbörse konnte nicht geladen werden',
 
   // auth
-  'auth.error.userNotFound':
-    'Kein Konto für diese E-Mail gefunden. Wenn du dich auf der Website mit Google oder Apple registriert hast, nutze hier Mit Apple anmelden.',
-  'auth.error.wrongPassword':
-    'Falsches Passwort, oder dieses Konto nutzt Google-/Apple-Anmeldung von der Website. Versuche Mit Apple anmelden oder setze dein Passwort auf puzzleinteract.com zurück.',
   'auth.error.userNotConfirmed': 'Bitte bestätige deine E-Mail vor der Anmeldung.',
   'auth.error.passwordResetRequired':
     'Du musst dein Passwort zurücksetzen, bevor du dich anmelden kannst.',
@@ -250,9 +276,8 @@ export default {
     'Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.',
   'auth.error.generic': 'Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
   'auth.error.noToken': 'Anmeldung hat kein Token zurückgegeben.',
-  'auth.apple.iosOnly': 'Mit Apple anmelden ist nur auf dem iPhone verfügbar.',
-  'auth.apple.unavailable': 'Mit Apple anmelden ist auf diesem Gerät nicht verfügbar.',
-  'auth.apple.noIdentityToken': 'Mit Apple anmelden hat kein Identity-Token zurückgegeben.',
-  'auth.apple.exchangeFailed': 'Apple-Anmelde-Austausch fehlgeschlagen.',
-  'auth.apple.httpFailed': 'Apple-Anmeldung fehlgeschlagen (HTTP {status})',
+  'auth.google.failed': 'Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen.',
+  'auth.google.exchangeFailed': 'Google-Anmeldung konnte nicht abgeschlossen werden.',
+  'auth.google.noCode': 'Google-Anmeldung hat keinen Autorisierungscode zurückgegeben.',
+  'auth.google.stateMismatch': 'Google-Anmeldung konnte nicht bestätigt werden. Bitte erneut versuchen.',
 };

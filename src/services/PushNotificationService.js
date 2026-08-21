@@ -11,16 +11,27 @@ const STORED_TOKEN_KEY = 'word-wheel-push-device-token-v1';
 
 let listenersAttached = false;
 let navigateHandler = null;
+let notificationHandlerReady = false;
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+function ensureNotificationHandler() {
+  if (notificationHandlerReady) return;
+  notificationHandlerReady = true;
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  } catch (e) {
+    if (__DEV__) {
+      console.warn('[Push] setNotificationHandler failed', e?.message || e);
+    }
+  }
+}
 
 export function setPushNavigateHandler(handler) {
   navigateHandler = typeof handler === 'function' ? handler : null;
@@ -100,6 +111,7 @@ function attachListeners() {
     return;
   }
   listenersAttached = true;
+  ensureNotificationHandler();
 
   Notifications.addNotificationResponseReceivedListener((response) => {
     handleNotificationData(response?.notification?.request?.content?.data);
@@ -163,6 +175,7 @@ const PushNotificationService = {
     if (!isPushSupported()) {
       return;
     }
+    ensureNotificationHandler();
     attachListeners();
 
     const authed = await isLoggedIn();
@@ -200,6 +213,7 @@ const PushNotificationService = {
     if (!isPushSupported()) {
       return { ok: false, reason: 'unsupported' };
     }
+    ensureNotificationHandler();
     attachListeners();
     const perm = await Notifications.requestPermissionsAsync();
     if (perm.status !== 'granted') {

@@ -1,0 +1,7 @@
+Welcome to Word Wheel Quest! Our first release.
+
+- Solve crossword-style clues by swiping letters on the wheel
+- Bonus words earn extra coins
+- Gentle hints and a relaxing, no-pressure pace
+
+Thanks for playing! We'd love your feedback.

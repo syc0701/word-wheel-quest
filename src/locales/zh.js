@@ -112,6 +112,29 @@ export default {
   'settings.sound.sfx': '播放音效',
   'settings.sound.sfxSubtitle': '点击、正确、错误和胜利音效',
   'settings.language.a11y': '语言',
+  'settings.section.feedback': '反馈',
+  'settings.feedback.rowDesc': '告诉我们你喜欢什么，或我们该改进什么。',
+  'settings.feedback.button': '反馈',
+  'settings.feedback.title': '帮助我们改进',
+  'settings.feedback.intro':
+    '分享你对 Word Wheel Quest 的想法。建议、想玩的谜题或一般反馈都欢迎。',
+  'settings.feedback.category': '类别',
+  'settings.feedback.category.puzzles': '谜题',
+  'settings.feedback.category.gameplay': '玩法',
+  'settings.feedback.category.bugs': '错误与崩溃',
+  'settings.feedback.category.shop': '商店与购买',
+  'settings.feedback.category.other': '其他',
+  'settings.feedback.opinion': '你的意见',
+  'settings.feedback.opinionPlaceholder': '告诉我们更多…',
+  'settings.feedback.opinionRequired': '发送前请先写一段简短说明。',
+  'settings.feedback.privacyNote':
+    '不会收集个人数据。仅包含标准诊断信息（应用版本和操作系统）。',
+  'settings.feedback.cancel': '取消',
+  'settings.feedback.send': '发送',
+  'settings.feedback.sendError': '无法发送反馈，请重试。',
+  'settings.feedback.thanksTitle': '谢谢',
+  'settings.feedback.thanksMessage': '感谢你的反馈！我们会继续努力改进应用。',
+  'settings.feedback.close': '关闭',
 
   // legal
   'legal.marketing': '营销',
@@ -131,9 +154,10 @@ export default {
   'signIn.placeholder.email': '邮箱',
   'signIn.placeholder.password': '密码',
   'signIn.button.email': '登录',
+  'signIn.button.google': '使用 Google 登录',
   'signIn.divider': '— 或 —',
-  'signIn.button.apple': ' 通过 Apple 登录',
-  'signIn.apple.hint': '通过 Apple 登录可在 iPhone 上使用。',
+  'signIn.required.title': '需要登录',
+  'signIn.required.body': '请使用 Google 登录，以便将此次购买同步到你的账户。',
 
   // shop
   'shop.title': '商店',
@@ -144,13 +168,17 @@ export default {
     '该商品尚未加载。请稍后再试。',
   'shop.alert.success.title': '谢谢！',
   'shop.alert.success.body': '{name} 购买成功。',
+  'shop.alert.signInRequired.title': '需要登录',
+  'shop.alert.signInRequired.body':
+    '购买已记录。请使用 Google 登录以同步到你的账户。',
+  'shop.alert.signInRequired.action': '使用 Google 登录',
   'shop.alert.purchaseFailed.title': '购买失败',
   'shop.alert.purchaseFailed.body': '出了点问题。',
   'shop.alert.restored.title': '已恢复',
   'shop.alert.restored.body': '你的购买已恢复。',
   'shop.alert.restoreFailed.title': '恢复失败',
   'shop.alert.restoreFailed.body': '无法恢复购买。',
-  'shop.offeringHint': '商品 `{id}` · 价格来自 App Store。',
+  'shop.offeringHint': '商品 `{id}` · 价格来自 Google Play。',
   'shop.restore': '恢复购买',
 
   // webview
@@ -235,10 +263,6 @@ export default {
   'wallet.error.loadFailed': '加载钱包失败',
 
   // auth
-  'auth.error.userNotFound':
-    '未找到此邮箱的账户。如果您在网站上使用 Google 或 Apple 注册，请在此使用通过 Apple 登录。',
-  'auth.error.wrongPassword':
-    '密码错误，或此账户使用网站的 Google/Apple 登录。请尝试通过 Apple 登录，或在 puzzleinteract.com 重置密码。',
   'auth.error.userNotConfirmed': '登录前请先确认邮箱。',
   'auth.error.passwordResetRequired':
     '登录前必须重置密码。',
@@ -249,9 +273,8 @@ export default {
     '尝试次数过多。请稍等几分钟后再试。',
   'auth.error.generic': '登录失败。请重试。',
   'auth.error.noToken': '登录未返回令牌。',
-  'auth.apple.iosOnly': '通过 Apple 登录仅在 iPhone 上可用。',
-  'auth.apple.unavailable': '此设备不支持通过 Apple 登录。',
-  'auth.apple.noIdentityToken': '通过 Apple 登录未返回身份令牌。',
-  'auth.apple.exchangeFailed': 'Apple 登录交换失败。',
-  'auth.apple.httpFailed': 'Apple 登录失败 (HTTP {status})',
+  'auth.google.failed': 'Google 登录失败，请重试。',
+  'auth.google.exchangeFailed': '无法完成 Google 登录。',
+  'auth.google.noCode': 'Google 登录未返回授权码。',
+  'auth.google.stateMismatch': '无法验证 Google 登录，请重试。',
 };

@@ -1,0 +1,98 @@
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt
+index ca49160..5f73beb 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt
+@@ -7,12 +7,9 @@
+ 
+ package com.facebook.react.modules.statusbar
+ 
+-import android.animation.ArgbEvaluator
+-import android.animation.ValueAnimator
+ import android.os.Build
+ import android.view.View
+ import android.view.WindowInsetsController
+-import android.view.WindowManager
+ import com.facebook.common.logging.FLog
+ import com.facebook.fbreact.specs.NativeStatusBarManagerAndroidSpec
+ import com.facebook.react.bridge.GuardedRunnable
+@@ -31,47 +28,17 @@ import com.facebook.react.views.view.setStatusBarVisibility
+ public class StatusBarModule(reactContext: ReactApplicationContext?) :
+     NativeStatusBarManagerAndroidSpec(reactContext) {
+ 
+-  @Suppress("DEPRECATION")
++  // Edge-to-edge: do not call Window.getStatusBarColor / setStatusBarColor (deprecated on API 35+).
+   override fun getTypedExportedConstants(): Map<String, Any> {
+     val currentActivity = reactApplicationContext.currentActivity
+-    val statusBarColor =
+-        currentActivity?.window?.statusBarColor?.let { color ->
+-          String.format("#%06X", 0xFFFFFF and color)
+-        } ?: "black"
+     return mapOf(
+         HEIGHT_KEY to PixelUtil.toDIPFromPixel(getStatusBarHeightPx(currentActivity).toFloat()),
+-        DEFAULT_BACKGROUND_COLOR_KEY to statusBarColor,
++        DEFAULT_BACKGROUND_COLOR_KEY to "00000000",
+     )
+   }
+ 
+-  @Suppress("DEPRECATION")
+   override fun setColor(colorDouble: Double, animated: Boolean) {
+-    val color = colorDouble.toInt()
+-    val activity = currentActivity
+-    if (activity == null) {
+-      FLog.w(
+-          ReactConstants.TAG,
+-          "StatusBarModule: Ignored status bar change, current activity is null.")
+-      return
+-    }
+-    UiThreadUtil.runOnUiThread(
+-        object : GuardedRunnable(reactApplicationContext) {
+-          override fun runGuarded() {
+-            val window = activity.window ?: return
+-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+-            if (animated) {
+-              val curColor = window.statusBarColor
+-              val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(), curColor, color)
+-              colorAnimation.addUpdateListener { animator ->
+-                activity.window?.statusBarColor = (animator.animatedValue as Int)
+-              }
+-              colorAnimation.setDuration(300).startDelay = 0
+-              colorAnimation.start()
+-            } else {
+-              window.statusBarColor = color
+-            }
+-          }
+-        })
++    // No-op: status bar background color is not supported under edge-to-edge.
+   }
+ 
+   @Suppress("DEPRECATION")
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/WindowUtil.kt b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/WindowUtil.kt
+index 8b0aff2..ce7906a 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/WindowUtil.kt
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/views/view/WindowUtil.kt
+@@ -8,7 +8,6 @@
+ package com.facebook.react.views.view
+ 
+ import android.content.res.Configuration
+-import android.graphics.Color
+ import android.os.Build
+ import android.view.Window
+ import android.view.WindowManager
+@@ -80,15 +79,8 @@ internal fun Window.setSystemBarsTranslucency(isTranslucent: Boolean) {
+       isNavigationBarContrastEnforced = true
+     }
+ 
+-    statusBarColor = Color.TRANSPARENT
+-    navigationBarColor =
+-        when {
+-          Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> Color.TRANSPARENT
+-          Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 && !isDarkMode ->
+-              Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+-          else -> Color.argb(0x80, 0x1b, 0x1b, 0x1b)
+-        }
+-
++    // Do not call Window.setStatusBarColor / setNavigationBarColor (deprecated on API 35+).
++    // Edge-to-edge draws content under transparent system bars; icon contrast is enough.
+     WindowInsetsControllerCompat(this, this.decorView).run {
+       isAppearanceLightNavigationBars = !isDarkMode
+     }

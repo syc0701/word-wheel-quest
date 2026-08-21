@@ -1,10 +1,11 @@
 {
   "name": "puzzle-wwq",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
-    "start": "expo start",
-    "run:metro": "expo start --clear",
+    "postinstall": "patch-package",
+    "start": "npx expo start",
+    "run:metro": "npx expo start --clear",
     "ios": "npm run ios:run",
     "ios:run": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios",
     "ios:run:quiet": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && SIMCTL_CHILD_OS_ACTIVITY_MODE=disable expo run:ios 2>&1 | grep --line-buffered -Ev 'MediaToolbox|FigFilePlayer|FigFileAnalyzer|libFontParser'",
@@ -23,14 +24,19 @@
     "ios:screenshots:install": "npx playwright install chromium",
     "ios:screenshots:check": "node docs/scripts/verify-screenshots.js",
     "ios:screenshots:upload": "npm run ios:screenshots && npm run ios:screenshots:check && export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && cd ios/fastlane && set -a && . ./asc_api_key.env && { [ -f ./asc_review_contact.env ] && . ./asc_review_contact.env || true; } && set +a && fastlane screenshots --verbose",
-    "clean": "rm -rf ios/build node_modules/.cache .expo dist web-build",
+    "android": "npm run android:run",
+    "android:run": "bash scripts/android-run.sh",
+    "android:build": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && npx expo run:android",
+    "clean": "rm -rf ios/build android/app/build android/build node_modules/.cache .expo dist web-build",
     "clean:all": "npm run clean && npm run ios:clean-cache",
     "fastlane:install": "brew list fastlane >/dev/null 2>&1 || brew install fastlane; brew upgrade fastlane 2>/dev/null || true",
     "screenshots:view": "node docs/scripts/view-screenshots.js",
-    "android": "expo run:android"
+    "metadata:sync": "bash scripts/sync-play-store-text.sh",
+    "metadata:upload": "npm run metadata:sync && unset BUNDLE_GEMFILE; bundle exec fastlane metadata"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-google-signin/google-signin": "^16.1.4",
     "amazon-cognito-identity-js": "^6.3.20",
     "buffer": "^6.0.3",
     "crypto-js": "^4.2.0",
@@ -38,23 +44,34 @@
     "expo-apple-authentication": "~7.2.4",
     "expo-asset": "~11.1.7",
     "expo-audio": "~0.4.9",
+    "expo-build-properties": "^0.14.8",
     "expo-linear-gradient": "~14.1.5",
     "expo-notifications": "~0.31.4",
+    "expo-splash-screen": "^0.30.10",
     "expo-status-bar": "~2.2.3",
     "lucide-react-native": "1.22.0",
+    "play-integrity": "file:./modules/play-integrity",
     "react": "19.0.0",
     "react-icons": "^5.7.0",
     "react-native": "0.79.6",
+    "react-native-edge-to-edge": "^1.6.0",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-get-random-values": "~1.11.0",
+    "react-native-google-mobile-ads": "^16.4.0",
     "react-native-purchases": "^10.4.1",
     "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "^5.4.0",
     "react-native-svg": "15.11.2",
     "react-native-webview": "13.13.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "patch-package": "^8.0.1",
     "playwright": "^1.61.1"
+  },
+  "overrides": {
+    "postcss": "8.5.25",
+    "uuid": "11.1.1"
   },
   "private": true
 }

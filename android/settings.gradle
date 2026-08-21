@@ -1,0 +1,73 @@
+pluginManagement {
+  def envNode = System.getenv("NODE_BINARY")
+  def nodeExecutable = "node"
+  if (envNode != null && !envNode.trim().isEmpty() && new File(envNode.trim()).exists()) {
+    nodeExecutable = envNode.trim()
+  } else {
+    def localPropsFile = new File(settingsDir, "local.properties")
+    if (localPropsFile.exists()) {
+      def props = new Properties()
+      localPropsFile.withInputStream { props.load(it) }
+      def nodeBinary = props.getProperty("node.binary")
+      if (nodeBinary != null && !nodeBinary.trim().isEmpty() && new File(nodeBinary.trim()).exists()) {
+        nodeExecutable = nodeBinary.trim()
+      }
+    }
+    if (nodeExecutable == "node") {
+      def gradlePropsFile = new File(settingsDir, "gradle.properties")
+      if (gradlePropsFile.exists()) {
+        def props = new Properties()
+        gradlePropsFile.withInputStream { props.load(it) }
+        def nodeBinary = props.getProperty("NODE_BINARY")
+        if (nodeBinary != null && !nodeBinary.trim().isEmpty() && new File(nodeBinary.trim()).exists()) {
+          nodeExecutable = nodeBinary.trim()
+        }
+      }
+    }
+    if (nodeExecutable == "node") {
+      ["/usr/local/bin/node", "/opt/homebrew/bin/node"].each { candidate ->
+        if (nodeExecutable == "node" && new File(candidate).exists()) {
+          nodeExecutable = candidate
+        }
+      }
+    }
+  }
+
+  def reactNativeGradlePlugin = new File(
+    providers.exec {
+      workingDir(rootDir)
+      commandLine(nodeExecutable, "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })")
+    }.standardOutput.asText.get().trim()
+  ).getParentFile().absolutePath
+  includeBuild(reactNativeGradlePlugin)
+
+  def expoPluginsPath = new File(
+    providers.exec {
+      workingDir(rootDir)
+      commandLine(nodeExecutable, "--print", "require.resolve('expo-modules-autolinking/package.json', { paths: [require.resolve('expo/package.json')] })")
+    }.standardOutput.asText.get().trim(),
+    "../android/expo-gradle-plugin"
+  ).absolutePath
+  includeBuild(expoPluginsPath)
+}
+
+plugins {
+  id("com.facebook.react.settings")
+  id("expo-autolinking-settings")
+}
+
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+  if (System.getenv('EXPO_USE_COMMUNITY_AUTOLINKING') == '1') {
+    ex.autolinkLibrariesFromCommand()
+  } else {
+    ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand)
+  }
+}
+expoAutolinking.useExpoModules()
+
+rootProject.name = 'Word Wheel Quest'
+
+expoAutolinking.useExpoVersionCatalog()
+
+include ':app'
+includeBuild(expoAutolinking.reactNativeGradlePlugin)

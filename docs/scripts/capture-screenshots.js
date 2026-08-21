@@ -1,120 +1,89 @@
 #!/usr/bin/env node
 /**
- * Capture App Store screenshots from puzzleinteract.com word-wheel scenes.
- * Default: 10 locales × 2 devices × 10 scenes → ios/fastlane/screenshots/<locale>/
+ * Capture Play Store screenshots from word-wheel prototype scenes.
  *
- * Env (same names as puzzle-app where possible):
- *   SNAPSHOT_LANGUAGES=en-US,fr-FR   — subset of Apple locale folders
- *   SNAPSHOT_DEVICES=iPhone 15 Plus,iPad Pro 13-inch (M4)
- *   SNAPSHOT_IPHONE_ONLY=1           — skip iPad
- *   SCREENSHOT_START / SCREENSHOT_END — scene range (default 1–10)
- *   KEEP_SCREENSHOTS=1              — keep existing PNGs (default: wipe before capture)
+ * Default: scenes 01–08 × all 10 locales × phone + 7-inch + 10-inch tablet
+ * → fastlane/metadata/android/<locale>/images/{phone,sevenInch,tenInch}Screenshots/
+ * (Play Store allows max 8 screenshots per device type per language.)
+ *
+ * Env:
+ *   SNAPSHOT_LANGUAGES=all|en-US,fr-FR   — Play locale folders (default: all 10)
+ *   SCREENSHOT_DEVICES=all|phone,sevenInch,tenInch — device types (default: all)
+ *   SCREENSHOT_START / SCREENSHOT_END — scene range (default 1–8)
+ *   CLEAR_SCREENSHOTS=1              — wipe PNG outputs before capture
+ *   SCREENSHOT_BASE_URL              — override base URL
+ *     default: https://www.puzzleinteract.com/prototype/mobile/word-wheel/screenshot
  */
 
 const fs = require('fs');
 const path = require('path');
-const { chromium, devices } = require('playwright');
+const { chromium } = require('playwright');
 const {
   parseLocaleFilter,
   parseDeviceFilter,
   sceneSlugs,
-  snapshotName,
   buildSceneUrl,
-  screenshotsRoot,
+  screenshotsDir,
 } = require('./screenshot-config');
 
-function mirrorEnUsToEnCa(root) {
-  const src = path.join(root, 'en-US');
-  const dest = path.join(root, 'en-CA');
-  if (!fs.existsSync(src)) return 0;
-
-  const pngs = fs.readdirSync(src).filter((f) => f.toLowerCase().endsWith('.png'));
-  if (pngs.length === 0) return 0;
-
-  fs.mkdirSync(dest, { recursive: true });
-  for (const file of fs.readdirSync(dest)) {
+function clearDir(dir) {
+  if (!fs.existsSync(dir)) return;
+  for (const file of fs.readdirSync(dir)) {
     if (file.toLowerCase().endsWith('.png')) {
-      fs.unlinkSync(path.join(dest, file));
+      fs.unlinkSync(path.join(dir, file));
     }
   }
-
-  let copied = 0;
-  for (const file of pngs) {
-    fs.copyFileSync(path.join(src, file), path.join(dest, file));
-    copied += 1;
-  }
-  console.log(`Mirrored ${copied} PNG(s) en-US → en-CA`);
-  return copied;
-}
-
-function clearLocaleDirs(root, localeCodes) {
-  for (const locale of localeCodes) {
-    const dir = path.join(root, locale);
-    if (!fs.existsSync(dir)) continue;
-    for (const file of fs.readdirSync(dir)) {
-      if (file.toLowerCase().endsWith('.png')) {
-        fs.unlinkSync(path.join(dir, file));
-      }
-    }
-  }
-}
-
-async function createContext(browser, deviceConfig) {
-  const preset = devices[deviceConfig.playwrightPreset] ?? {};
-  return browser.newContext({
-    ...preset,
-    locale: 'en-US',
-    viewport: deviceConfig.viewport,
-    deviceScaleFactor: deviceConfig.deviceScaleFactor,
-  });
 }
 
 async function capture() {
   const locales = parseLocaleFilter();
-  const deviceList = parseDeviceFilter();
+  const devices = parseDeviceFilter();
   const slugs = sceneSlugs();
-  const root = screenshotsRoot();
-  const localeCodes = locales.map((l) => l.locale);
+  const expected = locales.length * devices.length * slugs.length;
 
-  // Clear stale PNGs by default so a smaller new set (e.g. 8 vs 10) does not
-  // leave leftover shots on disk that get uploaded into extra store slots.
-  // en-CA is mirrored from en-US, so always clear it too.
-  if (process.env.KEEP_SCREENSHOTS !== '1') {
-    const toClear = Array.from(new Set([...localeCodes, 'en-CA']));
-    clearLocaleDirs(root, toClear);
-    console.log(`Cleared existing PNGs in ${toClear.join(', ')}`);
-  }
-
-  const expected = locales.length * deviceList.length * slugs.length;
   console.log(
-    `Capturing ${slugs.length} scenes × ${deviceList.length} devices × ${locales.length} locales = ${expected} PNGs`
+    `Capturing ${slugs.length} scenes × ${locales.length} locales × ${devices.length} devices = ${expected} PNGs`
   );
+  for (const device of devices) {
+    console.log(
+      `  - ${device.name}: ${device.viewport.width}×${device.viewport.height} → ${device.playFolder}/`
+    );
+  }
 
   const browser = await chromium.launch({ headless: true });
   let captured = 0;
   let failed = 0;
 
   for (const { locale, lang } of locales) {
-    const outDir = path.join(root, locale);
-    fs.mkdirSync(outDir, { recursive: true });
     console.log(`\n[${locale}] lang=${lang}`);
 
-    for (const deviceConfig of deviceList) {
-      console.log(`  ${deviceConfig.name} (${deviceConfig.pixelSize})`);
-      const context = await createContext(browser, deviceConfig);
+    for (const device of devices) {
+      const outDir = screenshotsDir(locale, device.playFolder);
+      fs.mkdirSync(outDir, { recursive: true });
+
+      if (process.env.CLEAR_SCREENSHOTS === '1') {
+        clearDir(outDir);
+        console.log(`  Cleared PNGs in ${device.playFolder}/`);
+      }
+
+      console.log(`  ${device.name} (${device.viewport.width}×${device.viewport.height})`);
+      const context = await browser.newContext({
+        locale: lang === 'en' ? 'en-US' : lang,
+        viewport: device.viewport,
+        deviceScaleFactor: device.deviceScaleFactor,
+      });
 
       for (const slug of slugs) {
         const url = buildSceneUrl(slug, lang);
-        const filename = `${deviceConfig.name}-${snapshotName(slug)}.png`;
-        const outFile = path.join(outDir, filename);
+        const outFile = path.join(outDir, `${slug}.png`);
         const page = await context.newPage();
 
         try {
           await page.goto(url, { waitUntil: 'networkidle', timeout: 90_000 });
           await page.waitForTimeout(2000);
-          await page.screenshot({ path: outFile, type: 'png' });
+          await page.screenshot({ path: outFile, type: 'png', fullPage: false });
           captured += 1;
-          console.log(`    ✓ ${slug} → ${filename}`);
+          console.log(`    ✓ ${slug} → ${path.relative(process.cwd(), outFile)}`);
         } catch (error) {
           failed += 1;
           console.error(`    ✗ ${slug} (${url}): ${error.message}`);
@@ -129,13 +98,7 @@ async function capture() {
   }
 
   await browser.close();
-
-  if (locales.some((l) => l.locale === 'en-US')) {
-    mirrorEnUsToEnCa(root);
-  }
-
   console.log(`\nDone. ${captured} captured, ${failed} failed (expected ${expected}).`);
-  console.log(`Output: ${root}`);
 }
 
 capture().catch((error) => {

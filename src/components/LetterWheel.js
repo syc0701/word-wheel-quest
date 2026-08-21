@@ -23,12 +23,13 @@ const AnimatedLine = Animated.createAnimatedComponent(Line);
 const LINE_CORE = 6;
 const LINE_MID = 11;
 const LINE_GLOW = 20;
-const ROLLBACK_MS = 200;
 /** Shuffle: spiral implode into center, then spiral explode to new seats (~1.55s). */
 const SHUFFLE_IMPLODE_MS = 720;
 const SHUFFLE_EXPLODE_MS = 830;
 const SHUFFLE_IMPLODE_EASING = Easing.inOut(Easing.cubic);
 const SHUFFLE_EXPLODE_EASING = Easing.out(Easing.cubic);
+/** If a drag never receives end/finalize (ScrollView steal), snap-clear. */
+const DRAG_WATCHDOG_MS = 2800;
 
 /** Draw one segment with soft glow → mid → core (amber lock on teal). */
 function WheelSegment({ x1, y1, x2, y2, active = false, line, lineDark, lineSoft }) {
@@ -114,55 +115,6 @@ function DraggingLine({ x1, y1, fingerX, fingerY, visible, line, lineDark, lineS
   );
 }
 
-/** Last segment whose endpoint animates during ROLLBACK (rubber-band retract). */
-function RetractingSegment({ x1, y1, x2, y2, progress, line, lineDark, lineSoft }) {
-  const animatedProps = useAnimatedProps(() => {
-    // progress 1 = full segment (x1→x2), progress 0 = collapsed at start node (x1)
-    const t = progress.value;
-    return {
-      x2: x1 + (x2 - x1) * t,
-      y2: y1 + (y2 - y1) * t,
-    };
-  });
-
-  return (
-    <>
-      <AnimatedLine
-        animatedProps={animatedProps}
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke={lineSoft || line}
-        strokeWidth={LINE_GLOW}
-        strokeLinecap="round"
-        opacity={0.45}
-      />
-      <AnimatedLine
-        animatedProps={animatedProps}
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke={line}
-        strokeWidth={LINE_MID}
-        strokeLinecap="round"
-        opacity={0.85}
-      />
-      <AnimatedLine
-        animatedProps={animatedProps}
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke={lineDark}
-        strokeWidth={LINE_CORE}
-        strokeLinecap="round"
-      />
-    </>
-  );
-}
-
 export default function LetterWheel({
   tiles = [],
   selectedIndices,
@@ -189,10 +141,15 @@ export default function LetterWheel({
   const [phase, setPhase] = useState('idle');
   const pathRef = useRef([]);
   const phaseRef = useRef('idle');
-  const rollbackAbortRef = useRef(false);
   const shufflingRef = useRef(false);
+  const dragWatchdogRef = useRef(null);
+  const submittedRef = useRef(false);
   const onShuffleRef = useRef(onShuffle);
-  const segmentProgress = useSharedValue(1);
+  const onDragEndRef = useRef(onDragEnd);
+  const onSelectionChangeRef = useRef(onSelectionChange);
+  const tilesRef = useRef(tiles);
+  const nodesRef = useRef(nodes);
+  const hitRadiusRef = useRef(hitRadius);
   const fingerX = useSharedValue(0);
   const fingerY = useSharedValue(0);
   const fingerVisible = useSharedValue(0);
@@ -200,11 +157,32 @@ export default function LetterWheel({
   const shuffleProgress = useSharedValue(0);
 
   onShuffleRef.current = onShuffle;
+  onDragEndRef.current = onDragEnd;
+  onSelectionChangeRef.current = onSelectionChange;
+  tilesRef.current = tiles;
+  nodesRef.current = nodes;
+  hitRadiusRef.current = hitRadius;
 
   const setPhaseBoth = useCallback((nextPhase) => {
     phaseRef.current = nextPhase;
     setPhase(nextPhase);
   }, []);
+
+  const clearDragWatchdog = useCallback(() => {
+    if (dragWatchdogRef.current) {
+      clearTimeout(dragWatchdogRef.current);
+      dragWatchdogRef.current = null;
+    }
+  }, []);
+
+  const clearWheelSelection = useCallback(() => {
+    clearDragWatchdog();
+    pathRef.current = [];
+    setDisplayIndices([]);
+    fingerVisible.value = 0;
+    setPhaseBoth('idle');
+    onSelectionChangeRef.current([]);
+  }, [setPhaseBoth, fingerVisible, clearDragWatchdog]);
 
   const tilesIdentity = useMemo(
     () =>
@@ -224,6 +202,13 @@ export default function LetterWheel({
     }
   }, [tilesIdentity, setPhaseBoth, shuffleProgress]);
 
+  useEffect(
+    () => () => {
+      clearDragWatchdog();
+    },
+    [clearDragWatchdog]
+  );
+
   const finishShuffle = useCallback(() => {
     shufflingRef.current = false;
     setPhaseBoth('idle');
@@ -241,7 +226,6 @@ export default function LetterWheel({
 
   const applyShuffleAtCenter = useCallback(() => {
     onShuffleRef.current?.();
-    // Let React commit new tile seats while letters are still hidden at center.
     setTimeout(() => {
       explodeAfterShuffle();
     }, 16);
@@ -253,12 +237,12 @@ export default function LetterWheel({
     if (!onShuffleRef.current) return undefined;
 
     shufflingRef.current = true;
-    rollbackAbortRef.current = true;
+    clearDragWatchdog();
     setPhaseBoth('shuffling');
     pathRef.current = [];
     setDisplayIndices([]);
     fingerVisible.value = 0;
-    onSelectionChange([]);
+    onSelectionChangeRef.current([]);
 
     shuffleProgress.value = withTiming(
       1,
@@ -274,203 +258,145 @@ export default function LetterWheel({
     shuffleSignal,
     applyShuffleAtCenter,
     setPhaseBoth,
-    onSelectionChange,
     shuffleProgress,
     fingerVisible,
+    clearDragWatchdog,
   ]);
 
-  const syncPath = useCallback(
-    (nextPath) => {
-      pathRef.current = nextPath;
-      setDisplayIndices(nextPath);
-      onSelectionChange(nextPath);
-    },
-    [onSelectionChange]
-  );
+  /** Local path only — never push to parent mid-drag (parent re-renders freeze the gesture). */
+  const syncPathLocal = useCallback((nextPath) => {
+    pathRef.current = nextPath;
+    setDisplayIndices(nextPath);
+  }, []);
 
   useEffect(() => {
-    if (selectedIndices.length === 0 && pathRef.current.length > 0 && phaseRef.current === 'rollback') {
-      rollbackAbortRef.current = true;
-      setPhaseBoth('idle');
-      pathRef.current = [];
-      setDisplayIndices([]);
-      fingerVisible.value = 0;
+    // Parent cleared selection — drop a stuck drag line.
+    if (selectedIndices.length === 0 && pathRef.current.length > 0 && phaseRef.current !== 'dragging') {
+      clearWheelSelection();
       return;
     }
     if (phaseRef.current !== 'idle') return;
     setDisplayIndices(selectedIndices);
     pathRef.current = selectedIndices;
-  }, [selectedIndices, setPhaseBoth, fingerVisible]);
+  }, [selectedIndices, clearWheelSelection]);
 
-  const tryAppendIndex = useCallback(
-    (index) => {
-      const next = updateSelectionPath(pathRef.current, index);
-      if (next !== pathRef.current) syncPath(next);
-    },
-    [syncPath]
-  );
-
-  const handleTouchMove = useCallback(
-    (x, y) => {
+  const finishDrag = useCallback(
+    (shouldSubmit) => {
       if (phaseRef.current !== 'dragging') return;
-      const hit = findNodeAtPoint(nodes, x, y, hitRadius);
-      if (hit) tryAppendIndex(hit.index);
+      const word = pathRef.current.map((i) => tilesRef.current[i]?.letter || '').join('');
+      // Always snap-clear first — never leave a frozen orange line while parent updates.
+      clearWheelSelection();
+      onSelectionChangeRef.current([]);
+      if (shouldSubmit && !submittedRef.current) {
+        submittedRef.current = true;
+        // Defer submit so clear paints before PlayScreen heavy updates.
+        requestAnimationFrame(() => {
+          onDragEndRef.current?.(word);
+        });
+      }
     },
-    [nodes, hitRadius, tryAppendIndex]
+    [clearWheelSelection]
   );
 
   const startPathAt = useCallback(
     (x, y) => {
       if (phaseRef.current === 'shuffling' || shufflingRef.current) return;
-      if (phaseRef.current === 'rollback') {
-        rollbackAbortRef.current = true;
-      }
+      submittedRef.current = false;
+      // Ensure parent isn't holding a stale selection overlay.
+      onSelectionChangeRef.current([]);
       setPhaseBoth('dragging');
-      segmentProgress.value = 1;
       fingerX.value = x;
       fingerY.value = y;
       fingerVisible.value = 1;
-      const hit = findNodeAtPoint(nodes, x, y, hitRadius);
-      syncPath(hit ? [hit.index] : []);
+      const hit = findNodeAtPoint(nodesRef.current, x, y, hitRadiusRef.current);
+      syncPathLocal(hit ? [hit.index] : []);
+
+      clearDragWatchdog();
+      dragWatchdogRef.current = setTimeout(() => {
+        dragWatchdogRef.current = null;
+        if (phaseRef.current === 'dragging') {
+          // Gesture end was lost — submit whatever is selected, then free the UI.
+          finishDrag(true);
+        }
+      }, DRAG_WATCHDOG_MS);
     },
-    [nodes, hitRadius, syncPath, segmentProgress, setPhaseBoth, fingerX, fingerY, fingerVisible]
+    [syncPathLocal, setPhaseBoth, fingerX, fingerY, fingerVisible, clearDragWatchdog, finishDrag]
   );
 
-  const finishRollback = useCallback(() => {
-    setPhaseBoth('idle');
-    pathRef.current = [];
-    setDisplayIndices([]);
-    fingerVisible.value = 0;
-    onSelectionChange([]);
-  }, [onSelectionChange, setPhaseBoth, fingerVisible]);
-
-  const afterSegmentRetractedRef = useRef(null);
-
-  const runRollbackStep = useCallback(() => {
-    if (rollbackAbortRef.current) {
-      finishRollback();
-      return;
-    }
-
-    const current = pathRef.current;
-    if (current.length <= 1) {
-      finishRollback();
-      return;
-    }
-
-    segmentProgress.value = 1;
-    segmentProgress.value = withTiming(
-      0,
-      { duration: ROLLBACK_MS, easing: Easing.inOut(Easing.cubic) },
-      (finished) => {
-        if (!finished) return;
-        runOnJS(afterSegmentRetractedRef.current)();
-      }
-    );
-  }, [segmentProgress, finishRollback]);
-
-  const afterSegmentRetracted = useCallback(() => {
-    if (rollbackAbortRef.current) {
-      finishRollback();
-      return;
-    }
-
-    const next = pathRef.current.slice(0, -1);
-    pathRef.current = next;
-    setDisplayIndices(next);
-    onSelectionChange(next);
-
-    if (next.length === 0) {
-      setPhaseBoth('idle');
-      return;
-    }
-
-    if (next.length === 1) {
-      pathRef.current = [];
-      setDisplayIndices([]);
-      onSelectionChange([]);
-      setPhaseBoth('idle');
-      return;
-    }
-
-    runRollbackStep();
-  }, [onSelectionChange, finishRollback, runRollbackStep, setPhaseBoth]);
-
-  afterSegmentRetractedRef.current = afterSegmentRetracted;
-
-  const beginRollback = useCallback(() => {
-    setPhaseBoth('rollback');
-    rollbackAbortRef.current = false;
-    fingerVisible.value = 0;
-    const word = pathRef.current.map((i) => tiles[i]?.letter || '').join('');
-    onDragEnd?.(word);
-
-    const chain = [...pathRef.current];
-    if (chain.length === 0) {
-      setPhaseBoth('idle');
-      return;
-    }
-    if (chain.length === 1) {
-      pathRef.current = [];
-      setDisplayIndices([]);
-      onSelectionChange([]);
-      setPhaseBoth('idle');
-      return;
-    }
-
-    runRollbackStep();
-  }, [onDragEnd, onSelectionChange, runRollbackStep, setPhaseBoth, tiles, fingerVisible]);
+  const handleTouchMove = useCallback(
+    (x, y) => {
+      if (phaseRef.current !== 'dragging') return;
+      const hit = findNodeAtPoint(nodesRef.current, x, y, hitRadiusRef.current);
+      if (!hit) return;
+      const next = updateSelectionPath(pathRef.current, hit.index);
+      if (next !== pathRef.current) syncPathLocal(next);
+    },
+    [syncPathLocal]
+  );
 
   const handleTouchEnd = useCallback(() => {
-    if (phaseRef.current !== 'dragging') return;
-    beginRollback();
-  }, [beginRollback]);
+    finishDrag(true);
+  }, [finishDrag]);
+
+  const startPathAtRef = useRef(startPathAt);
+  const handleTouchMoveRef = useRef(handleTouchMove);
+  const handleTouchEndRef = useRef(handleTouchEnd);
+  startPathAtRef.current = startPathAt;
+  handleTouchMoveRef.current = handleTouchMove;
+  handleTouchEndRef.current = handleTouchEnd;
+
+  const onBeginJS = useCallback((x, y) => {
+    startPathAtRef.current(x, y);
+  }, []);
+  const onUpdateJS = useCallback((x, y) => {
+    handleTouchMoveRef.current(x, y);
+  }, []);
+  const onEndJS = useCallback(() => {
+    handleTouchEndRef.current();
+  }, []);
+  const onFinalizeJS = useCallback(() => {
+    if (phaseRef.current === 'dragging') {
+      handleTouchEndRef.current();
+    }
+  }, []);
 
   const panGesture = useMemo(
     () =>
       Gesture.Pan()
         .minDistance(0)
+        .maxPointers(1)
+        .shouldCancelWhenOutside(false)
         .onBegin((e) => {
           fingerX.value = e.x;
           fingerY.value = e.y;
           fingerVisible.value = 1;
-          runOnJS(startPathAt)(e.x, e.y);
+          runOnJS(onBeginJS)(e.x, e.y);
         })
         .onUpdate((e) => {
           fingerX.value = e.x;
           fingerY.value = e.y;
-          runOnJS(handleTouchMove)(e.x, e.y);
+          runOnJS(onUpdateJS)(e.x, e.y);
         })
         .onEnd(() => {
           fingerVisible.value = 0;
-          runOnJS(handleTouchEnd)();
+          runOnJS(onEndJS)();
         })
         .onFinalize(() => {
           fingerVisible.value = 0;
-          runOnJS(handleTouchEnd)();
+          runOnJS(onFinalizeJS)();
         }),
-    [startPathAt, handleTouchMove, handleTouchEnd, fingerX, fingerY, fingerVisible]
+    [onBeginJS, onUpdateJS, onEndJS, onFinalizeJS, fingerX, fingerY, fingerVisible]
   );
 
-  const isRollingBack = phase === 'rollback';
   const isDragging = phase === 'dragging';
-  const retractFrom =
-    displayIndices.length >= 2 ? nodes[displayIndices[displayIndices.length - 2]] : null;
-  const retractTo =
-    displayIndices.length >= 1 ? nodes[displayIndices[displayIndices.length - 1]] : null;
   const dragFrom =
     displayIndices.length >= 1 ? nodes[displayIndices[displayIndices.length - 1]] : null;
-
-  const staticSegmentCount =
-    isRollingBack && displayIndices.length >= 2
-      ? displayIndices.length - 2
-      : Math.max(0, displayIndices.length - 1);
+  const staticSegmentCount = Math.max(0, displayIndices.length - 1);
 
   return (
     <View style={{ width: wheelSize, height: wheelSize, alignSelf: 'center' }}>
       <GestureDetector gesture={panGesture}>
-        <View style={{ width: wheelSize, height: wheelSize }}>
-          {/* Helm sits under selection lines + letters */}
+        <View style={{ width: wheelSize, height: wheelSize }} collapsable={false}>
           <ShipHelm size={wheelSize} inset={nodeRadius + 6} />
 
           <Svg
@@ -507,19 +433,6 @@ export default function LetterWheel({
                 fingerX={fingerX}
                 fingerY={fingerY}
                 visible={fingerVisible}
-                line={line}
-                lineDark={lineDark}
-                lineSoft={lineSoft}
-              />
-            ) : null}
-
-            {isRollingBack && retractFrom && retractTo ? (
-              <RetractingSegment
-                x1={retractFrom.x}
-                y1={retractFrom.y}
-                x2={retractTo.x}
-                y2={retractTo.y}
-                progress={segmentProgress}
                 line={line}
                 lineDark={lineDark}
                 lineSoft={lineSoft}

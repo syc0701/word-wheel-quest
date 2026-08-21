@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'साउंड इफ़ेक्ट चलाएँ',
   'settings.sound.sfxSubtitle': 'क्लिक, सही, गलत और जीत की आवाज़ें',
   'settings.language.a11y': 'भाषा',
+  'settings.section.feedback': 'प्रतिक्रिया',
+  'settings.feedback.rowDesc': 'बताएँ कि आपको क्या पसंद है या हमें क्या सुधारना चाहिए।',
+  'settings.feedback.button': 'प्रतिक्रिया',
+  'settings.feedback.title': 'बेहतर बनाने में मदद करें',
+  'settings.feedback.intro':
+    'Word Wheel Quest पर अपने विचार साझा करें। सुझाव, पहेलियाँ या सामान्य प्रतिक्रिया सभी स्वागत योग्य हैं।',
+  'settings.feedback.category': 'श्रेणी',
+  'settings.feedback.category.puzzles': 'पहेलियाँ',
+  'settings.feedback.category.gameplay': 'गेमप्ले',
+  'settings.feedback.category.bugs': 'बग और क्रैश',
+  'settings.feedback.category.shop': 'दुकान और खरीदारी',
+  'settings.feedback.category.other': 'अन्य',
+  'settings.feedback.opinion': 'आपकी राय',
+  'settings.feedback.opinionPlaceholder': 'और बताएँ...',
+  'settings.feedback.opinionRequired': 'भेजने से पहले एक छोटी सी टिप्पणी लिखें।',
+  'settings.feedback.privacyNote':
+    'कोई व्यक्तिगत डेटा एकत्र नहीं किया जाता। केवल मानक डायग्नोस्टिक जानकारी (ऐप संस्करण और OS) शामिल है।',
+  'settings.feedback.cancel': 'रद्द करें',
+  'settings.feedback.send': 'भेजें',
+  'settings.feedback.sendError': 'प्रतिक्रिया नहीं भेजी जा सकी। फिर कोशिश करें।',
+  'settings.feedback.thanksTitle': 'धन्यवाद',
+  'settings.feedback.thanksMessage':
+    'आपकी प्रतिक्रिया के लिए धन्यवाद! हम ऐप को बेहतर बनाने पर काम करते रहेंगे।',
+  'settings.feedback.close': 'बंद करें',
 
   // legal
   'legal.marketing': 'मार्केटिंग',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': 'ईमेल',
   'signIn.placeholder.password': 'पासवर्ड',
   'signIn.button.email': 'साइन इन',
+  'signIn.button.google': 'Google से साइन इन करें',
   'signIn.divider': '— या —',
-  'signIn.button.apple': ' Apple से साइन इन',
-  'signIn.apple.hint': 'Apple से साइन इन iPhone पर उपलब्ध है।',
+  'signIn.required.title': 'साइन इन आवश्यक है',
+  'signIn.required.body':
+    'इस खरीदारी को अपने खाते से सिंक करने के लिए Google से साइन इन करें।',
 
   // shop
   'shop.title': 'दुकान',
@@ -144,13 +170,17 @@ export default {
     'यह उत्पाद अभी लोड नहीं हुआ। थोड़ी देर बाद फिर कोशिश करें।',
   'shop.alert.success.title': 'धन्यवाद!',
   'shop.alert.success.body': '{name} सफलतापूर्वक खरीदा गया।',
+  'shop.alert.signInRequired.title': 'साइन इन आवश्यक है',
+  'shop.alert.signInRequired.body':
+    'खरीदारी रिकॉर्ड हो गई। अपने खाते से सिंक करने के लिए Google से साइन इन करें।',
+  'shop.alert.signInRequired.action': 'Google से साइन इन करें',
   'shop.alert.purchaseFailed.title': 'खरीदारी विफल',
   'shop.alert.purchaseFailed.body': 'कुछ गलत हो गया।',
   'shop.alert.restored.title': 'पुनर्स्थापित',
   'shop.alert.restored.body': 'आपकी खरीदारियाँ पुनर्स्थापित हो गईं।',
   'shop.alert.restoreFailed.title': 'पुनर्स्थापना विफल',
   'shop.alert.restoreFailed.body': 'खरीदारियाँ पुनर्स्थापित नहीं हो सकीं।',
-  'shop.offeringHint': 'ऑफ़र `{id}` · कीमतें App Store से।',
+  'shop.offeringHint': 'ऑफ़र `{id}` · कीमतें Google Play से।',
   'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': 'वॉलेट लोड करने में विफल',
 
   // auth
-  'auth.error.userNotFound':
-    'इस ईमेल के लिए कोई खाता नहीं मिला। यदि आपने वेबसाइट पर Google या Apple से साइन अप किया है, तो यहाँ Apple से साइन इन करें।',
-  'auth.error.wrongPassword':
-    'गलत पासवर्ड, या यह खाता वेबसाइट से Google/Apple साइन-इन इस्तेमाल करता है। Apple से साइन इन आज़माएँ, या puzzleinteract.com पर पासवर्ड रीसेट करें।',
   'auth.error.userNotConfirmed': 'साइन इन से पहले अपना ईमेल पुष्टि करें।',
   'auth.error.passwordResetRequired':
     'साइन इन से पहले आपको पासवर्ड रीसेट करना होगा।',
@@ -250,9 +276,8 @@ export default {
     'बहुत ज़्यादा प्रयास। कुछ मिनट प्रतीक्षा करें और फिर कोशिश करें।',
   'auth.error.generic': 'साइन इन विफल। कृपया फिर कोशिश करें।',
   'auth.error.noToken': 'साइन इन ने टोकन नहीं लौटाया।',
-  'auth.apple.iosOnly': 'Apple से साइन इन केवल iPhone पर उपलब्ध है।',
-  'auth.apple.unavailable': 'इस डिवाइस पर Apple से साइन इन उपलब्ध नहीं है।',
-  'auth.apple.noIdentityToken': 'Apple से साइन इन ने आइडेंटिटी टोकन नहीं लौटाया।',
-  'auth.apple.exchangeFailed': 'Apple साइन-इन एक्सचेंज विफल।',
-  'auth.apple.httpFailed': 'Apple साइन-इन विफल (HTTP {status})',
+  'auth.google.failed': 'Google साइन इन असफल रहा। कृपया फिर कोशिश करें।',
+  'auth.google.exchangeFailed': 'Google साइन इन पूरा नहीं हो सका।',
+  'auth.google.noCode': 'Google साइन इन ने अनुमति कोड नहीं लौटाया।',
+  'auth.google.stateMismatch': 'Google साइन इन सत्यापित नहीं हो सका। फिर कोशिश करें।',
 };

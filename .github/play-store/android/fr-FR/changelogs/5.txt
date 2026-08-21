@@ -1,0 +1,7 @@
+Bienvenue dans Word Wheel Quest ! Notre première version.
+
+- Résolvez des définitions de mots croisés en glissant les lettres sur la roue
+- Les mots bonus rapportent des pièces
+- Indices en douceur et rythme relaxant, sans pression
+
+Merci de jouer ! Vos retours sont les bienvenus.

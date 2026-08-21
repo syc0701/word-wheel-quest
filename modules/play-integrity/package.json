@@ -1,0 +1,10 @@
+{
+  "name": "play-integrity",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

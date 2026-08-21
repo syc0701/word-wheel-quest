@@ -73,8 +73,9 @@ export function isRtlLocale(code = currentLocale) {
 
 /** Simple `{name}` interpolation. Missing keys fall back to English, then the key. */
 export function t(key, params) {
+  const catalog = CATALOGS[currentLocale] || en;
   const raw =
-    currentCatalog?.[key] ?? en?.[key] ?? (typeof key === 'string' ? key : '');
+    catalog?.[key] ?? en?.[key] ?? (typeof key === 'string' ? key : '');
   if (!params || typeof raw !== 'string') return raw;
   return raw.replace(/\{(\w+)\}/g, (_, name) => {
     const value = params[name];

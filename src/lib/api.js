@@ -1,5 +1,5 @@
 import { getOrCreateWordWheelSession, getWordWheelSession, clearWordWheelSession } from './session';
-import { clearGuestPuzzleCoins } from './guestCoinsStorage';
+import { reconcileGuestCoinsWithAccount } from './guestCoinsMigration';
 import { isLoggedIn } from './auth';
 import { apiGet, apiPost, apiPut } from './http';
 
@@ -13,8 +13,12 @@ async function getSessionForRequest() {
 
 function clearSessionAfterLoginMigration(loggedIn, session) {
   if (loggedIn && session?.sessionId) {
+    // The server links this guest session's plays to the account on authenticated
+    // calls, so the anonymous id is no longer needed. Coins go through the
+    // reconcile instead of being deleted outright, which used to discard the
+    // balance earned before sign-in.
     clearWordWheelSession();
-    clearGuestPuzzleCoins();
+    reconcileGuestCoinsWithAccount().catch(() => {});
   }
 }
 

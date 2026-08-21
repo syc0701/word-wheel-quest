@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const APPEARANCE_KEY = 'ww.appearance';
 export const APPEARANCE_LIGHT = 'light';
 export const APPEARANCE_DARK = 'dark';
-/** Scene photo from `assets/bg_image` (3 days per image). */
+/** Scene photo from `assets/bg_image` (changes every 50 journey levels). */
 export const APPEARANCE_RANDOM = 'random';
 
 const MODES = new Set([APPEARANCE_LIGHT, APPEARANCE_DARK, APPEARANCE_RANDOM]);
@@ -30,9 +30,9 @@ export const WW_LIGHT = {
   wheelLineSoft: 'rgba(254, 243, 199, 0.9)',
   success: '#34d399',
   successSoft: 'rgba(16, 185, 129, 0.28)',
-  successText: '#ecfdf5',
+  successText: '#042f2e',
   hintSoft: 'rgba(251, 191, 36, 0.32)',
-  hintText: '#fde68a',
+  hintText: '#78350f',
   gridHidden: 'rgba(56, 189, 248, 0.22)',
   gridInactive: 'rgba(14, 116, 144, 0.35)',
   gridBorder: 'rgba(125, 211, 252, 0.55)',
@@ -82,10 +82,10 @@ export const WW_DARK = {
   wheelLineGlow: 'rgba(252, 211, 77, 0.55)',
   wheelLineSoft: 'rgba(254, 243, 199, 0.9)',
   success: '#34d399',
-  successSoft: 'rgba(16, 185, 129, 0.28)',
-  successText: '#ecfdf5',
+  successSoft: 'rgba(16, 185, 129, 0.38)',
+  successText: '#ffffff',
   hintSoft: 'rgba(251, 191, 36, 0.28)',
-  hintText: '#fde68a',
+  hintText: '#fef08a',
   gridHidden: 'rgba(56, 189, 248, 0.18)',
   gridInactive: 'rgba(8, 47, 73, 0.55)',
   gridBorder: 'rgba(125, 211, 252, 0.5)',
@@ -138,9 +138,9 @@ export const WW_RANDOM = {
   wheelLineSoft: 'rgba(254, 243, 199, 0.9)',
   success: '#059669',
   successSoft: 'rgba(167, 243, 208, 0.92)',
-  successText: '#065f46',
+  successText: '#064e3b',
   hintSoft: 'rgba(254, 243, 199, 0.95)',
-  hintText: '#92400e',
+  hintText: '#78350f',
   gridHidden: 'rgba(204, 251, 241, 0.92)',
   gridInactive: 'rgba(167, 243, 208, 0.45)',
   gridBorder: 'rgba(110, 231, 183, 0.9)',
@@ -161,13 +161,14 @@ export const WW_RANDOM = {
   letterSelectedGradient: ['#fffbeb', '#fde68a', '#fbbf24'],
   letterSelectedBorder: '#f59e0b',
   letterSelectedText: '#78350f',
-  radarGlassMid: 'rgba(226, 232, 240, 0.55)',
-  radarGlassOuter: 'rgba(148, 163, 184, 0.22)',
-  radarRim: 'rgba(203, 213, 225, 0.95)',
-  radarStroke: 'rgba(100, 116, 139, 0.55)',
-  radarStrokeSoft: 'rgba(148, 163, 184, 0.4)',
-  radarHub: 'rgba(148, 163, 184, 0.55)',
-  radarSweepMid: 'rgba(148, 163, 184, 0.16)',
+  radarGlassMid: 'rgba(255, 255, 255, 0.42)',
+  radarGlassOuter: 'rgba(15, 23, 42, 0.18)',
+  radarRim: 'rgba(255, 255, 255, 0.88)',
+  radarStroke: 'rgba(255, 255, 255, 0.82)',
+  radarStrokeSoft: 'rgba(255, 255, 255, 0.45)',
+  radarHub: 'rgba(251, 191, 36, 0.75)',
+  radarSweepMid: 'rgba(253, 224, 71, 0.42)',
+  radarSweepLead: 'rgba(255, 255, 255, 0.7)',
   statusBar: 'light',
 };
 
@@ -259,7 +260,7 @@ export async function loadAppearance() {
   try {
     const raw = await AsyncStorage.getItem(APPEARANCE_KEY);
     if (raw == null || String(raw).trim() === '') {
-      // Default: Image (scene photos, 3 days each).
+      // Default: Image (scene photos, every 50 journey levels).
       await AsyncStorage.setItem(APPEARANCE_KEY, APPEARANCE_RANDOM);
       return APPEARANCE_RANDOM;
     }

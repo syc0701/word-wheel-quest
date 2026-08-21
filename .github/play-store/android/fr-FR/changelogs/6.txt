@@ -1,0 +1,8 @@
+Nouveautés de cette mise à jour :
+
+- Affichage plein écran plus fluide sur Android récent
+- Meilleures performances et moins de mémoire utilisée
+- Meilleure prise en charge des tablettes et grands écrans
+- Lancement, barre d’état et affichage peaufinés
+
+Merci de jouer ! Vos retours sont les bienvenus.

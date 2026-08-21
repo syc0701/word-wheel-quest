@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 import {
@@ -13,6 +12,7 @@ import WordMasterCard from './intermission/WordMasterCard';
 import StreaksSparksCard from './intermission/StreaksSparksCard';
 import BrainPowerCard from './intermission/BrainPowerCard';
 import { INTERMISSION } from './intermission/intermissionTheme';
+
 
 const COMPLIMENT_KEYS = [
   'complete.compliment.goodJob',
@@ -46,6 +46,7 @@ export default function WordWheelCompleteDialog({
   hintCoinsSpent = 0,
   levelNumber,
   forceScreenType,
+  unlockedFeature = null,
 }) {
   const t = useT();
   const { timerEnabled } = usePlayTimer();
@@ -154,38 +155,40 @@ export default function WordWheelCompleteDialog({
     && hasScore;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={handleClose}
+      statusBarTranslucent
+    >
       <View style={styles.backdrop}>
-        {visible ? (
-          <Animated.View entering={FadeIn.duration(280)} style={styles.wrap}>
-            <IntermissionCardShell
-              continueLabel={`${t('complete.next').toUpperCase()} ➔`}
-              continueA11y={t('complete.next')}
-              onContinue={handleContinue}
-            >
-              {body}
-              {showScoreHint ? (
-                <Text style={styles.scoreNote}>
-                  {t('complete.stat.score')}: {scoreLabel}
-                </Text>
-              ) : null}
-              {hasHints ? (
-                <Text style={styles.hintsNote}>
-                  {t('complete.hintsUsed', { n: hintCoinsSpent })}
-                </Text>
-              ) : null}
-            </IntermissionCardShell>
-
-            <Pressable
-              style={styles.closeBtn}
-              onPress={handleClose}
-              accessibilityRole="button"
-              accessibilityLabel={t('complete.close')}
-            >
-              <Text style={styles.closeText}>{t('complete.close')}</Text>
-            </Pressable>
-          </Animated.View>
-        ) : null}
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} accessibilityRole="button" />
+        <View style={styles.wrap} pointerEvents="box-none">
+          <IntermissionCardShell
+            continueLabel={`${t('complete.next').toUpperCase()} ➔`}
+            continueA11y={t('complete.next')}
+            onContinue={handleContinue}
+          >
+            {body}
+            {unlockedFeature === 'dailyPuzzle' ? (
+              <View style={styles.unlockBox}>
+                <Text style={styles.unlockTitle}>{t('complete.unlock.dailyPuzzle')}</Text>
+                <Text style={styles.unlockBody}>{t('complete.unlock.dailyPuzzle.body')}</Text>
+              </View>
+            ) : null}
+            {showScoreHint ? (
+              <Text style={styles.scoreNote}>
+                {t('complete.stat.score')}: {scoreLabel}
+              </Text>
+            ) : null}
+            {hasHints ? (
+              <Text style={styles.hintsNote}>
+                {t('complete.hintsUsed', { n: hintCoinsSpent })}
+              </Text>
+            ) : null}
+          </IntermissionCardShell>
+        </View>
       </View>
     </Modal>
   );
@@ -203,6 +206,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
+    zIndex: 2,
   },
   scoreNote: {
     marginTop: 12,
@@ -212,24 +216,36 @@ const styles = StyleSheet.create({
     color: INTERMISSION.titleTeal,
     textAlign: 'center',
   },
+  unlockBox: {
+    marginTop: 14,
+    width: '100%',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(234, 179, 8, 0.55)',
+    backgroundColor: 'rgba(250, 204, 21, 0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  unlockTitle: {
+    fontFamily: INTERMISSION.serifBold || INTERMISSION.serif,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#a16207',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  unlockBody: {
+    fontFamily: INTERMISSION.serif,
+    fontSize: 13,
+    color: INTERMISSION.bodyMuted,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
   hintsNote: {
     marginTop: 12,
     fontFamily: INTERMISSION.serif,
     fontSize: 13,
     color: INTERMISSION.bodyMuted,
     textAlign: 'center',
-  },
-  closeBtn: {
-    marginTop: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  closeText: {
-    fontFamily: INTERMISSION.serif,
-    fontSize: 15,
-    fontWeight: '600',
-    color: 'rgba(255, 248, 230, 0.92)',
-    letterSpacing: 0.4,
-    textDecorationLine: 'underline',
   },
 });

@@ -1,41 +1,36 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   Calendar,
   ChevronRight,
-  Lock,
+  Cloud,
   Play,
+  Search,
   Settings,
-  ShoppingBag,
-  User,
+  ShoppingCart,
 } from 'lucide-react-native';
-import DailyLockedModal from '../components/DailyLockedModal';
+import AdBanner from '../components/AdBanner';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
-import { WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
+import { hasCompletedOnboarding } from '../lib/onboarding';
+import { APPEARANCE_DARK } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const CARD_WHITE = 'rgba(255, 255, 255, 0.96)';
-const CARD_WHITE_BORDER = 'rgba(255, 255, 255, 0.7)';
-const CARD_INK = '#0b3d36';
-const CARD_INK_MUTED = 'rgba(11, 61, 54, 0.62)';
-const DAILY_FROST = 'rgba(18, 28, 36, 0.72)';
-const DAILY_FROST_BORDER = 'rgba(255, 255, 255, 0.18)';
-const LOCK_GOLD = '#f5d78e';
-const MAX_PROGRESS_DOTS = 8;
+const WHEEL_ART = require('../assets/icon.png');
 
 function logHomePuzzle(data, source) {
   const wordsInUse = data?.wordsInUse;
@@ -72,84 +67,111 @@ function resolveFoundWordCount(puzzle) {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
 }
 
-function WordProgressDots({ found, total, fillColor, emptyColor }) {
-  const count = Math.min(Math.max(0, total), MAX_PROGRESS_DOTS);
-  if (count <= 0) return null;
-  return (
-    <View style={styles.progressDots} accessibilityElementsHidden>
-      {Array.from({ length: count }, (_, i) => (
-        <View
-          key={i}
-          style={[
-            styles.progressDot,
-            { backgroundColor: i < found ? fillColor : emptyColor },
-          ]}
-        />
-      ))}
-    </View>
-  );
-}
+function useHomePalette() {
+  const { colors, mode, isRandomScene } = useAppearance();
+  const isDark = mode === APPEARANCE_DARK;
 
-function ShopRow({ onPress, t }) {
-  return (
-    <Pressable
-      style={[styles.row, styles.shopRow]}
-      onPress={onPress}
-    >
-      <View style={[styles.rowIcon, styles.shopIcon]}>
-        <ShoppingBag color={CARD_INK} size={20} strokeWidth={1.8} />
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={[styles.rowLabel, { color: CARD_INK }]}>{t('home.shop.label')}</Text>
-        <Text style={[styles.rowSubtitle, { color: CARD_INK_MUTED }]}>
-          {t('home.shop.subtitle')}
-        </Text>
-      </View>
-      <ChevronRight color={CARD_INK_MUTED} size={20} />
-    </Pressable>
-  );
-}
+  return useMemo(() => {
+    const title = isRandomScene
+      ? {
+          color: '#ffffff',
+          textShadowColor: 'rgba(0, 0, 0, 0.55)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 6,
+        }
+      : { color: colors.text };
 
-function DailyRow({ locked, unlockLevel, onPress, t }) {
-  return (
-    <Pressable
-      style={[styles.row, styles.dailyRow, locked && styles.dailyRowLocked]}
-      onPress={onPress}
-    >
-      <View style={[styles.rowIcon, styles.dailyIcon]}>
-        <Calendar color="#ffffff" size={20} strokeWidth={1.8} />
-      </View>
-      <View style={styles.rowBody}>
-        <Text style={[styles.rowLabel, styles.dailyLabel]}>
-          {t('home.dailyPuzzle.label')}
-        </Text>
-        {locked ? (
-          <View style={styles.lockBadge}>
-            <Lock color={LOCK_GOLD} size={13} strokeWidth={2.4} />
-            <Text style={styles.lockBadgeText}>
-              {t('home.dailyPuzzle.lockedSubtitle', { n: unlockLevel })}
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.dailySubtitle}>{t('home.dailyPuzzle.subtitle')}</Text>
-        )}
-      </View>
-      {locked ? (
-        <Lock color={LOCK_GOLD} size={18} strokeWidth={2.2} />
-      ) : (
-        <ChevronRight color="rgba(255,255,255,0.7)" size={20} />
-      )}
-    </Pressable>
-  );
+    const comment = isRandomScene
+      ? {
+          color: 'rgba(255, 255, 255, 0.9)',
+          textShadowColor: 'rgba(0, 0, 0, 0.45)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 4,
+        }
+      : { color: colors.textMuted };
+
+    // Level card: warm gold / cream (matches home mock).
+    const LEVEL_CARD = {
+      cardBg: '#E3C17D',
+      cardBorder: '#CDB069',
+      text: '#3A2A1A',
+      muted: 'rgba(58, 42, 26, 0.72)',
+      badgeBg: 'rgba(58, 42, 26, 0.12)',
+      badgeText: '#3A2A1A',
+      progressTrack: 'rgba(58, 42, 26, 0.18)',
+      progressFill: '#8B6914',
+      ctaBg: '#F8EED8',
+      ctaText: '#3A2A1A',
+    };
+
+    const continueCard = {
+      backgroundColor: LEVEL_CARD.cardBg,
+      borderColor: LEVEL_CARD.cardBorder,
+      shadowColor: '#6B4E1F',
+      shadowOpacity: 0.18,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
+    };
+    const continueText = LEVEL_CARD.text;
+    const continueMuted = LEVEL_CARD.muted;
+    const continueCta = { backgroundColor: LEVEL_CARD.ctaBg };
+    const continueCtaText = LEVEL_CARD.ctaText;
+    const progressTrack = LEVEL_CARD.progressTrack;
+    const progressFill = LEVEL_CARD.progressFill;
+    const levelBadgeBg = LEVEL_CARD.badgeBg;
+    const levelBadgeText = LEVEL_CARD.badgeText;
+
+    const tile = {
+      backgroundColor: colors.surface,
+      borderColor: isRandomScene ? 'rgba(255,255,255,0.55)' : colors.surfaceLight,
+    };
+
+    const tutorialLink = isRandomScene
+      ? {
+          color: 'rgba(255, 255, 255, 0.92)',
+          textShadowColor: 'rgba(0, 0, 0, 0.45)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 4,
+        }
+      : { color: isDark ? colors.primaryGlow : colors.primary };
+
+    return {
+      colors,
+      isDark,
+      isRandomScene,
+      title,
+      comment,
+      continueCard,
+      continueText,
+      continueMuted,
+      continueCta,
+      continueCtaText,
+      progressTrack,
+      progressFill,
+      levelBadgeBg,
+      levelBadgeText,
+      tutorialLink,
+      tile,
+      settingsBg: isRandomScene ? 'rgba(255,255,255,0.92)' : colors.surface,
+      settingsIcon: colors.text,
+      dailyIconBg: isDark ? 'rgba(45, 212, 191, 0.16)' : 'rgba(61, 155, 116, 0.14)',
+      shopIconBg: isDark ? 'rgba(251, 191, 36, 0.14)' : 'rgba(234, 179, 148, 0.35)',
+      signInBorder: isDark ? colors.primary : '#1b4d3e',
+      signInText: isDark ? colors.primaryGlow : '#1b4d3e',
+    };
+  }, [colors, isDark, isRandomScene]);
 }
 
 export default function HomeScreen({ navigate }) {
-  const { colors } = useAppearance();
+  const palette = useHomePalette();
+  const { colors } = palette;
+  const { setSceneLevel } = useAppearance();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
-  const [dailyLockedVisible, setDailyLockedVisible] = useState(false);
   const [guest, setGuest] = useState(true);
 
   useEffect(() => {
@@ -207,141 +229,212 @@ export default function HomeScreen({ navigate }) {
     [puzzle]
   );
   const foundCount = useMemo(() => resolveFoundWordCount(puzzle), [puzzle]);
-  const dailyUnlocked =
-    journeyLevel != null && journeyLevel >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
+  const progress =
+    wordCount > 0 ? Math.min(1, Math.max(0, foundCount / wordCount)) : 0;
+  const canPlay = Boolean(puzzle) && !loading && !error;
+
+  const handleContinue = useCallback(async () => {
+    if (!canPlay) return;
+    const completed = await hasCompletedOnboarding();
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      puzzle,
+      isOnboarding: !completed,
+    });
+  }, [canPlay, navigate, puzzle]);
+
+  const handleTutorial = useCallback(() => {
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      isOnboarding: true,
+    });
+  }, [navigate]);
+
+  useEffect(() => {
+    if (journeyLevel != null) setSceneLevel(journeyLevel);
+  }, [journeyLevel, setSceneLevel]);
 
   useEffect(() => {
     if (!puzzle) return;
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
 
-  const canPlay = Boolean(puzzle) && !loading && !error;
-
   const openDaily = () => {
-    if (dailyUnlocked) {
-      navigate(SCREENS.DAILY);
-      return;
-    }
-    setDailyLockedVisible(true);
+    navigate(SCREENS.DAILY);
   };
-
-  const playLabel = t('home.journey.playLevel');
 
   return (
     <GradientBackground variant="home">
       <View style={styles.container}>
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(0,0,0,0.30)', 'rgba(0,0,0,0.16)', 'transparent']}
-          locations={[0, 0.45, 1]}
-          style={styles.topScrim}
-        />
-
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}>
           <View style={styles.topBarSpacer} />
           <Pressable
-            style={styles.topIconBtn}
+            style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
             onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
             accessibilityLabel={t('home.a11y.settings')}
             hitSlop={8}
           >
-            <Settings color="#ffffff" size={22} strokeWidth={1.8} />
+            <Settings color={palette.settingsIcon} size={20} strokeWidth={1.9} />
           </Pressable>
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          style={styles.body}
+          contentContainerStyle={[styles.bodyContent, { paddingBottom: 16 }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{t('home.title')}</Text>
-          <Text style={styles.tagline}>{t('home.tagline')}</Text>
+          <View style={styles.headerBlock}>
+            <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
+            <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
+              {t('home.title.line2')}
+            </Text>
+            <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
+          </View>
 
-          <Text style={styles.sectionTitle}>{t('home.section.seasonJourney')}</Text>
-          <View style={styles.journeyCard}>
-            {loading ? (
-              <ActivityIndicator color={colors.primaryGlow} style={styles.cardLoader} />
-            ) : error ? (
-              <Text style={styles.cardError}>{error}</Text>
-            ) : puzzle ? (
-              <>
-                <View style={styles.levelRow}>
-                  {journeyLevel != null ? (
-                    <Text style={styles.levelHero}>
-                      {t('common.level', { n: journeyLevel })}
-                    </Text>
-                  ) : (
-                    <View style={styles.levelHeroSpacer} />
-                  )}
-                </View>
-                {wordCount > 0 ? (
-                  <View style={styles.wordsFoundRow}>
-                    <Text style={styles.wordsFoundText}>
-                      {t('home.journey.wordsFound', {
-                        found: Math.min(foundCount, wordCount),
-                        total: wordCount,
-                      })}
-                    </Text>
-                    <WordProgressDots
-                      found={Math.min(foundCount, wordCount)}
-                      total={wordCount}
-                      fillColor={colors.primary}
-                      emptyColor="rgba(11, 61, 54, 0.18)"
-                    />
+          <View style={styles.middleBlock}>
+            <View style={[styles.continueCard, palette.continueCard]}>
+              {loading ? (
+                <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
+              ) : error ? (
+                <Text style={styles.cardError}>{error}</Text>
+              ) : (
+                <>
+                  <View style={styles.continueTop}>
+                    <Image source={WHEEL_ART} style={styles.wheelArt} />
+                    <View style={styles.continueMeta}>
+                      <View style={[styles.levelBadge, { backgroundColor: palette.levelBadgeBg }]}>
+                        <Text style={[styles.levelBadgeText, { color: palette.levelBadgeText }]}>
+                          {t('home.continue.badge')}
+                        </Text>
+                      </View>
+                      <Text style={[styles.levelTitle, { color: palette.continueText }]}>
+                        {journeyLevel != null
+                          ? t('common.level', { n: journeyLevel })
+                          : t('common.levelFallback')}
+                      </Text>
+                      <View
+                        style={[styles.progressTrack, { backgroundColor: palette.progressTrack }]}
+                      >
+                        <View
+                          style={[
+                            styles.progressFill,
+                            {
+                              backgroundColor: palette.progressFill,
+                              width: `${Math.round(progress * 100)}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <View style={styles.wordsRow}>
+                        <Search color={palette.continueMuted} size={14} strokeWidth={2.2} />
+                        <Text style={[styles.wordsText, { color: palette.continueMuted }]}>
+                          {t('home.continue.wordsFound', {
+                            found: Math.min(foundCount, wordCount || 0),
+                            total: wordCount || 0,
+                          })}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                ) : null}
-              </>
-            ) : null}
+
+                  <Pressable
+                    style={[
+                      styles.continueBtn,
+                      palette.continueCta,
+                      !canPlay && styles.btnDisabled,
+                    ]}
+                    disabled={!canPlay}
+                    onPress={handleContinue}
+                    accessibilityLabel={t('home.continue.cta')}
+                  >
+                    <Play
+                      color={palette.continueCtaText}
+                      size={17}
+                      strokeWidth={2.4}
+                      fill={palette.continueCtaText}
+                    />
+                    <Text style={[styles.continueBtnText, { color: palette.continueCtaText }]}>
+                      {t('home.continue.cta')}
+                    </Text>
+                  </Pressable>
+                </>
+              )}
+            </View>
 
             <Pressable
-              style={[styles.primaryBtn, !canPlay && styles.primaryBtnDisabled]}
-              disabled={!canPlay}
-              onPress={() =>
-                navigate(SCREENS.PLAY, {
-                  mode: PLAY_MODE.JOURNEY,
-                  puzzle: canPlay ? puzzle : undefined,
-                })
-              }
-              accessibilityLabel={playLabel}
+              style={styles.tutorialLink}
+              onPress={handleTutorial}
+              accessibilityLabel={t('home.a11y.tutorial')}
+              hitSlop={10}
             >
-              <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
-              <Text style={styles.primaryBtnText}>{playLabel}</Text>
+              <Text style={[styles.tutorialLinkText, palette.tutorialLink]}>
+                {t('home.tutorial.link')}
+              </Text>
             </Pressable>
           </View>
 
-          <View style={styles.bottomSpacer} />
+          <View style={styles.bottomBlock}>
+            <View style={styles.tileRow}>
+              <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
+                <View style={styles.tileHeader}>
+                  <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
+                    <Calendar color={colors.primaryGlow} size={18} strokeWidth={1.9} />
+                  </View>
+                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
+                    {t('home.dailyPuzzle.label')}
+                  </Text>
+                </View>
+                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
+                  {t('home.dailyPuzzle.subtitle')}
+                </Text>
+              </Pressable>
 
-          <Text style={[styles.sectionTitle, styles.moreSectionTitle]}>
-            {t('home.section.more')}
-          </Text>
-          <DailyRow
-            locked={!dailyUnlocked}
-            unlockLevel={WORD_WHEEL_DAILY_UNLOCK_LEVEL}
-            onPress={openDaily}
-            t={t}
-          />
-          <ShopRow
-            onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
-            t={t}
-          />
+              <Pressable
+                style={[styles.tile, palette.tile]}
+                onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
+              >
+                <View style={styles.tileHeader}>
+                  <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
+                    <ShoppingCart color={colors.text} size={18} strokeWidth={1.9} />
+                  </View>
+                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
+                    {t('home.shop.label')}
+                  </Text>
+                  <ChevronRight color={colors.textMuted} size={16} />
+                </View>
+                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
+                  {t('home.shop.subtitle')}
+                </Text>
+              </Pressable>
+            </View>
 
-          {guest ? (
-            <Pressable
-              style={styles.guestPill}
-              onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
-              accessibilityLabel={t('home.guestPill')}
-            >
-              <User color="#ffffff" size={16} strokeWidth={2.2} />
-              <Text style={styles.guestPillText}>{t('home.guestPill')}</Text>
-            </Pressable>
-          ) : null}
-
-          <Text style={styles.copyright}>{t('home.copyright')}</Text>
+            {guest ? (
+              <View style={[styles.guestCard, palette.tile]}>
+                <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
+                  <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
+                </View>
+                <View style={styles.guestBody}>
+                  <Text style={[styles.guestTitle, { color: colors.text }]}>
+                    {t('home.guest.title')}
+                  </Text>
+                  <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
+                    {t('home.guest.body')}
+                  </Text>
+                </View>
+                <Pressable
+                  style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
+                  onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
+                >
+                  <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
+                    {t('home.guest.signIn')}
+                  </Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </View>
         </ScrollView>
 
-        <DailyLockedModal
-          visible={dailyLockedVisible}
-          onClose={() => setDailyLockedVisible(false)}
-        />
+        <AdBanner />
       </View>
     </GradientBackground>
   );
@@ -352,259 +445,222 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
-  topScrim: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '48%',
-    zIndex: 0,
-  },
   topBar: {
-    zIndex: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingTop: 52,
     paddingHorizontal: 16,
-    paddingBottom: 4,
+    paddingBottom: 2,
   },
   topBarSpacer: {
     flex: 1,
   },
-  topIconBtn: {
+  settingsBtn: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.28)',
   },
-  scroll: {
-    zIndex: 1,
+  body: {
+    flex: 1,
+  },
+  bodyContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-    color: '#ffffff',
-    marginTop: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.45)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  tagline: {
-    fontSize: 15,
-    marginTop: 8,
-    marginBottom: 8,
-    lineHeight: 22,
-    color: 'rgba(255, 255, 255, 0.92)',
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  bottomSpacer: {
-    flexGrow: 1,
-    minHeight: 24,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    marginTop: 22,
-    marginBottom: 10,
-    color: 'rgba(255, 255, 255, 0.78)',
-    textShadowColor: 'rgba(0, 0, 0, 0.35)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  moreSectionTitle: {
-    marginTop: 8,
-  },
-  journeyCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: CARD_WHITE_BORDER,
-    backgroundColor: CARD_WHITE,
-    paddingTop: 18,
     paddingHorizontal: 18,
-    paddingBottom: 14,
-    overflow: 'hidden',
+  },
+  headerBlock: {
+    paddingTop: 4,
+  },
+  middleBlock: {
+    // Grows to centre the card when there is room, but keeps its natural height
+    // on short screens instead of collapsing and spilling over the neighbours.
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  bottomBlock: {
+    gap: 12,
+    paddingBottom: 4,
+  },
+  titleLine: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+    lineHeight: 38,
+  },
+  titleLine2: {
+    marginTop: -2,
+  },
+  comment: {
+    marginTop: 10,
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  continueCard: {
+    borderRadius: 28,
+    borderWidth: 1,
+    padding: 20,
   },
   cardLoader: {
-    marginVertical: 28,
+    marginVertical: 36,
   },
   cardError: {
     color: '#dc2626',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 12,
   },
-  levelHero: {
-    fontSize: 44,
-    fontWeight: '800',
-    letterSpacing: -0.8,
-    flexShrink: 1,
-    color: CARD_INK,
-  },
-  levelHeroSpacer: {
-    flex: 1,
-  },
-  levelRow: {
+  continueTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
+    gap: 14,
   },
-  wordsFoundRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 10,
+  wheelArt: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
   },
-  wordsFoundText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: CARD_INK_MUTED,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  primaryBtn: {
-    marginTop: 18,
-    marginHorizontal: -18,
-    marginBottom: -14,
-    minHeight: 56,
-    borderBottomLeftRadius: 17,
-    borderBottomRightRadius: 17,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#0d9488',
-  },
-  primaryBtnDisabled: {
-    opacity: 0.5,
-  },
-  primaryBtnText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-  },
-  shopRow: {
-    backgroundColor: CARD_WHITE,
-    borderColor: CARD_WHITE_BORDER,
-  },
-  shopIcon: {
-    backgroundColor: 'rgba(13, 148, 136, 0.12)',
-  },
-  dailyRow: {
-    backgroundColor: DAILY_FROST,
-    borderColor: DAILY_FROST_BORDER,
-  },
-  dailyRowLocked: {
-    opacity: 1,
-  },
-  dailyIcon: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-  },
-  dailyLabel: {
-    color: '#ffffff',
-  },
-  dailySubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-    lineHeight: 18,
-    color: 'rgba(255, 255, 255, 0.72)',
-  },
-  lockBadge: {
-    marginTop: 4,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: 'rgba(245, 215, 142, 0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(245, 215, 142, 0.45)',
-  },
-  lockBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: LOCK_GOLD,
-    letterSpacing: 0.2,
-  },
-  rowIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  rowBody: {
+  continueMeta: {
     flex: 1,
     minWidth: 0,
   },
-  rowLabel: {
-    fontSize: 16,
+  levelBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginBottom: 6,
+  },
+  levelBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.1,
+  },
+  levelTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  progressTrack: {
+    marginTop: 10,
+    height: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+  },
+  wordsRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  wordsText: {
+    fontSize: 13,
     fontWeight: '600',
   },
-  rowSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  guestPill: {
-    alignSelf: 'center',
+  continueBtn: {
     marginTop: 18,
-    minHeight: 42,
-    paddingHorizontal: 16,
+    minHeight: 52,
     borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.42)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
   },
-  guestPillText: {
-    color: '#ffffff',
-    fontSize: 13,
+  continueBtnText: {
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  btnDisabled: {
+    opacity: 0.5,
+  },
+  tutorialLink: {
+    alignSelf: 'center',
+    marginTop: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  tutorialLinkText: {
+    fontSize: 15,
     fontWeight: '700',
-    letterSpacing: 0.2,
+    textDecorationLine: 'underline',
   },
-  copyright: {
+  tileRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 10,
+  },
+  tile: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  tileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  tileIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileTitle: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  tileSubtitle: {
     fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 18,
-    marginBottom: 8,
-    letterSpacing: 0.2,
-    color: 'rgba(255, 255, 255, 0.72)',
+    lineHeight: 16,
+  },
+  guestCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  guestIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  guestTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  guestBodyText: {
+    marginTop: 3,
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  signInBtn: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    backgroundColor: 'transparent',
+  },
+  signInBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

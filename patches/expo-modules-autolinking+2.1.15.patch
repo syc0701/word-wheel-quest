@@ -1,0 +1,81 @@
+diff --git a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/AutolinkigCommandBuilder.kt b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/AutolinkigCommandBuilder.kt
+index 7629d8d..6619fb0 100644
+--- a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/AutolinkigCommandBuilder.kt
++++ b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/AutolinkigCommandBuilder.kt
+@@ -8,7 +8,7 @@ class AutolinkigCommandBuilder {
+    * Command for finding and running `expo-modules-autolinking`.
+    */
+   private val baseCommand = listOf(
+-    "node",
++    NodeBinary.resolve(),
+     "--no-warnings",
+     "--eval",
+     "require(require.resolve('expo-modules-autolinking', { paths: [require.resolve('expo/package.json')] }))(process.argv.slice(1))",
+diff --git a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/NodeBinary.kt b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/NodeBinary.kt
+new file mode 100644
+index 0000000..8e2a045
+--- /dev/null
++++ b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin-shared/src/main/kotlin/expo/modules/plugin/NodeBinary.kt
+@@ -0,0 +1,27 @@
++package expo.modules.plugin
++
++import java.io.File
++
++/**
++ * Resolve a usable Node binary. Android Studio's Gradle daemon often has a
++ * PATH that does not include Homebrew or /usr/local/bin.
++ */
++object NodeBinary {
++  fun resolve(): String {
++    val fromEnv = System.getenv("NODE_BINARY")
++    if (!fromEnv.isNullOrBlank() && File(fromEnv).canExecute()) {
++      return fromEnv
++    }
++
++    listOf(
++      "/usr/local/bin/node",
++      "/opt/homebrew/bin/node",
++    ).forEach { candidate ->
++      if (File(candidate).canExecute()) {
++        return candidate
++      }
++    }
++
++    return "node"
++  }
++}
+diff --git a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsExtension.kt b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsExtension.kt
+index 831f0a1..80cfeea 100644
+--- a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsExtension.kt
++++ b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsExtension.kt
+@@ -42,7 +42,7 @@ open class ExpoAutolinkingSettingsExtension(
+     File(
+       settings.providers.exec { env ->
+         env.workingDir(settings.rootDir)
+-        env.commandLine("node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })")
++        env.commandLine(NodeBinary.resolve(), "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })")
+       }.standardOutput.asText.get().trim(),
+     ).parentFile
+   }
+@@ -54,7 +54,7 @@ open class ExpoAutolinkingSettingsExtension(
+     File(
+       settings.providers.exec { env ->
+         env.workingDir(settings.rootDir)
+-        env.commandLine("node", "--print", "require.resolve('react-native/package.json')")
++        env.commandLine(NodeBinary.resolve(), "--print", "require.resolve('react-native/package.json')")
+       }.standardOutput.asText.get().trim(),
+     ).parentFile
+   }
+diff --git a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsPlugin.kt b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsPlugin.kt
+index 99ccc9f..5323a70 100644
+--- a/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsPlugin.kt
++++ b/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/src/main/kotlin/expo/modules/plugin/ExpoAutolinkingSettingsPlugin.kt
+@@ -36,7 +36,7 @@ open class ExpoAutolinkingSettingsPlugin : Plugin<Settings> {
+     val expoModulesAutolinkingPath =
+       settings.providers.exec { env ->
+         env.workingDir(settings.rootDir)
+-        env.commandLine("node", "--print", "require.resolve('expo-modules-autolinking/package.json', { paths: [require.resolve('expo/package.json')] })")
++        env.commandLine(NodeBinary.resolve(), "--print", "require.resolve('expo-modules-autolinking/package.json', { paths: [require.resolve('expo/package.json')] })")
+       }.standardOutput.asText.get().trim()
+ 
+     val expoAutolinkingDir = File(expoModulesAutolinkingPath).parentFile

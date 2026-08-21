@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'Lire les effets sonores',
   'settings.sound.sfxSubtitle': 'Clics, juste, faux et sons de victoire',
   'settings.language.a11y': 'Langue',
+  'settings.section.feedback': 'Commentaires',
+  'settings.feedback.rowDesc': 'Dites-nous ce que vous aimez ou ce que nous pourrions améliorer.',
+  'settings.feedback.button': 'Commentaires',
+  'settings.feedback.title': 'Aidez-nous à nous améliorer',
+  'settings.feedback.intro':
+    'Partagez vos impressions sur Word Wheel Quest. Suggestions, puzzles souhaités ou commentaires généraux sont les bienvenus.',
+  'settings.feedback.category': 'Catégorie',
+  'settings.feedback.category.puzzles': 'Puzzles',
+  'settings.feedback.category.gameplay': 'Gameplay',
+  'settings.feedback.category.bugs': 'Bugs et plantages',
+  'settings.feedback.category.shop': 'Boutique et achats',
+  'settings.feedback.category.other': 'Autre',
+  'settings.feedback.opinion': 'Votre avis',
+  'settings.feedback.opinionPlaceholder': 'Dites-nous en plus...',
+  'settings.feedback.opinionRequired': 'Veuillez écrire un court message avant d’envoyer.',
+  'settings.feedback.privacyNote':
+    'Aucune donnée personnelle n’est collectée. Seules des infos de diagnostic standard (version de l’app et OS) sont incluses.',
+  'settings.feedback.cancel': 'Annuler',
+  'settings.feedback.send': 'Envoyer',
+  'settings.feedback.sendError': 'Impossible d’envoyer le commentaire. Réessayez.',
+  'settings.feedback.thanksTitle': 'Merci',
+  'settings.feedback.thanksMessage':
+    'Merci pour votre retour ! Nous continuerons à améliorer l’app.',
+  'settings.feedback.close': 'Fermer',
 
   // legal
   'legal.marketing': 'Marketing',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': 'E-mail',
   'signIn.placeholder.password': 'Mot de passe',
   'signIn.button.email': 'Se connecter',
+  'signIn.button.google': 'Se connecter avec Google',
   'signIn.divider': '— ou —',
-  'signIn.button.apple': ' Se connecter avec Apple',
-  'signIn.apple.hint': 'Se connecter avec Apple est disponible sur iPhone.',
+  'signIn.required.title': 'Connexion requise',
+  'signIn.required.body':
+    'Connectez-vous avec Google pour synchroniser cet achat avec votre compte.',
 
   // shop
   'shop.title': 'Boutique',
@@ -144,13 +170,17 @@ export default {
     'Ce produit n’est pas encore chargé. Réessayez dans un instant.',
   'shop.alert.success.title': 'Merci !',
   'shop.alert.success.body': '{name} acheté avec succès.',
+  'shop.alert.signInRequired.title': 'Connexion requise',
+  'shop.alert.signInRequired.body':
+    'Achat enregistré. Connectez-vous avec Google pour le synchroniser avec votre compte.',
+  'shop.alert.signInRequired.action': 'Se connecter avec Google',
   'shop.alert.purchaseFailed.title': 'Achat échoué',
   'shop.alert.purchaseFailed.body': 'Une erreur s’est produite.',
   'shop.alert.restored.title': 'Restauré',
   'shop.alert.restored.body': 'Vos achats ont été restaurés.',
   'shop.alert.restoreFailed.title': 'Restauration échouée',
   'shop.alert.restoreFailed.body': 'Impossible de restaurer les achats.',
-  'shop.offeringHint': 'Offre `{id}` · Prix de l’App Store.',
+  'shop.offeringHint': 'Offre `{id}` · Prix de l’Google Play.',
   'shop.restore': 'Restaurer les achats',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': 'Échec du chargement du portefeuille',
 
   // auth
-  'auth.error.userNotFound':
-    'Aucun compte trouvé pour cet e-mail. Si vous vous êtes inscrit avec Google ou Apple sur le site, utilisez Se connecter avec Apple ici.',
-  'auth.error.wrongPassword':
-    'Mot de passe incorrect, ou ce compte utilise la connexion Google/Apple du site. Essayez Se connecter avec Apple, ou réinitialisez votre mot de passe sur puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Veuillez confirmer votre e-mail avant de vous connecter.',
   'auth.error.passwordResetRequired':
     'Vous devez réinitialiser votre mot de passe avant de vous connecter.',
@@ -250,9 +276,8 @@ export default {
     'Trop de tentatives. Attendez quelques minutes et réessayez.',
   'auth.error.generic': 'Échec de la connexion. Veuillez réessayer.',
   'auth.error.noToken': 'La connexion n’a pas renvoyé de jeton.',
-  'auth.apple.iosOnly': 'Se connecter avec Apple est disponible uniquement sur iPhone.',
-  'auth.apple.unavailable': 'Se connecter avec Apple n’est pas disponible sur cet appareil.',
-  'auth.apple.noIdentityToken': 'Se connecter avec Apple n’a pas renvoyé de jeton d’identité.',
-  'auth.apple.exchangeFailed': 'Échec de l’échange de connexion Apple.',
-  'auth.apple.httpFailed': 'Échec de la connexion Apple (HTTP {status})',
+  'auth.google.failed': 'Échec de la connexion Google. Veuillez réessayer.',
+  'auth.google.exchangeFailed': 'Impossible de terminer la connexion Google.',
+  'auth.google.noCode': 'La connexion Google n’a pas renvoyé de code d’autorisation.',
+  'auth.google.stateMismatch': 'La connexion Google n’a pas pu être vérifiée. Réessayez.',
 };

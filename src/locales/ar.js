@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'تشغيل المؤثرات الصوتية',
   'settings.sound.sfxSubtitle': 'نقرات، صحيح، خطأ، وأصوات الفوز',
   'settings.language.a11y': 'اللغة',
+  'settings.section.feedback': 'ملاحظات',
+  'settings.feedback.rowDesc': 'أخبرنا بما يعجبك أو بما يجب تحسينه.',
+  'settings.feedback.button': 'ملاحظات',
+  'settings.feedback.title': 'ساعدنا على التحسين',
+  'settings.feedback.intro':
+    'شاركنا رأيك في Word Wheel Quest. الاقتراحات والألغاز التي تودّها أو الملاحظات العامة كلها مرحّب بها.',
+  'settings.feedback.category': 'الفئة',
+  'settings.feedback.category.puzzles': 'الألغاز',
+  'settings.feedback.category.gameplay': 'أسلوب اللعب',
+  'settings.feedback.category.bugs': 'الأخطاء والأعطال',
+  'settings.feedback.category.shop': 'المتجر والمشتريات',
+  'settings.feedback.category.other': 'أخرى',
+  'settings.feedback.opinion': 'رأيك',
+  'settings.feedback.opinionPlaceholder': 'أخبرنا بالمزيد...',
+  'settings.feedback.opinionRequired': 'يرجى كتابة ملاحظة قصيرة قبل الإرسال.',
+  'settings.feedback.privacyNote':
+    'لا يتم جمع بيانات شخصية. تُرفق فقط معلومات تشخيصية قياسية (إصدار التطبيق ونظام التشغيل).',
+  'settings.feedback.cancel': 'إلغاء',
+  'settings.feedback.send': 'إرسال',
+  'settings.feedback.sendError': 'تعذّر إرسال الملاحظات. حاول مرة أخرى.',
+  'settings.feedback.thanksTitle': 'شكرًا',
+  'settings.feedback.thanksMessage':
+    'شكرًا على ملاحظاتك! سنواصل العمل على تحسين التطبيق.',
+  'settings.feedback.close': 'إغلاق',
 
   // legal
   'legal.marketing': 'التسويق',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': 'البريد الإلكتروني',
   'signIn.placeholder.password': 'كلمة المرور',
   'signIn.button.email': 'تسجيل الدخول',
+  'signIn.button.google': 'تسجيل الدخول عبر Google',
   'signIn.divider': '— أو —',
-  'signIn.button.apple': ' تسجيل الدخول عبر Apple',
-  'signIn.apple.hint': 'تسجيل الدخول عبر Apple متاح على iPhone.',
+  'signIn.required.title': 'تسجيل الدخول مطلوب',
+  'signIn.required.body':
+    'سجّل الدخول عبر Google لمزامنة هذا الشراء مع حسابك.',
 
   // shop
   'shop.title': 'المتجر',
@@ -144,13 +170,17 @@ export default {
     'هذا المنتج غير محمّل بعد. حاول مرة أخرى بعد لحظات.',
   'shop.alert.success.title': 'شكراً لك!',
   'shop.alert.success.body': 'تم شراء {name} بنجاح.',
+  'shop.alert.signInRequired.title': 'تسجيل الدخول مطلوب',
+  'shop.alert.signInRequired.body':
+    'تم تسجيل الشراء. سجّل الدخول عبر Google لمزامنته مع حسابك.',
+  'shop.alert.signInRequired.action': 'تسجيل الدخول عبر Google',
   'shop.alert.purchaseFailed.title': 'فشل الشراء',
   'shop.alert.purchaseFailed.body': 'حدث خطأ ما.',
   'shop.alert.restored.title': 'تمت الاستعادة',
   'shop.alert.restored.body': 'تمت استعادة مشترياتك.',
   'shop.alert.restoreFailed.title': 'فشلت الاستعادة',
   'shop.alert.restoreFailed.body': 'تعذّر استعادة المشتريات.',
-  'shop.offeringHint': 'العرض `{id}` · الأسعار من App Store.',
+  'shop.offeringHint': 'العرض `{id}` · الأسعار من Google Play.',
   'shop.restore': 'استعادة المشتريات',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': 'فشل تحميل المحفظة',
 
   // auth
-  'auth.error.userNotFound':
-    'لم يُعثر على حساب لهذا البريد. إذا سجّلت عبر Google أو Apple على الموقع، استخدم تسجيل الدخول عبر Apple هنا.',
-  'auth.error.wrongPassword':
-    'كلمة مرور خاطئة، أو هذا الحساب يستخدم تسجيل Google/Apple من الموقع. جرّب تسجيل الدخول عبر Apple، أو أعد تعيين كلمة المرور على puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.',
   'auth.error.passwordResetRequired':
     'يجب إعادة تعيين كلمة المرور قبل تسجيل الدخول.',
@@ -250,9 +276,8 @@ export default {
     'محاولات كثيرة جداً. انتظر بضع دقائق وحاول مجدداً.',
   'auth.error.generic': 'فشل تسجيل الدخول. يرجى المحاولة مجدداً.',
   'auth.error.noToken': 'تسجيل الدخول لم يُرجع رمزاً.',
-  'auth.apple.iosOnly': 'تسجيل الدخول عبر Apple متاح على iPhone فقط.',
-  'auth.apple.unavailable': 'تسجيل الدخول عبر Apple غير متاح على هذا الجهاز.',
-  'auth.apple.noIdentityToken': 'تسجيل الدخول عبر Apple لم يُرجع رمز هوية.',
-  'auth.apple.exchangeFailed': 'فشل تبادل تسجيل الدخول عبر Apple.',
-  'auth.apple.httpFailed': 'فشل تسجيل الدخول عبر Apple (HTTP {status})',
+  'auth.google.failed': 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.',
+  'auth.google.exchangeFailed': 'تعذّر إكمال تسجيل الدخول عبر Google.',
+  'auth.google.noCode': 'تسجيل الدخول عبر Google لم يُرجع رمز تفويض.',
+  'auth.google.stateMismatch': 'تعذّر التحقق من تسجيل الدخول عبر Google. حاول مرة أخرى.',
 };

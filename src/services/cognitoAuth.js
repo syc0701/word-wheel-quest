@@ -1,5 +1,6 @@
 import 'react-native-get-random-values';
 import { Platform } from 'react-native';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import {
   AuthenticationDetails,
   CognitoUser,
@@ -10,10 +11,13 @@ import {
   APPLE_NATIVE_JWT_AUDIENCE,
   COGNITO_MOBILE_CLIENT_ID,
   COGNITO_USER_POOL_ID,
+  GOOGLE_NATIVE_EXCHANGE_URL,
+  GOOGLE_WEB_CLIENT_ID,
 } from '../constants/cognito';
-import { signInWithToken, clearStoredAuthToken } from '../lib/auth';
+import { getAuthTokenClaims, signInWithToken, clearStoredAuthToken } from '../lib/auth';
 import { t } from '../lib/i18n';
 import { ensureUserAfterSignup } from '../lib/userApi';
+import { isPurchasesConfigured } from './purchases';
 
 const userPool = new CognitoUserPool({
   UserPoolId: COGNITO_USER_POOL_ID,
@@ -78,19 +82,16 @@ function usernameCandidates(username) {
 
 function cognitoAuthenticate(username, password) {
   return new Promise((resolve, reject) => {
-    const cognitoUser = new CognitoUser({ Username: username, Pool: userPool });
+    const user = new CognitoUser({ Username: username, Pool: userPool });
     const authDetails = new AuthenticationDetails({
       Username: username,
       Password: password,
     });
-
-    cognitoUser.authenticateUser(authDetails, {
+    user.authenticateUser(authDetails, {
       onSuccess: (session) => {
         resolve(session.getIdToken().getJwtToken());
       },
-      onFailure: (error) => {
-        reject(error);
-      },
+      onFailure: (err) => reject(err),
       newPasswordRequired: () => {
         const error = new Error('Password reset required');
         error.name = 'PasswordResetRequiredException';
@@ -98,32 +99,6 @@ function cognitoAuthenticate(username, password) {
       },
     });
   });
-}
-
-function pickTokenField(obj, ...keys) {
-  for (const key of keys) {
-    const value = obj?.[key];
-    if (value != null && String(value).trim()) return String(value).trim();
-  }
-  return null;
-}
-
-function parseAppleExchangeResponse(json) {
-  const nested =
-    json?.AuthenticationResult || json?.authenticationResult || json?.tokens || json?.data;
-  const ar = nested && typeof nested === 'object' ? nested : json;
-  const idToken = pickTokenField(ar, 'IdToken', 'idToken', 'id_token');
-  if (!idToken) {
-    throw new Error(json?.message || json?.error || t('auth.apple.exchangeFailed'));
-  }
-  return idToken;
-}
-
-function isAppleSignInCancelled(error) {
-  if (!error) return false;
-  if (error.code === 'ERR_REQUEST_CANCELED') return true;
-  const msg = String(error.message || '').toLowerCase();
-  return msg.includes('cancel');
 }
 
 export async function loginWithPassword(email, password) {
@@ -142,6 +117,7 @@ export async function loginWithPassword(email, password) {
       }
       await signInWithToken(idToken);
       await ensureUserAfterSignup();
+      await identifyPurchasesUser();
       return { success: true };
     } catch (error) {
       lastError = error;
@@ -162,6 +138,69 @@ export async function loginWithPassword(email, password) {
     message: lastError?.message,
     error: lastError,
   };
+}
+
+function pickTokenField(obj, ...keys) {
+  for (const key of keys) {
+    const value = obj?.[key];
+    if (value != null && String(value).trim()) return String(value).trim();
+  }
+  return null;
+}
+
+function parseNativeExchangeResponse(json) {
+  const nested =
+    json?.AuthenticationResult || json?.authenticationResult || json?.tokens || json?.data;
+  const ar = nested && typeof nested === 'object' ? nested : json;
+  const idToken = pickTokenField(ar, 'IdToken', 'idToken', 'id_token');
+  if (!idToken) {
+    throw new Error(json?.message || json?.error || t('auth.google.exchangeFailed'));
+  }
+  return idToken;
+}
+
+function parseAppleExchangeResponse(json) {
+  const nested =
+    json?.AuthenticationResult || json?.authenticationResult || json?.tokens || json?.data;
+  const ar = nested && typeof nested === 'object' ? nested : json;
+  const idToken = pickTokenField(ar, 'IdToken', 'idToken', 'id_token');
+  if (!idToken) {
+    throw new Error(json?.message || json?.error || t('auth.apple.exchangeFailed'));
+  }
+  return idToken;
+}
+
+function isAppleSignInCancelled(error) {
+  if (!error) return false;
+  if (error.code === 'ERR_REQUEST_CANCELED') return true;
+  const msg = String(error.message || '').toLowerCase();
+  return msg.includes('cancel');
+}
+
+let googleConfigured = false;
+
+function configureGoogleSignIn() {
+  if (googleConfigured) return;
+  GoogleSignin.configure({
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+    offlineAccess: false,
+    scopes: ['email', 'profile'],
+  });
+  googleConfigured = true;
+}
+
+export async function identifyPurchasesUser() {
+  if (!isPurchasesConfigured()) return;
+  try {
+    const Purchases = (await import('react-native-purchases')).default;
+    const claims = await getAuthTokenClaims();
+    const appUserId = claims?.sub;
+    if (appUserId) {
+      await Purchases.logIn(String(appUserId));
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 export async function signInWithApple() {
@@ -222,9 +261,85 @@ export async function signInWithApple() {
   const idToken = parseAppleExchangeResponse(json);
   await signInWithToken(idToken);
   await ensureUserAfterSignup();
+  await identifyPurchasesUser();
+  return { success: true };
+}
+
+export async function signInWithGoogle() {
+  configureGoogleSignIn();
+  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+  let nativeResult;
+  try {
+    nativeResult = await GoogleSignin.signIn();
+  } catch (error) {
+    const code = String(error?.code || '');
+    if (code === 'SIGN_IN_CANCELLED' || code === '12501') {
+      return { success: false, cancelled: true };
+    }
+    if (code === '10' || code === 'DEVELOPER_ERROR') {
+      throw new Error(t('auth.google.developerError'));
+    }
+    throw error;
+  }
+
+  if (nativeResult?.type === 'cancelled') {
+    return { success: false, cancelled: true };
+  }
+
+  const googleIdentityToken =
+    nativeResult?.type === 'success'
+      ? nativeResult.data?.idToken
+      : nativeResult?.idToken;
+  if (!googleIdentityToken) {
+    throw new Error(t('auth.google.noCode'));
+  }
+
+  const response = await fetch(GOOGLE_NATIVE_EXCHANGE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ googleIdentityToken }),
+  });
+
+  const text = await response.text();
+  let json = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(text?.slice(0, 200) || t('auth.google.exchangeFailed'));
+  }
+
+  if (!response.ok) {
+    throw new Error(json.message || json.error || t('auth.google.exchangeFailed'));
+  }
+
+  const idToken = parseNativeExchangeResponse(json);
+  await signInWithToken(idToken);
+  await ensureUserAfterSignup();
+  await identifyPurchasesUser();
   return { success: true };
 }
 
 export async function signOutAll() {
   await clearStoredAuthToken();
+  try {
+    const { clearPlayIntegrityCache } = require('../lib/playIntegrity');
+    clearPlayIntegrityCache();
+  } catch {
+    /* ignore */
+  }
+  try {
+    configureGoogleSignIn();
+    await GoogleSignin.signOut();
+  } catch {
+    /* ignore */
+  }
+  try {
+    if (isPurchasesConfigured()) {
+      const Purchases = (await import('react-native-purchases')).default;
+      await Purchases.logOut();
+    }
+  } catch {
+    /* ignore */
+  }
 }

@@ -1,0 +1,124 @@
+diff --git a/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt b/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt
+index 56e8653..72ff503 100644
+--- a/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt
++++ b/node_modules/react-native-edge-to-edge/android/src/main/java/com/zoontek/rnedgetoedge/EdgeToEdgeModuleImpl.kt
+@@ -5,7 +5,6 @@ import android.os.Build.VERSION_CODES
+ 
+ import android.app.Activity
+ import android.content.res.Configuration
+-import android.graphics.Color
+ import android.util.TypedValue
+ import android.view.Window
+ import android.view.WindowManager
+@@ -18,9 +17,6 @@ import com.facebook.common.logging.FLog
+ import com.facebook.react.bridge.ReactApplicationContext
+ import com.facebook.react.common.ReactConstants
+ 
+-internal val LightNavigationBarColor = Color.argb(0xe6, 0xFF, 0xFF, 0xFF)
+-internal val DarkNavigationBarColor = Color.argb(0x80, 0x1b, 0x1b, 0x1b)
+-
+ object EdgeToEdgeModuleImpl {
+   const val NAME = "RNEdgeToEdge"
+ 
+@@ -71,11 +67,8 @@ object EdgeToEdgeModuleImpl {
+ 
+       WindowCompat.setDecorFitsSystemWindows(window, false)
+ 
+-      window.statusBarColor = Color.TRANSPARENT
+-
++      // Avoid Window.setStatusBarColor / setNavigationBarColor (deprecated on API 35+).
+       if (VERSION.SDK_INT >= VERSION_CODES.O_MR1 && isNavigationBarTransparent(activity)) {
+-        window.navigationBarColor = Color.TRANSPARENT
+-
+         if (VERSION.SDK_INT >= VERSION_CODES.Q) {
+           window.isStatusBarContrastEnforced = false
+           window.isNavigationBarContrastEnforced = false
+@@ -83,12 +76,6 @@ object EdgeToEdgeModuleImpl {
+       } else {
+         val light = isDefaultLightSystemBars(activity)
+ 
+-        window.navigationBarColor = when {
+-          VERSION.SDK_INT >= VERSION_CODES.Q -> Color.TRANSPARENT
+-          VERSION.SDK_INT >= VERSION_CODES.O_MR1 && light -> LightNavigationBarColor
+-          else -> DarkNavigationBarColor
+-        }
+-
+         insetsController.run {
+           isAppearanceLightNavigationBars = when {
+             VERSION.SDK_INT >= VERSION_CODES.O_MR1 -> light
+diff --git a/node_modules/react-native-edge-to-edge/android/src/main/res/values/styles.xml b/node_modules/react-native-edge-to-edge/android/src/main/res/values/styles.xml
+index 1db8599..4c7d9bc 100644
+--- a/node_modules/react-native-edge-to-edge/android/src/main/res/values/styles.xml
++++ b/node_modules/react-native-edge-to-edge/android/src/main/res/values/styles.xml
+@@ -6,8 +6,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">@bool/windowLightSystemBars</item>
+     </style>
+ 
+@@ -17,8 +15,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">@bool/windowLightSystemBars</item>
+     </style>
+ 
+@@ -28,8 +24,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">@bool/windowLightSystemBars</item>
+     </style>
+ 
+@@ -39,8 +33,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">@bool/windowLightSystemBars</item>
+     </style>
+ 
+@@ -50,8 +42,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">true</item>
+     </style>
+ 
+@@ -61,8 +51,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">true</item>
+     </style>
+ 
+@@ -72,8 +60,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">true</item>
+     </style>
+ 
+@@ -83,8 +69,6 @@
+ 
+         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+         <item name="android:fitsSystemWindows">false</item>
+-        <item name="android:navigationBarColor">@color/navigationBarColor</item>
+-        <item name="android:statusBarColor">@android:color/transparent</item>
+         <item name="android:windowLightStatusBar">true</item>
+     </style>
+ 

@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': '効果音を再生',
   'settings.sound.sfxSubtitle': 'クリック、正解、不正解、クリア音',
   'settings.language.a11y': '言語',
+  'settings.section.feedback': 'フィードバック',
+  'settings.feedback.rowDesc': '気に入った点や改善してほしい点を教えてください。',
+  'settings.feedback.button': 'フィードバック',
+  'settings.feedback.title': '改善にご協力ください',
+  'settings.feedback.intro':
+    'Word Wheel Questについてのご意見をお聞かせください。ご提案、追加してほしいパズル、一般的な感想など、すべて歓迎します。',
+  'settings.feedback.category': 'カテゴリ',
+  'settings.feedback.category.puzzles': 'パズル',
+  'settings.feedback.category.gameplay': 'ゲームプレイ',
+  'settings.feedback.category.bugs': '不具合・クラッシュ',
+  'settings.feedback.category.shop': 'ショップと購入',
+  'settings.feedback.category.other': 'その他',
+  'settings.feedback.opinion': 'ご意見',
+  'settings.feedback.opinionPlaceholder': '詳しく教えてください…',
+  'settings.feedback.opinionRequired': '送信前に短いメッセージを入力してください。',
+  'settings.feedback.privacyNote':
+    '個人データは収集しません。アプリのバージョンとOSなどの標準的な診断情報のみが含まれます。',
+  'settings.feedback.cancel': 'キャンセル',
+  'settings.feedback.send': '送信',
+  'settings.feedback.sendError': 'フィードバックを送信できませんでした。もう一度お試しください。',
+  'settings.feedback.thanksTitle': 'ありがとうございます',
+  'settings.feedback.thanksMessage':
+    'フィードバックありがとうございます。アプリの改善に努めてまいります。',
+  'settings.feedback.close': '閉じる',
 
   // legal
   'legal.marketing': 'マーケティング',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': 'メール',
   'signIn.placeholder.password': 'パスワード',
   'signIn.button.email': 'サインイン',
+  'signIn.button.google': 'Googleでサインイン',
   'signIn.divider': '— または —',
-  'signIn.button.apple': ' Appleでサインイン',
-  'signIn.apple.hint': 'AppleでサインインはiPhoneで利用できます。',
+  'signIn.required.title': 'サインインが必要です',
+  'signIn.required.body':
+    'この購入をアカウントに同期するには、Googleでサインインしてください。',
 
   // shop
   'shop.title': 'ショップ',
@@ -144,13 +170,17 @@ export default {
     'この商品はまだ読み込まれていません。しばらくしてから再試行してください。',
   'shop.alert.success.title': 'ありがとうございます！',
   'shop.alert.success.body': '{name}の購入が完了しました。',
+  'shop.alert.signInRequired.title': 'サインインが必要です',
+  'shop.alert.signInRequired.body':
+    '購入を記録しました。アカウントに同期するにはGoogleでサインインしてください。',
+  'shop.alert.signInRequired.action': 'Googleでサインイン',
   'shop.alert.purchaseFailed.title': '購入に失敗しました',
   'shop.alert.purchaseFailed.body': '問題が発生しました。',
   'shop.alert.restored.title': '復元しました',
   'shop.alert.restored.body': '購入内容を復元しました。',
   'shop.alert.restoreFailed.title': '復元に失敗しました',
   'shop.alert.restoreFailed.body': '購入内容を復元できませんでした。',
-  'shop.offeringHint': 'オファリング `{id}` · 価格はApp Storeより。',
+  'shop.offeringHint': 'オファリング `{id}` · 価格はGoogle Playより。',
   'shop.restore': '購入を復元',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': 'ウォレットの読み込みに失敗しました',
 
   // auth
-  'auth.error.userNotFound':
-    'このメールのアカウントが見つかりません。ウェブサイトでGoogleまたはAppleで登録した場合は、ここでAppleでサインインしてください。',
-  'auth.error.wrongPassword':
-    'パスワードが違うか、このアカウントはウェブサイトのGoogle/Appleサインインを使っています。Appleでサインインするか、puzzleinteract.comでパスワードをリセットしてください。',
   'auth.error.userNotConfirmed': 'サインイン前にメールを確認してください。',
   'auth.error.passwordResetRequired':
     'サインイン前にパスワードをリセットする必要があります。',
@@ -250,9 +276,8 @@ export default {
     '試行回数が多すぎます。数分待ってから再試行してください。',
   'auth.error.generic': 'サインインに失敗しました。もう一度お試しください。',
   'auth.error.noToken': 'サインインがトークンを返しませんでした。',
-  'auth.apple.iosOnly': 'AppleでサインインはiPhoneでのみ利用できます。',
-  'auth.apple.unavailable': 'この端末ではAppleでサインインを利用できません。',
-  'auth.apple.noIdentityToken': 'AppleでサインインがIDトークンを返しませんでした。',
-  'auth.apple.exchangeFailed': 'Appleサインインの交換に失敗しました。',
-  'auth.apple.httpFailed': 'Appleサインインに失敗しました (HTTP {status})',
+  'auth.google.failed': 'Googleサインインに失敗しました。もう一度お試しください。',
+  'auth.google.exchangeFailed': 'Googleサインインを完了できませんでした。',
+  'auth.google.noCode': 'Googleサインインが認証コードを返しませんでした。',
+  'auth.google.stateMismatch': 'Googleサインインを確認できませんでした。もう一度お試しください。',
 };

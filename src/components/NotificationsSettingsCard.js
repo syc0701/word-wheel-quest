@@ -61,9 +61,7 @@ export default function NotificationsSettingsCard({
   };
 
   const onToggle = async (next) => {
-    if (saving || loading) {
-      return;
-    }
+    if (saving || loading) return;
 
     if (!authed) {
       promptSignIn();

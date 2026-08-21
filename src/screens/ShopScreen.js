@@ -8,9 +8,16 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
-import { getDefaultOffering, purchasePackage, readPurchaseTransactionId } from '../services/purchases';
+import {
+  getDefaultOffering,
+  isPurchasesConfigured,
+  isStoreUnavailable,
+  purchasePackage,
+  readPurchaseTransactionId,
+} from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
+import { savePendingIap } from '../lib/pendingIap';
 
 const GOLD = '#facc15';
 
@@ -121,17 +128,24 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       }
     : null;
 
+  const shopReady = isPurchasesConfigured();
+
   const loadOfferings = useCallback(async () => {
+    if (!isPurchasesConfigured()) {
+      setRcPackages([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const offering = await getDefaultOffering();
       setRcPackages(offering?.availablePackages ?? []);
-    } catch (error) {
-      Alert.alert(t('shop.alert.unavailable.title'), error.message ?? t('shop.alert.unavailable.body'));
+    } catch {
+      setRcPackages([]);
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     loadOfferings();
@@ -153,20 +167,44 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     try {
       const purchaseResult = await purchasePackage(rcPackage);
       const authed = await isLoggedIn();
+      const transactionId = readPurchaseTransactionId(purchaseResult);
+      const productId = rcPackage.product.identifier;
       if (authed) {
         await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
-          productId: rcPackage.product.identifier,
-          transactionId: readPurchaseTransactionId(purchaseResult),
+          productId,
+          transactionId,
           rawPayload: {
-            platform: 'apple',
-            storeProductId: rcPackage.product.identifier,
+            platform: 'google',
+            storeProductId: productId,
             packageKey: meta.packageId,
           },
         });
+        const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
+        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+      } else {
+        await savePendingIap({
+          productId,
+          transactionId,
+          packageKey: meta.packageId,
+        });
+        Alert.alert(
+          t('shop.alert.signInRequired.title'),
+          t('shop.alert.signInRequired.body'),
+          [
+            {
+              text: t('shop.alert.signInRequired.action'),
+              onPress: () =>
+                navigate(SCREENS.SIGN_IN, {
+                  backScreen: SCREENS.SHOP,
+                  returnBackScreen: backScreen,
+                  requireSignIn: true,
+                }),
+            },
+          ],
+          { cancelable: false }
+        );
       }
-      const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-      Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));
@@ -190,6 +228,14 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
 
         {loading ? (
           <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
+        ) : !shopReady ? (
+          <Text style={[styles.unavailable, { color: colors.textMuted }, sceneChip]}>
+            {t(
+              isStoreUnavailable()
+                ? 'shop.alert.deviceUnavailable.body'
+                : 'shop.alert.unavailable.body'
+            )}
+          </Text>
         ) : (
           IAP_PACKAGES.map((meta) => {
             const rcPackage = findRcPackage(meta.packageId);
@@ -238,6 +284,11 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 24,
+  },
+  unavailable: {
+    marginTop: 16,
+    fontSize: 15,
+    lineHeight: 22,
   },
   productRow: {
     flexDirection: 'row',

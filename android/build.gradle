@@ -1,0 +1,48 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+  def kotlinVersion = findProperty('android.kotlinVersion') ?: '2.3.0'
+  repositories {
+    google()
+    mavenCentral()
+  }
+  dependencies {
+        classpath 'com.google.gms:google-services:4.4.1'
+    classpath('com.android.tools.build:gradle')
+    classpath('com.facebook.react:react-native-gradle-plugin')
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+  }
+}
+
+// Expose to subprojects (Expo modules read rootProject.ext.kotlinVersion / kspVersion).
+ext {
+  kotlinVersion = findProperty('android.kotlinVersion') ?: '2.3.0'
+  kspVersion = findProperty('android.kspVersion') ?: '2.3.0'
+}
+
+apply from: new File(rootDir, "resolveNode.gradle")
+def nodeExecutable = resolveNodeExecutable(rootDir)
+
+def reactNativeAndroidDir = new File(
+  providers.exec {
+    workingDir(rootDir)
+    commandLine(nodeExecutable, "--print", "require.resolve('react-native/package.json')")
+  }.standardOutput.asText.get().trim(),
+  "../android"
+)
+
+allprojects {
+  repositories {
+    maven {
+      // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+      url(reactNativeAndroidDir)
+    }
+
+    google()
+    mavenCentral()
+    maven { url 'https://www.jitpack.io' }
+  }
+}
+
+apply plugin: "expo-root-project"
+apply plugin: "com.facebook.react.rootproject"

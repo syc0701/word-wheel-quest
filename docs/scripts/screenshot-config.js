@@ -1,46 +1,56 @@
 /**
- * App Store screenshot config — mirrors puzzle-app Snapfile + Fastfile defaults.
- * 10 locales × 2 devices × 10 scenes = 200 PNGs per full run.
+ * Play Store screenshot config for Word Wheel Quest.
+ * Captures https://www.puzzleinteract.com/prototype/mobile/word-wheel/screenshot/01 … /08
+ * into fastlane/metadata/android/<locale>/images/{phone,sevenInch}Screenshots/
  */
+
+const path = require('path');
 
 const BASE_URL =
   process.env.SCREENSHOT_BASE_URL ??
   'https://www.puzzleinteract.com/prototype/mobile/word-wheel/screenshot';
 
-/** Fastlane / App Store Connect locale → short ?lang= code (see puzzle-app screenshotI18n.js). */
+/** Play Console locale folder → ?lang= code */
 const LOCALES = [
   { locale: 'en-US', lang: 'en' },
   { locale: 'fr-FR', lang: 'fr' },
-  { locale: 'zh-Hans', lang: 'zh' },
-  { locale: 'hi', lang: 'hi' },
+  { locale: 'zh-CN', lang: 'zh' },
+  { locale: 'hi-IN', lang: 'hi' },
   { locale: 'es-ES', lang: 'es' },
-  { locale: 'ar-SA', lang: 'ar' },
+  { locale: 'ar', lang: 'ar' },
   { locale: 'pt-BR', lang: 'pt' },
   { locale: 'de-DE', lang: 'de' },
-  { locale: 'ja', lang: 'ja' },
-  { locale: 'ko', lang: 'ko' },
+  { locale: 'ja-JP', lang: 'ja' },
+  { locale: 'ko-KR', lang: 'ko' },
 ];
 
-/** App Store display slots — same simulators as puzzle-app Fastfile. */
-const DEVICES = [
-  {
-    name: 'iPhone 15 Plus',
-    playwrightPreset: 'iPhone 15 Plus',
-    viewport: { width: 430, height: 932 },
-    deviceScaleFactor: 3,
-    pixelSize: '1290×2796',
+/** Play screenshot sizes (portrait). Short side must be ≥1080px (Play API). */
+const DEVICES = {
+  phone: {
+    name: 'phone',
+    playFolder: 'phoneScreenshots',
+    // Was 430×940 — too small for current Play rules; keep ~same aspect.
+    viewport: { width: 1080, height: 2361 },
+    deviceScaleFactor: 1,
   },
-  {
-    name: 'iPad Pro 13-inch (M4)',
-    playwrightPreset: 'iPad Pro 11',
-    viewport: { width: 1032, height: 1376 },
-    deviceScaleFactor: 2,
-    pixelSize: '2064×2752',
+  sevenInch: {
+    name: 'sevenInch',
+    playFolder: 'sevenInchScreenshots',
+    // Was 600×960 (5:8)
+    viewport: { width: 1080, height: 1728 },
+    deviceScaleFactor: 1,
   },
-];
+  tenInch: {
+    name: 'tenInch',
+    playFolder: 'tenInchScreenshots',
+    // Was 800×1280 (5:8)
+    viewport: { width: 1080, height: 1728 },
+    deviceScaleFactor: 1,
+  },
+};
 
 const SCENE_START = Number(process.env.SCREENSHOT_START ?? 1);
-const SCENE_END = Number(process.env.SCREENSHOT_END ?? 10);
+const SCENE_END = Number(process.env.SCREENSHOT_END ?? 8);
 
 function padScene(n) {
   return String(n).padStart(2, '0');
@@ -54,58 +64,67 @@ function sceneSlugs() {
   return slugs;
 }
 
-function snapshotName(slug) {
-  return `${slug}WordWheel-Screenshot-${slug}`;
-}
-
 function buildSceneUrl(slug, lang) {
   return `${BASE_URL}/${slug}?lang=${lang}`;
 }
 
 function parseLocaleFilter() {
   const raw = process.env.SNAPSHOT_LANGUAGES?.trim();
-  if (!raw || raw === 'all') return LOCALES;
+  if (!raw || raw === 'all') {
+    return LOCALES;
+  }
   const wanted = raw.split(',').map((s) => s.trim()).filter(Boolean);
   const filtered = LOCALES.filter(({ locale }) => wanted.includes(locale));
   if (filtered.length === 0) {
-    throw new Error(`SNAPSHOT_LANGUAGES matched nothing. Use: all or ${LOCALES.map((l) => l.locale).join(', ')}`);
+    throw new Error(
+      `SNAPSHOT_LANGUAGES matched nothing. Use: all or ${LOCALES.map((l) => l.locale).join(', ')}`
+    );
   }
   return filtered;
 }
 
 function parseDeviceFilter() {
-  if (process.env.SNAPSHOT_IPHONE_ONLY === '1') {
-    return DEVICES.filter((d) => d.name.startsWith('iPhone'));
+  const raw = process.env.SCREENSHOT_DEVICES?.trim();
+  if (!raw || raw === 'all') {
+    return Object.values(DEVICES);
   }
-
-  const raw = process.env.SNAPSHOT_DEVICES?.trim();
-  if (!raw) return DEVICES;
-
   const wanted = raw.split(',').map((s) => s.trim()).filter(Boolean);
-  const filtered = DEVICES.filter(({ name }) =>
-    wanted.some((w) => name === w || name.startsWith(w))
-  );
+  const filtered = wanted.map((key) => DEVICES[key]).filter(Boolean);
   if (filtered.length === 0) {
-    throw new Error(`SNAPSHOT_DEVICES matched nothing. Use: ${DEVICES.map((d) => d.name).join(', ')}`);
+    throw new Error(
+      `SCREENSHOT_DEVICES matched nothing. Use: all or ${Object.keys(DEVICES).join(', ')}`
+    );
   }
   return filtered;
 }
 
 function screenshotsRoot() {
-  return require('path').join(__dirname, '..', '..', 'ios', 'fastlane', 'screenshots');
+  return path.join(__dirname, '..', '..', 'fastlane', 'metadata', 'android');
+}
+
+function screenshotsDir(locale, playFolder) {
+  return path.join(screenshotsRoot(), locale, 'images', playFolder);
+}
+
+/** @deprecated use screenshotsDir(locale, 'phoneScreenshots') */
+function phoneScreenshotsDir(locale) {
+  return screenshotsDir(locale, 'phoneScreenshots');
 }
 
 module.exports = {
   BASE_URL,
   LOCALES,
   DEVICES,
+  /** @deprecated use DEVICES.phone */
+  PHONE: DEVICES.phone,
   SCENE_START,
   SCENE_END,
   padScene,
   sceneSlugs,
-  snapshotName,
   buildSceneUrl,
   parseLocaleFilter,
   parseDeviceFilter,
   screenshotsRoot,
+  screenshotsDir,
+  phoneScreenshotsDir,
 };

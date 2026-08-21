@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -9,11 +10,12 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { WW } from '../constants/theme';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
+import { GRID_CREAM, GRID_TRANSITION_MS } from '../lib/gridTheme';
 
 const SPRING_POP = { damping: 8, stiffness: 280, mass: 0.55 };
 const SPRING_SETTLE = { damping: 12, stiffness: 180, mass: 0.7 };
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 /**
  * Grid cell bounce / pulse when a word is newly found or re-selected (already revealed).
@@ -35,6 +37,14 @@ export default function RevealCell({
   const scale = useSharedValue(1);
   const lift = useSharedValue(0);
   const glow = useSharedValue(0);
+  const selectedProgress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    selectedProgress.value = withTiming(isSelected ? 1 : 0, {
+      duration: GRID_TRANSITION_MS,
+      easing: Easing.inOut(Easing.quad),
+    });
+  }, [isSelected, selectedProgress]);
 
   useEffect(() => {
     if (!celebrate) {
@@ -57,10 +67,7 @@ export default function RevealCell({
       );
       lift.value = withDelay(
         celebrateDelay,
-        withSequence(
-          withTiming(-3, { duration: 120 }),
-          withTiming(0, { duration: 220 })
-        )
+        withSequence(withTiming(-3, { duration: 120 }), withTiming(0, { duration: 220 }))
       );
       glow.value = withDelay(
         celebrateDelay,
@@ -100,7 +107,46 @@ export default function RevealCell({
     shadowRadius: 4 + glow.value * 8,
   }));
 
+  const cellStyle = useAnimatedStyle(() => {
+    const celebrating = celebrate;
+    const celebrateBg =
+      mode === 'already' ? GRID_CREAM.alreadyBg : GRID_CREAM.celebrateBg;
+    const celebrateBorder =
+      mode === 'already' ? GRID_CREAM.alreadyBorder : GRID_CREAM.celebrateBorder;
+    const idleBg = celebrating
+      ? celebrateBg
+      : isHint
+        ? GRID_CREAM.hintBg
+        : GRID_CREAM.revealedBg;
+    const idleBorder = celebrating
+      ? celebrateBorder
+      : isHint
+        ? GRID_CREAM.hintBorder
+        : GRID_CREAM.revealedBorder;
+    const idleWidth = celebrating && mode === 'already' ? 2.5 : GRID_CREAM.cellBorderWidth;
+    return {
+      backgroundColor: interpolateColor(
+        selectedProgress.value,
+        [0, 1],
+        [idleBg, GRID_CREAM.selectedBg]
+      ),
+      borderColor: interpolateColor(
+        selectedProgress.value,
+        [0, 1],
+        [idleBorder, GRID_CREAM.selectedBorder]
+      ),
+      borderWidth:
+        idleWidth +
+        selectedProgress.value * (GRID_CREAM.selectedBorderWidth - idleWidth),
+    };
+  }, [celebrate, isHint, mode]);
+
   const wordNumberLabel = formatCellWordNumberLabel(wordNumber);
+  const textColor = isSelected
+    ? GRID_CREAM.selectedText
+    : isHint
+      ? GRID_CREAM.hintText
+      : GRID_CREAM.revealedText;
 
   return (
     <Animated.View
@@ -110,15 +156,9 @@ export default function RevealCell({
         animatedStyle,
       ]}
     >
-      <Pressable
+      <AnimatedPressable
         onPress={onPress}
-        style={[
-          styles.cell,
-          { width: size, height: size },
-          isHint ? styles.cellHint : styles.cellFound,
-          isSelected && styles.cellSelected,
-          celebrate && (mode === 'already' ? styles.cellAlready : styles.cellCelebrate),
-        ]}
+        style={[styles.cell, { width: size, height: size }, cellStyle]}
       >
         {wordNumberLabel ? (
           <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
@@ -127,22 +167,20 @@ export default function RevealCell({
             </Text>
           </View>
         ) : null}
-        {letter ? (
-          <Text style={[styles.letter, isHint && styles.letterHint]}>{letter}</Text>
-        ) : null}
-      </Pressable>
+        {letter ? <Text style={[styles.letter, { color: textColor }]}>{letter}</Text> : null}
+      </AnimatedPressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   shadowNew: {
-    shadowColor: '#facc15',
+    shadowColor: GRID_CREAM.selectedBorder,
     shadowOffset: { width: 0, height: 2 },
     elevation: 6,
   },
   shadowAlready: {
-    shadowColor: '#38bdf8',
+    shadowColor: GRID_CREAM.cellBorder,
     shadowOffset: { width: 0, height: 2 },
     elevation: 5,
   },
@@ -152,62 +190,35 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     position: 'relative',
   },
-  cellFound: {
-    backgroundColor: WW.successSoft,
-    borderWidth: 2,
-    borderColor: '#bbf7d0',
-  },
-  cellHint: {
-    backgroundColor: WW.hintSoft,
-    borderWidth: 2,
-    borderColor: '#fcd34d',
-  },
-  cellSelected: {
-    borderWidth: 3.5,
-    borderColor: WW.wheelLine || '#f59e0b',
-  },
-  cellCelebrate: {
-    backgroundColor: '#d9f99d',
-    borderColor: '#84cc16',
-  },
-  cellAlready: {
-    backgroundColor: '#e0f2fe',
-    borderColor: '#38bdf8',
-    borderWidth: 2.5,
-  },
   letter: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: WW.successText,
-  },
-  letterHint: {
-    color: WW.hintText,
+    fontSize: 17,
+    fontWeight: '900',
   },
   numberBadge: {
     position: 'absolute',
     top: 2,
     left: 2,
-    minWidth: 14,
-    minHeight: 14,
-    paddingHorizontal: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    minWidth: 18,
+    minHeight: 18,
+    paddingHorizontal: 3,
+    borderRadius: 5,
+    backgroundColor: GRID_CREAM.badgeBg,
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: GRID_CREAM.badgeBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   numberBadgeWide: {
-    minWidth: 22,
-    paddingHorizontal: 3,
+    minWidth: 26,
+    paddingHorizontal: 4,
   },
   numberText: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '800',
-    color: '#064e3b',
+    color: GRID_CREAM.badgeText,
   },
   numberTextCompact: {
-    fontSize: 8,
+    fontSize: 10,
     letterSpacing: -0.2,
   },
 });

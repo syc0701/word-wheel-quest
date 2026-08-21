@@ -15,16 +15,46 @@ import { APP_URLS } from '../constants/store';
 import { SCREENS } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { verifyPendingIapIfNeeded } from '../lib/pendingIap';
 import {
   loginWithPassword,
   signInErrorMessage,
   signInWithApple,
+  signInWithGoogle,
 } from '../services/cognitoAuth';
+
+function GoogleMark() {
+  return (
+    <View style={googleMarkStyles.badge}>
+      <Text style={googleMarkStyles.letter}>G</Text>
+    </View>
+  );
+}
+
+const googleMarkStyles = StyleSheet.create({
+  badge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  letter: {
+    color: '#4285F4',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+});
 
 export default function SignInScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
-  const backScreen = SCREENS.SETTINGS;
+  const insets = useSafeAreaInsets();
+  const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
+  const requireSignIn = Boolean(routeParams.requireSignIn);
 
   const emailRef = useRef('');
   const passwordRef = useRef('');
@@ -32,29 +62,43 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
   const [appleBusy, setAppleBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Image theme: dark chrome colors wash out on scene photos — use light over-photo type.
-  const onScene = isRandomScene;
-  const titleColor = onScene ? '#ffffff' : colors.text;
-  const mutedColor = onScene ? 'rgba(255, 255, 255, 0.9)' : colors.textMuted;
-  const linkColor = onScene ? '#5eead4' : colors.primaryGlow;
-  const iconColor = onScene ? '#ffffff' : colors.textMuted;
-  const sceneShadow = onScene
+  const sceneText = isRandomScene
     ? {
-        textShadowColor: 'rgba(0, 0, 0, 0.55)',
+        color: '#ffffff',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
         textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 5,
+        textShadowRadius: 4,
+      }
+    : null;
+  const sceneMuted = isRandomScene
+    ? {
+        color: 'rgba(255, 255, 255, 0.92)',
+        textShadowColor: 'rgba(0, 0, 0, 0.7)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+      }
+    : null;
+  const sceneLink = isRandomScene
+    ? {
+        color: '#fde68a',
+        textShadowColor: 'rgba(0, 0, 0, 0.7)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
       }
     : null;
 
-  const finishSignIn = () => {
+  const finishSignIn = async () => {
+    await verifyPendingIapIfNeeded();
     navigate(backScreen, {
       ...routeParams,
-      backScreen: routeParams.backScreen ?? SCREENS.PLAY,
+      backScreen: routeParams.returnBackScreen ?? routeParams.backScreen ?? SCREENS.PLAY,
       signedIn: true,
       authTick: Date.now(),
+      requireSignIn: undefined,
     });
   };
 
@@ -70,7 +114,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     try {
       const result = await loginWithPassword(trimmedEmail, pwd);
       if (result.success) {
-        finishSignIn();
+        await finishSignIn();
         return;
       }
       setError(result.message || signInErrorMessage(result.errorKey));
@@ -81,6 +125,22 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleBusy(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result.cancelled) return;
+      if (result.success) {
+        await finishSignIn();
+      }
+    } catch (e) {
+      setError(e?.message || t('auth.google.failed'));
+    } finally {
+      setGoogleBusy(false);
+    }
+  };
+
   const handleAppleSignIn = async () => {
     setError('');
     setAppleBusy(true);
@@ -88,7 +148,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
       const result = await signInWithApple();
       if (result.cancelled) return;
       if (result.success) {
-        finishSignIn();
+        await finishSignIn();
       }
     } catch (e) {
       setError(e?.message || signInErrorMessage('generic'));
@@ -106,16 +166,20 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     });
   };
 
-  const styles = createStyles(colors);
+  const locked = busy || googleBusy || appleBusy;
+  const styles = createStyles(colors, insets);
 
   return (
     <View style={styles.container}>
       <Pressable
-        style={[styles.settingsBtn, onScene && styles.settingsBtnScene]}
+        style={[
+          styles.settingsBtn,
+          isRandomScene && styles.settingsBtnOnScene,
+        ]}
         onPress={() => navigate(backScreen, routeParams)}
         hitSlop={8}
       >
-        <Settings color={iconColor} size={22} />
+        <Settings color={isRandomScene ? '#0b3d36' : colors.textMuted} size={22} />
       </Pressable>
 
       <KeyboardAvoidingView
@@ -127,21 +191,25 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.title, { color: titleColor }, sceneShadow]}>
-            {t('signIn.title')}
+          <Text style={[styles.title, sceneText]}>
+            {requireSignIn ? t('signIn.required.title') : t('signIn.title')}
           </Text>
 
-          <Text style={[styles.legal, { color: mutedColor }, sceneShadow]}>
+          {requireSignIn ? (
+            <Text style={[styles.requiredBody, sceneMuted]}>{t('signIn.required.body')}</Text>
+          ) : null}
+
+          <Text style={[styles.legal, sceneMuted]}>
             {t('signIn.legal.prefix')}
             <Text
-              style={[styles.legalLink, { color: linkColor }]}
+              style={[styles.legalLink, sceneLink]}
               onPress={() => openLegal(APP_URLS.terms, t('signIn.legal.termsTitle'))}
             >
               {t('signIn.legal.termsLink')}
             </Text>
             {t('signIn.legal.and')}
             <Text
-              style={[styles.legalLink, { color: linkColor }]}
+              style={[styles.legalLink, sceneLink]}
               onPress={() => openLegal(APP_URLS.privacy, t('signIn.legal.privacyTitle'))}
             >
               {t('signIn.legal.privacyLink')}
@@ -149,79 +217,13 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             {t('signIn.legal.period')}
           </Text>
 
-          {error ? (
-            <Text style={[styles.error, sceneShadow]}>{error}</Text>
-          ) : null}
-
-          <TextInput
-            style={styles.input}
-            placeholder={t('signIn.placeholder.email')}
-            placeholderTextColor={colors.textMuted}
-            value={email}
-            onChangeText={(value) => {
-              emailRef.current = value;
-              setEmail(value);
-            }}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="username"
-            editable={!busy && !appleBusy}
-          />
-
-          <View style={styles.passwordWrap}>
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              placeholder={t('signIn.placeholder.password')}
-              placeholderTextColor={colors.textMuted}
-              value={password}
-              onChangeText={(value) => {
-                passwordRef.current = value;
-                setPassword(value);
-              }}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              textContentType="password"
-              editable={!busy && !appleBusy}
-            />
-            <Pressable
-              style={styles.eyeBtn}
-              onPress={() => setShowPassword((v) => !v)}
-              hitSlop={8}
-            >
-              {showPassword ? (
-                <EyeOff color={colors.textMuted} size={20} />
-              ) : (
-                <Eye color={colors.textMuted} size={20} />
-              )}
-            </Pressable>
-          </View>
-
-          <Pressable
-            style={[styles.primaryBtn, (busy || appleBusy) && styles.btnDisabled]}
-            onPress={handleEmailSignIn}
-            disabled={busy || appleBusy}
-          >
-            {busy ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.primaryBtnText}>{t('signIn.button.email')}</Text>
-            )}
-          </Pressable>
-
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, onScene && styles.dividerLineScene]} />
-            <Text style={[styles.dividerText, { color: mutedColor }, sceneShadow]}>
-              {t('signIn.divider')}
-            </Text>
-            <View style={[styles.dividerLine, onScene && styles.dividerLineScene]} />
-          </View>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
           {Platform.OS === 'ios' ? (
             <Pressable
-              style={[styles.appleBtn, (busy || appleBusy) && styles.btnDisabled]}
+              style={[styles.appleBtn, locked && styles.btnDisabled]}
               onPress={handleAppleSignIn}
-              disabled={busy || appleBusy}
+              disabled={locked}
             >
               {appleBusy ? (
                 <ActivityIndicator color="#fff" />
@@ -230,143 +232,245 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
               )}
             </Pressable>
           ) : (
-            <Text style={[styles.appleHint, { color: mutedColor }, sceneShadow]}>
-              {t('signIn.apple.hint')}
-            </Text>
+            <Pressable
+              style={[styles.googleBtn, locked && styles.btnDisabled]}
+              onPress={handleGoogleSignIn}
+              disabled={locked}
+            >
+              {googleBusy ? (
+                <ActivityIndicator color="#1f1f1f" />
+              ) : (
+                <>
+                  <GoogleMark />
+                  <Text style={styles.googleBtnText}>{t('signIn.button.google')}</Text>
+                </>
+              )}
+            </Pressable>
           )}
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.surfaceLight }]} />
+            <Text style={[styles.dividerText, sceneMuted]}>{t('signIn.divider')}</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.surfaceLight }]} />
+          </View>
+
+          <TextInput
+            style={[styles.input, isRandomScene && styles.inputOnScene]}
+            placeholder={t('signIn.placeholder.email')}
+            placeholderTextColor={isRandomScene ? '#64748b' : colors.textMuted}
+            value={email}
+            onChangeText={(value) => {
+              emailRef.current = value;
+              setEmail(value);
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+            keyboardType="email-address"
+            autoComplete="off"
+            textContentType="none"
+            importantForAutofill="no"
+            editable={!locked}
+          />
+
+          <View style={styles.passwordWrap}>
+            <TextInput
+              style={[
+                styles.input,
+                styles.passwordInput,
+                isRandomScene && styles.inputOnScene,
+              ]}
+              placeholder={t('signIn.placeholder.password')}
+              placeholderTextColor={isRandomScene ? '#64748b' : colors.textMuted}
+              value={password}
+              onChangeText={(value) => {
+                passwordRef.current = value;
+                setPassword(value);
+              }}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+              autoComplete="off"
+              textContentType="none"
+              importantForAutofill="no"
+              editable={!locked}
+            />
+            <Pressable
+              style={styles.eyeBtn}
+              onPress={() => setShowPassword((v) => !v)}
+              hitSlop={8}
+            >
+              {showPassword ? (
+                <EyeOff color={isRandomScene ? '#475569' : colors.textMuted} size={20} />
+              ) : (
+                <Eye color={isRandomScene ? '#475569' : colors.textMuted} size={20} />
+              )}
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={[styles.primaryBtn, locked && styles.btnDisabled]}
+            onPress={handleEmailSignIn}
+            disabled={locked}
+          >
+            {busy ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.primaryBtnText}>{t('signIn.button.email')}</Text>
+            )}
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 }
 
-function createStyles(colors) {
+function createStyles(colors, insets) {
+  const top = Math.max(insets?.top ?? 0, 12);
   return StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  settingsBtn: {
-    position: 'absolute',
-    top: 52,
-    right: 16,
-    zIndex: 2,
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-  },
-  settingsBtnScene: {
-    backgroundColor: 'rgba(6, 32, 38, 0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 96,
-    paddingBottom: 40,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    lineHeight: 32,
-    marginBottom: 16,
-  },
-  legal: {
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  legalLink: {
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
-  error: {
-    color: '#fecaca',
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceLight,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    color: colors.text,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  passwordWrap: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  passwordInput: {
-    marginBottom: 0,
-    paddingRight: 48,
-  },
-  eyeBtn: {
-    position: 'absolute',
-    right: 12,
-    top: 14,
-  },
-  primaryBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  btnDisabled: {
-    opacity: 0.7,
-  },
-  primaryBtnText: {
-    color: '#ffffff',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-    gap: 10,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.surfaceLight,
-  },
-  dividerLineScene: {
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-  },
-  dividerText: {
-    fontSize: 13,
-  },
-  appleBtn: {
-    width: '100%',
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  appleBtnText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  appleHint: {
-    fontSize: 13,
-    textAlign: 'center',
-  },
-});
+    container: {
+      flex: 1,
+    },
+    flex: {
+      flex: 1,
+    },
+    settingsBtn: {
+      position: 'absolute',
+      top: top + 8,
+      right: 16,
+      zIndex: 2,
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+    },
+    settingsBtnOnScene: {
+      backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingHorizontal: 24,
+      paddingTop: top + 56,
+      paddingBottom: 40 + (insets?.bottom ?? 0),
+    },
+    title: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: '800',
+      lineHeight: 32,
+      marginBottom: 16,
+    },
+    requiredBody: {
+      color: colors.textMuted,
+      fontSize: 15,
+      lineHeight: 22,
+      marginBottom: 16,
+    },
+    legal: {
+      color: colors.textMuted,
+      fontSize: 13,
+      lineHeight: 20,
+      marginBottom: 24,
+    },
+    legalLink: {
+      color: colors.primaryGlow,
+      fontWeight: '600',
+    },
+    error: {
+      color: '#f87171',
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    googleBtn: {
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      minHeight: 48,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(15, 23, 42, 0.12)',
+    },
+    googleBtnText: {
+      color: '#1f1f1f',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    appleBtn: {
+      backgroundColor: '#000000',
+      borderRadius: 12,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    appleBtnText: {
+      color: '#ffffff',
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 18,
+      gap: 10,
+    },
+    dividerLine: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+    },
+    dividerText: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surfaceLight,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      color: colors.text,
+      fontSize: 16,
+      marginBottom: 12,
+    },
+    inputOnScene: {
+      backgroundColor: 'rgba(255, 255, 255, 0.96)',
+      borderColor: 'rgba(255, 255, 255, 0.9)',
+      color: '#0f172a',
+    },
+    passwordWrap: {
+      position: 'relative',
+      marginBottom: 12,
+    },
+    passwordInput: {
+      marginBottom: 0,
+      paddingRight: 48,
+    },
+    eyeBtn: {
+      position: 'absolute',
+      right: 12,
+      top: 14,
+    },
+    primaryBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      minHeight: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 4,
+    },
+    btnDisabled: {
+      opacity: 0.7,
+    },
+    primaryBtnText: {
+      color: '#ffffff',
+      fontSize: 17,
+      fontWeight: '700',
+    },
+  });
 }

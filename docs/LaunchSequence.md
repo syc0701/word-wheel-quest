@@ -1,59 +1,32 @@
-# App Launch Sequence
+# App Launch Sequence (Android)
 
-## 1. Native launch screen
+## 1. Native splash
 
-iOS immediately displays `SplashScreen.storyboard` before JavaScript loads:
+Android shows the Expo splash theme immediately (held until the JS overlay is ready via `expo-splash-screen`):
 
-- Cream-to-gold gradient background
-- **Word Wheel Quest** title near the top
-- App icon centered with aspect-fit sizing, so it is not zoomed or cropped
-- **© 2026 Puzzle Interact** near the bottom
+- Deep-sea blue background (`#0A2A4A`)
+- Splash image (`splash-launch.png` — WORD logo on deep blue) centered with contain sizing
 
 ## 2. JavaScript launch overlay
 
-When the React Native application starts, `LaunchSplashOverlay` appears over the application with the same visual design:
-
-- Matching cream-to-gold gradient
-- Matching title, centered app icon, and copyright
-- Cream fallback background (`#E8D4B8`) while the image loads
-
-Matching the native screen and JavaScript overlay creates a smooth transition without a black frame.
+`LaunchSplashOverlay` paints the reef background (`splash-reef-bg.png`), animates the WORD logo in, fades the title with extra spacing, and fills an animated rope progress bar. Tip text is not shown.
 
 ## 3. Overlay dismissal
 
-The overlay waits until:
-
-1. The splash image has loaded.
-2. Initial application interactions have completed.
-3. An additional 180 ms transition delay has elapsed.
-
-It then disappears and reveals the home screen, which has already rendered underneath.
-
-## 4. Home screen
-
-The home screen appears with its configured scene image or theme background.
+After native splash hide + short hold (~2.2 s), the overlay reveals Home. Tap dismisses early.
 
 ## Flow
 
 ```text
-iOS native splash
-(cream gradient + logo + copyright)
+Android native splash
+(deep-sea blue + WORD logo)
         |
-        | JavaScript bundle loads
+        | JS ready + reef image loaded → SplashScreen.hideAsync()
         v
 JavaScript launch overlay
-(matching gradient + logo + copyright)
+(reef + logo bounce + title + animated progress)
         |
-        | image ready + app ready + 180 ms
+        | ~2.2 s
         v
 Home screen
 ```
-
-## Expected behavior
-
-- No black screen between the splash screen and the application
-- No old splash image
-- No icon zoom or crop
-- Smooth transition from the native splash to the JavaScript overlay and then to the home screen
-
-> iOS caches native launch screens. After changing launch assets or the storyboard, delete the installed app and rebuild it to ensure the latest launch screen is displayed.

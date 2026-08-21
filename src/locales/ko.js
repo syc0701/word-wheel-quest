@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': '효과음 재생',
   'settings.sound.sfxSubtitle': '클릭, 정답, 오답, 승리 사운드',
   'settings.language.a11y': '언어',
+  'settings.section.feedback': '피드백',
+  'settings.feedback.rowDesc': '마음에 드는 점이나 개선할 점을 알려 주세요.',
+  'settings.feedback.button': '피드백',
+  'settings.feedback.title': '개선에 도움을 주세요',
+  'settings.feedback.intro':
+    'Word Wheel Quest에 대한 생각을 공유해 주세요. 제안, 원하는 퍼즐, 일반적인 의견 모두 환영합니다.',
+  'settings.feedback.category': '카테고리',
+  'settings.feedback.category.puzzles': '퍼즐',
+  'settings.feedback.category.gameplay': '게임플레이',
+  'settings.feedback.category.bugs': '버그 및 충돌',
+  'settings.feedback.category.shop': '상점 및 구매',
+  'settings.feedback.category.other': '기타',
+  'settings.feedback.opinion': '의견',
+  'settings.feedback.opinionPlaceholder': '자세히 알려 주세요...',
+  'settings.feedback.opinionRequired': '보내기 전에 짧은 내용을 작성해 주세요.',
+  'settings.feedback.privacyNote':
+    '개인 데이터는 수집하지 않습니다. 앱 버전과 OS 같은 표준 진단 정보만 포함됩니다.',
+  'settings.feedback.cancel': '취소',
+  'settings.feedback.send': '보내기',
+  'settings.feedback.sendError': '피드백을 보내지 못했습니다. 다시 시도해 주세요.',
+  'settings.feedback.thanksTitle': '감사합니다',
+  'settings.feedback.thanksMessage':
+    '피드백 감사합니다! 앱을 더 좋게 만들기 위해 계속 노력하겠습니다.',
+  'settings.feedback.close': '닫기',
 
   // legal
   'legal.marketing': '마케팅',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': '이메일',
   'signIn.placeholder.password': '비밀번호',
   'signIn.button.email': '로그인',
+  'signIn.button.google': 'Google로 로그인',
   'signIn.divider': '— 또는 —',
-  'signIn.button.apple': ' Apple로 로그인',
-  'signIn.apple.hint': 'Apple로 로그인은 iPhone에서 사용할 수 있습니다.',
+  'signIn.required.title': '로그인이 필요합니다',
+  'signIn.required.body':
+    '이 구매를 계정에 동기화하려면 Google로 로그인하세요.',
 
   // shop
   'shop.title': '상점',
@@ -144,13 +170,17 @@ export default {
     '이 상품이 아직 로드되지 않았습니다. 잠시 후 다시 시도하세요.',
   'shop.alert.success.title': '감사합니다!',
   'shop.alert.success.body': '{name} 구매가 완료되었습니다.',
+  'shop.alert.signInRequired.title': '로그인이 필요합니다',
+  'shop.alert.signInRequired.body':
+    '구매가 기록되었습니다. 계정에 동기화하려면 Google로 로그인하세요.',
+  'shop.alert.signInRequired.action': 'Google로 로그인',
   'shop.alert.purchaseFailed.title': '구매 실패',
   'shop.alert.purchaseFailed.body': '문제가 발생했습니다.',
   'shop.alert.restored.title': '복원됨',
   'shop.alert.restored.body': '구매 내역이 복원되었습니다.',
   'shop.alert.restoreFailed.title': '복원 실패',
   'shop.alert.restoreFailed.body': '구매를 복원할 수 없습니다.',
-  'shop.offeringHint': '오퍼링 `{id}` · 가격은 App Store 기준.',
+  'shop.offeringHint': '오퍼링 `{id}` · 가격은 Google Play 기준.',
   'shop.restore': '구매 복원',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': '지갑 불러오기 실패',
 
   // auth
-  'auth.error.userNotFound':
-    '이 이메일의 계정을 찾을 수 없습니다. 웹사이트에서 Google 또는 Apple로 가입했다면 여기서 Apple로 로그인하세요.',
-  'auth.error.wrongPassword':
-    '비밀번호가 틀렸거나, 이 계정은 웹사이트의 Google/Apple 로그인을 사용합니다. Apple로 로그인을 시도하거나 puzzleinteract.com에서 비밀번호를 재설정하세요.',
   'auth.error.userNotConfirmed': '로그인 전에 이메일을 확인하세요.',
   'auth.error.passwordResetRequired':
     '로그인 전에 비밀번호를 재설정해야 합니다.',
@@ -250,9 +276,8 @@ export default {
     '시도가 너무 많습니다. 몇 분 기다린 후 다시 시도하세요.',
   'auth.error.generic': '로그인에 실패했습니다. 다시 시도하세요.',
   'auth.error.noToken': '로그인이 토큰을 반환하지 않았습니다.',
-  'auth.apple.iosOnly': 'Apple로 로그인은 iPhone에서만 사용할 수 있습니다.',
-  'auth.apple.unavailable': '이 기기에서는 Apple로 로그인을 사용할 수 없습니다.',
-  'auth.apple.noIdentityToken': 'Apple로 로그인이 ID 토큰을 반환하지 않았습니다.',
-  'auth.apple.exchangeFailed': 'Apple 로그인 교환에 실패했습니다.',
-  'auth.apple.httpFailed': 'Apple 로그인 실패 (HTTP {status})',
+  'auth.google.failed': 'Google 로그인에 실패했습니다. 다시 시도해 주세요.',
+  'auth.google.exchangeFailed': 'Google 로그인을 완료할 수 없습니다.',
+  'auth.google.noCode': 'Google 로그인이 인증 코드를 반환하지 않았습니다.',
+  'auth.google.stateMismatch': 'Google 로그인을 확인할 수 없습니다. 다시 시도해 주세요.',
 };

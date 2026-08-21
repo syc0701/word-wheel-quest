@@ -1,7 +1,8 @@
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { AppState } from 'react-native';
+import { createAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'expo-audio';
 import { AUDIO, BGM_SCENES } from './audioAssets';
 
-const BGM_VOLUME = 0.38;
+const BGM_VOLUME = 0.5;
 const SFX_VOLUME = 0.85;
 
 let ready = false;
@@ -11,26 +12,78 @@ let scene = BGM_SCENES.NONE;
 let activeBgmKey = null;
 let bgmPlayer = null;
 let sfxPlayers = new Map();
+let appStateSub = null;
+let playRetryTimer = null;
 
 async function ensureMode() {
   if (ready) return;
   try {
+    await setIsAudioActiveAsync(true);
+    // Android needs doNotMix (permanent focus) for looping BGM.
+    // duckOthers maps to TRANSIENT focus and can kill long music.
     await setAudioModeAsync({
       playsInSilentMode: true,
       allowsRecording: false,
       interruptionMode: 'mixWithOthers',
-      interruptionModeAndroid: 'duckOthers',
+      interruptionModeAndroid: 'doNotMix',
       shouldPlayInBackground: false,
       shouldRouteThroughEarpiece: false,
     });
   } catch {
     try {
-      await setAudioModeAsync({ playsInSilentMode: true });
+      await setIsAudioActiveAsync(true);
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        interruptionModeAndroid: 'doNotMix',
+      });
     } catch {
       /* ignore */
     }
   }
   ready = true;
+  ensureAppStateListener();
+}
+
+function ensureAppStateListener() {
+  if (appStateSub) return;
+  appStateSub = AppState.addEventListener('change', (next) => {
+    if (next === 'active') {
+      soundManager.resumeBgm();
+    }
+  });
+}
+
+function clearPlayRetry() {
+  if (playRetryTimer) {
+    clearTimeout(playRetryTimer);
+    playRetryTimer = null;
+  }
+}
+
+function playBgmNow() {
+  if (!bgmPlayer) return;
+  try {
+    bgmPlayer.play();
+  } catch {
+    /* ignore */
+  }
+  // ExoPlayer may ignore play() before the first buffer is ready.
+  clearPlayRetry();
+  playRetryTimer = setTimeout(() => {
+    playRetryTimer = null;
+    try {
+      if (
+        bgmPlayer
+        && musicEnabled
+        && bgmKeyForScene(scene)
+        && !bgmPlayer.playing
+      ) {
+        bgmPlayer.play();
+      }
+    } catch {
+      /* ignore */
+    }
+  }, 300);
 }
 
 function bgmKeyForScene(nextScene) {
@@ -41,7 +94,12 @@ function bgmKeyForScene(nextScene) {
 
 function ensureBgmPlayer(source) {
   if (!bgmPlayer) {
-    bgmPlayer = createAudioPlayer(source);
+    try {
+      bgmPlayer = createAudioPlayer(source);
+    } catch {
+      bgmPlayer = null;
+      return null;
+    }
   } else {
     try {
       bgmPlayer.replace(source);
@@ -51,11 +109,20 @@ function ensureBgmPlayer(source) {
       } catch {
         /* ignore */
       }
-      bgmPlayer = createAudioPlayer(source);
+      try {
+        bgmPlayer = createAudioPlayer(source);
+      } catch {
+        bgmPlayer = null;
+        return null;
+      }
     }
   }
-  bgmPlayer.loop = true;
-  bgmPlayer.volume = BGM_VOLUME;
+  try {
+    bgmPlayer.loop = true;
+    bgmPlayer.volume = BGM_VOLUME;
+  } catch {
+    /* ignore */
+  }
   return bgmPlayer;
 }
 
@@ -64,6 +131,7 @@ async function applyBgm({ forceRestart = false } = {}) {
   const key = bgmKeyForScene(scene);
 
   if (!musicEnabled || !key) {
+    clearPlayRetry();
     if (bgmPlayer?.playing) bgmPlayer.pause();
     return;
   }
@@ -71,10 +139,13 @@ async function applyBgm({ forceRestart = false } = {}) {
   const source = AUDIO[key];
   const needsSwap = activeBgmKey !== key || !bgmPlayer;
   if (needsSwap) {
-    ensureBgmPlayer(source);
+    const player = ensureBgmPlayer(source);
+    if (!player) return;
     activeBgmKey = key;
     forceRestart = true;
   }
+
+  if (!bgmPlayer) return;
 
   if (forceRestart) {
     try {
@@ -84,7 +155,7 @@ async function applyBgm({ forceRestart = false } = {}) {
     }
   }
 
-  if (!bgmPlayer.playing) bgmPlayer.play();
+  playBgmNow();
 }
 
 function getSfxPlayer(key) {
@@ -92,9 +163,13 @@ function getSfxPlayer(key) {
   if (!source) return null;
   let player = sfxPlayers.get(key);
   if (!player) {
-    player = createAudioPlayer(source);
-    player.volume = SFX_VOLUME;
-    sfxPlayers.set(key, player);
+    try {
+      player = createAudioPlayer(source);
+      player.volume = SFX_VOLUME;
+      sfxPlayers.set(key, player);
+    } catch {
+      return null;
+    }
   }
   return player;
 }
@@ -109,6 +184,7 @@ export const soundManager = {
   async setMusicEnabled(enabled) {
     musicEnabled = Boolean(enabled);
     if (!musicEnabled) {
+      clearPlayRetry();
       if (bgmPlayer?.playing) bgmPlayer.pause();
       return;
     }
@@ -123,12 +199,17 @@ export const soundManager = {
     const next = nextScene || BGM_SCENES.NONE;
     if (scene === next) {
       if (musicEnabled && bgmKeyForScene(scene) && bgmPlayer && !bgmPlayer.playing) {
-        bgmPlayer.play();
+        playBgmNow();
       }
       return;
     }
     scene = next;
     await applyBgm({ forceRestart: true });
+  },
+
+  resumeBgm() {
+    if (!musicEnabled || !bgmKeyForScene(scene) || !bgmPlayer) return;
+    if (!bgmPlayer.playing) playBgmNow();
   },
 
   async playSfx(key) {
@@ -145,6 +226,7 @@ export const soundManager = {
   },
 
   pauseBgm() {
+    clearPlayRetry();
     if (bgmPlayer?.playing) bgmPlayer.pause();
   },
 };

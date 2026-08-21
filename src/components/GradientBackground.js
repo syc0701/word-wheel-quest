@@ -9,11 +9,12 @@ const DEEP_WATER = ['#7dd3fc', '#38bdf8', '#0284c7', '#0c4a6e', '#082f49', '#020
 
 /**
  * Screen shell over the shared AppBackground.
- * Layer order: backdrop (gradient / image) → mist → UI.
+ * Layer order: backdrop → ambient (bubbles on home; mist+bubbles on play) → UI.
  */
 export default function GradientBackground({ children, variant = 'home' }) {
   const { mode, ww } = useAppearance();
   const isPlay = variant === 'play';
+  const isHome = variant === 'home';
   const showUnderwater = isPlay && mode !== APPEARANCE_RANDOM;
   const gradientColors = ww?.playGradient?.length >= 2 ? ww.playGradient : DEEP_WATER;
 
@@ -30,13 +31,21 @@ export default function GradientBackground({ children, variant = 'home' }) {
             locations={[0, 0.35, 1]}
             style={styles.surfaceLight}
           />
-          <PlayAmbientBubbles />
+          <PlayAmbientBubbles variant="play" />
         </View>
       ) : null}
 
-      <View style={styles.mist} pointerEvents="none">
-        <HomeSmogEffect />
-      </View>
+      {isHome ? (
+        <View style={styles.ambient} pointerEvents="none">
+          <PlayAmbientBubbles variant="home" />
+        </View>
+      ) : null}
+
+      {isPlay ? (
+        <View style={styles.mist} pointerEvents="none">
+          <HomeSmogEffect />
+        </View>
+      ) : null}
 
       <View style={styles.content} pointerEvents="box-none">
         {children}
@@ -55,6 +64,11 @@ const styles = StyleSheet.create({
     zIndex: 0,
   },
   mist: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+    overflow: 'hidden',
+  },
+  ambient: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
     overflow: 'hidden',

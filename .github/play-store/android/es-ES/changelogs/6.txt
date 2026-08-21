@@ -1,0 +1,8 @@
+Novedades de esta actualización:
+
+- Experiencia a pantalla completa más fluida en Android moderno
+- Mejor rendimiento y menos uso de memoria
+- Mejor compatibilidad con tablets y pantallas grandes
+- Pulido del inicio, la barra de estado y la pantalla
+
+¡Gracias por jugar! Nos encantaría conocer tu opinión.

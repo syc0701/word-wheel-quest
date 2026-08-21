@@ -112,6 +112,30 @@ export default {
   'settings.sound.sfx': 'Reproducir efectos de sonido',
   'settings.sound.sfxSubtitle': 'Clics, acierto, error y sonidos de victoria',
   'settings.language.a11y': 'Idioma',
+  'settings.section.feedback': 'Comentarios',
+  'settings.feedback.rowDesc': 'Cuéntanos qué te gusta o qué deberíamos mejorar.',
+  'settings.feedback.button': 'Comentarios',
+  'settings.feedback.title': 'Ayúdanos a mejorar',
+  'settings.feedback.intro':
+    'Comparte tu opinión sobre Word Wheel Quest. Sugerencias, puzzles que te gustaría ver o comentarios generales son bienvenidos.',
+  'settings.feedback.category': 'Categoría',
+  'settings.feedback.category.puzzles': 'Puzzles',
+  'settings.feedback.category.gameplay': 'Jugabilidad',
+  'settings.feedback.category.bugs': 'Errores y cierres',
+  'settings.feedback.category.shop': 'Tienda y compras',
+  'settings.feedback.category.other': 'Otro',
+  'settings.feedback.opinion': 'Tu opinión',
+  'settings.feedback.opinionPlaceholder': 'Cuéntanos más...',
+  'settings.feedback.opinionRequired': 'Escribe una nota breve antes de enviar.',
+  'settings.feedback.privacyNote':
+    'No se recopilan datos personales. Solo se incluye información de diagnóstico estándar (versión de la app y sistema operativo).',
+  'settings.feedback.cancel': 'Cancelar',
+  'settings.feedback.send': 'Enviar',
+  'settings.feedback.sendError': 'No se pudo enviar el comentario. Inténtalo de nuevo.',
+  'settings.feedback.thanksTitle': 'Gracias',
+  'settings.feedback.thanksMessage':
+    '¡Gracias por tus comentarios! Seguiremos trabajando para mejorar la app.',
+  'settings.feedback.close': 'Cerrar',
 
   // legal
   'legal.marketing': 'Marketing',
@@ -131,9 +155,11 @@ export default {
   'signIn.placeholder.email': 'Correo',
   'signIn.placeholder.password': 'Contraseña',
   'signIn.button.email': 'Iniciar sesión',
+  'signIn.button.google': 'Iniciar sesión con Google',
   'signIn.divider': '— o —',
-  'signIn.button.apple': ' Iniciar sesión con Apple',
-  'signIn.apple.hint': 'Iniciar sesión con Apple está disponible en iPhone.',
+  'signIn.required.title': 'Inicio de sesión obligatorio',
+  'signIn.required.body':
+    'Inicia sesión con Google para sincronizar esta compra con tu cuenta.',
 
   // shop
   'shop.title': 'Tienda',
@@ -144,13 +170,17 @@ export default {
     'Este producto aún no está cargado. Inténtalo de nuevo en un momento.',
   'shop.alert.success.title': '¡Gracias!',
   'shop.alert.success.body': '{name} comprado correctamente.',
+  'shop.alert.signInRequired.title': 'Inicio de sesión obligatorio',
+  'shop.alert.signInRequired.body':
+    'Compra registrada. Inicia sesión con Google para sincronizarla con tu cuenta.',
+  'shop.alert.signInRequired.action': 'Iniciar sesión con Google',
   'shop.alert.purchaseFailed.title': 'Compra fallida',
   'shop.alert.purchaseFailed.body': 'Algo salió mal.',
   'shop.alert.restored.title': 'Restaurado',
   'shop.alert.restored.body': 'Tus compras se han restaurado.',
   'shop.alert.restoreFailed.title': 'Restauración fallida',
   'shop.alert.restoreFailed.body': 'No se pudieron restaurar las compras.',
-  'shop.offeringHint': 'Oferta `{id}` · Precios de la App Store.',
+  'shop.offeringHint': 'Oferta `{id}` · Precios de Google Play.',
   'shop.restore': 'Restaurar compras',
 
   // webview
@@ -236,10 +266,6 @@ export default {
   'wallet.error.loadFailed': 'Error al cargar la billetera',
 
   // auth
-  'auth.error.userNotFound':
-    'No hay cuenta para este correo. Si te registraste con Google o Apple en la web, usa Iniciar sesión con Apple aquí.',
-  'auth.error.wrongPassword':
-    'Contraseña incorrecta, o esta cuenta usa inicio de sesión con Google/Apple de la web. Prueba Iniciar sesión con Apple, o restablece tu contraseña en puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Confirma tu correo antes de iniciar sesión.',
   'auth.error.passwordResetRequired':
     'Debes restablecer tu contraseña antes de iniciar sesión.',
@@ -250,9 +276,8 @@ export default {
     'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
   'auth.error.generic': 'Error al iniciar sesión. Inténtalo de nuevo.',
   'auth.error.noToken': 'El inicio de sesión no devolvió un token.',
-  'auth.apple.iosOnly': 'Iniciar sesión con Apple solo está disponible en iPhone.',
-  'auth.apple.unavailable': 'Iniciar sesión con Apple no está disponible en este dispositivo.',
-  'auth.apple.noIdentityToken': 'Iniciar sesión con Apple no devolvió un token de identidad.',
-  'auth.apple.exchangeFailed': 'Falló el intercambio de inicio de sesión con Apple.',
-  'auth.apple.httpFailed': 'Falló el inicio de sesión con Apple (HTTP {status})',
+  'auth.google.failed': 'Error al iniciar sesión con Google. Inténtalo de nuevo.',
+  'auth.google.exchangeFailed': 'No se pudo completar el inicio de sesión con Google.',
+  'auth.google.noCode': 'El inicio de sesión con Google no devolvió un código de autorización.',
+  'auth.google.stateMismatch': 'No se pudo verificar el inicio de sesión con Google. Inténtalo de nuevo.',
 };

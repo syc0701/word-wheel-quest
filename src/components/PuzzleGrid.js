@@ -1,10 +1,111 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { RevealCell, WordRevealBurst } from '../effect';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
-import { useAppearance } from '../context/AppearanceContext';
+import { GRID_CREAM, GRID_TRANSITION_MS } from '../lib/gridTheme';
 
 const GAP = 4;
+/** Stops a short word from rendering as a few giant cells on a large screen. */
+const MAX_CELL = 84;
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function GridCell({
+  size,
+  letter,
+  letterFontSize,
+  wordNumberLabel,
+  isRevealed,
+  isHintRevealed,
+  isSelected,
+  onPress,
+}) {
+  const selectedProgress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    selectedProgress.value = withTiming(isSelected ? 1 : 0, {
+      duration: GRID_TRANSITION_MS,
+      easing: Easing.inOut(Easing.quad),
+    });
+  }, [isSelected, selectedProgress]);
+
+  const cellStyle = useAnimatedStyle(() => {
+    const bg = isHintRevealed
+      ? interpolateColor(
+          selectedProgress.value,
+          [0, 1],
+          [GRID_CREAM.hintBg, GRID_CREAM.selectedBg]
+        )
+      : isRevealed
+        ? interpolateColor(
+            selectedProgress.value,
+            [0, 1],
+            [GRID_CREAM.revealedBg, GRID_CREAM.selectedBg]
+          )
+        : interpolateColor(
+            selectedProgress.value,
+            [0, 1],
+            [GRID_CREAM.cellBg, GRID_CREAM.selectedBg]
+          );
+
+    const border = interpolateColor(
+      selectedProgress.value,
+      [0, 1],
+      [
+        isHintRevealed ? GRID_CREAM.hintBorder : GRID_CREAM.cellBorder,
+        GRID_CREAM.selectedBorder,
+      ]
+    );
+
+    const borderWidth =
+      GRID_CREAM.cellBorderWidth +
+      selectedProgress.value * (GRID_CREAM.selectedBorderWidth - GRID_CREAM.cellBorderWidth);
+
+    return {
+      backgroundColor: bg,
+      borderColor: border,
+      borderWidth,
+    };
+  }, [isHintRevealed, isRevealed]);
+
+  const textStyle = useAnimatedStyle(() => {
+    const idle = isHintRevealed ? GRID_CREAM.hintText : GRID_CREAM.cellText;
+    return {
+      color: interpolateColor(selectedProgress.value, [0, 1], [idle, GRID_CREAM.selectedText]),
+    };
+  }, [isHintRevealed]);
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      style={[
+        styles.cell,
+        size > 0 && { width: size, height: size },
+        cellStyle,
+      ]}
+    >
+      {wordNumberLabel ? (
+        <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
+          <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
+            {wordNumberLabel}
+          </Text>
+        </View>
+      ) : null}
+      {isRevealed ? (
+        <Animated.Text style={[styles.letter, { fontSize: letterFontSize }, textStyle]}>
+          {letter}
+        </Animated.Text>
+      ) : null}
+    </AnimatedPressable>
+  );
+}
 
 export default function PuzzleGrid({
   gridSize,
@@ -17,18 +118,67 @@ export default function PuzzleGrid({
   celebrateOrder = [],
   celebrateMode = 'new',
   revealBurstId = 0,
+  maxBoardSize = 0,
   onCellPress,
+  onBoardMetrics = null,
+  boardHostRef = null,
 }) {
-  const { ww } = useAppearance();
   const [gridWidth, setGridWidth] = useState(0);
+  const boardRef = useRef(null);
 
-  // Floor so N cells + gaps never exceed measured width (flexWrap would drop the last column).
-  const cellSize =
-    gridWidth > 0 && gridSize > 0
-      ? Math.floor((gridWidth - GAP * (gridSize - 1)) / gridSize)
-      : 0;
-  const boardSize =
-    cellSize > 0 ? cellSize * gridSize + GAP * (gridSize - 1) : 0;
+  // Words rarely span the whole gridSize x gridSize board, so rendering every
+  // row and column strands the puzzle in a corner surrounded by blank cells.
+  // Cropping to the used cells lets the puzzle centre and use the space.
+  const bounds = useMemo(() => {
+    let minRow = Infinity;
+    let maxRow = -Infinity;
+    let minCol = Infinity;
+    let maxCol = -Infinity;
+    puzzleCells?.forEach((key) => {
+      const [row, col] = key.split(',').map(Number);
+      if (row < minRow) minRow = row;
+      if (row > maxRow) maxRow = row;
+      if (col < minCol) minCol = col;
+      if (col > maxCol) maxCol = col;
+    });
+    if (!Number.isFinite(minRow)) {
+      return { minRow: 0, maxRow: gridSize - 1, minCol: 0, maxCol: gridSize - 1 };
+    }
+    return { minRow, maxRow, minCol, maxCol };
+  }, [puzzleCells, gridSize]);
+
+  const rowCount = Math.max(1, bounds.maxRow - bounds.minRow + 1);
+  const colCount = Math.max(1, bounds.maxCol - bounds.minCol + 1);
+
+  // Fit both axes: sizing on width alone overflows the screen on short/landscape
+  // viewports, which is what pushed the letter wheel out of view.
+  const cellFromWidth =
+    gridWidth > 0 ? Math.floor((gridWidth - GAP * (colCount - 1)) / colCount) : 0;
+  const cellFromHeight =
+    maxBoardSize > 0
+      ? Math.floor((maxBoardSize - GAP * (rowCount - 1)) / rowCount)
+      : cellFromWidth;
+  const cellSize = Math.max(0, Math.min(cellFromWidth, cellFromHeight, MAX_CELL));
+
+  const boardWidth = cellSize > 0 ? cellSize * colCount + GAP * (colCount - 1) : 0;
+  const boardHeight = cellSize > 0 ? cellSize * rowCount + GAP * (rowCount - 1) : 0;
+  // Cells shrink on small viewports, so the glyph has to follow or it clips.
+  const letterFontSize = cellSize > 0 ? Math.max(11, Math.round(cellSize * 0.42)) : 17;
+
+  const setBoardRef = (node) => {
+    boardRef.current = node;
+    if (typeof boardHostRef === 'function') boardHostRef(node);
+    else if (boardHostRef) boardHostRef.current = node;
+  };
+
+  const reportBoardMetrics = () => {
+    if (!onBoardMetrics || !boardRef.current || cellSize <= 0) return;
+    boardRef.current.measureInWindow((x, y, width, height) => {
+      if (width > 0 && height > 0) {
+        onBoardMetrics({ x, y, width, height, cellSize, gap: GAP });
+      }
+    });
+  };
 
   const celebrating = celebratingCellKeys instanceof Set ? celebratingCellKeys : new Set();
 
@@ -38,11 +188,11 @@ export default function PuzzleGrid({
       const [row, col] = key.split(',').map(Number);
       return {
         key,
-        x: col * (cellSize + GAP) + cellSize / 2,
-        y: row * (cellSize + GAP) + cellSize / 2,
+        x: (col - bounds.minCol) * (cellSize + GAP) + cellSize / 2,
+        y: (row - bounds.minRow) * (cellSize + GAP) + cellSize / 2,
       };
     });
-  }, [celebratingCellKeys, cellSize, celebrating.size]);
+  }, [celebratingCellKeys, cellSize, celebrating.size, bounds]);
 
   const orderIndex = useMemo(() => {
     const map = new Map();
@@ -93,60 +243,31 @@ export default function PuzzleGrid({
     }
 
     return (
-      <Pressable
+      <GridCell
         key={cellKey}
+        size={cellSize}
+        letter={letter}
+        letterFontSize={letterFontSize}
+        wordNumberLabel={wordNumberLabel}
+        isRevealed={isRevealed}
+        isHintRevealed={isHintRevealed}
+        isSelected={isSelected}
         onPress={() => onCellPress(row, col)}
-        style={[
-          styles.cell,
-          cellSize > 0 && { width: cellSize, height: cellSize },
-          isRevealed
-            ? isHintRevealed
-              ? { backgroundColor: ww.hintSoft, borderWidth: 2, borderColor: '#fcd34d' }
-              : {
-                  backgroundColor: ww.successSoft,
-                  borderWidth: 2,
-                  borderColor: ww.gridRevealedBorder || '#bbf7d0',
-                }
-            : {
-                backgroundColor: ww.gridHidden,
-                borderWidth: 2,
-                borderColor: ww.gridBorder || ww.borderStrong,
-              },
-          isSelected && {
-            borderWidth: 3.5,
-            borderColor: ww.wheelLine || '#f59e0b',
-          },
-        ]}
-      >
-        {wordNumberLabel ? (
-          <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
-            <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
-              {wordNumberLabel}
-            </Text>
-          </View>
-        ) : null}
-        {isRevealed ? (
-          <Text
-            style={[
-              styles.letter,
-              { color: isHintRevealed ? ww.hintText : ww.successText },
-            ]}
-          >
-            {letter}
-          </Text>
-        ) : null}
-      </Pressable>
+      />
     );
   };
 
   const rows = [];
-  for (let row = 0; row < gridSize; row += 1) {
+  for (let row = bounds.minRow; row <= bounds.maxRow; row += 1) {
     const rowCells = [];
-    for (let col = 0; col < gridSize; col += 1) {
+    for (let col = bounds.minCol; col <= bounds.maxCol; col += 1) {
       rowCells.push(renderCell(row, col));
     }
     rows.push(
-      <View key={`row-${row}`} style={[styles.row, row > 0 && { marginTop: GAP }]}>
+      <View
+        key={`row-${row}`}
+        style={[styles.row, row > bounds.minRow && { marginTop: GAP }]}
+      >
         {rowCells}
       </View>
     );
@@ -163,9 +284,12 @@ export default function PuzzleGrid({
       }}
     >
       <View
+        ref={setBoardRef}
+        collapsable={false}
+        onLayout={reportBoardMetrics}
         style={[
           styles.grid,
-          boardSize > 0 && { width: boardSize, height: boardSize },
+          boardWidth > 0 && { width: boardWidth, height: boardHeight },
         ]}
       >
         {rows}
@@ -181,6 +305,11 @@ const styles = StyleSheet.create({
   gridWrap: {
     width: '100%',
     alignItems: 'center',
+    // Centre in the leftover space without collapsing when the screen is short.
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: 'auto',
+    justifyContent: 'center',
   },
   grid: {
     position: 'relative',
@@ -201,34 +330,34 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   letter: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '900',
   },
   numberBadge: {
     position: 'absolute',
     top: 2,
     left: 2,
-    minWidth: 14,
-    minHeight: 14,
-    paddingHorizontal: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    minWidth: 18,
+    minHeight: 18,
+    paddingHorizontal: 3,
+    borderRadius: 5,
+    backgroundColor: GRID_CREAM.badgeBg,
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: GRID_CREAM.badgeBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   numberBadgeWide: {
-    minWidth: 22,
-    paddingHorizontal: 3,
+    minWidth: 26,
+    paddingHorizontal: 4,
   },
   numberText: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '800',
-    color: '#064e3b',
+    color: GRID_CREAM.badgeText,
   },
   numberTextCompact: {
-    fontSize: 8,
+    fontSize: 10,
     letterSpacing: -0.2,
   },
 });
