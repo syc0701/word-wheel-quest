@@ -24,27 +24,27 @@ const LOCALES = [
   { locale: 'ko-KR', lang: 'ko' },
 ];
 
-/** Play screenshot sizes (portrait) */
+/** Play screenshot sizes (portrait). Short side must be ≥1080px (Play API). */
 const DEVICES = {
   phone: {
     name: 'phone',
     playFolder: 'phoneScreenshots',
-    // 430×940 phone screenshots
-    viewport: { width: 430, height: 940 },
+    // Was 430×940 — too small for current Play rules; keep ~same aspect.
+    viewport: { width: 1080, height: 2361 },
     deviceScaleFactor: 1,
   },
   sevenInch: {
     name: 'sevenInch',
     playFolder: 'sevenInchScreenshots',
-    // 5:8 — small tablet / large phone
-    viewport: { width: 600, height: 960 },
+    // Was 600×960 (5:8)
+    viewport: { width: 1080, height: 1728 },
     deviceScaleFactor: 1,
   },
   tenInch: {
     name: 'tenInch',
     playFolder: 'tenInchScreenshots',
-    // 5:8 — 7" tablet (Play tenInch slot)
-    viewport: { width: 800, height: 1280 },
+    // Was 800×1280 (5:8)
+    viewport: { width: 1080, height: 1728 },
     deviceScaleFactor: 1,
   },
 };
