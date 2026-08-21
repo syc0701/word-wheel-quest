@@ -1,0 +1,10 @@
+What's new in this update:
+
+- New interactive tutorial to learn the game
+- Fresh scene backgrounds (popcorn on Home, different scenes in Play)
+- Warm cream puzzle grid look
+- Redesigned Home continue card
+- Music on/off control on the Play screen
+- More reliable startup on newer Pixel devices
+
+Thanks for playing!
