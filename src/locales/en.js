@@ -22,6 +22,8 @@ export default {
   'home.continue.badge': 'LEVEL',
   'home.continue.cta': 'Continue',
   'home.continue.wordsFound': '{found} / {total} words found',
+  'home.tutorial.link': 'Tutorial',
+  'home.a11y.tutorial': 'Open tutorial',
   'home.error.noData': 'No word wheel puzzle available yet.',
   'home.error.loadFailed': 'Could not load the next puzzle.',
   'home.error.missingData': 'Next puzzle response was missing puzzle data.',
@@ -41,7 +43,6 @@ export default {
   'home.guest.signIn': 'Sign In',
   'home.footer':
     'Progress is saved on this device. Sign in once to move guest progress to your account.',
-  'home.copyright': '© 2026 Puzzle Interact',
 
   // daily
   'daily.a11y.back': 'Back',
@@ -87,6 +88,26 @@ export default {
   'play.a11y.useHint': 'Use hint',
   'play.a11y.shuffle': 'Shuffle',
   'play.a11y.dictionary': 'Dictionary',
+
+  // first-run onboarding (PlayScreen overlay)
+  'onboarding.title': 'Tutorial',
+  'onboarding.skip': 'Skip',
+  'onboarding.next': 'Next',
+  'onboarding.done': 'Got it',
+  'onboarding.stepLabel': 'Step {n}',
+  'onboarding.step.wheel': 'Drag D - O - G on the wheel',
+  'onboarding.step.clue': 'Check clues here to solve the grid.',
+  'onboarding.step.hint': 'Tap AI Assistant anytime for a hint!',
+  'onboarding.step.letter': 'You are all set.\nLet’s go!',
+  'onboarding.finish': "Let's go",
+  'onboarding.welcome.kicker': 'Welcome',
+  'onboarding.welcome.title': 'Let’s learn the game',
+  'onboarding.welcome.body':
+    'We’ll guide you through how to play Word Wheel Quest — clues, the letter wheel, and hints. It only takes a minute!',
+  'onboarding.welcome.start': 'Start',
+  'onboarding.success.kicker': 'Congratulations',
+  'onboarding.success.title': 'Good Job!!',
+  'onboarding.success.subtitle': 'You made it',
 
   // settings
   'settings.title': 'Settings',

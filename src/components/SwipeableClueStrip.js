@@ -1,6 +1,5 @@
-import { useCallback, useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useCallback, useEffect, useRef } from 'react';
+import { Animated as RNAnimated, Easing as RNEasing, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -12,37 +11,98 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react-native';
 
 const SWIPE_THRESHOLD = 56;
 const EXIT_MS = 220;
 const ENTER_MS = 240;
-const FALLBACK_GRADIENT = ['rgba(14, 116, 144, 0.55)', 'rgba(8, 47, 73, 0.85)'];
+
+const CREAM = '#FBF6EA';
+const ORANGE = '#E8943A';
+const CLUE_TEXT = '#3F2A1A';
+const CLUE_MUTED = 'rgba(63, 42, 26, 0.55)';
+
+function FlickerSwipeArrow({ side }) {
+  const opacity = useRef(new RNAnimated.Value(1)).current;
+  const shift = useRef(new RNAnimated.Value(0)).current;
+
+  useEffect(() => {
+    const flicker = RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.timing(opacity, {
+          toValue: 0.2,
+          duration: 380,
+          easing: RNEasing.inOut(RNEasing.quad),
+          useNativeDriver: true,
+        }),
+        RNAnimated.timing(opacity, {
+          toValue: 1,
+          duration: 380,
+          easing: RNEasing.inOut(RNEasing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    const nudge = RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.timing(shift, {
+          toValue: side === 'left' ? -4 : 4,
+          duration: 420,
+          easing: RNEasing.inOut(RNEasing.quad),
+          useNativeDriver: true,
+        }),
+        RNAnimated.timing(shift, {
+          toValue: 0,
+          duration: 420,
+          easing: RNEasing.inOut(RNEasing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    flicker.start();
+    nudge.start();
+    return () => {
+      flicker.stop();
+      nudge.stop();
+    };
+  }, [opacity, shift, side]);
+
+  const Icon = side === 'left' ? ChevronLeft : ChevronRight;
+
+  return (
+    <RNAnimated.View
+      pointerEvents="none"
+      style={[
+        styles.swipeArrow,
+        side === 'left' ? styles.swipeArrowLeft : styles.swipeArrowRight,
+        {
+          opacity,
+          transform: [{ translateX: shift }],
+        },
+      ]}
+    >
+      <Icon color="#fff" size={22} strokeWidth={3} />
+    </RNAnimated.View>
+  );
+}
 
 export default function SwipeableClueStrip({
   text,
   canSwipe,
   onSwipe,
-  backgroundColor,
-  gradientColors,
-  borderColor,
-  textColor,
   placeholder,
   prevA11y,
   nextA11y,
   active,
   overlay,
+  cardRef,
+  onCardLayout,
+  showSwipeHints = false,
 }) {
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
   const cardWidth = useSharedValue(320);
   const animating = useSharedValue(0);
-  const colors =
-    Array.isArray(gradientColors) && gradientColors.length >= 2
-      ? gradientColors
-      : backgroundColor
-        ? [backgroundColor, backgroundColor]
-        : FALLBACK_GRADIENT;
 
   useEffect(() => {
     if (animating.value === 0) {
@@ -73,34 +133,6 @@ export default function SwipeableClueStrip({
       );
     },
     [animating, cardWidth, onSwipe, opacity, translateX]
-  );
-
-  const runExit = useCallback(
-    (delta) => {
-      if (!canSwipe || animating.value) return;
-      animating.value = 1;
-      const width = Math.max(cardWidth.value, 280);
-      const exitX = delta > 0 ? -width : width;
-      translateX.value = withTiming(exitX, {
-        duration: EXIT_MS,
-        easing: Easing.in(Easing.cubic),
-      });
-      opacity.value = withTiming(
-        0,
-        {
-          duration: EXIT_MS,
-          easing: Easing.in(Easing.cubic),
-        },
-        (finished) => {
-          if (finished) {
-            runOnJS(finishSwipe)(delta);
-          } else {
-            animating.value = 0;
-          }
-        }
-      );
-    },
-    [animating, canSwipe, cardWidth, finishSwipe, opacity, translateX]
   );
 
   const panGesture = Gesture.Pan()
@@ -168,70 +200,51 @@ export default function SwipeableClueStrip({
 
   return (
     <View
-      style={[styles.clueBoxWrap, active ? styles.clueBoxActive : null]}
+      style={styles.clueBoxWrap}
       onLayout={(e) => {
         cardWidth.value = e.nativeEvent.layout.width;
       }}
     >
-      <LinearGradient
-        colors={colors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.clueBox, { borderColor }]}
+      <View
+        ref={cardRef}
+        collapsable={false}
+        style={styles.clueBox}
+        onLayout={onCardLayout}
       >
-        <LinearGradient
-          colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.04)', 'transparent']}
-          locations={[0, 0.35, 1]}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={styles.sheen}
-          pointerEvents="none"
-        />
         <GestureDetector gesture={panGesture}>
           <Animated.View style={[styles.card, cardStyle]} pointerEvents={active ? 'none' : 'auto'}>
             {active ? (
               <View style={styles.clueRowPlaceholder} />
             ) : (
-              <View style={styles.clueRow}>
-                {canSwipe ? (
-                  <Pressable
-                    style={styles.clueArrowBtn}
-                    onPress={() => runExit(-1)}
-                    hitSlop={8}
-                    accessibilityLabel={prevA11y}
-                  >
-                    <ChevronLeft color={textColor} size={22} strokeWidth={2.4} />
-                  </Pressable>
-                ) : (
-                  <View style={styles.clueArrowSpacer} />
-                )}
+              <View
+                style={[styles.clueRow, showSwipeHints && styles.clueRowWithHints]}
+                accessibilityRole="text"
+                accessibilityLabel={text}
+                accessibilityHint={canSwipe ? `${prevA11y}. ${nextA11y}` : undefined}
+              >
+                <View style={styles.iconBadge}>
+                  <Search color="#fff" size={18} strokeWidth={2.6} />
+                </View>
                 <Text
                   style={[
                     styles.clueText,
-                    { color: textColor },
                     placeholder ? styles.cluePlaceholder : null,
                   ]}
                 >
                   {text}
                 </Text>
-                {canSwipe ? (
-                  <Pressable
-                    style={styles.clueArrowBtn}
-                    onPress={() => runExit(1)}
-                    hitSlop={8}
-                    accessibilityLabel={nextA11y}
-                  >
-                    <ChevronRight color={textColor} size={22} strokeWidth={2.4} />
-                  </Pressable>
-                ) : (
-                  <View style={styles.clueArrowSpacer} />
-                )}
               </View>
             )}
           </Animated.View>
         </GestureDetector>
+        {showSwipeHints ? (
+          <>
+            <FlickerSwipeArrow side="left" />
+            <FlickerSwipeArrow side="right" />
+          </>
+        ) : null}
         {overlay ? <View style={styles.overlaySlot}>{overlay}</View> : null}
-      </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -240,27 +253,23 @@ const styles = StyleSheet.create({
   clueBoxWrap: {
     marginTop: 14,
     marginBottom: 8,
-    borderRadius: 16,
-    shadowColor: '#0284c7',
-    shadowOffset: { width: 0, height: 4 },
+    borderRadius: 22,
+    shadowColor: '#8B5A2B',
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.18,
-    shadowRadius: 10,
+    shadowRadius: 6,
     elevation: 3,
   },
   clueBox: {
-    borderRadius: 16,
-    borderWidth: 1.2,
-    minHeight: 54,
-    paddingHorizontal: 6,
-    paddingVertical: 12,
+    borderRadius: 22,
+    borderWidth: 4,
+    borderColor: ORANGE,
+    backgroundColor: CREAM,
+    minHeight: 64,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  clueBoxActive: {
-    minHeight: 62,
-  },
-  sheen: {
-    ...StyleSheet.absoluteFillObject,
+    overflow: 'visible',
   },
   card: {
     width: '100%',
@@ -276,30 +285,63 @@ const styles = StyleSheet.create({
   clueRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 10,
+  },
+  clueRowWithHints: {
+    paddingHorizontal: 28,
   },
   clueRowPlaceholder: {
-    minHeight: 36,
+    minHeight: 40,
     width: '100%',
   },
-  clueArrowBtn: {
+  swipeArrow: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -16,
+    zIndex: 4,
     width: 32,
-    height: 36,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: ORANGE,
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: '#B45309',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  clueArrowSpacer: {
-    width: 8,
+  swipeArrowLeft: {
+    left: -6,
+  },
+  swipeArrowRight: {
+    right: -6,
+  },
+  iconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: ORANGE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#B45309',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.28,
+    shadowRadius: 3,
+    elevation: 2,
   },
   clueText: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
-    lineHeight: 24,
-    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
+    color: CLUE_TEXT,
+    textAlign: 'left',
   },
   cluePlaceholder: {
-    fontStyle: 'italic',
-    fontWeight: '500',
+    color: CLUE_MUTED,
+    fontWeight: '600',
   },
 });

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
@@ -21,9 +21,12 @@ export default function PuzzleGrid({
   revealBurstId = 0,
   maxBoardSize = 0,
   onCellPress,
+  onBoardMetrics = null,
+  boardHostRef = null,
 }) {
   const { ww } = useAppearance();
   const [gridWidth, setGridWidth] = useState(0);
+  const boardRef = useRef(null);
 
   // Words rarely span the whole gridSize x gridSize board, so rendering every
   // row and column strands the puzzle in a corner surrounded by blank cells.
@@ -63,6 +66,21 @@ export default function PuzzleGrid({
   const boardHeight = cellSize > 0 ? cellSize * rowCount + GAP * (rowCount - 1) : 0;
   // Cells shrink on small viewports, so the glyph has to follow or it clips.
   const letterFontSize = cellSize > 0 ? Math.max(11, Math.round(cellSize * 0.42)) : 17;
+
+  const setBoardRef = (node) => {
+    boardRef.current = node;
+    if (typeof boardHostRef === 'function') boardHostRef(node);
+    else if (boardHostRef) boardHostRef.current = node;
+  };
+
+  const reportBoardMetrics = () => {
+    if (!onBoardMetrics || !boardRef.current || cellSize <= 0) return;
+    boardRef.current.measureInWindow((x, y, width, height) => {
+      if (width > 0 && height > 0) {
+        onBoardMetrics({ x, y, width, height, cellSize, gap: GAP });
+      }
+    });
+  };
 
   const celebrating = celebratingCellKeys instanceof Set ? celebratingCellKeys : new Set();
 
@@ -203,6 +221,9 @@ export default function PuzzleGrid({
       }}
     >
       <View
+        ref={setBoardRef}
+        collapsable={false}
+        onLayout={reportBoardMetrics}
         style={[
           styles.grid,
           boardWidth > 0 && { width: boardWidth, height: boardHeight },

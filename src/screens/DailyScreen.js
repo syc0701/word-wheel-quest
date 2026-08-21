@@ -10,7 +10,7 @@ import {
 import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
 import PuzzleGrid from '../components/PuzzleGrid';
 import WordWheelApi from '../lib/api';
-import { WORD_WHEEL_DAILY_CALENDAR_MIN, WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
+import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
   buildCellWordNumbers,
@@ -18,7 +18,6 @@ import {
   parseWordPositions,
   puzzleCellKeys,
 } from '../lib/gridReveal';
-import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import {
   addMontrealCalendarDays,
   clampYmd,
@@ -43,8 +42,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
-  const [accessChecked, setAccessChecked] = useState(false);
-  const [dailyAllowed, setDailyAllowed] = useState(false);
 
   const sceneText = useMemo(
     () =>
@@ -60,32 +57,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   );
   const todayYmd = useMemo(() => montrealYmdFromDate(), []);
   const minYmd = WORD_WHEEL_DAILY_CALENDAR_MIN;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const next = await WordWheelApi.fetchNext();
-        const level = resolveJourneyLevel(next);
-        const allowed = level != null && level >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
-        if (cancelled) return;
-        setDailyAllowed(allowed);
-        if (!allowed) {
-          navigate(SCREENS.HOME);
-        }
-      } catch {
-        if (!cancelled) {
-          setDailyAllowed(false);
-          navigate(SCREENS.HOME);
-        }
-      } finally {
-        if (!cancelled) setAccessChecked(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [navigate]);
 
   const [selectedDate, setSelectedDate] = useState(() =>
     clampYmd(routeParams.date || todayYmd, minYmd, todayYmd)
@@ -114,7 +85,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   );
 
   useEffect(() => {
-    if (!dailyAllowed) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -137,7 +107,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, t, dailyAllowed]);
+  }, [selectedDate, t]);
 
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
   const wordPositions = useMemo(
@@ -169,14 +139,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const canGoNext = selectedDate < todayYmd;
   const canPlay = Boolean(puzzle?.id) && !loading;
   const showGrid = Boolean(puzzle?.id) && gridSize > 0 && puzzleCells.size > 0;
-
-  if (!accessChecked || !dailyAllowed) {
-    return (
-      <View style={[styles.container, styles.accessGate]}>
-        <ActivityIndicator color={colors.primaryGlow} />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -328,10 +290,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-  },
-  accessGate: {
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   topBar: {
     flexDirection: 'row',

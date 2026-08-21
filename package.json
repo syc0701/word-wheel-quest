@@ -10,7 +10,7 @@
     "android:run": "bash scripts/android-run.sh",
     "android:build": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && npx expo run:android",
     "android:run:release": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && npx expo run:android --variant release",
-    "android:emulator": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && emulator -avd Pixel_6",
+    "android:emulator": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && emulator -avd Pixel_10",
     "android:prebuild": "CI=1 npx expo prebuild --platform android --clean --no-install",
     "android:sync": "npx expo prebuild --platform android && npm run android:run",
     "android:studio": "CI=1 npx expo prebuild --platform android --no-install && open -a 'Android Studio' \"$PWD/android\"",
