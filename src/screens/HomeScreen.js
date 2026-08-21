@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -11,21 +11,19 @@ import {
   Calendar,
   ChevronRight,
   Cloud,
-  Lock,
   Play,
   Search,
   Settings,
   ShoppingCart,
 } from 'lucide-react-native';
 import AdBanner from '../components/AdBanner';
-import DailyLockedModal from '../components/DailyLockedModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
-import { WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
+import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
@@ -149,6 +147,15 @@ function useHomePalette() {
       borderColor: isRandomScene ? 'rgba(255,255,255,0.55)' : colors.surfaceLight,
     };
 
+    const tutorialLink = isRandomScene
+      ? {
+          color: 'rgba(255, 255, 255, 0.92)',
+          textShadowColor: 'rgba(0, 0, 0, 0.45)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 4,
+        }
+      : { color: isDark ? colors.primaryGlow : colors.primary };
+
     return {
       colors,
       isDark,
@@ -163,13 +170,12 @@ function useHomePalette() {
       progressFill,
       levelBadgeBg,
       levelBadgeText,
+      tutorialLink,
       tile,
       settingsBg: isRandomScene ? 'rgba(255,255,255,0.92)' : colors.surface,
       settingsIcon: colors.text,
       dailyIconBg: isDark ? 'rgba(45, 212, 191, 0.16)' : 'rgba(61, 155, 116, 0.14)',
       shopIconBg: isDark ? 'rgba(251, 191, 36, 0.14)' : 'rgba(234, 179, 148, 0.35)',
-      lockBadgeBg: isDark ? 'rgba(45, 212, 191, 0.14)' : 'rgba(61, 155, 116, 0.14)',
-      lockBadgeText: isDark ? colors.primaryGlow : '#1b4d3e',
       signInBorder: isDark ? colors.primary : '#1b4d3e',
       signInText: isDark ? colors.primaryGlow : '#1b4d3e',
     };
@@ -185,7 +191,6 @@ export default function HomeScreen({ navigate }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
-  const [dailyLockedVisible, setDailyLockedVisible] = useState(false);
   const [guest, setGuest] = useState(true);
 
   useEffect(() => {
@@ -245,9 +250,24 @@ export default function HomeScreen({ navigate }) {
   const foundCount = useMemo(() => resolveFoundWordCount(puzzle), [puzzle]);
   const progress =
     wordCount > 0 ? Math.min(1, Math.max(0, foundCount / wordCount)) : 0;
-  const dailyUnlocked =
-    journeyLevel != null && journeyLevel >= WORD_WHEEL_DAILY_UNLOCK_LEVEL;
   const canPlay = Boolean(puzzle) && !loading && !error;
+
+  const handleContinue = useCallback(async () => {
+    if (!canPlay) return;
+    const completed = await hasCompletedOnboarding();
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      puzzle,
+      isOnboarding: !completed,
+    });
+  }, [canPlay, navigate, puzzle]);
+
+  const handleTutorial = useCallback(() => {
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      isOnboarding: true,
+    });
+  }, [navigate]);
 
   useEffect(() => {
     if (journeyLevel != null) setSceneLevel(journeyLevel);
@@ -259,11 +279,7 @@ export default function HomeScreen({ navigate }) {
   }, [puzzle]);
 
   const openDaily = () => {
-    if (dailyUnlocked) {
-      navigate(SCREENS.DAILY);
-      return;
-    }
-    setDailyLockedVisible(true);
+    navigate(SCREENS.DAILY);
   };
 
   return (
@@ -343,12 +359,7 @@ export default function HomeScreen({ navigate }) {
                       !canPlay && styles.btnDisabled,
                     ]}
                     disabled={!canPlay}
-                    onPress={() =>
-                      navigate(SCREENS.PLAY, {
-                        mode: PLAY_MODE.JOURNEY,
-                        puzzle: canPlay ? puzzle : undefined,
-                      })
-                    }
+                    onPress={handleContinue}
                     accessibilityLabel={t('home.continue.cta')}
                   >
                     <Play color="#fff" size={17} strokeWidth={2.4} fill="#fff" />
@@ -357,6 +368,17 @@ export default function HomeScreen({ navigate }) {
                 </>
               )}
             </View>
+
+            <Pressable
+              style={styles.tutorialLink}
+              onPress={handleTutorial}
+              accessibilityLabel={t('home.a11y.tutorial')}
+              hitSlop={10}
+            >
+              <Text style={[styles.tutorialLinkText, palette.tutorialLink]}>
+                {t('home.tutorial.link')}
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.bottomBlock}>
@@ -364,27 +386,15 @@ export default function HomeScreen({ navigate }) {
               <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
                 <View style={styles.tileHeader}>
                   <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
-                    <Calendar color={colors.primaryGlow} size={20} strokeWidth={1.9} />
+                    <Calendar color={colors.primaryGlow} size={18} strokeWidth={1.9} />
                   </View>
                   <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
                     {t('home.dailyPuzzle.label')}
                   </Text>
                 </View>
-                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
                   {t('home.dailyPuzzle.subtitle')}
                 </Text>
-                {!dailyUnlocked ? (
-                  <View style={[styles.lockPill, { backgroundColor: palette.lockBadgeBg }]}>
-                    <Lock color={palette.lockBadgeText} size={12} strokeWidth={2.4} />
-                    <Text style={[styles.lockPillText, { color: palette.lockBadgeText }]}>
-                      {t('home.dailyPuzzle.lockedSubtitle', {
-                        n: WORD_WHEEL_DAILY_UNLOCK_LEVEL,
-                      })}
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.tileSpacer} />
-                )}
               </Pressable>
 
               <Pressable
@@ -393,14 +403,14 @@ export default function HomeScreen({ navigate }) {
               >
                 <View style={styles.tileHeader}>
                   <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
-                    <ShoppingCart color={colors.text} size={20} strokeWidth={1.9} />
+                    <ShoppingCart color={colors.text} size={18} strokeWidth={1.9} />
                   </View>
                   <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
                     {t('home.shop.label')}
                   </Text>
-                  <ChevronRight color={colors.textMuted} size={18} />
+                  <ChevronRight color={colors.textMuted} size={16} />
                 </View>
-                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]}>
+                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
                   {t('home.shop.subtitle')}
                 </Text>
               </Pressable>
@@ -429,19 +439,10 @@ export default function HomeScreen({ navigate }) {
                 </Pressable>
               </View>
             ) : null}
-
-            <Text style={[styles.copyright, { color: colors.textMuted }, palette.comment]}>
-              {t('home.copyright')}
-            </Text>
           </View>
         </View>
 
         <AdBanner />
-
-        <DailyLockedModal
-          visible={dailyLockedVisible}
-          onClose={() => setDailyLockedVisible(false)}
-        />
       </View>
     </GradientBackground>
   );
@@ -580,56 +581,50 @@ const styles = StyleSheet.create({
   btnDisabled: {
     opacity: 0.5,
   },
+  tutorialLink: {
+    alignSelf: 'center',
+    marginTop: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  tutorialLinkText: {
+    fontSize: 15,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
   tileRow: {
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'stretch',
+    gap: 10,
   },
   tile: {
     flex: 1,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 14,
-    minHeight: 128,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   tileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 6,
   },
   tileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tileTitle: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
   },
   tileSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  lockPill: {
-    marginTop: 'auto',
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  lockPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  tileSpacer: {
-    marginTop: 'auto',
-    height: 8,
+    fontSize: 12,
+    lineHeight: 16,
   },
   guestCard: {
     borderRadius: 18,
@@ -669,12 +664,5 @@ const styles = StyleSheet.create({
   signInBtnText: {
     fontSize: 13,
     fontWeight: '800',
-  },
-  copyright: {
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-    paddingTop: 4,
-    letterSpacing: 0.2,
   },
 });

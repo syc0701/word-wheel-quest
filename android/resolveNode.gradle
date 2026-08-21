@@ -1,0 +1,42 @@
+/**
+ * Resolve the Node binary for Gradle / Android Studio.
+ * GUI Gradle often has a PATH without Homebrew or /usr/local/bin.
+ *
+ * Override with:
+ *   - env NODE_BINARY
+ *   - android/local.properties → node.binary=/absolute/path/to/node
+ *   - gradle.properties → NODE_BINARY=/absolute/path/to/node
+ */
+ext.resolveNodeExecutable = { Object baseDir ->
+  def envNode = System.getenv("NODE_BINARY")
+  if (envNode != null && !envNode.trim().isEmpty() && new File(envNode.trim()).exists()) {
+    return envNode.trim()
+  }
+
+  def propNode = findProperty("NODE_BINARY")
+  if (propNode != null && !propNode.toString().trim().isEmpty() && new File(propNode.toString().trim()).exists()) {
+    return propNode.toString().trim()
+  }
+
+  def dir = baseDir instanceof File ? baseDir : new File(baseDir.toString())
+  def localPropsFile = new File(dir, "local.properties")
+  if (localPropsFile.exists()) {
+    def props = new Properties()
+    localPropsFile.withInputStream { props.load(it) }
+    def nodeBinary = props.getProperty("node.binary")
+    if (nodeBinary != null && !nodeBinary.trim().isEmpty() && new File(nodeBinary.trim()).exists()) {
+      return nodeBinary.trim()
+    }
+  }
+
+  for (def candidate : [
+    "/usr/local/bin/node",
+    "/opt/homebrew/bin/node",
+  ]) {
+    if (new File(candidate).exists()) {
+      return candidate
+    }
+  }
+
+  return "node"
+}

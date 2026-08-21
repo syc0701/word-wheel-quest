@@ -4,7 +4,6 @@ import {
   InteractionManager,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
@@ -20,7 +19,6 @@ import Animated, {
 
 const SPLASH_BG = require('../assets/splash-reef-bg.png');
 const SEA_FALLBACK = '#0A2A4A';
-const COPYRIGHT = '© 2026 Puzzle Interact';
 
 /**
  * Immersive reef launch: title + animated rope progress (no square logo asset).
@@ -132,7 +130,6 @@ export default function LaunchSplashOverlay({ onDone }) {
               <Animated.View style={[styles.ropeFill, ropeFillStyle]} />
             </View>
           </View>
-          <Text style={styles.copyright}>{COPYRIGHT}</Text>
         </View>
       </ImageBackground>
     </Pressable>
@@ -200,11 +197,5 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 999,
     backgroundColor: '#E8B84A',
-  },
-  copyright: {
-    color: 'rgba(244, 230, 200, 0.55)',
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'center',
   },
 });

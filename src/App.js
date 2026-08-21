@@ -41,8 +41,7 @@ function AppShell() {
       return;
     }
     if (
-      screen === SCREENS.HOME
-      || screen === SCREENS.DAILY
+      screen === SCREENS.DAILY
       || screen === SCREENS.SETTINGS
       || screen === SCREENS.SHOP
       || screen === SCREENS.SIGN_IN
@@ -88,7 +87,7 @@ function AppShell() {
       case SCREENS.DAILY_PLAY:
         return (
           <Animated.View
-            key={`play-${params.mode}-${params.date ?? 'journey'}-${params.t ?? 0}`}
+            key={`play-${params.mode}-${params.date ?? 'journey'}-${params.isOnboarding ? 'onb' : 'std'}-${params.t ?? 0}`}
             entering={SlideInRight.duration(350).springify()}
             exiting={SlideOutLeft.duration(250)}
             style={opaqueScreenStyle}

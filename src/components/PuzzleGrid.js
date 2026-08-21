@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
@@ -18,9 +18,12 @@ export default function PuzzleGrid({
   celebrateMode = 'new',
   revealBurstId = 0,
   onCellPress,
+  onBoardMetrics = null,
+  boardHostRef = null,
 }) {
   const { ww } = useAppearance();
   const [gridWidth, setGridWidth] = useState(0);
+  const boardRef = useRef(null);
 
   // Floor so N cells + gaps never exceed measured width (flexWrap would drop the last column).
   const cellSize =
@@ -29,6 +32,21 @@ export default function PuzzleGrid({
       : 0;
   const boardSize =
     cellSize > 0 ? cellSize * gridSize + GAP * (gridSize - 1) : 0;
+
+  const setBoardRef = (node) => {
+    boardRef.current = node;
+    if (typeof boardHostRef === 'function') boardHostRef(node);
+    else if (boardHostRef) boardHostRef.current = node;
+  };
+
+  const reportBoardMetrics = () => {
+    if (!onBoardMetrics || !boardRef.current || cellSize <= 0) return;
+    boardRef.current.measureInWindow((x, y, width, height) => {
+      if (width > 0 && height > 0) {
+        onBoardMetrics({ x, y, width, height, cellSize, gap: GAP });
+      }
+    });
+  };
 
   const celebrating = celebratingCellKeys instanceof Set ? celebratingCellKeys : new Set();
 
@@ -163,6 +181,9 @@ export default function PuzzleGrid({
       }}
     >
       <View
+        ref={setBoardRef}
+        collapsable={false}
+        onLayout={reportBoardMetrics}
         style={[
           styles.grid,
           boardSize > 0 && { width: boardSize, height: boardSize },

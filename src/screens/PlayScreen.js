@@ -25,7 +25,6 @@ import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
-import { WORD_WHEEL_DAILY_UNLOCK_LEVEL } from '../constants/api';
 import { validateBonusWord } from '../lib/dictionary';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
@@ -69,6 +68,10 @@ import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
+import OnboardingOverlay from '../components/OnboardingOverlay';
+import OnboardingSuccessOverlay from '../components/OnboardingSuccessOverlay';
+import OnboardingWelcomeOverlay from '../components/OnboardingWelcomeOverlay';
+import { markOnboardingComplete, ONBOARDING_PUZZLE } from '../lib/onboarding';
 import { useAppearance } from '../context/AppearanceContext';
 import { useAudio } from '../context/AudioContext';
 import { usePlayTimer } from '../context/PlayTimerContext';
@@ -83,6 +86,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
   const dailyDate = routeParams.date;
   const seededPuzzle = routeParams.puzzle;
+  const isOnboarding = Boolean(routeParams.isOnboarding);
   const wallet = useWordWheelWallet();
   const { ww, isRandomScene, setSceneLevel } = useAppearance();
   const { playSfx } = useAudio();
@@ -107,6 +111,24 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingFocusRects, setOnboardingFocusRects] = useState({});
+  const [onboardingWelcomeVisible, setOnboardingWelcomeVisible] = useState(() =>
+    Boolean(routeParams.isOnboarding)
+  );
+  const [onboardingSuccessVisible, setOnboardingSuccessVisible] = useState(false);
+  const onboardingSuccessNextStepRef = useRef(1);
+  const onboardingOverlayRef = useRef(null);
+  const onboardingScrollRef = useRef(null);
+  const onboardingClueWrapRef = useRef(null);
+  const onboardingClueContentLayoutRef = useRef({ y: 0, height: 0 });
+  const onboardingScrollYRef = useRef(0);
+  const onboardingClueRef = useRef(null);
+  const onboardingWheelRef = useRef(null);
+  const onboardingHintRef = useRef(null);
+  const onboardingBoardMetricsRef = useRef(null);
+  const onboardingGridBoardRef = useRef(null);
+  const finishingOnboardingRef = useRef(false);
   const [bonusWordModal, setBonusWordModal] = useState({
     visible: false,
     word: '',
@@ -230,13 +252,19 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   const goClue = useCallback(
     (delta) => {
-      if (unfoundClues.length === 0) return;
-      const next = (clueIndex + delta + unfoundClues.length) % unfoundClues.length;
-      setSelectedWord(unfoundClues[next].word);
+      if (unfoundClues.length > 0) {
+        const next = (clueIndex + delta + unfoundClues.length) % unfoundClues.length;
+        setSelectedWord(unfoundClues[next].word);
+      }
+      // Step 1: clue swipe → congrats flash, then wheel step.
+      if (isOnboarding && onboardingStep === 0 && !onboardingSuccessVisible) {
+        playSfx('complete');
+        onboardingSuccessNextStepRef.current = 1;
+        setOnboardingSuccessVisible(true);
+      }
     },
-    [unfoundClues, clueIndex]
+    [unfoundClues, clueIndex, isOnboarding, onboardingStep, onboardingSuccessVisible, playSfx]
   );
-
   const clueStripText = activeClue
     ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
     : selectedWord
@@ -280,9 +308,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const totalHintCoinsAvailable = lifetimeCoinsRemaining + wallet.creditBalance;
   const canUseHint =
     !puzzleComplete
-    && hintCandidates.length > 0
-    && totalHintCoinsAvailable >= WORD_WHEEL_HINT_COST
-    && !hintPending;
+    && !hintPending
+    && (
+      (isOnboarding && onboardingStep === 2)
+      || (
+        hintCandidates.length > 0
+        && totalHintCoinsAvailable >= WORD_WHEEL_HINT_COST
+      )
+    );
 
   useEffect(() => {
     if (!__DEV__ || loading) return;
@@ -454,6 +487,17 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       setError('');
       resetPlayState();
       try {
+        if (isOnboarding) {
+          if (!cancelled) {
+            setPuzzle(ONBOARDING_PUZZLE);
+            // Tutorial HUD starts with enough coins for one hint demo.
+            setPlaySessionCoins(WORD_WHEEL_HINT_COST);
+            const startedAt = Date.now();
+            levelStartedAtRef.current = startedAt;
+            setTimerStartedAt(startedAt);
+          }
+          return;
+        }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
           : (reloadKey === 0 && seededPuzzle?.id
@@ -572,7 +616,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
+  }, [isDaily, isOnboarding, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
 
   const handleNextPuzzle = useCallback(() => {
     if (isDaily) {
@@ -594,9 +638,126 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setShowHeaderNext(true);
   }, []);
 
+  const finishOnboarding = useCallback(async () => {
+    if (finishingOnboardingRef.current) return;
+    finishingOnboardingRef.current = true;
+    await markOnboardingComplete();
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      puzzle: routeParams.puzzle,
+      isOnboarding: false,
+      t: Date.now(),
+    });
+  }, [navigate, routeParams.puzzle]);
+
+  const measureOnboardingFocus = useCallback(() => {
+    if (!isOnboarding) return;
+    const overlayNode = onboardingOverlayRef.current;
+    if (!overlayNode || typeof overlayNode.measureInWindow !== 'function') return;
+
+    const next = {};
+    let pending = 4;
+    const done = () => {
+      pending -= 1;
+      if (pending <= 0) {
+        setOnboardingFocusRects((prev) => ({
+          ...next,
+          // Keep the L spotlight stable across remount/remeasure flicker.
+          letter: next.letter || prev.letter,
+        }));
+      }
+    };
+
+    // Clue sits inside GH ScrollView — derive band from content layout + scroll offset.
+    const measureClueBand = () => {
+      const scrollNode = onboardingScrollRef.current;
+      const layout = onboardingClueContentLayoutRef.current;
+      if (
+        !scrollNode
+        || typeof scrollNode.measureInWindow !== 'function'
+        || !(layout.height > 0)
+      ) {
+        done();
+        return;
+      }
+      overlayNode.measureInWindow((ox, oy, overlayW) => {
+        scrollNode.measureInWindow((_sx, sy) => {
+          const y = sy + layout.y - onboardingScrollYRef.current - oy;
+          next.clue = {
+            x: 0,
+            y,
+            width: overlayW > 0 ? overlayW : Dimensions.get('window').width,
+            height: layout.height,
+          };
+          done();
+        });
+      });
+    };
+
+    const captureOutsideScroll = (key, ref) => {
+      const node = ref.current;
+      if (!node || typeof node.measureInWindow !== 'function') {
+        done();
+        return;
+      }
+      overlayNode.measureInWindow((ox, oy) => {
+        node.measureInWindow((x, y, width, height) => {
+          if (width > 0 && height > 0) {
+            next[key] = {
+              x: x - ox,
+              y: y - oy,
+              width,
+              height,
+            };
+          }
+          done();
+        });
+      });
+    };
+
+    const measureLetterCell = () => {
+      const board = onboardingBoardMetricsRef.current;
+      const boardNode = onboardingGridBoardRef.current;
+      if (!board || !(board.cellSize > 0)) {
+        done();
+        return;
+      }
+      // Tutorial L in LOG is at row 3, col 2.
+      const row = 3;
+      const col = 2;
+      const apply = (bx, by) => {
+        overlayNode.measureInWindow((ox, oy) => {
+          next.letter = {
+            x: bx - ox + col * (board.cellSize + board.gap),
+            y: by - oy + row * (board.cellSize + board.gap),
+            width: board.cellSize,
+            height: board.cellSize,
+          };
+          done();
+        });
+      };
+      if (boardNode && typeof boardNode.measureInWindow === 'function') {
+        boardNode.measureInWindow((bx, by) => apply(bx, by));
+      } else {
+        apply(board.x, board.y);
+      }
+    };
+
+    measureClueBand();
+    captureOutsideScroll('wheel', onboardingWheelRef);
+    captureOutsideScroll('hint', onboardingHintRef);
+    measureLetterCell();
+  }, [isOnboarding]);
+
+  useEffect(() => {
+    if (!isOnboarding) return undefined;
+    const timers = [0, 80, 200, 400].map((ms) => setTimeout(measureOnboardingFocus, ms));
+    return () => timers.forEach(clearTimeout);
+  }, [isOnboarding, onboardingStep, loading, measureOnboardingFocus]);
+
   const persistProgress = useCallback(
     async (words, bonusWords = bonusWordsFound) => {
-      if (!puzzle?.id) return null;
+      if (isOnboarding || !puzzle?.id) return null;
       try {
         const updated = await WordWheelApi.updateProgress(puzzle.id, words, bonusWords);
         if (updated && !updated.code) {
@@ -613,12 +774,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         return null;
       }
     },
-    [puzzle, t, bonusWordsFound, wallet.loggedIn]
+    [isOnboarding, puzzle, t, bonusWordsFound, wallet.loggedIn]
   );
 
   const persistBonusWords = useCallback(
     async (words) => {
-      if (!puzzle?.id) return;
+      if (isOnboarding || !puzzle?.id) return;
       await saveStoredBonusWords(puzzle.id, words);
       try {
         await WordWheelApi.updateProgress(puzzle.id, foundWords, words);
@@ -626,7 +787,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         // Local cache already saved; server sync is best-effort.
       }
     },
-    [puzzle?.id, foundWords]
+    [isOnboarding, puzzle?.id, foundWords]
   );
 
   const celebrateClearRef = useRef(null);
@@ -665,6 +826,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     async (words, updatedSession) => {
       const completeNow = words.length >= targetWords.length && targetWords.length > 0;
       if (!completeNow || completionShownRef.current) return;
+      if (isOnboarding) {
+        completionShownRef.current = true;
+        finishOnboarding();
+        return;
+      }
       completionShownRef.current = true;
       playSfx('complete');
       const startedAt = levelStartedAtRef.current ?? Date.now();
@@ -690,7 +856,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
-    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, puzzle]
+    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, isOnboarding, finishOnboarding, puzzle]
   );
 
   // Crossings / hints can finish a word without a wheel submit — promote those to found.
@@ -728,6 +894,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (word.length < 3) return false;
 
       if (!targetWords.includes(word)) {
+        if (isOnboarding) {
+          playSfx('wrong');
+          return false;
+        }
         if (bonusWordLookupRef.current) return false;
         // Same bonus word again — no second gift.
         if (bonusWordsFound.includes(word)) {
@@ -784,6 +954,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       cascaded.forEach((w) => {
         if (w !== word) triggerWordRevealEffect(w, 'new');
       });
+
+      // Step 2: first correct wheel word → congrats, then hint step.
+      if (isOnboarding && onboardingStep === 1 && !onboardingSuccessVisible) {
+        playSfx('complete');
+        onboardingSuccessNextStepRef.current = 2;
+        setOnboardingSuccessVisible(true);
+      }
+
       const updatedSession = await persistProgress(next);
       await openCompletionIfNeeded(next, updatedSession);
       return true;
@@ -802,8 +980,27 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       bonusWordsFound,
       persistBonusWords,
       applyBonusWordGift,
+      isOnboarding,
+      onboardingStep,
+      onboardingSuccessVisible,
     ]
   );
+
+  useEffect(() => {
+    if (!isOnboarding) return;
+    // Don't auto-jump (or pull back) during wheel / hint / letter-review steps.
+    if (onboardingSuccessVisible || onboardingStep >= 1) return;
+    if (foundWords.length >= targetWords.length && targetWords.length > 0) return;
+    if (foundWords.length > 0) {
+      setOnboardingStep((s) => Math.min(2, Math.max(s, foundWords.length)));
+    }
+  }, [
+    isOnboarding,
+    foundWords.length,
+    targetWords.length,
+    onboardingSuccessVisible,
+    onboardingStep,
+  ]);
 
   const handleDragEnd = useCallback(
     (word) => {
@@ -858,6 +1055,36 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const handleHint = useCallback(async () => {
     if (puzzleComplete) return;
     if (hintPending) return;
+
+    // Tutorial step 3: spend demo coins, reveal L, keep spotlight until Next.
+    if (isOnboarding && onboardingStep === 2) {
+      const pick = { key: '3,2', letter: 'L', word: 'LOG' };
+      if (hintLetters.has(pick.key)) {
+        setOnboardingStep(3);
+        setTimeout(measureOnboardingFocus, 40);
+        setTimeout(measureOnboardingFocus, 200);
+        return;
+      }
+      setHintPending(true);
+      try {
+        playSfx('bonus');
+        // Local tutorial balance only — don't touch persisted guest coins.
+        setPlaySessionCoins(0);
+        setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
+        const nextHints = new Map(hintLetters);
+        nextHints.set(pick.key, pick.letter);
+        setHintLetters(nextHints);
+        setSelectedWord(pick.word);
+        triggerCellRevealEffect([pick.key], 'new');
+        setOnboardingStep(3);
+        setTimeout(measureOnboardingFocus, 80);
+        setTimeout(measureOnboardingFocus, 220);
+        setTimeout(measureOnboardingFocus, 500);
+      } finally {
+        setHintPending(false);
+      }
+      return;
+    }
 
     if (totalHintCoinsAvailable < WORD_WHEEL_HINT_COST) {
       showNotEnoughCoinsAlert();
@@ -925,6 +1152,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, [
     puzzleComplete,
     hintPending,
+    isOnboarding,
+    onboardingStep,
     totalHintCoinsAvailable,
     hintCandidates,
     lifetimeCoinsRemaining,
@@ -940,6 +1169,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     playSfx,
     showNotEnoughCoinsAlert,
     t,
+    measureOnboardingFocus,
   ]);
 
   const handleBack = () => {
@@ -964,6 +1194,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   return (
     <GradientBackground variant="play">
       <ScrollView
+        ref={onboardingScrollRef}
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scroll,
@@ -971,6 +1202,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          onboardingScrollYRef.current = e.nativeEvent.contentOffset.y;
+          if (isOnboarding) measureOnboardingFocus();
+        }}
       >
         <View style={styles.header}>
           <Pressable
@@ -990,7 +1226,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 isRandomScene && styles.levelHeroOnScene,
               ]}
             >
-              {isDaily
+              {isOnboarding
+                ? t('onboarding.title')
+                : isDaily
                 ? dailyLabel
                 : journeyLevel != null
                   ? t('common.level', { n: journeyLevel })
@@ -1029,26 +1267,47 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           celebrateMode={celebrateMode}
           revealBurstId={revealBurstId}
           onCellPress={handleCellPress}
+          onBoardMetrics={
+            isOnboarding
+              ? (metrics) => {
+                  onboardingBoardMetricsRef.current = metrics;
+                  measureOnboardingFocus();
+                }
+              : null
+          }
+          boardHostRef={isOnboarding ? onboardingGridBoardRef : null}
         />
 
-        <SwipeableClueStrip
-          text={clueStripText}
-          placeholder={clueStripPlaceholder}
-          canSwipe={unfoundClues.length > 1}
-          onSwipe={goClue}
-          backgroundColor={ww.clueBg}
-          gradientColors={ww.clueGradient}
-          borderColor={ww.borderStrong}
-          textColor={
-            clueStripPlaceholder
-              ? ww.textMuted || ww.clueText
-              : ww.clueText || ww.text
-          }
-          prevA11y={t('play.clue.prev')}
-          nextA11y={t('play.clue.next')}
-          active={false}
-          overlay={null}
-        />
+        <View
+          ref={onboardingClueWrapRef}
+          collapsable={false}
+          onLayout={(e) => {
+            const { y, height } = e.nativeEvent.layout;
+            onboardingClueContentLayoutRef.current = { y, height };
+            if (isOnboarding) measureOnboardingFocus();
+          }}
+        >
+          <SwipeableClueStrip
+            cardRef={onboardingClueRef}
+            text={clueStripText}
+            placeholder={clueStripPlaceholder}
+            canSwipe={unfoundClues.length > 1 || (isOnboarding && onboardingStep === 0)}
+            showSwipeHints={isOnboarding && onboardingStep === 0}
+            onSwipe={goClue}
+            backgroundColor={ww.clueBg}
+            gradientColors={ww.clueGradient}
+            borderColor={ww.borderStrong}
+            textColor={
+              clueStripPlaceholder
+                ? ww.textMuted || ww.clueText
+                : ww.clueText || ww.text
+            }
+            prevA11y={t('play.clue.prev')}
+            nextA11y={t('play.clue.next')}
+            active={false}
+            overlay={null}
+          />
+        </View>
 
         {timerEnabled ? (
           <View
@@ -1083,25 +1342,31 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 </Text>
               </Animated.View>
             </View>
-            <Pressable
-              style={[
-                styles.toolBtn,
-                { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
-                !canUseHint && styles.toolBtnDisabled,
-              ]}
-              onPress={() => {
-                setSelectedIndices([]);
-                handleHint();
-              }}
-              disabled={hintPending}
-              accessibilityLabel={t('play.a11y.useHint')}
+            <View
+              ref={onboardingHintRef}
+              collapsable={false}
+              onLayout={isOnboarding ? measureOnboardingFocus : undefined}
             >
-              {hintPending ? (
-                <ActivityIndicator color={ww.toolIcon} size="small" />
-              ) : (
-                <Lightbulb color={ww.toolIcon} size={18} />
-              )}
-            </Pressable>
+              <Pressable
+                style={[
+                  styles.toolBtn,
+                  { backgroundColor: ww.toolBtnBg, borderColor: ww.borderStrong },
+                  !canUseHint && styles.toolBtnDisabled,
+                ]}
+                onPress={() => {
+                  setSelectedIndices([]);
+                  handleHint();
+                }}
+                disabled={hintPending}
+                accessibilityLabel={t('play.a11y.useHint')}
+              >
+                {hintPending ? (
+                  <ActivityIndicator color={ww.toolIcon} size="small" />
+                ) : (
+                  <Lightbulb color={ww.toolIcon} size={18} />
+                )}
+              </Pressable>
+            </View>
             <Pressable
               style={[
                 styles.toolBtn,
@@ -1117,15 +1382,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
 
-          <LetterWheel
-            tiles={wheelTiles}
-            selectedIndices={selectedIndices}
-            onSelectionChange={setSelectedIndices}
-            onDragEnd={handleDragEnd}
-            onShuffle={applyWheelShuffle}
-            shuffleSignal={shuffleSignal}
-            wheelSize={WHEEL_SIZE}
-          />
+          <View
+            ref={onboardingWheelRef}
+            collapsable={false}
+            onLayout={isOnboarding ? measureOnboardingFocus : undefined}
+          >
+            <LetterWheel
+              tiles={wheelTiles}
+              selectedIndices={selectedIndices}
+              onSelectionChange={setSelectedIndices}
+              onDragEnd={handleDragEnd}
+              onShuffle={applyWheelShuffle}
+              shuffleSignal={shuffleSignal}
+              wheelSize={WHEEL_SIZE}
+            />
+          </View>
 
           <View style={styles.sideTools}>
             <Pressable
@@ -1175,13 +1446,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}
         levelNumber={completionStats?.levelNumber}
         forceScreenType={completionStats?.screenType}
-        unlockedFeature={
-          !isDaily
-          && completionStats?.levelNumber != null
-          && Number(completionStats.levelNumber) === WORD_WHEEL_DAILY_UNLOCK_LEVEL
-            ? 'dailyPuzzle'
-            : null
-        }
       />
 
       {/* Bonus-word discovery popup disabled
@@ -1204,6 +1468,41 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           setDictionaryWord(next);
           setTreasureOpen(false);
           setDictionaryOpen(true);
+        }}
+      />
+      {isOnboarding && !onboardingWelcomeVisible && !onboardingSuccessVisible ? (
+        <OnboardingOverlay
+          overlayRef={onboardingOverlayRef}
+          step={onboardingStep}
+          topInset={insets.top}
+          bottomInset={insets.bottom}
+          focusRects={onboardingFocusRects}
+          t={t}
+          onNext={() => {
+            if (onboardingStep >= 3) finishOnboarding();
+            else setOnboardingStep((s) => s + 1);
+          }}
+          onSkip={finishOnboarding}
+        />
+      ) : null}
+      <OnboardingWelcomeOverlay
+        visible={isOnboarding && onboardingWelcomeVisible}
+        t={t}
+        onSkip={finishOnboarding}
+        onStart={() => {
+          playSfx('click');
+          setOnboardingWelcomeVisible(false);
+          setOnboardingStep(0);
+          setTimeout(measureOnboardingFocus, 80);
+          setTimeout(measureOnboardingFocus, 220);
+        }}
+      />
+      <OnboardingSuccessOverlay
+        visible={onboardingSuccessVisible}
+        t={t}
+        onDone={() => {
+          setOnboardingSuccessVisible(false);
+          setOnboardingStep(onboardingSuccessNextStepRef.current);
         }}
       />
     </GradientBackground>

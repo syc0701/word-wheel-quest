@@ -13,9 +13,27 @@ export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
 export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
 
+AVD_NAME="${ANDROID_AVD:-Pixel_10}"
+
 if ! adb get-state >/dev/null 2>&1; then
-  echo "No device/emulator detected. Start one with: npm run android:emulator"
-  exit 1
+  echo "No device/emulator detected. Starting $AVD_NAME..."
+  if ! emulator -list-avds 2>/dev/null | grep -qx "$AVD_NAME"; then
+    echo "AVD '$AVD_NAME' not found. Create it in Android Studio, or set ANDROID_AVD."
+    exit 1
+  fi
+  emulator -avd "$AVD_NAME" -netdelay none -netspeed full >/tmp/word-wheel-emulator.log 2>&1 &
+  echo "Waiting for emulator to boot..."
+  adb wait-for-device
+  for _ in $(seq 1 60); do
+    if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then
+      break
+    fi
+    sleep 2
+  done
+  if ! adb get-state >/dev/null 2>&1; then
+    echo "Emulator did not come online. Check /tmp/word-wheel-emulator.log"
+    exit 1
+  fi
 fi
 
 adb wait-for-device
