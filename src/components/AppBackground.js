@@ -2,11 +2,16 @@ import { Image, StyleSheet, View } from 'react-native';
 import { useAppearance } from '../context/AppearanceContext';
 
 /**
- * App backdrop: solid theme color, or rotating scene photo when Appearance = Image.
+ * App backdrop: solid theme color, or scene photo when Appearance = Image.
+ * `surface`: 'home' → popcorn; 'play' → a different journey scene.
  */
-export default function AppBackground({ children, scrim, style }) {
-  const { colors, isRandomScene, weeklyBg } = useAppearance();
-  const showScene = isRandomScene && weeklyBg?.source;
+export default function AppBackground({ children, surface = 'home', scrim, style }) {
+  const { colors, isRandomScene, weeklyBg, homeBg, playBg } = useAppearance();
+  const scene =
+    surface === 'play'
+      ? playBg || weeklyBg
+      : homeBg || weeklyBg;
+  const showScene = isRandomScene && scene?.source;
   const resolvedScrim = scrim ?? (showScene ? 0.42 : 0.12);
 
   return (
@@ -19,7 +24,7 @@ export default function AppBackground({ children, scrim, style }) {
     >
       {showScene ? (
         <View style={styles.backdrop} pointerEvents="none">
-          <Image source={weeklyBg.source} style={styles.image} resizeMode="cover" />
+          <Image source={scene.source} style={styles.image} resizeMode="cover" />
           {resolvedScrim > 0 ? (
             <View
               style={[styles.scrim, { backgroundColor: `rgba(6, 32, 38, ${resolvedScrim})` }]}

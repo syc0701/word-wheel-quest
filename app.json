@@ -3,7 +3,7 @@
     "name": "Word Wheel Quest",
     "slug": "word-wheel-quest",
     "scheme": "puzzleinteract",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
@@ -19,7 +19,7 @@
     "android": {
       "package": "com.puzint.wordwheel.app",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 9,
+      "versionCode": 10,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
       "permissions": [

@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { ArrowLeft, BookOpen, ChevronRight, Clock, Lightbulb, Tornado } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, ChevronRight, Clock, Lightbulb, Tornado, Volume2, VolumeX } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
@@ -119,7 +119,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const isOnboarding = Boolean(routeParams.isOnboarding);
   const wallet = useWordWheelWallet();
   const { ww, isRandomScene, setSceneLevel } = useAppearance();
-  const { playSfx } = useAudio();
+  const { playSfx, musicEnabled, setMusicEnabled } = useAudio();
   const { timerEnabled } = usePlayTimer();
   const t = useT();
   const insets = useSafeAreaInsets();
@@ -672,6 +672,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const finishOnboarding = useCallback(async () => {
     if (finishingOnboardingRef.current) return;
     finishingOnboardingRef.current = true;
+    playSfx('levelUp');
     await markOnboardingComplete();
     navigate(SCREENS.PLAY, {
       mode: PLAY_MODE.JOURNEY,
@@ -679,7 +680,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       isOnboarding: false,
       t: Date.now(),
     });
-  }, [navigate, routeParams.puzzle]);
+  }, [navigate, routeParams.puzzle, playSfx]);
 
   const measureOnboardingFocus = useCallback(() => {
     if (!isOnboarding) return;
@@ -1267,22 +1268,43 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                   : t('common.levelFallback')}
             </Text>
           </View>
-          {showHeaderNext && puzzleComplete ? (
+          <View style={styles.headerRight}>
             <Pressable
-              style={[styles.headerNextBtn, { backgroundColor: ww.accentDark }]}
+              style={[
+                styles.iconBtn,
+                isRandomScene && styles.iconBtnOnScene,
+              ]}
               onPress={() => {
+                const next = !musicEnabled;
+                setMusicEnabled(next);
                 playSfx('click');
-                handleNextPuzzle();
               }}
               accessibilityRole="button"
-              accessibilityLabel={t('complete.next')}
+              accessibilityLabel={
+                musicEnabled ? t('play.a11y.musicOff') : t('play.a11y.musicOn')
+              }
             >
-              <Text style={styles.headerNextText}>{t('complete.next')}</Text>
-              <ChevronRight color="#fff" size={16} strokeWidth={2.6} />
+              {musicEnabled ? (
+                <Volume2 color={isRandomScene ? '#0b3d36' : ww.text} size={22} />
+              ) : (
+                <VolumeX color={isRandomScene ? '#0b3d36' : ww.text} size={22} />
+              )}
             </Pressable>
-          ) : (
-            <View style={styles.headerSpacer} />
-          )}
+            {showHeaderNext && puzzleComplete ? (
+              <Pressable
+                style={[styles.headerNextBtn, { backgroundColor: ww.accentDark }]}
+                onPress={() => {
+                  playSfx('click');
+                  handleNextPuzzle();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t('complete.next')}
+              >
+                <Text style={styles.headerNextText}>{t('complete.next')}</Text>
+                <ChevronRight color="#fff" size={16} strokeWidth={2.6} />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -1519,16 +1541,23 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           focusRects={onboardingFocusRects}
           t={t}
           onNext={() => {
+            playSfx('click');
             if (onboardingStep >= 3) finishOnboarding();
             else setOnboardingStep((s) => s + 1);
           }}
-          onSkip={finishOnboarding}
+          onSkip={() => {
+            playSfx('click');
+            finishOnboarding();
+          }}
         />
       ) : null}
       <OnboardingWelcomeOverlay
         visible={isOnboarding && onboardingWelcomeVisible}
         t={t}
-        onSkip={finishOnboarding}
+        onSkip={() => {
+          playSfx('click');
+          finishOnboarding();
+        }}
         onStart={() => {
           playSfx('click');
           setOnboardingWelcomeVisible(false);
@@ -1541,6 +1570,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         visible={onboardingSuccessVisible}
         t={t}
         onDone={() => {
+          playSfx('whoosh');
           setOnboardingSuccessVisible(false);
           setOnboardingStep(onboardingSuccessNextStepRef.current);
         }}
@@ -1630,6 +1660,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '800',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 38,
+    justifyContent: 'flex-end',
   },
   headerSpacer: {
     width: 38,

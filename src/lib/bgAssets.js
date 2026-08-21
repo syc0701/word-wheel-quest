@@ -1,12 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-/** All scene backgrounds available for the Image appearance. */
+/**
+ * Scene backgrounds for Image appearance.
+ * Order matters: band 0 is the first journey scene (popcorn).
+ * New 260820 set is listed first; legacy JPGs follow. PNGs removed.
+ */
 export const BG_IMAGE_CATALOG = {
-  '0804_flower': require('../assets/bg_image/0804-flower.png'),
-  '0804_mountain': require('../assets/bg_image/0804-mountain.png'),
-  '0804_plant': require('../assets/bg_image/0804-plant.png'),
+  circus_popcorn: require('../assets/bg_image/260820-circus-popcorn-and-juggling-pins.jpeg'),
+  morning_espresso: require('../assets/bg_image/260820-morning-espresso-and-lavender-view.jpeg'),
+  vermont_autumn: require('../assets/bg_image/260820-vermont-autumn-farmland-at-dusk.jpeg'),
+  soccer_stadium: require('../assets/bg_image/260820-soccer-ball-on-stadium-turf.jpeg'),
+  study_chalkboard: require('../assets/bg_image/260820-classic-study-corner-with-chalkboard.jpeg'),
+  vintage_console: require('../assets/bg_image/260820-vintage-zenith-console-and-color-bars.jpeg'),
   beach: require('../assets/bg_image/beach.jpg'),
-  classroom: require('../assets/bg_image/classroom.png'),
   deep_sea: require('../assets/bg_image/deep_sea.jpg'),
   flowers: require('../assets/bg_image/flowers.jpg'),
   island: require('../assets/bg_image/island.jpg'),
@@ -17,8 +23,11 @@ export const BG_IMAGE_CATALOG = {
   village: require('../assets/bg_image/village.jpg'),
 };
 
-/** Stable alphabetical order so level bands stay deterministic. */
-export const BG_IMAGE_IDS = Object.keys(BG_IMAGE_CATALOG).sort();
+/** Explicit order — do not alphabetize (popcorn must stay first). */
+export const BG_IMAGE_IDS = Object.keys(BG_IMAGE_CATALOG);
+
+/** First-launch / splash background (circus popcorn). */
+export const SPLASH_BG_SOURCE = BG_IMAGE_CATALOG.circus_popcorn;
 
 /** Scene changes at levels 50, 100, 150, … */
 export const LEVELS_PER_SCENE = 50;
@@ -41,6 +50,33 @@ export function getSceneBandForLevel(level) {
 export function resolveSceneBackground(level = 0) {
   const band = getSceneBandForLevel(level);
   const id = BG_IMAGE_IDS[band % BG_IMAGE_IDS.length] || BG_IMAGE_IDS[0];
+  return {
+    id,
+    source: BG_IMAGE_CATALOG[id],
+    band,
+    level: Number(level) || 0,
+  };
+}
+
+/** Home / main hub always uses the circus popcorn scene. */
+export function resolveHomeBackground(level = 0) {
+  return {
+    id: 'circus_popcorn',
+    source: BG_IMAGE_CATALOG.circus_popcorn,
+    band: getSceneBandForLevel(level),
+    level: Number(level) || 0,
+  };
+}
+
+/**
+ * Play uses a different image than home — cycles the catalog excluding popcorn
+ * so the board never shares the main-page photo.
+ */
+export function resolvePlayBackground(level = 0) {
+  const band = getSceneBandForLevel(level);
+  const playIds = BG_IMAGE_IDS.filter((id) => id !== 'circus_popcorn');
+  const list = playIds.length ? playIds : BG_IMAGE_IDS;
+  const id = list[band % list.length] || list[0];
   return {
     id,
     source: BG_IMAGE_CATALOG[id],

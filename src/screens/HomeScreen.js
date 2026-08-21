@@ -90,58 +90,37 @@ function useHomePalette() {
         }
       : { color: colors.textMuted };
 
-    // Continue hero: light card in light theme; deep green over image; surface in dark.
-    let continueCard;
-    let continueText;
-    let continueMuted;
-    let continueCta;
-    let progressTrack;
-    let progressFill;
-    let levelBadgeBg;
-    let levelBadgeText;
+    // Level card: warm gold / cream (matches home mock).
+    const LEVEL_CARD = {
+      cardBg: '#E3C17D',
+      cardBorder: '#CDB069',
+      text: '#3A2A1A',
+      muted: 'rgba(58, 42, 26, 0.72)',
+      badgeBg: 'rgba(58, 42, 26, 0.12)',
+      badgeText: '#3A2A1A',
+      progressTrack: 'rgba(58, 42, 26, 0.18)',
+      progressFill: '#8B6914',
+      ctaBg: '#F8EED8',
+      ctaText: '#3A2A1A',
+    };
 
-    if (isRandomScene) {
-      continueCard = {
-        backgroundColor: '#1b4d3e',
-        borderColor: 'rgba(255,255,255,0.08)',
-      };
-      continueText = '#f4faf7';
-      continueMuted = 'rgba(244, 250, 247, 0.78)';
-      continueCta = { backgroundColor: '#3d9b74' };
-      progressTrack = 'rgba(255,255,255,0.18)';
-      progressFill = '#7dcea0';
-      levelBadgeBg = 'rgba(0,0,0,0.22)';
-      levelBadgeText = '#ffffff';
-    } else if (isDark) {
-      continueCard = {
-        backgroundColor: colors.surface,
-        borderColor: colors.surfaceLight,
-      };
-      continueText = colors.text;
-      continueMuted = colors.textMuted;
-      continueCta = { backgroundColor: colors.primary };
-      progressTrack = 'rgba(255,255,255,0.12)';
-      progressFill = colors.primaryGlow;
-      levelBadgeBg = 'rgba(0,0,0,0.28)';
-      levelBadgeText = '#ffffff';
-    } else {
-      continueCard = {
-        backgroundColor: '#ffffff',
-        borderColor: 'rgba(6, 78, 59, 0.1)',
-        shadowColor: '#0f3d32',
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: 6 },
-        elevation: 3,
-      };
-      continueText = colors.text;
-      continueMuted = colors.textMuted;
-      continueCta = { backgroundColor: colors.primary };
-      progressTrack = 'rgba(13, 148, 136, 0.14)';
-      progressFill = colors.primary;
-      levelBadgeBg = 'rgba(13, 148, 136, 0.12)';
-      levelBadgeText = colors.primaryGlow;
-    }
+    const continueCard = {
+      backgroundColor: LEVEL_CARD.cardBg,
+      borderColor: LEVEL_CARD.cardBorder,
+      shadowColor: '#6B4E1F',
+      shadowOpacity: 0.18,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
+    };
+    const continueText = LEVEL_CARD.text;
+    const continueMuted = LEVEL_CARD.muted;
+    const continueCta = { backgroundColor: LEVEL_CARD.ctaBg };
+    const continueCtaText = LEVEL_CARD.ctaText;
+    const progressTrack = LEVEL_CARD.progressTrack;
+    const progressFill = LEVEL_CARD.progressFill;
+    const levelBadgeBg = LEVEL_CARD.badgeBg;
+    const levelBadgeText = LEVEL_CARD.badgeText;
 
     const tile = {
       backgroundColor: colors.surface,
@@ -167,6 +146,7 @@ function useHomePalette() {
       continueText,
       continueMuted,
       continueCta,
+      continueCtaText,
       progressTrack,
       progressFill,
       levelBadgeBg,
@@ -367,8 +347,15 @@ export default function HomeScreen({ navigate }) {
                     onPress={handleContinue}
                     accessibilityLabel={t('home.continue.cta')}
                   >
-                    <Play color="#fff" size={17} strokeWidth={2.4} fill="#fff" />
-                    <Text style={styles.continueBtnText}>{t('home.continue.cta')}</Text>
+                    <Play
+                      color={palette.continueCtaText}
+                      size={17}
+                      strokeWidth={2.4}
+                      fill={palette.continueCtaText}
+                    />
+                    <Text style={[styles.continueBtnText, { color: palette.continueCtaText }]}>
+                      {t('home.continue.cta')}
+                    </Text>
                   </Pressable>
                 </>
               )}
@@ -513,9 +500,9 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   continueCard: {
-    borderRadius: 22,
+    borderRadius: 28,
     borderWidth: 1,
-    padding: 16,
+    padding: 20,
   },
   cardLoader: {
     marginVertical: 36,
@@ -558,7 +545,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     marginTop: 10,
-    height: 6,
+    height: 4,
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -577,16 +564,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   continueBtn: {
-    marginTop: 16,
-    minHeight: 50,
-    borderRadius: 16,
+    marginTop: 18,
+    minHeight: 52,
+    borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   continueBtnText: {
-    color: '#fff',
     fontSize: 17,
     fontWeight: '800',
   },

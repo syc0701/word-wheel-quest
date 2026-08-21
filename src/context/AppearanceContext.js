@@ -11,6 +11,8 @@ import {
 } from '../lib/appearance';
 import {
   loadStoredSceneLevel,
+  resolveHomeBackground,
+  resolvePlayBackground,
   resolveSceneBackground,
   saveStoredSceneLevel,
 } from '../lib/bgAssets';
@@ -21,8 +23,16 @@ export function AppearanceProvider({ children }) {
   const [mode, setModeState] = useState(APPEARANCE_RANDOM);
   const [ready, setReady] = useState(false);
   const [weeklyBg, setWeeklyBg] = useState(null);
+  const [homeBg, setHomeBg] = useState(null);
+  const [playBg, setPlayBg] = useState(null);
   const [sceneLevel, setSceneLevelState] = useState(0);
   const sceneLevelRef = useRef(0);
+
+  const applySceneBackgrounds = useCallback((level) => {
+    setWeeklyBg(resolveSceneBackground(level));
+    setHomeBg(resolveHomeBackground(level));
+    setPlayBg(resolvePlayBackground(level));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,25 +46,27 @@ export function AppearanceProvider({ children }) {
       sceneLevelRef.current = storedLevel;
       setSceneLevelState(storedLevel);
       if (loaded === APPEARANCE_RANDOM) {
-        setWeeklyBg(resolveSceneBackground(storedLevel));
+        applySceneBackgrounds(storedLevel);
       }
       if (!cancelled) setReady(true);
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applySceneBackgrounds]);
 
   const setMode = useCallback(async (nextMode) => {
     const normalized = await saveAppearance(nextMode);
     setModeState(normalized);
     if (normalized === APPEARANCE_RANDOM) {
-      setWeeklyBg(resolveSceneBackground(sceneLevelRef.current));
+      applySceneBackgrounds(sceneLevelRef.current);
     } else {
       setWeeklyBg(null);
+      setHomeBg(null);
+      setPlayBg(null);
     }
     return normalized;
-  }, []);
+  }, [applySceneBackgrounds]);
 
   /** Keep Image theme scene in sync with season journey level (changes every 50 levels). */
   const setSceneLevel = useCallback((level) => {
@@ -69,8 +81,8 @@ export function AppearanceProvider({ children }) {
 
   useEffect(() => {
     if (mode !== APPEARANCE_RANDOM) return;
-    setWeeklyBg(resolveSceneBackground(sceneLevel));
-  }, [mode, sceneLevel]);
+    applySceneBackgrounds(sceneLevel);
+  }, [mode, sceneLevel, applySceneBackgrounds]);
 
   const value = useMemo(
     () => ({
@@ -80,12 +92,14 @@ export function AppearanceProvider({ children }) {
       isDark: mode === APPEARANCE_DARK,
       isRandomScene: mode === APPEARANCE_RANDOM,
       weeklyBg,
+      homeBg,
+      playBg,
       sceneLevel,
       setSceneLevel,
       ww: getWW(mode),
       colors: getColors(mode),
     }),
-    [mode, setMode, ready, weeklyBg, sceneLevel, setSceneLevel]
+    [mode, setMode, ready, weeklyBg, homeBg, playBg, sceneLevel, setSceneLevel]
   );
 
   return (
@@ -106,6 +120,8 @@ export function useAppearance() {
       isDark: false,
       isRandomScene: true,
       weeklyBg: null,
+      homeBg: null,
+      playBg: null,
       sceneLevel: 0,
       setSceneLevel: () => {},
       ww: getWW(APPEARANCE_RANDOM),

@@ -29,8 +29,16 @@ function AppShell() {
   const { setBgmScene, ready: audioReady } = useAudio();
 
   useEffect(() => {
-    configurePurchases();
-    initializeMobileAds();
+    // Defer native SDK work slightly so first paint / splash can settle on cold start.
+    const t = setTimeout(() => {
+      try {
+        configurePurchases();
+      } catch {
+        /* ignore */
+      }
+      initializeMobileAds();
+    }, 400);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -184,7 +192,13 @@ function AppShell() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <View style={[styles.container, { direction: isRtl ? 'rtl' : 'ltr' }]}>
-        <AppBackground>
+        <AppBackground
+          surface={
+            route.screen === SCREENS.PLAY || route.screen === SCREENS.DAILY_PLAY
+              ? 'play'
+              : 'home'
+          }
+        >
           <View style={styles.screenLayer} pointerEvents="box-none">
             {renderScreen()}
           </View>

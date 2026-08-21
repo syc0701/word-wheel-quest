@@ -17,11 +17,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-const SPLASH_BG = require('../assets/splash-reef-bg.png');
+import { BG_IMAGE_CATALOG, SPLASH_BG_SOURCE } from '../lib/bgAssets';
+
 const SEA_FALLBACK = '#0A2A4A';
+const SPLASH_BG = SPLASH_BG_SOURCE || BG_IMAGE_CATALOG.circus_popcorn;
 
 /**
- * Immersive reef launch: title + animated rope progress (no square logo asset).
+ * Immersive launch: title + animated rope progress over the opening scene photo.
  */
 export default function LaunchSplashOverlay({ onDone }) {
   const [visible, setVisible] = useState(true);

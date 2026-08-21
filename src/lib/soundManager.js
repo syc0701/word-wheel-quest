@@ -94,7 +94,12 @@ function bgmKeyForScene(nextScene) {
 
 function ensureBgmPlayer(source) {
   if (!bgmPlayer) {
-    bgmPlayer = createAudioPlayer(source);
+    try {
+      bgmPlayer = createAudioPlayer(source);
+    } catch {
+      bgmPlayer = null;
+      return null;
+    }
   } else {
     try {
       bgmPlayer.replace(source);
@@ -104,11 +109,20 @@ function ensureBgmPlayer(source) {
       } catch {
         /* ignore */
       }
-      bgmPlayer = createAudioPlayer(source);
+      try {
+        bgmPlayer = createAudioPlayer(source);
+      } catch {
+        bgmPlayer = null;
+        return null;
+      }
     }
   }
-  bgmPlayer.loop = true;
-  bgmPlayer.volume = BGM_VOLUME;
+  try {
+    bgmPlayer.loop = true;
+    bgmPlayer.volume = BGM_VOLUME;
+  } catch {
+    /* ignore */
+  }
   return bgmPlayer;
 }
 
@@ -125,10 +139,13 @@ async function applyBgm({ forceRestart = false } = {}) {
   const source = AUDIO[key];
   const needsSwap = activeBgmKey !== key || !bgmPlayer;
   if (needsSwap) {
-    ensureBgmPlayer(source);
+    const player = ensureBgmPlayer(source);
+    if (!player) return;
     activeBgmKey = key;
     forceRestart = true;
   }
+
+  if (!bgmPlayer) return;
 
   if (forceRestart) {
     try {
@@ -146,9 +163,13 @@ function getSfxPlayer(key) {
   if (!source) return null;
   let player = sfxPlayers.get(key);
   if (!player) {
-    player = createAudioPlayer(source);
-    player.volume = SFX_VOLUME;
-    sfxPlayers.set(key, player);
+    try {
+      player = createAudioPlayer(source);
+      player.volume = SFX_VOLUME;
+      sfxPlayers.set(key, player);
+    } catch {
+      return null;
+    }
   }
   return player;
 }

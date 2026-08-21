@@ -348,6 +348,8 @@ export default {
   'treasureChest.close': 'Close',
   'treasureChest.openDictionary': 'Look up {word}',
   'play.a11y.treasureChest': 'Bonus words treasure chest',
+  'play.a11y.musicOn': 'Turn on background music',
+  'play.a11y.musicOff': 'Turn off background music',
 
   // points table
   'pointsTable.header.letters': 'Letters',

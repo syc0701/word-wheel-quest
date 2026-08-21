@@ -1,12 +1,111 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { RevealCell, WordRevealBurst } from '../effect';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
-import { useAppearance } from '../context/AppearanceContext';
+import { GRID_CREAM, GRID_TRANSITION_MS } from '../lib/gridTheme';
 
 const GAP = 4;
 /** Stops a short word from rendering as a few giant cells on a large screen. */
 const MAX_CELL = 84;
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function GridCell({
+  size,
+  letter,
+  letterFontSize,
+  wordNumberLabel,
+  isRevealed,
+  isHintRevealed,
+  isSelected,
+  onPress,
+}) {
+  const selectedProgress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    selectedProgress.value = withTiming(isSelected ? 1 : 0, {
+      duration: GRID_TRANSITION_MS,
+      easing: Easing.inOut(Easing.quad),
+    });
+  }, [isSelected, selectedProgress]);
+
+  const cellStyle = useAnimatedStyle(() => {
+    const bg = isHintRevealed
+      ? interpolateColor(
+          selectedProgress.value,
+          [0, 1],
+          [GRID_CREAM.hintBg, GRID_CREAM.selectedBg]
+        )
+      : isRevealed
+        ? interpolateColor(
+            selectedProgress.value,
+            [0, 1],
+            [GRID_CREAM.revealedBg, GRID_CREAM.selectedBg]
+          )
+        : interpolateColor(
+            selectedProgress.value,
+            [0, 1],
+            [GRID_CREAM.cellBg, GRID_CREAM.selectedBg]
+          );
+
+    const border = interpolateColor(
+      selectedProgress.value,
+      [0, 1],
+      [
+        isHintRevealed ? GRID_CREAM.hintBorder : GRID_CREAM.cellBorder,
+        GRID_CREAM.selectedBorder,
+      ]
+    );
+
+    const borderWidth =
+      GRID_CREAM.cellBorderWidth +
+      selectedProgress.value * (GRID_CREAM.selectedBorderWidth - GRID_CREAM.cellBorderWidth);
+
+    return {
+      backgroundColor: bg,
+      borderColor: border,
+      borderWidth,
+    };
+  }, [isHintRevealed, isRevealed]);
+
+  const textStyle = useAnimatedStyle(() => {
+    const idle = isHintRevealed ? GRID_CREAM.hintText : GRID_CREAM.cellText;
+    return {
+      color: interpolateColor(selectedProgress.value, [0, 1], [idle, GRID_CREAM.selectedText]),
+    };
+  }, [isHintRevealed]);
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      style={[
+        styles.cell,
+        size > 0 && { width: size, height: size },
+        cellStyle,
+      ]}
+    >
+      {wordNumberLabel ? (
+        <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
+          <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
+            {wordNumberLabel}
+          </Text>
+        </View>
+      ) : null}
+      {isRevealed ? (
+        <Animated.Text style={[styles.letter, { fontSize: letterFontSize }, textStyle]}>
+          {letter}
+        </Animated.Text>
+      ) : null}
+    </AnimatedPressable>
+  );
+}
 
 export default function PuzzleGrid({
   gridSize,
@@ -24,7 +123,6 @@ export default function PuzzleGrid({
   onBoardMetrics = null,
   boardHostRef = null,
 }) {
-  const { ww } = useAppearance();
   const [gridWidth, setGridWidth] = useState(0);
   const boardRef = useRef(null);
 
@@ -145,52 +243,17 @@ export default function PuzzleGrid({
     }
 
     return (
-      <Pressable
+      <GridCell
         key={cellKey}
+        size={cellSize}
+        letter={letter}
+        letterFontSize={letterFontSize}
+        wordNumberLabel={wordNumberLabel}
+        isRevealed={isRevealed}
+        isHintRevealed={isHintRevealed}
+        isSelected={isSelected}
         onPress={() => onCellPress(row, col)}
-        style={[
-          styles.cell,
-          cellSize > 0 && { width: cellSize, height: cellSize },
-          isRevealed
-            ? isHintRevealed
-              ? { backgroundColor: ww.hintSoft, borderWidth: 2, borderColor: '#fcd34d' }
-              : {
-                  backgroundColor: ww.successSoft,
-                  borderWidth: 2,
-                  borderColor: ww.gridRevealedBorder || '#bbf7d0',
-                }
-            : {
-                backgroundColor: ww.gridHidden,
-                borderWidth: 2,
-                borderColor: ww.gridBorder || ww.borderStrong,
-              },
-          isSelected && {
-            borderWidth: 3.5,
-            borderColor: ww.wheelLine || '#f59e0b',
-          },
-        ]}
-      >
-        {wordNumberLabel ? (
-          <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
-            <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
-              {wordNumberLabel}
-            </Text>
-          </View>
-        ) : null}
-        {isRevealed ? (
-          <Text
-            style={[
-              styles.letter,
-              {
-                fontSize: letterFontSize,
-                color: isHintRevealed ? ww.hintText : ww.successText,
-              },
-            ]}
-          >
-            {letter}
-          </Text>
-        ) : null}
-      </Pressable>
+      />
     );
   };
 
@@ -274,27 +337,27 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     left: 2,
-    minWidth: 14,
-    minHeight: 14,
-    paddingHorizontal: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    minWidth: 18,
+    minHeight: 18,
+    paddingHorizontal: 3,
+    borderRadius: 5,
+    backgroundColor: GRID_CREAM.badgeBg,
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: GRID_CREAM.badgeBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   numberBadgeWide: {
-    minWidth: 22,
-    paddingHorizontal: 3,
+    minWidth: 26,
+    paddingHorizontal: 4,
   },
   numberText: {
-    fontSize: 9,
+    fontSize: 12,
     fontWeight: '800',
-    color: '#064e3b',
+    color: GRID_CREAM.badgeText,
   },
   numberTextCompact: {
-    fontSize: 8,
+    fontSize: 10,
     letterSpacing: -0.2,
   },
 });
