@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Defs, Mask, Rect } from 'react-native-svg';
 import { Info } from 'lucide-react-native';
 
@@ -7,12 +8,29 @@ const STEPS = [
   { key: 'clue', textKey: 'onboarding.step.clue', focus: 'clue', fullWidth: true },
   { key: 'wheel', textKey: 'onboarding.step.wheel', focus: 'wheel', circular: true, circleBoost: 6 },
   { key: 'hint', textKey: 'onboarding.step.hint', focus: 'hint', circular: true, circleBoost: 22 },
-  { key: 'letter', textKey: 'onboarding.step.letter', focus: 'letter', circular: true, circleBoost: 28 },
+  {
+    key: 'letter',
+    textKey: 'onboarding.step.letter',
+    focus: 'letter',
+    circular: true,
+    circleBoost: 28,
+    delayedFinish: true,
+    finishDelayMs: 3000,
+  },
 ];
 
 const PAD = 10;
 const DIM = 'rgba(0, 0, 0, 0.62)';
 const INFO_SIZE = 34;
+const FINISH_CIRCLE = 280;
+
+function getCircleLayout(hole, circleBoost = 0) {
+  if (!hole || hole.width <= 0 || hole.height <= 0) return null;
+  const cx = hole.x + hole.width / 2;
+  const cy = hole.y + hole.height / 2;
+  const r = Math.max(hole.width, hole.height) / 2 + PAD + 6 + circleBoost;
+  return { cx, cy, r, diameter: r * 2, left: cx - r, top: cy - r };
+}
 
 /**
  * Dim everything except a clear hole (full-width band, circle, or rectangle).
@@ -40,9 +58,11 @@ function SpotlightMask({ hole, width: W, height: H, fullWidth, circular, circleB
   }
 
   if (circular) {
-    const cx = hole.x + hole.width / 2;
-    const cy = hole.y + hole.height / 2;
-    const r = Math.max(hole.width, hole.height) / 2 + PAD + 6 + circleBoost;
+    const layout = getCircleLayout(hole, circleBoost);
+    if (!layout) {
+      return <View pointerEvents="none" style={[styles.dimFull, { backgroundColor: DIM }]} />;
+    }
+    const { cx, cy, r } = layout;
     return (
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
         <Svg width={W} height={H} style={StyleSheet.absoluteFill}>
@@ -77,7 +97,6 @@ function SpotlightMask({ hole, width: W, height: H, fullWidth, circular, circleB
   const top = Math.max(0, hole.y - PAD);
   const right = Math.min(W, hole.x + hole.width + PAD);
   const bottom = Math.min(H, hole.y + hole.height + PAD);
-  const holeW = Math.max(0, right - left);
   const holeH = Math.max(0, bottom - top);
 
   return (
@@ -158,18 +177,66 @@ export default function OnboardingOverlay({
 }) {
   const { width: windowW, height: windowH } = useWindowDimensions();
   const [overlaySize, setOverlaySize] = useState({ width: windowW, height: windowH });
+  const finishOpacity = useRef(new Animated.Value(0)).current;
+  const finishScale = useRef(new Animated.Value(0.72)).current;
 
   const safeStep = Math.max(0, Math.min(step, STEPS.length - 1));
   const current = STEPS[safeStep];
   const isLast = safeStep >= STEPS.length - 1;
-  const hole = focusRects?.[current.focus] || null;
+  const isLetterStep = current.key === 'letter';
+  const [showLetterFinish, setShowLetterFinish] = useState(false);
+
+  useEffect(() => {
+    if (!isLetterStep) {
+      setShowLetterFinish(false);
+      return undefined;
+    }
+    setShowLetterFinish(false);
+    const delayMs = current.finishDelayMs || 3000;
+    const timer = setTimeout(() => setShowLetterFinish(true), delayMs);
+    return () => clearTimeout(timer);
+  }, [isLetterStep, step, current.finishDelayMs]);
+
+  useEffect(() => {
+    if (!showLetterFinish) {
+      finishOpacity.setValue(0);
+      finishScale.setValue(0.72);
+      return;
+    }
+    Animated.parallel([
+      Animated.timing(finishOpacity, {
+        toValue: 1,
+        duration: 280,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(finishScale, {
+        toValue: 1,
+        friction: 6,
+        tension: 90,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [showLetterFinish, finishOpacity, finishScale]);
+
+  const showLetterSpotlight = isLetterStep && !showLetterFinish;
+  const showCenteredFinish = isLetterStep && showLetterFinish;
+  const hole = showCenteredFinish ? null : focusRects?.[current.focus] || null;
+  const circleLayout = useMemo(
+    () => (current.circular && hole ? getCircleLayout(hole, current.circleBoost || 0) : null),
+    [current.circular, current.circleBoost, hole]
+  );
+
+  const finishTitle = useMemo(() => {
+    const raw = t(current.textKey);
+    const firstLine = String(raw).split('\n')[0]?.trim();
+    return firstLine || raw;
+  }, [current.textKey, t]);
 
   const infoPos = useMemo(() => {
-    if (!hole) return null;
-    if (current.circular) {
-      const cx = hole.x + hole.width / 2;
-      const cy = hole.y + hole.height / 2;
-      const r = Math.max(hole.width, hole.height) / 2 + PAD + 6 + (current.circleBoost || 0);
+    if (showCenteredFinish || !hole) return null;
+    if (current.circular && circleLayout) {
+      const { cx, cy, r } = circleLayout;
       return {
         left: Math.max(8, cx - r),
         top: Math.max(4, cy - r - INFO_SIZE / 2),
@@ -185,14 +252,17 @@ export default function OnboardingOverlay({
       left: Math.max(8, hole.x - PAD),
       top: Math.max(4, hole.y - PAD - INFO_SIZE / 2),
     };
-  }, [hole, current.circular, current.fullWidth, current.circleBoost]);
+  }, [hole, current.circular, current.fullWidth, circleLayout, showCenteredFinish]);
 
   const tooltipStyle = useMemo(() => {
+    if (showLetterSpotlight || showCenteredFinish) return null;
     if (current.focus === 'clue') {
-      return { bottom: 132 + bottomInset };
+      const bottom = hole
+        ? Math.max(120 + bottomInset, (overlaySize.height || windowH) - hole.y + 28)
+        : 200 + bottomInset;
+      return { bottom };
     }
     if (current.focus === 'hint') {
-      // Step 3: keep tip above the hint spotlight.
       const bottom = hole
         ? Math.max(168 + bottomInset, (overlaySize.height || windowH) - hole.y + 72)
         : 180 + bottomInset;
@@ -202,22 +272,11 @@ export default function OnboardingOverlay({
         paddingLeft: 20,
       };
     }
-    if (current.focus === 'letter') {
-      // Sit fully below the L circle so the tip never covers the spotlight.
-      if (hole) {
-        const r =
-          Math.max(hole.width, hole.height) / 2 + PAD + 6 + (current.circleBoost || 0);
-        const circleBottom = hole.y + hole.height / 2 + r;
-        return { top: circleBottom + 18 };
-      }
-      return { top: '62%' };
-    }
-    // Wheel (step 2): sit clearly above the circular spotlight + info icon.
     const bottom = hole
       ? Math.max(160 + bottomInset, (overlaySize.height || windowH) - hole.y + 88)
       : 200 + bottomInset;
     return { bottom };
-  }, [current.focus, current.circleBoost, hole, bottomInset, windowH, overlaySize.height]);
+  }, [current.focus, showCenteredFinish, showLetterSpotlight, hole, bottomInset, windowH, overlaySize.height]);
 
   return (
     <View
@@ -230,41 +289,64 @@ export default function OnboardingOverlay({
         if (width > 0 && height > 0) setOverlaySize({ width, height });
       }}
     >
-      <SpotlightMask
-        hole={hole}
-        width={overlaySize.width || windowW}
-        height={overlaySize.height || windowH}
-        fullWidth={Boolean(current.fullWidth)}
-        circular={Boolean(current.circular)}
-        circleBoost={current.circleBoost || 0}
-        maskId={`onboardingHole-${current.key}`}
-      />
+      {!showCenteredFinish ? (
+        <SpotlightMask
+          hole={hole}
+          width={overlaySize.width || windowW}
+          height={overlaySize.height || windowH}
+          fullWidth={Boolean(current.fullWidth)}
+          circular={Boolean(current.circular)}
+          circleBoost={current.circleBoost || 0}
+          maskId={`onboardingHole-${current.key}`}
+        />
+      ) : null}
 
-      {infoPos ? <FlickerInfoIcon left={infoPos.left} top={infoPos.top} /> : null}
+      {showCenteredFinish ? (
+        <>
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: finishOpacity }]}>
+            <LinearGradient
+              colors={['rgba(2, 18, 28, 0.78)', 'rgba(6, 40, 48, 0.9)', 'rgba(2, 12, 20, 0.95)']}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.finishScreenWrap,
+              { opacity: finishOpacity, transform: [{ scale: finishScale }] },
+            ]}
+          >
+            <View style={styles.finishCircle}>
+              <Text style={styles.finishCircleTitle}>{finishTitle}</Text>
+              <Pressable
+                style={styles.finishCircleBtn}
+                onPress={onNext}
+                accessibilityRole="button"
+                accessibilityLabel={t('onboarding.finish')}
+              >
+                <Text style={styles.finishCircleBtnText}>{t('onboarding.finish')}</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </>
+      ) : null}
 
-      <Pressable
-        style={[styles.skipBtn, { top: Math.max(topInset, 12) + 6 }]}
-        onPress={onSkip}
-        accessibilityRole="button"
-        accessibilityLabel={t('onboarding.skip')}
-      >
-        <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
-      </Pressable>
+      {!showCenteredFinish && infoPos ? (
+        <FlickerInfoIcon left={infoPos.left} top={infoPos.top} />
+      ) : null}
 
-      <View pointerEvents="box-none" style={[styles.tooltipWrap, tooltipStyle]}>
-        {current.key === 'letter' ? (
-          <View style={styles.finishWrap}>
-            <Text style={styles.finishTitle}>{t('onboarding.step.letter')}</Text>
-            <Pressable
-              style={styles.finishCircle}
-              onPress={onNext}
-              accessibilityRole="button"
-              accessibilityLabel={t('onboarding.finish')}
-            >
-              <Text style={styles.finishCircleText}>{t('onboarding.finish')}</Text>
-            </Pressable>
-          </View>
-        ) : (
+      {!showCenteredFinish ? (
+        <Pressable
+          style={[styles.skipBtn, { top: Math.max(topInset, 12) + 6 }]}
+          onPress={onSkip}
+          accessibilityRole="button"
+          accessibilityLabel={t('onboarding.skip')}
+        >
+          <Text style={styles.skipText}>{t('onboarding.skip')}</Text>
+        </Pressable>
+      ) : null}
+
+      {tooltipStyle ? (
+        <View pointerEvents="box-none" style={[styles.tooltipWrap, tooltipStyle]}>
           <View style={styles.tooltip}>
             <Text style={styles.stepLabel}>
               {t('onboarding.stepLabel', { n: safeStep + 1 })}
@@ -281,8 +363,8 @@ export default function OnboardingOverlay({
               </Text>
             </Pressable>
           </View>
-        )}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -329,6 +411,58 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  finishScreenWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    zIndex: 5,
+  },
+  finishCircle: {
+    width: FINISH_CIRCLE,
+    height: FINISH_CIRCLE,
+    borderRadius: FINISH_CIRCLE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    backgroundColor: 'rgba(15, 118, 110, 0.42)',
+    borderWidth: 3,
+    borderColor: 'rgba(94, 234, 212, 0.85)',
+    shadowColor: '#2dd4bf',
+    shadowOpacity: 0.55,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
+  finishCircleTitle: {
+    color: '#ffffff',
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+    textAlign: 'center',
+    textShadowColor: 'rgba(45, 212, 191, 0.55)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 14,
+  },
+  finishCircleBtn: {
+    marginTop: 18,
+    minWidth: 140,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#14b8a6',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.88)',
+  },
+  finishCircleBtnText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
   tooltipWrap: {
     position: 'absolute',
@@ -389,41 +523,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '800',
-  },
-  finishWrap: {
-    alignItems: 'center',
-    paddingHorizontal: 12,
-  },
-  finishTitle: {
-    color: '#f8fafc',
-    fontSize: 26,
-    fontWeight: '900',
-    lineHeight: 34,
-    textAlign: 'center',
-    marginBottom: 22,
-    textShadowColor: 'rgba(0, 0, 0, 0.45)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  finishCircle: {
-    width: 156,
-    height: 156,
-    borderRadius: 78,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#14b8a6',
-    borderWidth: 4,
-    borderColor: 'rgba(255, 255, 255, 0.88)',
-    shadowColor: '#2dd4bf',
-    shadowOpacity: 0.55,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
-  },
-  finishCircleText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: 0.3,
   },
 });
