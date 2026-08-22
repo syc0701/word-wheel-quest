@@ -1,0 +1,8 @@
+What's new in this update:
+
+- Targets Android 16 (API 36) for Google Play compliance
+- Interactive tutorial, cream puzzle grid, and refreshed scene backgrounds
+- Music on/off on the Play screen
+- More reliable startup on newer devices
+
+Thanks for playing!

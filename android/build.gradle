@@ -15,7 +15,12 @@ buildscript {
 }
 
 // Expose to subprojects (Expo modules read rootProject.ext.kotlinVersion / kspVersion).
+// Force API 36 before expo-root-project applies — RN catalog defaults to 35, and Play
+// rejects updates that do not target Android 16 (API 36)+.
 ext {
+  compileSdkVersion = Integer.parseInt(findProperty('android.compileSdkVersion') ?: '36')
+  targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '36')
+  minSdkVersion = Integer.parseInt(findProperty('android.minSdkVersion') ?: '24')
   kotlinVersion = findProperty('android.kotlinVersion') ?: '2.3.0'
   kspVersion = findProperty('android.kspVersion') ?: '2.3.0'
 }
