@@ -1,11 +1,11 @@
 /**
- * Google Play Integrity — request a device token and verify with puzzle-be.
+ * Play Integrity (Android) — request a device token and verify with puzzle-be.
  * POST /home/android/security/verify-integrity
  *
  * @see Puzzle-iOS/puzzle-be/docs/android-play-integrity.md
  */
 import { Platform } from 'react-native';
-import { PLAY_STORE } from '../constants/store';
+import { PLAY_STORE } from '../constants/store.android';
 import { apiPost } from './http';
 
 const VERIFY_PATH = '/home/android/security/verify-integrity';

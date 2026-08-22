@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— ou —',
   'signIn.required.title': 'Connexion requise',
   'signIn.required.body':
-    'Connectez-vous avec Google pour synchroniser cet achat avec votre compte.',
+    'Connectez-vous pour synchroniser cet achat avec votre compte.',
 
   // shop
   'shop.title': 'Boutique',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': '{name} acheté avec succès.',
   'shop.alert.signInRequired.title': 'Connexion requise',
   'shop.alert.signInRequired.body':
-    'Achat enregistré. Connectez-vous avec Google pour le synchroniser avec votre compte.',
-  'shop.alert.signInRequired.action': 'Se connecter avec Google',
+    'Achat enregistré. Connectez-vous pour le synchroniser avec votre compte.',
+  'shop.alert.signInRequired.action': 'Se connecter',
   'shop.alert.purchaseFailed.title': 'Achat échoué',
   'shop.alert.purchaseFailed.body': 'Une erreur s’est produite.',
   'shop.alert.restored.title': 'Restauré',
   'shop.alert.restored.body': 'Vos achats ont été restaurés.',
   'shop.alert.restoreFailed.title': 'Restauration échouée',
   'shop.alert.restoreFailed.body': 'Impossible de restaurer les achats.',
-  'shop.offeringHint': 'Offre `{id}` · Prix de l’Google Play.',
+  'shop.offeringHint': 'Offre `{id}` · Prix App Store.',
   'shop.restore': 'Restaurer les achats',
+  'shop.restore.subtitleIos': 'Déjà acheté avec cet identifiant Apple ? Restaurez ici.',
+  'shop.restore.subtitleAndroid': 'Déjà acheté ? Restaurez ici.',
 
   // webview
   'webview.titleFallback': 'Page',

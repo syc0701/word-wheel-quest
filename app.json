@@ -16,14 +16,18 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.puzint.wordwheel.app",
-      "buildNumber": "2",
+      "buildNumber": "17",
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       },
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "appleTeamId": "54J44H4BZ7"
     },
     "androidStatusBar": {
-      "barStyle": "light-content"
+      "barStyle": "light-content",
+      "backgroundColor": "#0A2A4A"
     },
     "android": {
       "package": "com.puzint.wordwheel.app",

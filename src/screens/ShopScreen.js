@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { ShoppingBag } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
@@ -175,7 +175,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           productId,
           transactionId,
           rawPayload: {
-            platform: 'google',
+            platform: Platform.OS === 'ios' ? 'apple' : 'google',
             storeProductId: productId,
             packageKey: meta.packageId,
           },

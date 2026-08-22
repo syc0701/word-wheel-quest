@@ -14,6 +14,7 @@ import {
   GOOGLE_NATIVE_EXCHANGE_URL,
   GOOGLE_WEB_CLIENT_ID,
 } from '../constants/cognito';
+import { APP_STORE } from '../constants/store';
 import { getAuthTokenClaims, signInWithToken, clearStoredAuthToken } from '../lib/auth';
 import { t } from '../lib/i18n';
 import { ensureUserAfterSignup } from '../lib/userApi';
@@ -235,13 +236,28 @@ export async function signInWithApple() {
     throw new Error(t('auth.apple.noIdentityToken'));
   }
 
+  const exchangeBody = {
+    appleIdentityToken,
+    iosJwtAudience: APPLE_NATIVE_JWT_AUDIENCE,
+    bundleId: APP_STORE.bundleId,
+  };
+  if (credential.authorizationCode) {
+    exchangeBody.authorizationCode = credential.authorizationCode;
+  }
+  if (credential.user) {
+    exchangeBody.appleUser = credential.user;
+  }
+  if (credential.fullName) {
+    exchangeBody.fullName = credential.fullName;
+  }
+  if (credential.email) {
+    exchangeBody.email = credential.email;
+  }
+
   const response = await fetch(APPLE_NATIVE_EXCHANGE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({
-      appleIdentityToken,
-      iosJwtAudience: APPLE_NATIVE_JWT_AUDIENCE,
-    }),
+    body: JSON.stringify(exchangeBody),
   });
 
   const text = await response.text();
@@ -322,11 +338,13 @@ export async function signInWithGoogle() {
 
 export async function signOutAll() {
   await clearStoredAuthToken();
-  try {
-    const { clearPlayIntegrityCache } = require('../lib/playIntegrity');
-    clearPlayIntegrityCache();
-  } catch {
-    /* ignore */
+  if (Platform.OS === 'android') {
+    try {
+      const { clearPlayIntegrityCache } = require('../lib/playIntegrity');
+      clearPlayIntegrityCache();
+    } catch {
+      /* ignore */
+    }
   }
   try {
     configureGoogleSignIn();

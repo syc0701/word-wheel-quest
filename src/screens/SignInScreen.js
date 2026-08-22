@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Eye, EyeOff, Settings } from 'lucide-react-native';
 import { APP_URLS } from '../constants/store';
 import { SCREENS } from '../constants/theme';
@@ -142,6 +143,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   };
 
   const handleAppleSignIn = async () => {
+    if (locked) return;
     setError('');
     setAppleBusy(true);
     try {
@@ -220,17 +222,20 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           {Platform.OS === 'ios' ? (
-            <Pressable
-              style={[styles.appleBtn, locked && styles.btnDisabled]}
-              onPress={handleAppleSignIn}
-              disabled={locked}
-            >
+            <View style={styles.appleBtnWrap}>
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={12}
+                style={styles.appleAuthBtn}
+                onPress={handleAppleSignIn}
+              />
               {appleBusy ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.appleBtnText}>{t('signIn.button.apple')}</Text>
-              )}
-            </Pressable>
+                <View style={styles.appleBusyOverlay} pointerEvents="none">
+                  <ActivityIndicator color="#fff" />
+                </View>
+              ) : null}
+            </View>
           ) : (
             <Pressable
               style={[styles.googleBtn, locked && styles.btnDisabled]}
@@ -400,6 +405,22 @@ function createStyles(colors, insets) {
       color: '#1f1f1f',
       fontSize: 16,
       fontWeight: '700',
+    },
+    appleAuthBtn: {
+      width: '100%',
+      height: 48,
+    },
+    appleBtnWrap: {
+      position: 'relative',
+      width: '100%',
+      minHeight: 48,
+    },
+    appleBusyOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.35)',
+      borderRadius: 12,
     },
     appleBtn: {
       backgroundColor: '#000000',

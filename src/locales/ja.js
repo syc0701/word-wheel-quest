@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— または —',
   'signIn.required.title': 'サインインが必要です',
   'signIn.required.body':
-    'この購入をアカウントに同期するには、Googleでサインインしてください。',
+    'サインインして、この購入をアカウントに同期してください。',
 
   // shop
   'shop.title': 'ショップ',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': '{name}の購入が完了しました。',
   'shop.alert.signInRequired.title': 'サインインが必要です',
   'shop.alert.signInRequired.body':
-    '購入を記録しました。アカウントに同期するにはGoogleでサインインしてください。',
-  'shop.alert.signInRequired.action': 'Googleでサインイン',
+    '購入を記録しました。サインインしてアカウントに同期してください。',
+  'shop.alert.signInRequired.action': 'サインイン',
   'shop.alert.purchaseFailed.title': '購入に失敗しました',
   'shop.alert.purchaseFailed.body': '問題が発生しました。',
   'shop.alert.restored.title': '復元しました',
   'shop.alert.restored.body': '購入内容を復元しました。',
   'shop.alert.restoreFailed.title': '復元に失敗しました',
   'shop.alert.restoreFailed.body': '購入内容を復元できませんでした。',
-  'shop.offeringHint': 'オファリング `{id}` · 価格はGoogle Playより。',
+  'shop.offeringHint': 'オファリング `{id}` · App Storeの価格。',
   'shop.restore': '購入を復元',
+  'shop.restore.subtitleIos': 'このApple IDで購入済みですか？ここで復元。',
+  'shop.restore.subtitleAndroid': '購入済みですか？ここで復元。',
 
   // webview
   'webview.titleFallback': 'ページ',

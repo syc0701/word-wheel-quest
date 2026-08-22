@@ -1,6 +1,6 @@
+import { Platform } from 'react-native';
 import { APP_STORE } from '../constants/store';
 import { apiGet, apiPost } from './http';
-import { ensurePlayIntegrityPassed } from './playIntegrity';
 
 function readBalance(payload) {
   const n = Number(payload?.creditBalance);
@@ -8,11 +8,13 @@ function readBalance(payload) {
 }
 
 async function requirePlayIntegrity(actionLabel) {
+  if (Platform.OS !== 'android') return;
+  const { ensurePlayIntegrityPassed } = require('./playIntegrity');
   const gate = await ensurePlayIntegrityPassed();
   if (gate.ok) return;
   const detail = gate.reason ? ` (${gate.reason})` : '';
   throw new Error(
-    `Device integrity check failed for ${actionLabel}${detail}. Try again from an official Play Store install.`
+    `Device integrity check failed for ${actionLabel}${detail}. Try again from an official store install.`
   );
 }
 
@@ -40,8 +42,8 @@ const CreditApi = {
       productId,
       transactionId,
       rawPayload: {
+        platform: Platform.OS === 'ios' ? 'apple' : 'google',
         ...rawPayload,
-        platform: 'google',
       },
     });
     if (data?.code === 'FAILURE') {

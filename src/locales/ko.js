@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— 또는 —',
   'signIn.required.title': '로그인이 필요합니다',
   'signIn.required.body':
-    '이 구매를 계정에 동기화하려면 Google로 로그인하세요.',
+    '로그인하여 이 구매를 계정에 동기화하세요.',
 
   // shop
   'shop.title': '상점',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': '{name} 구매가 완료되었습니다.',
   'shop.alert.signInRequired.title': '로그인이 필요합니다',
   'shop.alert.signInRequired.body':
-    '구매가 기록되었습니다. 계정에 동기화하려면 Google로 로그인하세요.',
-  'shop.alert.signInRequired.action': 'Google로 로그인',
+    '구매가 기록되었습니다. 로그인하여 계정에 동기화하세요.',
+  'shop.alert.signInRequired.action': '로그인',
   'shop.alert.purchaseFailed.title': '구매 실패',
   'shop.alert.purchaseFailed.body': '문제가 발생했습니다.',
   'shop.alert.restored.title': '복원됨',
   'shop.alert.restored.body': '구매 내역이 복원되었습니다.',
   'shop.alert.restoreFailed.title': '복원 실패',
   'shop.alert.restoreFailed.body': '구매를 복원할 수 없습니다.',
-  'shop.offeringHint': '오퍼링 `{id}` · 가격은 Google Play 기준.',
+  'shop.offeringHint': '오퍼링 `{id}` · App Store 가격.',
   'shop.restore': '구매 복원',
+  'shop.restore.subtitleIos': '이 Apple ID로 구매하셨나요? 여기서 복원하세요.',
+  'shop.restore.subtitleAndroid': '이미 구매하셨나요? 여기서 복원하세요.',
 
   // webview
   'webview.titleFallback': '페이지',

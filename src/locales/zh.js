@@ -157,7 +157,7 @@ export default {
   'signIn.button.google': '使用 Google 登录',
   'signIn.divider': '— 或 —',
   'signIn.required.title': '需要登录',
-  'signIn.required.body': '请使用 Google 登录，以便将此次购买同步到你的账户。',
+  'signIn.required.body': '请登录以将此次购买同步到你的账户。',
 
   // shop
   'shop.title': '商店',
@@ -170,16 +170,18 @@ export default {
   'shop.alert.success.body': '{name} 购买成功。',
   'shop.alert.signInRequired.title': '需要登录',
   'shop.alert.signInRequired.body':
-    '购买已记录。请使用 Google 登录以同步到你的账户。',
-  'shop.alert.signInRequired.action': '使用 Google 登录',
+    '购买已记录。请登录以同步到你的账户。',
+  'shop.alert.signInRequired.action': '登录',
   'shop.alert.purchaseFailed.title': '购买失败',
   'shop.alert.purchaseFailed.body': '出了点问题。',
   'shop.alert.restored.title': '已恢复',
   'shop.alert.restored.body': '你的购买已恢复。',
   'shop.alert.restoreFailed.title': '恢复失败',
   'shop.alert.restoreFailed.body': '无法恢复购买。',
-  'shop.offeringHint': '商品 `{id}` · 价格来自 Google Play。',
+  'shop.offeringHint': '商品 `{id}` · App Store 价格。',
   'shop.restore': '恢复购买',
+  'shop.restore.subtitleIos': '已在此 Apple ID 上购买？在此恢复。',
+  'shop.restore.subtitleAndroid': '已购买？在此恢复。',
 
   // webview
   'webview.titleFallback': '页面',

@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— أو —',
   'signIn.required.title': 'تسجيل الدخول مطلوب',
   'signIn.required.body':
-    'سجّل الدخول عبر Google لمزامنة هذا الشراء مع حسابك.',
+    'سجّل الدخول لمزامنة هذا الشراء مع حسابك.',
 
   // shop
   'shop.title': 'المتجر',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': 'تم شراء {name} بنجاح.',
   'shop.alert.signInRequired.title': 'تسجيل الدخول مطلوب',
   'shop.alert.signInRequired.body':
-    'تم تسجيل الشراء. سجّل الدخول عبر Google لمزامنته مع حسابك.',
-  'shop.alert.signInRequired.action': 'تسجيل الدخول عبر Google',
+    'تم تسجيل الشراء. سجّل الدخول لمزامنته مع حسابك.',
+  'shop.alert.signInRequired.action': 'تسجيل الدخول',
   'shop.alert.purchaseFailed.title': 'فشل الشراء',
   'shop.alert.purchaseFailed.body': 'حدث خطأ ما.',
   'shop.alert.restored.title': 'تمت الاستعادة',
   'shop.alert.restored.body': 'تمت استعادة مشترياتك.',
   'shop.alert.restoreFailed.title': 'فشلت الاستعادة',
   'shop.alert.restoreFailed.body': 'تعذّر استعادة المشتريات.',
-  'shop.offeringHint': 'العرض `{id}` · الأسعار من Google Play.',
+  'shop.offeringHint': 'العرض `{id}` · أسعار App Store.',
   'shop.restore': 'استعادة المشتريات',
+  'shop.restore.subtitleIos': 'اشتريت مسبقًا بهذا Apple ID؟ استعد هنا.',
+  'shop.restore.subtitleAndroid': 'اشتريت مسبقًا؟ استعد هنا.',
 
   // webview
   'webview.titleFallback': 'صفحة',

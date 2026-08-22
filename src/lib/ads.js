@@ -1,12 +1,16 @@
 import mobileAds from 'react-native-google-mobile-ads';
+import { isAdsEnabled } from '../constants/ads';
 
 let initPromise = null;
 
 /**
- * Initialize the Google Mobile Ads SDK once at launch.
+ * Initialize the Google Mobile Ads SDK once at launch (Android only for now).
  * Safe to call multiple times; subsequent calls reuse the same promise.
  */
 export function initializeMobileAds() {
+  if (!isAdsEnabled()) {
+    return Promise.resolve(null);
+  }
   if (initPromise) return initPromise;
   initPromise = mobileAds()
     .setRequestConfiguration({

@@ -217,7 +217,7 @@ export default {
   'signIn.button.email': 'Sign in',
   'signIn.button.google': 'Sign in with Google',
   'signIn.button.apple': 'Sign in with Apple',
-  'signIn.apple.hint': 'Sign in with Apple is available on iPhone.',
+  'signIn.apple.hint': 'Sign in with Apple is available on iPhone and iPad.',
   'signIn.divider': '— or —',
   'signIn.required.title': 'Sign in required',
   'signIn.required.body':
@@ -238,10 +238,9 @@ export default {
   'shop.pack.coinsLarge.name': '1,000 Coins',
   'shop.pack.coinsLarge.description': 'Adds 1,000 coins to player balance',
   'shop.alert.unavailable.title': 'Shop unavailable',
-  'shop.alert.unavailable.body':
-    'In-app purchases are not set up yet. Add your RevenueCat Android API key to enable the shop.',
+  'shop.alert.unavailable.body': 'Could not load products. Try again in a moment.',
   'shop.alert.deviceUnavailable.body':
-    'In-app purchases are not available on this device. Sign in to the Play Store and try again.',
+    'In-app purchases are not available on this device right now.',
   'shop.alert.productUnavailable.title': 'Unavailable',
   'shop.alert.productUnavailable.body':
     'This product is not loaded yet. Try again in a moment.',
@@ -249,17 +248,18 @@ export default {
   'shop.alert.success.body': '{name} purchased successfully.',
   'shop.alert.signInRequired.title': 'Sign in required',
   'shop.alert.signInRequired.body':
-    'Purchase recorded. Sign in with Google to sync it to your account.',
-  'shop.alert.signInRequired.action': 'Sign in with Google',
+    'Purchase recorded. Sign in to sync it to your account.',
+  'shop.alert.signInRequired.action': 'Sign in',
   'shop.alert.purchaseFailed.title': 'Purchase failed',
   'shop.alert.purchaseFailed.body': 'Something went wrong.',
   'shop.alert.restored.title': 'Restored',
   'shop.alert.restored.body': 'Your purchases have been restored.',
   'shop.alert.restoreFailed.title': 'Restore failed',
   'shop.alert.restoreFailed.body': 'Could not restore purchases.',
-  'shop.offeringHint': 'Offering `{id}` · Prices from Google Play.',
+  'shop.offeringHint': 'Offering `{id}` · App Store prices.',
   'shop.restore': 'Restore purchases',
-  'shop.restore.subtitle': 'Already bought on this Google Play account? Restore here.',
+  'shop.restore.subtitleIos': 'Already bought on this Apple ID? Restore here.',
+  'shop.restore.subtitleAndroid': 'Already purchased? Restore here.',
 
   // webview
   'webview.titleFallback': 'Page',
@@ -393,7 +393,7 @@ export default {
   'auth.google.developerError':
     'Google Sign-In is not set up for this Android build. Add the app SHA-1 to the Google Cloud Android OAuth client.',
   'auth.google.stateMismatch': 'Google sign-in could not be verified. Try again.',
-  'auth.apple.iosOnly': 'Sign in with Apple is available on iPhone only.',
+  'auth.apple.iosOnly': 'Sign in with Apple is available on iOS devices.',
   'auth.apple.unavailable': 'Sign in with Apple is not available on this device.',
   'auth.apple.noIdentityToken': 'Sign in with Apple did not return an identity token.',
   'auth.apple.exchangeFailed': 'Apple sign-in exchange failed.',

@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_STORE } from '../constants/store';
 import CreditApi from './creditApi';
@@ -32,7 +33,7 @@ export async function clearPendingIap() {
   }
 }
 
-/** After sign-in, attach a guest Play purchase to the account. */
+/** After sign-in, attach a guest purchase to the account. */
 export async function verifyPendingIapIfNeeded() {
   const pending = await loadPendingIap();
   if (!pending?.productId) return { synced: false };
@@ -42,7 +43,7 @@ export async function verifyPendingIapIfNeeded() {
       productId: pending.productId,
       transactionId: pending.transactionId,
       rawPayload: {
-        platform: 'google',
+        platform: Platform.OS === 'ios' ? 'apple' : 'google',
         storeProductId: pending.productId,
         packageKey: pending.packageKey,
       },

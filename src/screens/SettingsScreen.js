@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
@@ -339,7 +339,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           <MenuRow
             icon={RotateCcw}
             label={t('shop.restore')}
-            subtitle={t('shop.restore.subtitle')}
+            subtitle={t(Platform.OS === 'ios' ? 'shop.restore.subtitleIos' : 'shop.restore.subtitleAndroid')}
             onPress={handleRestorePurchases}
             colors={colors}
             embedded

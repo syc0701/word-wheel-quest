@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getBannerAdUnitId } from '../constants/ads';
+import { getBannerAdUnitId, isAdsEnabled } from '../constants/ads';
 import { useAppearance } from '../context/AppearanceContext';
 import { initializeMobileAds } from '../lib/ads';
 
@@ -20,13 +20,15 @@ export default function AdBanner({ style }) {
   const { colors, isDark, isRandomScene } = useAppearance();
   const [ready, setReady] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const unitId = getBannerAdUnitId();
+  const adsEnabled = isAdsEnabled();
+  const unitId = adsEnabled ? getBannerAdUnitId() : null;
   const adWidth = Math.max(
     1,
     Math.floor(windowWidth - SIDE_INSET * 2 - FRAME_BORDER * 2)
   );
 
   useEffect(() => {
+    if (!adsEnabled) return undefined;
     let cancelled = false;
     initializeMobileAds().then(() => {
       if (!cancelled) setReady(true);
@@ -34,9 +36,9 @@ export default function AdBanner({ style }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [adsEnabled]);
 
-  if (!ready || !unitId) return null;
+  if (!adsEnabled || !ready || !unitId) return null;
 
   const borderColor = isRandomScene
     ? 'rgba(255,255,255,0.55)'

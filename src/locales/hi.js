@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— या —',
   'signIn.required.title': 'साइन इन आवश्यक है',
   'signIn.required.body':
-    'इस खरीदारी को अपने खाते से सिंक करने के लिए Google से साइन इन करें।',
+    'इस खरीदारी को अपने खाते से सिंक करने के लिए साइन इन करें।',
 
   // shop
   'shop.title': 'दुकान',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': '{name} सफलतापूर्वक खरीदा गया।',
   'shop.alert.signInRequired.title': 'साइन इन आवश्यक है',
   'shop.alert.signInRequired.body':
-    'खरीदारी रिकॉर्ड हो गई। अपने खाते से सिंक करने के लिए Google से साइन इन करें।',
-  'shop.alert.signInRequired.action': 'Google से साइन इन करें',
+    'खरीदारी रिकॉर्ड हो गई। अपने खाते से सिंक करने के लिए साइन इन करें।',
+  'shop.alert.signInRequired.action': 'साइन इन',
   'shop.alert.purchaseFailed.title': 'खरीदारी विफल',
   'shop.alert.purchaseFailed.body': 'कुछ गलत हो गया।',
   'shop.alert.restored.title': 'पुनर्स्थापित',
   'shop.alert.restored.body': 'आपकी खरीदारियाँ पुनर्स्थापित हो गईं।',
   'shop.alert.restoreFailed.title': 'पुनर्स्थापना विफल',
   'shop.alert.restoreFailed.body': 'खरीदारियाँ पुनर्स्थापित नहीं हो सकीं।',
-  'shop.offeringHint': 'ऑफ़र `{id}` · कीमतें Google Play से।',
+  'shop.offeringHint': 'ऑफ़र `{id}` · App Store कीमतें।',
   'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
+  'shop.restore.subtitleIos': 'इस Apple ID पर पहले खरीदा? यहाँ पुनर्स्थापित करें।',
+  'shop.restore.subtitleAndroid': 'पहले खरीदा? यहाँ पुनर्स्थापित करें।',
 
   // webview
   'webview.titleFallback': 'पेज',

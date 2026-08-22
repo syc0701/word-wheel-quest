@@ -161,6 +161,21 @@ After build shows **Ready to Submit** (~10–30 min):
 4. **Privacy Policy URL**: https://www.puzzleinteract.com/legal/word_wheel_quest#privacy
 5. **Add for Review**
 
+## App Review (demo account)
+
+Apple requires credentials to test sign-in and full app access (**Guideline 2.1(a)**). A demo video is **not** sufficient.
+
+1. In **App Store Connect** → your app → **App Review Information**
+2. Enable **Sign-in required**
+3. Add a **demo email + password** (Cognito account with normal player progress — not an admin-only account)
+4. In **Notes**, briefly explain:
+   - Email/password sign-in on the Sign In screen
+   - **Sign in with Apple** on iPhone/iPad (Settings → Sign in, or after a guest shop purchase)
+   - Shop is under Settings → Restore purchases / in-app packs
+5. Save before resubmitting
+
+Create the demo user in Cognito (or puzzleinteract.com) if you do not have one yet. Test on a **release** build on iPad before upload.
+
 ## Re-upload (new binary)
 
 Bump in `app.json` → `ios.buildNumber` (2, 3, …), then:

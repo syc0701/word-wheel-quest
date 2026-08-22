@@ -3,11 +3,7 @@ import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { REVENUECAT_API_KEY, REVENUECAT_OFFERING } from '../constants/store';
 
 let configured = false;
-/**
- * Emulators and devices without Play billing reject every store call. Latch it
- * so we stop retrying, and so the Shop can present its unavailable state
- * instead of spinning.
- */
+/** Android emulators / devices without Play billing — skip further store calls. */
 let storeUnavailable = false;
 
 const BILLING_UNAVAILABLE_RE =
@@ -29,13 +25,6 @@ function isBillingUnavailable(error) {
   return BILLING_UNAVAILABLE_RE.test(text) || /PurchaseNotAllowed/i.test(text);
 }
 
-/**
- * Purchases.configure() installs a log handler that sends every ERROR to
- * console.error, and a device without Play billing reports one for each call,
- * so LogBox buries the app in dev. Registering first wins: configure() only
- * installs its default when no custom handler exists. A device that simply
- * cannot buy anything is expected, not an error worth reporting.
- */
 function installLogHandler() {
   if (typeof Purchases.setLogHandler !== 'function') return;
   Purchases.setLogHandler((logLevel, message) => {
@@ -55,24 +44,26 @@ export function isPurchasesConfigured() {
 }
 
 export async function configurePurchases() {
-  if (configured || Platform.OS !== 'android') return;
+  if (configured) return;
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
   if (!hasValidApiKey()) {
     if (__DEV__) {
       console.warn(
-        '[Purchases] Set REVENUECAT_API_KEY to your RevenueCat Google Play public SDK key (goog_…).'
+        `[Purchases] Set REVENUECAT_API_KEY to your RevenueCat public SDK key for ${Platform.OS}.`
       );
     }
     return;
   }
 
-  installLogHandler();
-  try {
-    await Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
-  } catch {
-    // Log level is a nicety; never block configuration on it.
+  if (Platform.OS === 'android') {
+    installLogHandler();
+    try {
+      await Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.WARN : LOG_LEVEL.ERROR);
+    } catch {
+      /* ignore */
+    }
   }
 
-  // App.js calls this without awaiting, so nothing here may reject.
   try {
     Purchases.configure({ apiKey: REVENUECAT_API_KEY });
     configured = true;
@@ -81,16 +72,15 @@ export async function configurePurchases() {
     return;
   }
 
-  // Probe once so the rest of the app can skip store calls entirely on devices
-  // that cannot purchase (emulators, missing Play Services).
-  try {
-    storeUnavailable = !(await Purchases.canMakePayments());
-  } catch (error) {
-    storeUnavailable = isBillingUnavailable(error);
-  }
-
-  if (__DEV__ && storeUnavailable) {
-    console.log('[Purchases] Store unavailable on this device; IAP disabled.');
+  if (Platform.OS === 'android') {
+    try {
+      storeUnavailable = !(await Purchases.canMakePayments());
+    } catch (error) {
+      storeUnavailable = isBillingUnavailable(error);
+    }
+    if (__DEV__ && storeUnavailable) {
+      console.log('[Purchases] Store unavailable on this device; IAP disabled.');
+    }
   }
 }
 
@@ -100,7 +90,7 @@ export async function getDefaultOffering() {
     const offerings = await Purchases.getOfferings();
     return offerings.all[REVENUECAT_OFFERING.identifier] ?? offerings.current ?? null;
   } catch (error) {
-    if (isBillingUnavailable(error)) {
+    if (Platform.OS === 'android' && isBillingUnavailable(error)) {
       storeUnavailable = true;
       return null;
     }
@@ -118,11 +108,16 @@ function assertStoreReady() {
 }
 
 export async function purchasePackage(rcPackage) {
-  assertStoreReady();
+  if (Platform.OS === 'android') {
+    assertStoreReady();
+  } else if (!isPurchasesConfigured()) {
+    throw new Error('Purchases are not configured yet.');
+  }
+
   try {
     return await Purchases.purchasePackage(rcPackage);
   } catch (error) {
-    if (isBillingUnavailable(error)) {
+    if (Platform.OS === 'android' && isBillingUnavailable(error)) {
       storeUnavailable = true;
       throw new Error('In-app purchases are not available on this device.');
     }
@@ -130,7 +125,7 @@ export async function purchasePackage(rcPackage) {
   }
 }
 
-/** Best-effort purchase / order id for backend IAP verify (Google Play). */
+/** Best-effort purchase id for backend IAP verify. */
 export function readPurchaseTransactionId(purchaseResult) {
   const tx =
     purchaseResult?.transaction?.purchaseToken
@@ -143,6 +138,10 @@ export function readPurchaseTransactionId(purchaseResult) {
 }
 
 export async function restorePurchases() {
-  assertStoreReady();
+  if (Platform.OS === 'android') {
+    assertStoreReady();
+  } else if (!isPurchasesConfigured()) {
+    throw new Error('Purchases are not configured yet.');
+  }
   return Purchases.restorePurchases();
 }

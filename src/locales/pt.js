@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— ou —',
   'signIn.required.title': 'Login obrigatório',
   'signIn.required.body':
-    'Entre com o Google para sincronizar esta compra com sua conta.',
+    'Entre com sua conta para sincronizar esta compra.',
 
   // shop
   'shop.title': 'Loja',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': '{name} comprado com sucesso.',
   'shop.alert.signInRequired.title': 'Login obrigatório',
   'shop.alert.signInRequired.body':
-    'Compra registrada. Entre com o Google para sincronizá-la com sua conta.',
-  'shop.alert.signInRequired.action': 'Entrar com o Google',
+    'Compra registrada. Entre para sincronizá-la com sua conta.',
+  'shop.alert.signInRequired.action': 'Entrar',
   'shop.alert.purchaseFailed.title': 'Compra falhou',
   'shop.alert.purchaseFailed.body': 'Algo deu errado.',
   'shop.alert.restored.title': 'Restaurado',
   'shop.alert.restored.body': 'Suas compras foram restauradas.',
   'shop.alert.restoreFailed.title': 'Restauração falhou',
   'shop.alert.restoreFailed.body': 'Não foi possível restaurar as compras.',
-  'shop.offeringHint': 'Oferta `{id}` · Preços da Google Play.',
+  'shop.offeringHint': 'Oferta `{id}` · Preços da App Store.',
   'shop.restore': 'Restaurar compras',
+  'shop.restore.subtitleIos': 'Já comprou com este Apple ID? Restaure aqui.',
+  'shop.restore.subtitleAndroid': 'Já comprou? Restaure aqui.',
 
   // webview
   'webview.titleFallback': 'Página',

@@ -159,7 +159,7 @@ export default {
   'signIn.divider': '— oder —',
   'signIn.required.title': 'Anmeldung erforderlich',
   'signIn.required.body':
-    'Melde dich mit Google an, um diesen Kauf mit deinem Konto zu synchronisieren.',
+    'Melde dich an, um diesen Kauf mit deinem Konto zu synchronisieren.',
 
   // shop
   'shop.title': 'Shop',
@@ -172,16 +172,18 @@ export default {
   'shop.alert.success.body': '{name} erfolgreich gekauft.',
   'shop.alert.signInRequired.title': 'Anmeldung erforderlich',
   'shop.alert.signInRequired.body':
-    'Kauf gespeichert. Melde dich mit Google an, um ihn mit deinem Konto zu synchronisieren.',
-  'shop.alert.signInRequired.action': 'Mit Google anmelden',
+    'Kauf gespeichert. Melde dich an, um ihn mit deinem Konto zu synchronisieren.',
+  'shop.alert.signInRequired.action': 'Anmelden',
   'shop.alert.purchaseFailed.title': 'Kauf fehlgeschlagen',
   'shop.alert.purchaseFailed.body': 'Etwas ist schiefgelaufen.',
   'shop.alert.restored.title': 'Wiederhergestellt',
   'shop.alert.restored.body': 'Deine Käufe wurden wiederhergestellt.',
   'shop.alert.restoreFailed.title': 'Wiederherstellung fehlgeschlagen',
   'shop.alert.restoreFailed.body': 'Käufe konnten nicht wiederhergestellt werden.',
-  'shop.offeringHint': 'Angebot `{id}` · Preise aus dem Google Play.',
+  'shop.offeringHint': 'Angebot `{id}` · App Store-Preise.',
   'shop.restore': 'Käufe wiederherstellen',
+  'shop.restore.subtitleIos': 'Bereits mit dieser Apple-ID gekauft? Hier wiederherstellen.',
+  'shop.restore.subtitleAndroid': 'Bereits gekauft? Hier wiederherstellen.',
 
   // webview
   'webview.titleFallback': 'Seite',
