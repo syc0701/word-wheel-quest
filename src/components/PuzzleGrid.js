@@ -175,7 +175,16 @@ export default function PuzzleGrid({
     if (!onBoardMetrics || !boardRef.current || cellSize <= 0) return;
     boardRef.current.measureInWindow((x, y, width, height) => {
       if (width > 0 && height > 0) {
-        onBoardMetrics({ x, y, width, height, cellSize, gap: GAP });
+        onBoardMetrics({
+          x,
+          y,
+          width,
+          height,
+          cellSize,
+          gap: GAP,
+          minRow: bounds.minRow,
+          minCol: bounds.minCol,
+        });
       }
     });
   };

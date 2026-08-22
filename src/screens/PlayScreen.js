@@ -754,14 +754,16 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         done();
         return;
       }
-      // Tutorial L in LOG is at row 3, col 2.
+      // Tutorial L in LOG is at row 3, col 2 (grid coords).
       const row = 3;
       const col = 2;
+      const minRow = board.minRow ?? 0;
+      const minCol = board.minCol ?? 0;
       const apply = (bx, by) => {
         overlayNode.measureInWindow((ox, oy) => {
           next.letter = {
-            x: bx - ox + col * (board.cellSize + board.gap),
-            y: by - oy + row * (board.cellSize + board.gap),
+            x: bx - ox + (col - minCol) * (board.cellSize + board.gap),
+            y: by - oy + (row - minRow) * (board.cellSize + board.gap),
             width: board.cellSize,
             height: board.cellSize,
           };
