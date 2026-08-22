@@ -60,33 +60,5 @@ target 'WordWheelQuest' do
         end
       end
     end
-
-    # Prebuilt Hermes has no dSYM; generate one so App Store symbol upload succeeds.
-    require 'xcodeproj'
-    app_project = Xcodeproj::Project.open(File.join(__dir__, 'WordWheelQuest.xcodeproj'))
-    app_target = app_project.targets.find { |t| t.name == 'WordWheelQuest' }
-    if app_target
-      phase_name = 'Generate Hermes dSYM'
-      phase = app_target.shell_script_build_phases.find { |p| p.name == phase_name }
-      phase ||= app_target.new_shell_script_build_phase(phase_name)
-      phase.always_out_of_date = '1'
-      phase.shell_script = <<~'SCRIPT'
-        HERMES_BIN="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework/hermes"
-        if [ ! -f "$HERMES_BIN" ]; then
-          echo "note: hermes binary not found, skipping dSYM"
-          exit 0
-        fi
-        DSYM_OUT="${DWARF_DSYM_FOLDER_PATH}/hermes.framework.dSYM"
-        mkdir -p "${DWARF_DSYM_FOLDER_PATH}"
-        dsymutil "$HERMES_BIN" -o "$DSYM_OUT"
-        echo "Generated Hermes dSYM at $DSYM_OUT"
-      SCRIPT
-      embed = app_target.build_phases.find { |p| p.respond_to?(:name) && p.name == '[CP] Embed Pods Frameworks' }
-      if embed
-        app_target.build_phases.delete(phase)
-        app_target.build_phases.insert(app_target.build_phases.index(embed) + 1, phase)
-      end
-      app_project.save
-    end
   end
 end
