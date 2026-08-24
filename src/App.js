@@ -49,7 +49,8 @@ function AppShell() {
       return;
     }
     if (
-      screen === SCREENS.DAILY
+      screen === SCREENS.HOME
+      || screen === SCREENS.DAILY
       || screen === SCREENS.SETTINGS
       || screen === SCREENS.SHOP
       || screen === SCREENS.SIGN_IN

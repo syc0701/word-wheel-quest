@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
 import PuzzleGrid from '../components/PuzzleGrid';
+import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelApi from '../lib/api';
 import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
+import { FREE_DAILY_PLAYS, STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
   buildCellWordNumbers,
@@ -25,8 +27,16 @@ import {
   montrealYmdFromDate,
 } from '../lib/montrealCalendar';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
+import { isLoggedIn } from '../lib/auth';
+import {
+  canPlayDailyPuzzle,
+  getFreeDailyPlaysRemaining,
+  hasStarterPackAccess,
+  resolveDailyPlayAccess,
+} from '../lib/guestStarterPack';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const EMPTY_SET = new Set();
@@ -42,6 +52,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
+  const wallet = useWordWheelWallet();
 
   const sceneText = useMemo(
     () =>
@@ -71,6 +82,18 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
+  const [freeDailyLeft, setFreeDailyLeft] = useState(FREE_DAILY_PLAYS);
+  const [starterGateVisible, setStarterGateVisible] = useState(false);
+  const [starterGateContext, setStarterGateContext] = useState('daily');
+
+  const refreshDailyAccess = useCallback(async () => {
+    const left = await getFreeDailyPlaysRemaining();
+    setFreeDailyLeft(left);
+  }, []);
+
+  useEffect(() => {
+    refreshDailyAccess();
+  }, [refreshDailyAccess, routeParams.starterUnlockTick]);
 
   const setDate = useCallback(
     (ymd) => {
@@ -138,6 +161,46 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
   const canPlay = Boolean(puzzle?.id) && !loading;
+
+  const handlePlayDaily = useCallback(async () => {
+    if (!canPlay) return;
+    const authed = await isLoggedIn();
+    const hasStarter = await hasStarterPackAccess();
+    const access = await resolveDailyPlayAccess({
+      hasStarter,
+      loggedIn: authed,
+      creditBalance: wallet.creditBalance,
+    });
+    if (access === 'starter') {
+      setStarterGateContext('daily');
+      setStarterGateVisible(true);
+      return;
+    }
+    if (access === 'no_credits') {
+      setStarterGateContext('credits');
+      setStarterGateVisible(true);
+      return;
+    }
+    if (!(await canPlayDailyPuzzle({
+      hasStarter,
+      loggedIn: authed,
+      creditBalance: wallet.creditBalance,
+    }))) {
+      setStarterGateContext('daily');
+      setStarterGateVisible(true);
+      return;
+    }
+    navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate });
+  }, [canPlay, navigate, selectedDate, wallet.creditBalance]);
+
+  const handleStarterGateShop = useCallback(() => {
+    setStarterGateVisible(false);
+    navigate(SCREENS.SHOP, {
+      backScreen: SCREENS.DAILY,
+      packageId: STARTER_PACK_PACKAGE_ID,
+    });
+  }, [navigate]);
+
   const showGrid = Boolean(puzzle?.id) && gridSize > 0 && puzzleCells.size > 0;
 
   return (
@@ -160,7 +223,9 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
         <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>{t('daily.kicker')}</Text>
         <Text style={[styles.title, { color: colors.text }, sceneText]}>{t('daily.title')}</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText]}>
-          {t('daily.subtitle')}
+          {freeDailyLeft > 0
+            ? t('daily.subtitleFreePlays', { left: freeDailyLeft, total: FREE_DAILY_PLAYS })
+            : t('daily.subtitleCredits')}
         </Text>
 
         <View
@@ -203,39 +268,23 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
               <ChevronRight color={colors.text} size={22} />
             </Pressable>
           </View>
-        </View>
 
-        <View
-          style={[
-            styles.card,
-            styles.previewCard,
-            { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-          ]}
-        >
           {loading ? (
-            <ActivityIndicator color={colors.primaryGlow} style={{ marginVertical: 8 }} />
-          ) : puzzle ? (
+            <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
+          ) : puzzle?.id ? (
             <>
               <View style={styles.previewHeader}>
-                {puzzleCompleted ? (
-                  <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
-                    <Text style={[styles.completedChipText, { color: colors.success }]}>
-                      {t('daily.completed')}
+                {difficultyLabel ? (
+                  <View style={[styles.difficultyChip, { backgroundColor: colors.surfaceLight }]}>
+                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
+                      {difficultyLabel}
                     </Text>
                   </View>
                 ) : null}
-                {difficultyLabel ? (
-                  <View
-                    style={[
-                      styles.difficultyChip,
-                      {
-                        backgroundColor: colors.surfaceLight,
-                        borderColor: colors.primary,
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
-                      {difficultyLabel}
+                {puzzleCompleted ? (
+                  <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
+                    <Text style={[styles.completedChipText, { color: colors.primaryGlow }]}>
+                      {t('daily.completed')}
                     </Text>
                   </View>
                 ) : null}
@@ -274,14 +323,19 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             !canPlay && styles.primaryBtnDisabled,
           ]}
           disabled={!canPlay}
-          onPress={() =>
-            navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate })
-          }
+          onPress={handlePlayDaily}
         >
           <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
           <Text style={styles.primaryBtnText}>{puzzleCompleted ? t('daily.replay') : t('common.play')}</Text>
         </Pressable>
       </ScrollView>
+
+      <StarterPackGateModal
+        visible={starterGateVisible}
+        context={starterGateContext}
+        onClose={() => setStarterGateVisible(false)}
+        onShop={handleStarterGateShop}
+      />
     </View>
   );
 }
@@ -370,9 +424,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  previewCard: {
-    minHeight: 96,
-    justifyContent: 'center',
+  loader: {
+    marginVertical: 24,
   },
   previewHeader: {
     flexDirection: 'row',
@@ -380,6 +433,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 8,
+    marginTop: 12,
   },
   puzzleTitle: {
     fontSize: 18,

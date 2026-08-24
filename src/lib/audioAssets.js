@@ -1,8 +1,20 @@
-/** Bundled tracks from assets/audio — main BGM, play BGM, and SFX. */
+/** Bundled Simber Chill Simple Lofi BGM + UI SFX. */
+
+/** Main / menu screens — one picked at random when entering Home BGM. */
+export const HOME_BGM_TRACKS = [
+  require('../assets/audio/lofi/Smb_CSL_Low_Ambient_Syn_Pad_58_Ab.m4a'),
+  require('../assets/audio/lofi/Smb_CSL_Clean_Chill_EPiano_70_Ab.m4a'),
+  require('../assets/audio/lofi/Smb_CSL_Very_Wet_Guitar_56_C.wav'),
+];
+
+/** Puzzle play — one picked at random when entering Play BGM. */
+export const PLAY_BGM_TRACKS = [
+  require('../assets/audio/lofi/Smb_CSL_Relaxing_Piano_Melo_70_Ab.m4a'),
+  require('../assets/audio/lofi/Smb_CSL_High_Sweet_Piano_70_C.m4a'),
+  require('../assets/audio/lofi/Smb_CSL_Sleepy_Melody_Guitar_56_Gm.m4a'),
+];
 
 export const AUDIO = {
-  homeBgm: require('../assets/audio/freesound_community-short-game-music-loop-38898.mp3'),
-  playBgm: require('../assets/audio/xtremefreddy-game-music-loop-6-144641.mp3'),
   click: require('../assets/audio/universfield-ui-button-click-147358.mp3'),
   correct: require('../assets/audio/cartoon-music-game-sfx-correct-game-show-alert-494539.mp3'),
   wrong: require('../assets/audio/freesound_community-wrong-47985.mp3'),
@@ -18,3 +30,15 @@ export const BGM_SCENES = {
   PLAY: 'play',
   NONE: 'none',
 };
+
+export function pickRandomBgmTrack(scene) {
+  const pool =
+    scene === BGM_SCENES.HOME
+      ? HOME_BGM_TRACKS
+      : scene === BGM_SCENES.PLAY
+        ? PLAY_BGM_TRACKS
+        : null;
+  if (!pool?.length) return null;
+  const index = Math.floor(Math.random() * pool.length);
+  return { source: pool[index], id: `${scene}:${index}` };
+}

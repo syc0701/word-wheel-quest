@@ -7,10 +7,12 @@ import {
   LevelScreenPolicy,
   MILESTONE_BONUS_COINS,
 } from '../lib/LevelScreenPolicy';
+import { isPurchasesConfigured } from '../services/purchases';
 import IntermissionCardShell from './intermission/IntermissionCardShell';
 import WordMasterCard from './intermission/WordMasterCard';
 import StreaksSparksCard from './intermission/StreaksSparksCard';
 import BrainPowerCard from './intermission/BrainPowerCard';
+import ShopOfferButton from './intermission/ShopOfferButton';
 import { INTERMISSION } from './intermission/intermissionTheme';
 
 
@@ -41,17 +43,22 @@ export default function WordWheelCompleteDialog({
   visible,
   onClose,
   onNext,
+  onShop,
   durationLabel,
   scoreCoins = 0,
   hintCoinsSpent = 0,
   levelNumber,
   forceScreenType,
   unlockedFeature = null,
+  showStarterOffer = false,
 }) {
   const t = useT();
   const { timerEnabled } = usePlayTimer();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
   const autoTimerRef = useRef(null);
+
+  const guestUpsell =
+    showStarterOffer && isPurchasesConfigured() && typeof onShop === 'function';
 
   const screenType = useMemo(() => {
     if (
@@ -88,9 +95,14 @@ export default function WordWheelCompleteDialog({
     onClose?.();
   }, [clearAutoTimer, onClose]);
 
+  const handleShop = useCallback(() => {
+    clearAutoTimer();
+    onShop?.();
+  }, [clearAutoTimer, onShop]);
+
   useEffect(() => {
     clearAutoTimer();
-    if (!visible) return undefined;
+    if (!visible || guestUpsell) return undefined;
     const advance = onNext || onClose;
     if (!advance) return undefined;
     autoTimerRef.current = setTimeout(() => {
@@ -98,11 +110,9 @@ export default function WordWheelCompleteDialog({
       advance();
     }, COMPLETE_DIALOG_AUTO_MS);
     return clearAutoTimer;
-  }, [visible, onNext, onClose, clearAutoTimer]);
+  }, [visible, onNext, onClose, clearAutoTimer, guestUpsell]);
 
-  const hasScore = Number(scoreCoins) > 0;
   const hasHints = hintCoinsSpent > 0;
-  const scoreLabel = hasScore ? `+${scoreCoins}` : t('common.emDash');
   const level = Number(levelNumber) || 0;
   const streakBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.STREAK_SPARKS];
   const brainBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.BRAIN_POWER];
@@ -133,8 +143,6 @@ export default function WordWheelCompleteDialog({
       <WordMasterCard
         title={t('intermission.wordMaster.title')}
         message={t('intermission.wordMaster.message')}
-        starCaption={t('complete.stat.score')}
-        starWord={scoreLabel}
       />
     );
   } else {
@@ -143,16 +151,22 @@ export default function WordWheelCompleteDialog({
         title={t(titleKey)}
         timeCaption={timerEnabled ? t('complete.stat.time') : undefined}
         timeLabel={timerEnabled ? (durationLabel || t('common.emDash')) : undefined}
-        starCaption={t('complete.stat.score')}
-        starWord={scoreLabel}
       />
     );
   }
 
-  const showScoreHint =
-    (screenType === LEVEL_SCREEN_TYPES.STREAK_SPARKS
-      || screenType === LEVEL_SCREEN_TYPES.BRAIN_POWER)
-    && hasScore;
+  const footer = guestUpsell ? (
+    <View style={styles.linkFooter}>
+      <Pressable
+        onPress={handleContinue}
+        accessibilityRole="link"
+        accessibilityLabel={t('complete.next')}
+        hitSlop={8}
+      >
+        <Text style={styles.actionLink}>{t('complete.next')}</Text>
+      </Pressable>
+    </View>
+  ) : undefined;
 
   return (
     <Modal
@@ -169,18 +183,21 @@ export default function WordWheelCompleteDialog({
             continueLabel={`${t('complete.next').toUpperCase()} ➔`}
             continueA11y={t('complete.next')}
             onContinue={handleContinue}
+            footer={footer}
           >
             {body}
+            {guestUpsell ? (
+              <ShopOfferButton
+                label={t('complete.guest.starterLink')}
+                onPress={handleShop}
+                accessibilityLabel={t('complete.guest.starterLink')}
+              />
+            ) : null}
             {unlockedFeature === 'dailyPuzzle' ? (
               <View style={styles.unlockBox}>
                 <Text style={styles.unlockTitle}>{t('complete.unlock.dailyPuzzle')}</Text>
                 <Text style={styles.unlockBody}>{t('complete.unlock.dailyPuzzle.body')}</Text>
               </View>
-            ) : null}
-            {showScoreHint ? (
-              <Text style={styles.scoreNote}>
-                {t('complete.stat.score')}: {scoreLabel}
-              </Text>
             ) : null}
             {hasHints ? (
               <Text style={styles.hintsNote}>
@@ -207,14 +224,6 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     alignItems: 'center',
     zIndex: 2,
-  },
-  scoreNote: {
-    marginTop: 12,
-    fontFamily: INTERMISSION.serif,
-    fontSize: 14,
-    fontWeight: '600',
-    color: INTERMISSION.titleTeal,
-    textAlign: 'center',
   },
   unlockBox: {
     marginTop: 14,
@@ -246,6 +255,20 @@ const styles = StyleSheet.create({
     fontFamily: INTERMISSION.serif,
     fontSize: 13,
     color: INTERMISSION.bodyMuted,
+    textAlign: 'center',
+  },
+  linkFooter: {
+    marginTop: 18,
+    width: '100%',
+    alignItems: 'center',
+    gap: 14,
+  },
+  actionLink: {
+    fontFamily: INTERMISSION.serifBold || INTERMISSION.serif,
+    fontSize: 15,
+    fontWeight: '700',
+    color: INTERMISSION.titleTeal,
+    textDecorationLine: 'underline',
     textAlign: 'center',
   },
 });

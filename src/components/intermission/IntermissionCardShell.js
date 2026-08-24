@@ -5,7 +5,7 @@ import ContinueQuestButton from './ContinueQuestButton';
 import { INTERMISSION } from './intermissionTheme';
 
 /** Shared centered glass card with gold rim + filigree. */
-export default function IntermissionCardShell({ children, continueLabel, onContinue, continueA11y }) {
+export default function IntermissionCardShell({ children, continueLabel, onContinue, continueA11y, footer }) {
   return (
     <View style={styles.shadow}>
       <LinearGradient
@@ -16,11 +16,13 @@ export default function IntermissionCardShell({ children, continueLabel, onConti
       >
         <GoldFiligree />
         <View style={styles.content}>{children}</View>
-        <ContinueQuestButton
-          label={continueLabel}
-          onPress={onContinue}
-          accessibilityLabel={continueA11y}
-        />
+        {footer ?? (
+          <ContinueQuestButton
+            label={continueLabel}
+            onPress={onContinue}
+            accessibilityLabel={continueA11y}
+          />
+        )}
       </LinearGradient>
     </View>
   );

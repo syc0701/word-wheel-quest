@@ -6,6 +6,7 @@ export default {
   'common.level': 'Level {n}',
   'common.levelFallback': 'Level',
   'common.play': 'Play',
+  'common.continue': 'Continue',
   'common.daily': 'Daily',
   'common.words': '{n} words',
   'common.coins': '{n} coins',
@@ -49,6 +50,8 @@ export default {
   'daily.kicker': 'BONUS PUZZLE',
   'daily.title': 'Daily Puzzle',
   'daily.subtitle': "Pick a date to preview and play that day's puzzle.",
+  'daily.subtitleFreePlays': '{left} of {total} free daily puzzles left.',
+  'daily.subtitleCredits': 'Each daily puzzle uses 1 credit after your free plays.',
   'daily.today': 'Today',
   'daily.weekday.sun': 'S',
   'daily.weekday.mon': 'M',
@@ -73,6 +76,9 @@ export default {
   'play.error.noDaily': 'No daily puzzle available.',
   'play.error.noPuzzle': 'No puzzle available.',
   'play.error.loadFailed': 'Could not load puzzle.',
+  'play.error.starterRequired':
+    'Get the Starter Fun Bundle to continue past Level 50.',
+  'play.error.noCredits': 'No puzzle credits left. Get the Starter Fun Bundle or more credits in the Shop.',
   'play.error.generic': 'Failed to load',
   'play.error.saveFailed': 'Could not save progress',
   'play.alert.notEnoughCoins.title': 'Not enough coins',
@@ -249,6 +255,9 @@ export default {
   'shop.alert.signInRequired.body':
     'Purchase recorded. Sign in with Google to sync it to your account.',
   'shop.alert.signInRequired.action': 'Sign in with Google',
+  'shop.alert.starterUnlocked.title': 'Starter pack unlocked!',
+  'shop.alert.starterUnlocked.body':
+    'Level 51+ and extra daily puzzles are unlocked. Each play uses 1 credit from your balance.',
   'shop.alert.purchaseFailed.title': 'Purchase failed',
   'shop.alert.purchaseFailed.body': 'Something went wrong.',
   'shop.alert.restored.title': 'Restored',
@@ -311,6 +320,18 @@ export default {
   'complete.hintsUsed': 'Hints used: −{n} coins',
   'complete.close': 'Close',
   'complete.next': 'Next',
+  'complete.guest.starterLink': 'Get Starter Fun Bundle',
+  'guest.starter.levelTitle': 'Continue your journey',
+  'guest.starter.levelBody':
+    'You reached Level 50! Get the Starter Fun Bundle to play Level {n} and beyond.',
+  'guest.starter.dailyTitle': 'Daily Puzzle',
+  'guest.starter.dailyBody':
+    'You used your {n} free daily puzzles. Get the Starter Fun Bundle to keep playing — each puzzle uses 1 credit.',
+  'guest.starter.creditsTitle': 'Out of puzzle credits',
+  'guest.starter.creditsBody':
+    'Get the Starter Fun Bundle for {n} credits, or buy more in the Shop. Each Level 51+ or daily puzzle uses 1 credit.',
+  'guest.starter.shopCta': 'Get Starter Fun Bundle',
+  'guest.starter.notNow': 'Not now',
   'complete.unlock.dailyPuzzle': 'Unlocked: Daily Puzzle',
   'complete.unlock.dailyPuzzle.body': 'A new puzzle every day is now available from Home.',
 
@@ -350,6 +371,8 @@ export default {
   'play.a11y.treasureChest': 'Bonus words treasure chest',
   'play.a11y.musicOn': 'Turn on background music',
   'play.a11y.musicOff': 'Turn off background music',
+  'play.a11y.soundOn': 'Turn on sound',
+  'play.a11y.soundOff': 'Turn off sound',
 
   // points table
   'pointsTable.header.letters': 'Letters',

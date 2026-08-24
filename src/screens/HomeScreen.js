@@ -259,9 +259,9 @@ export default function HomeScreen({ navigate }) {
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
 
-  const openDaily = () => {
+  const openDaily = useCallback(() => {
     navigate(SCREENS.DAILY);
-  };
+  }, [navigate]);
 
   return (
     <GradientBackground variant="home">

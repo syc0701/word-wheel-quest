@@ -1,6 +1,6 @@
 import { AppState } from 'react-native';
 import { createAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'expo-audio';
-import { AUDIO, BGM_SCENES } from './audioAssets';
+import { BGM_SCENES, AUDIO, pickRandomBgmTrack } from './audioAssets';
 
 const BGM_VOLUME = 0.5;
 const SFX_VOLUME = 0.85;
@@ -9,7 +9,7 @@ let ready = false;
 let musicEnabled = true;
 let sfxEnabled = true;
 let scene = BGM_SCENES.NONE;
-let activeBgmKey = null;
+let activeBgmId = null;
 let bgmPlayer = null;
 let sfxPlayers = new Map();
 let appStateSub = null;
@@ -75,7 +75,7 @@ function playBgmNow() {
       if (
         bgmPlayer
         && musicEnabled
-        && bgmKeyForScene(scene)
+        && bgmSceneHasTracks(scene)
         && !bgmPlayer.playing
       ) {
         bgmPlayer.play();
@@ -86,10 +86,8 @@ function playBgmNow() {
   }, 300);
 }
 
-function bgmKeyForScene(nextScene) {
-  if (nextScene === BGM_SCENES.HOME) return 'homeBgm';
-  if (nextScene === BGM_SCENES.PLAY) return 'playBgm';
-  return null;
+function bgmSceneHasTracks(nextScene) {
+  return nextScene === BGM_SCENES.HOME || nextScene === BGM_SCENES.PLAY;
 }
 
 function ensureBgmPlayer(source) {
@@ -126,22 +124,22 @@ function ensureBgmPlayer(source) {
   return bgmPlayer;
 }
 
-async function applyBgm({ forceRestart = false } = {}) {
+async function applyBgm({ forceRestart = false, pickNew = false } = {}) {
   await ensureMode();
-  const key = bgmKeyForScene(scene);
 
-  if (!musicEnabled || !key) {
+  if (!musicEnabled || !bgmSceneHasTracks(scene)) {
     clearPlayRetry();
     if (bgmPlayer?.playing) bgmPlayer.pause();
     return;
   }
 
-  const source = AUDIO[key];
-  const needsSwap = activeBgmKey !== key || !bgmPlayer;
-  if (needsSwap) {
-    const player = ensureBgmPlayer(source);
+  const scenePrefix = `${scene}:`;
+  if (pickNew || !activeBgmId?.startsWith(scenePrefix)) {
+    const pick = pickRandomBgmTrack(scene);
+    if (!pick) return;
+    const player = ensureBgmPlayer(pick.source);
     if (!player) return;
-    activeBgmKey = key;
+    activeBgmId = pick.id;
     forceRestart = true;
   }
 
@@ -178,6 +176,10 @@ export const soundManager = {
   async configure({ music, sfx } = {}) {
     if (typeof music === 'boolean') musicEnabled = music;
     if (typeof sfx === 'boolean') sfxEnabled = sfx;
+    if (musicEnabled && bgmSceneHasTracks(scene) && !activeBgmId) {
+      await applyBgm({ pickNew: true });
+      return;
+    }
     await applyBgm();
   },
 
@@ -198,17 +200,23 @@ export const soundManager = {
   async setScene(nextScene) {
     const next = nextScene || BGM_SCENES.NONE;
     if (scene === next) {
-      if (musicEnabled && bgmKeyForScene(scene) && bgmPlayer && !bgmPlayer.playing) {
+      if (musicEnabled && bgmSceneHasTracks(scene) && bgmPlayer && !bgmPlayer.playing) {
         playBgmNow();
       }
       return;
     }
     scene = next;
-    await applyBgm({ forceRestart: true });
+    if (!bgmSceneHasTracks(scene)) {
+      activeBgmId = null;
+      clearPlayRetry();
+      if (bgmPlayer?.playing) bgmPlayer.pause();
+      return;
+    }
+    await applyBgm({ forceRestart: true, pickNew: true });
   },
 
   resumeBgm() {
-    if (!musicEnabled || !bgmKeyForScene(scene) || !bgmPlayer) return;
+    if (!musicEnabled || !bgmSceneHasTracks(scene) || !bgmPlayer) return;
     if (!bgmPlayer.playing) playBgmNow();
   },
 

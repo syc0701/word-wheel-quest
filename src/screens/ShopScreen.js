@@ -6,8 +6,9 @@ import { GiTwoCoins } from '../components/GiTwoCoins';
 import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
-import { SCREENS } from '../constants/theme';
+import { PLAY_MODE, SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
+import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import {
   getDefaultOffering,
   isPurchasesConfigured,
@@ -18,6 +19,7 @@ import {
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 import { savePendingIap } from '../lib/pendingIap';
+import { markStarterPackPurchased } from '../lib/guestStarterPack';
 
 const GOLD = '#facc15';
 
@@ -143,7 +145,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       const transactionId = readPurchaseTransactionId(purchaseResult);
       const productId = rcPackage.product.identifier;
       if (authed) {
-        await CreditApi.verifyIapPurchase({
+        const verify = await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
           productId,
           transactionId,
@@ -153,8 +155,47 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
             packageKey: meta.packageId,
           },
         });
+        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+          await markStarterPackPurchased({ grantGuestCredits: false });
+        }
         const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+          Alert.alert(
+            t('shop.alert.starterUnlocked.title'),
+            t('shop.alert.starterUnlocked.body'),
+            [{ text: t('common.continue') }]
+          );
+        } else {
+          Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+        }
+        if (verify?.creditBalance != null && __DEV__) {
+          console.log('[Shop] credits after verify', verify.creditBalance);
+        }
+      } else if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+        await markStarterPackPurchased({ grantGuestCredits: true });
+        await savePendingIap({
+          productId,
+          transactionId,
+          packageKey: meta.packageId,
+        });
+        const { packageId: _pkg, ...backParams } = routeParams;
+        Alert.alert(
+          t('shop.alert.starterUnlocked.title'),
+          t('shop.alert.starterUnlocked.body'),
+          [
+            {
+              text: t('common.continue'),
+              onPress: () =>
+                navigate(backScreen, {
+                  ...backParams,
+                  mode: backParams.mode ?? PLAY_MODE.JOURNEY,
+                  starterUnlockTick: Date.now(),
+                  t: Date.now(),
+                }),
+            },
+          ],
+          { cancelable: false }
+        );
       } else {
         await savePendingIap({
           productId,
