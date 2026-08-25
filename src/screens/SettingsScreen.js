@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
+import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Star, Trash2, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
@@ -17,6 +17,7 @@ import { LEGAL_LINKS } from '../constants/store';
 import { LEVEL_SCREEN_TYPES } from '../lib/LevelScreenPolicy';
 import { isLoggedIn } from '../lib/auth';
 import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
+import { requestAccountDeletion } from '../lib/userApi';
 import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
@@ -100,6 +101,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const [scoreLoading, setScoreLoading] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const refreshScore = async (isAuthed) => {
     if (!isAuthed) {
@@ -141,6 +143,79 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
     setScoreStanding(null);
     wallet.refresh({ silent: true }).catch(() => {});
     void PushNotificationService.syncPushNotificationsIfNeeded();
+  };
+
+  const runAccountDeletion = async () => {
+    if (deletingAccount) return;
+    setDeletingAccount(true);
+    try {
+      const { confirmationCode, statusUrl } = await requestAccountDeletion();
+      await signOutAll();
+      setAuthed(false);
+      setScoreStanding(null);
+      wallet.refresh({ silent: true }).catch(() => {});
+      void PushNotificationService.syncPushNotificationsIfNeeded();
+      Alert.alert(
+        t('settings.account.deleteDoneTitle'),
+        t('settings.account.deleteDoneBody', { code: confirmationCode }),
+        [
+          statusUrl
+            ? {
+                text: t('settings.account.deleteStatus'),
+                onPress: () => {
+                  Linking.openURL(statusUrl).catch(() => {});
+                  navigate(SCREENS.HOME);
+                },
+              }
+            : null,
+          {
+            text: t('common.ok'),
+            onPress: () => navigate(SCREENS.HOME),
+          },
+        ].filter(Boolean)
+      );
+    } catch (error) {
+      Alert.alert(
+        t('settings.account.deleteFailedTitle'),
+        error?.message || t('settings.account.deleteFailedBody')
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    if (deletingAccount) return;
+    Alert.alert(
+      t('settings.account.deleteConfirmTitle'),
+      t('settings.account.deleteConfirmBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('settings.account.delete'),
+          style: 'destructive',
+          onPress: () => {
+            // Nested Alert.alert is unreliable on iOS without a short delay.
+            setTimeout(() => {
+              Alert.alert(
+                t('settings.account.deleteFinalTitle'),
+                t('settings.account.deleteFinalBody'),
+                [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('settings.account.delete'),
+                    style: 'destructive',
+                    onPress: () => {
+                      void runAccountDeletion();
+                    },
+                  },
+                ]
+              );
+            }, 350);
+          },
+        },
+      ]
+    );
   };
 
   const handleSignIn = () => {
@@ -317,6 +392,16 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 onPress={handleSignOut}
                 colors={colors}
                 embedded
+              />
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              <MenuRow
+                icon={Trash2}
+                label={t('settings.account.delete')}
+                subtitle={t('settings.account.deleteSubtitle')}
+                onPress={handleDeleteAccount}
+                colors={colors}
+                embedded
+                loading={deletingAccount}
               />
             </>
           ) : (

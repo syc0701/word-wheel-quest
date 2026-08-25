@@ -3,6 +3,7 @@ export default {
   // common
   'common.emDash': '—',
   'common.cancel': 'Cancel',
+  'common.ok': 'OK',
   'common.level': 'Level {n}',
   'common.levelFallback': 'Level',
   'common.play': 'Play',
@@ -139,6 +140,20 @@ export default {
   'settings.account.signOut': 'Sign out',
   'settings.account.signIn': 'Sign in',
   'settings.account.signInSubtitle': 'Move guest progress to your account',
+  'settings.account.delete': 'Delete account',
+  'settings.account.deleteSubtitle': 'Permanently remove your account and data',
+  'settings.account.deleteConfirmTitle': 'Delete account?',
+  'settings.account.deleteConfirmBody':
+    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteFinalTitle': 'Are you sure?',
+  'settings.account.deleteFinalBody':
+    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteDoneTitle': 'Account deleted',
+  'settings.account.deleteDoneBody':
+    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteStatus': 'Check status',
+  'settings.account.deleteFailedTitle': 'Could not delete account',
+  'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
   'settings.shop.label': 'Shop',
   'settings.shop.subtitle': 'Buy coins and bundles',
   'settings.dev.hint': 'Dev builds only — preview between-level screens',
@@ -388,6 +403,7 @@ export default {
   'auth.error.generic': 'Sign-in failed. Please try again.',
   'auth.error.noToken': 'Sign-in did not return a token.',
   'auth.google.failed': 'Google sign-in failed. Please try again.',
+  'auth.google.iosUnavailable': 'Google Sign-In is not available on iOS. Please use Sign in with Apple.',
   'auth.google.exchangeFailed': 'Could not complete Google sign-in.',
   'auth.google.noCode': 'Google sign-in did not return an ID token.',
   'auth.google.developerError':

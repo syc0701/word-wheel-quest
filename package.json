@@ -25,15 +25,11 @@
     "ios:screenshots:check": "SCREENSHOT_PLATFORM=ios node docs/scripts/verify-screenshots.js",
     "ios:screenshots:upload-only": "npm run ios:screenshots:check && export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && cd ios/fastlane && test -f ./asc_api_key.env || (echo 'Missing ios/fastlane/asc_api_key.env — copy asc_api_key.env.example and set your .p8 path' && exit 1) && set -a && . ./asc_api_key.env && { [ -f ./asc_review_contact.env ] && . ./asc_review_contact.env || true; } && set +a && fastlane screenshots --verbose",
     "ios:screenshots:upload": "npm run ios:screenshots && npm run ios:screenshots:upload-only",
-    "android": "npm run android:run",
-    "android:run": "bash scripts/android-run.sh",
-    "android:build": "export ANDROID_HOME=\"${ANDROID_HOME:-$HOME/Library/Android/sdk}\" && export ANDROID_SDK_ROOT=\"${ANDROID_SDK_ROOT:-$ANDROID_HOME}\" && export PATH=\"$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH\" && npx expo run:android",
-    "clean": "rm -rf ios/build android/app/build android/build node_modules/.cache .expo dist web-build",
+    "clean": "rm -rf ios/build node_modules/.cache .expo dist web-build",
     "clean:all": "npm run clean && npm run ios:clean-cache",
     "fastlane:install": "brew list fastlane >/dev/null 2>&1 || brew install fastlane; brew upgrade fastlane 2>/dev/null || true",
     "screenshots:view": "node docs/scripts/view-screenshots.js",
-    "metadata:sync": "bash scripts/sync-play-store-text.sh",
-    "metadata:upload": "npm run metadata:sync && unset BUNDLE_GEMFILE; bundle exec fastlane metadata"
+    "android": "expo run:android"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",

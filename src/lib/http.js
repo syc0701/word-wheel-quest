@@ -60,17 +60,25 @@ export async function apiGet(path, params) {
   return parseResponse(result);
 }
 
-export async function apiPost(path, data) {
-  const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
-  let body;
+export async function apiPost(path, data, options = {}) {
+  const headers = await buildAuthHeaders(
+    options.noBody ? { Accept: 'application/json' } : { 'Content-Type': 'application/json' }
+  );
   const url = buildUrl(path);
-  if (shouldEncryptHomeBody(url) && data) {
+  let body;
+  if (options.noBody) {
+    body = undefined;
+  } else if (shouldEncryptHomeBody(url) && data) {
     const encrypted = encryptText(JSON.stringify(data));
     body = encrypted ? JSON.stringify({ encrypted }) : JSON.stringify(data);
   } else {
     body = JSON.stringify(data ?? {});
   }
-  const result = await fetchWithTimeout(url, { method: 'POST', headers, body });
+  const result = await fetchWithTimeout(
+    url,
+    { method: 'POST', headers, body },
+    options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+  );
   return parseResponse(result);
 }
 

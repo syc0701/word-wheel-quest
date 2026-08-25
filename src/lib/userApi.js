@@ -1,5 +1,15 @@
+import { Platform } from 'react-native';
 import { APP_STORE } from '../constants/store';
+import { getAuthToken, getAuthTokenClaims } from './auth';
 import { apiGet, apiPost } from './http';
+
+const DATA_DELETION_CODE_RE = /^[0-9a-fA-F]{16}$/;
+const DATA_DELETION_TIMEOUT_MS = 60000;
+
+/** Public SPA status page (not the REST endpoint). */
+function deletionStatusUrl(confirmationCode) {
+  return `https://www.puzzleinteract.com/deletion-status?code=${encodeURIComponent(confirmationCode)}`;
+}
 
 export function resolveWordWheelQuestCoins(cloudUser) {
   const map = cloudUser?.puzzleCoins;
@@ -108,4 +118,48 @@ export async function ensureUserAfterSignup(claims = null) {
   } catch {
     /* optional bootstrap */
   }
+}
+
+/**
+ * Permanently delete the signed-in account (App Store 5.1.1(v)).
+ * POST /home/user/data-deletion — Cognito user + cloud data removed synchronously.
+ * @returns {Promise<{ confirmationCode: string, statusUrl: string }>}
+ */
+export async function requestAccountDeletion() {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error('Authentication required. Sign out, sign in again, then retry.');
+  }
+
+  const claims = await getAuthTokenClaims();
+  await ensureUserAfterSignup(claims);
+
+  const data = await apiPost(
+    '/home/user/data-deletion',
+    {
+      platform: Platform.OS === 'ios' ? 'apple' : 'android',
+      appId: APP_STORE.appSiteId,
+    },
+    { timeoutMs: DATA_DELETION_TIMEOUT_MS }
+  );
+  if (data?.code === 'FAILURE') {
+    const message = String(data.message || '').trim();
+    if (/authentication required/i.test(message) || /missing or invalid jwt/i.test(message)) {
+      throw new Error('Authentication required. Sign out, sign in again, then retry.');
+    }
+    throw new Error(message || 'Failed to delete account.');
+  }
+
+  const confirmationCode = String(
+    data?.confirmation_code ?? data?.confirmationCode ?? ''
+  ).trim();
+  if (!confirmationCode || !DATA_DELETION_CODE_RE.test(confirmationCode)) {
+    throw new Error('Account deletion response was incomplete. Please try again.');
+  }
+
+  // Always open the public web status page (Jigsaw pattern), not the raw REST url.
+  return {
+    confirmationCode,
+    statusUrl: deletionStatusUrl(confirmationCode),
+  };
 }

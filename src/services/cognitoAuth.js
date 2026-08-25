@@ -182,6 +182,10 @@ let googleConfigured = false;
 
 function configureGoogleSignIn() {
   if (googleConfigured) return;
+  // iOS requires GoogleService-Info.plist or iosClientId — without either, configure() redboxes.
+  if (Platform.OS === 'ios') {
+    throw new Error('Google Sign-In is not configured for iOS (missing iosClientId / GoogleService-Info.plist)');
+  }
   GoogleSignin.configure({
     webClientId: GOOGLE_WEB_CLIENT_ID,
     offlineAccess: false,
@@ -282,6 +286,9 @@ export async function signInWithApple() {
 }
 
 export async function signInWithGoogle() {
+  if (Platform.OS === 'ios') {
+    throw new Error(t('auth.google.iosUnavailable'));
+  }
   configureGoogleSignIn();
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
@@ -345,12 +352,12 @@ export async function signOutAll() {
     } catch {
       /* ignore */
     }
-  }
-  try {
-    configureGoogleSignIn();
-    await GoogleSignin.signOut();
-  } catch {
-    /* ignore */
+    try {
+      configureGoogleSignIn();
+      await GoogleSignin.signOut();
+    } catch {
+      /* ignore */
+    }
   }
   try {
     if (isPurchasesConfigured()) {

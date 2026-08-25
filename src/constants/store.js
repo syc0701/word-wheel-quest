@@ -17,7 +17,7 @@ const REVENUECAT_IOS_KEY = 'appl_dhJZZjrCKdpiAzYdjcJHddBLEmt';
 /** RevenueCat public SDK key for the current platform. */
 export const REVENUECAT_API_KEY =
   Platform.OS === 'android'
-    ? require('./store.android').REVENUECAT_ANDROID_KEY
+    ? require('./playStore').REVENUECAT_ANDROID_KEY
     : REVENUECAT_IOS_KEY;
 
 /** In-app WebView URLs — append ?platform=app for minimal chrome on puzzleinteract.com */

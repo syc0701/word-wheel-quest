@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		27C5D107B0B43535A1ADBC16 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FA969D0DC3C4A73CEBC43F /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4121FE741643E02B3924AD91 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528B23700469CA16172238E4 /* ExpoModulesProvider.swift */; };
-		7BDE5F864C4DB9678E1BD961 /* libPods-WordWheelQuest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8933B817C1B7B46595292E06 /* libPods-WordWheelQuest.a */; };
-		B031669F0212655E69A7BADD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 39CED5126E02C7CB2EBD89B6 /* PrivacyInfo.xcprivacy */; };
+		46F56C28BC7AD8C296B99920 /* libPods-WordWheelQuest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EAD14CB3C99DA513E4DE514 /* libPods-WordWheelQuest.a */; };
+		6E80B3C152121F529288EF11 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F88D003AC402FCDD691D57FB /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
@@ -20,16 +20,16 @@
 		13B07F961A680F5B00A75B9A /* WordWheelQuest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WordWheelQuest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = WordWheelQuest/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = WordWheelQuest/Info.plist; sourceTree = "<group>"; };
-		39CED5126E02C7CB2EBD89B6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WordWheelQuest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		528B23700469CA16172238E4 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WordWheelQuest/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		8933B817C1B7B46595292E06 /* libPods-WordWheelQuest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WordWheelQuest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		9EC04D5CAECDE9FAA424F51A /* Pods-WordWheelQuest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.release.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.release.xcconfig"; sourceTree = "<group>"; };
+		1EAD14CB3C99DA513E4DE514 /* libPods-WordWheelQuest.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-WordWheelQuest.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FDA32477B4CF83010968347 /* Pods-WordWheelQuest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.release.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = WordWheelQuest/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B3FA969D0DC3C4A73CEBC43F /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-WordWheelQuest/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		E58985A2391877C80CCB1D84 /* Pods-WordWheelQuest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.debug.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = WordWheelQuest/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* WordWheelQuest-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "WordWheelQuest-Bridging-Header.h"; path = "WordWheelQuest/WordWheelQuest-Bridging-Header.h"; sourceTree = "<group>"; };
-		FC0E750C3A8A2BBFA6447752 /* Pods-WordWheelQuest.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-WordWheelQuest.debug.xcconfig"; path = "Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest.debug.xcconfig"; sourceTree = "<group>"; };
+		F88D003AC402FCDD691D57FB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = WordWheelQuest/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,21 +37,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7BDE5F864C4DB9678E1BD961 /* libPods-WordWheelQuest.a in Frameworks */,
+				46F56C28BC7AD8C296B99920 /* libPods-WordWheelQuest.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0B0D277845F2E84A590CEA1B /* WordWheelQuest */ = {
-			isa = PBXGroup;
-			children = (
-				528B23700469CA16172238E4 /* ExpoModulesProvider.swift */,
-			);
-			name = WordWheelQuest;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* WordWheelQuest */ = {
 			isa = PBXGroup;
 			children = (
@@ -61,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				39CED5126E02C7CB2EBD89B6 /* PrivacyInfo.xcprivacy */,
+				F88D003AC402FCDD691D57FB /* PrivacyInfo.xcprivacy */,
 			);
 			name = WordWheelQuest;
 			sourceTree = "<group>";
@@ -70,16 +62,16 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				8933B817C1B7B46595292E06 /* libPods-WordWheelQuest.a */,
+				1EAD14CB3C99DA513E4DE514 /* libPods-WordWheelQuest.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		7EC43EB08B159863D57FD60A /* Pods */ = {
+		78388C48C664285E06AA0BBD /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				FC0E750C3A8A2BBFA6447752 /* Pods-WordWheelQuest.debug.xcconfig */,
-				9EC04D5CAECDE9FAA424F51A /* Pods-WordWheelQuest.release.xcconfig */,
+				E58985A2391877C80CCB1D84 /* Pods-WordWheelQuest.debug.xcconfig */,
+				8FDA32477B4CF83010968347 /* Pods-WordWheelQuest.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -98,8 +90,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				7EC43EB08B159863D57FD60A /* Pods */,
-				E055255F6F441D32BAF0F844 /* ExpoModulesProviders */,
+				78388C48C664285E06AA0BBD /* Pods */,
+				D5B5EB0C82A22BF06F9D20BB /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -123,10 +115,18 @@
 			path = WordWheelQuest/Supporting;
 			sourceTree = "<group>";
 		};
-		E055255F6F441D32BAF0F844 /* ExpoModulesProviders */ = {
+		C358433D509D90E84B4912DA /* WordWheelQuest */ = {
 			isa = PBXGroup;
 			children = (
-				0B0D277845F2E84A590CEA1B /* WordWheelQuest */,
+				B3FA969D0DC3C4A73CEBC43F /* ExpoModulesProvider.swift */,
+			);
+			name = WordWheelQuest;
+			sourceTree = "<group>";
+		};
+		D5B5EB0C82A22BF06F9D20BB /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				C358433D509D90E84B4912DA /* WordWheelQuest */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -139,14 +139,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "WordWheelQuest" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				15791E6A0E7A7845270E7BB9 /* [Expo] Configure project */,
+				11946E78147B2FB8C2BCADF1 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				EFB72E882F3F59BD89709729 /* [CP] Embed Pods Frameworks */,
-				34734F04F383BA8D1D06A190 /* [CP-User] [RNGoogleMobileAds] Configuration */,
+				21D4A69E8DFA678E6E33C337 /* [CP] Embed Pods Frameworks */,
+				2CE3B89F1C645A40B4E0D5AD /* [CP-User] [RNGoogleMobileAds] Configuration */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				B031669F0212655E69A7BADD /* PrivacyInfo.xcprivacy in Resources */,
+				6E80B3C152121F529288EF11 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,7 +240,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		15791E6A0E7A7845270E7BB9 /* [Expo] Configure project */ = {
+		11946E78147B2FB8C2BCADF1 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -259,7 +259,25 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-WordWheelQuest/expo-configure-project.sh\"\n";
 		};
-		34734F04F383BA8D1D06A190 /* [CP-User] [RNGoogleMobileAds] Configuration */ = {
+		21D4A69E8DFA678E6E33C337 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2CE3B89F1C645A40B4E0D5AD /* [CP-User] [RNGoogleMobileAds] Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -334,24 +352,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		EFB72E882F3F59BD89709729 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-WordWheelQuest/Pods-WordWheelQuest-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -360,7 +360,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				4121FE741643E02B3924AD91 /* ExpoModulesProvider.swift in Sources */,
+				27C5D107B0B43535A1ADBC16 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,7 +369,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FC0E750C3A8A2BBFA6447752 /* Pods-WordWheelQuest.debug.xcconfig */;
+			baseConfigurationReference = E58985A2391877C80CCB1D84 /* Pods-WordWheelQuest.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -406,7 +406,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9EC04D5CAECDE9FAA424F51A /* Pods-WordWheelQuest.release.xcconfig */;
+			baseConfigurationReference = 8FDA32477B4CF83010968347 /* Pods-WordWheelQuest.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

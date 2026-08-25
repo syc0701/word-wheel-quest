@@ -5,7 +5,7 @@
  * @see Puzzle-iOS/puzzle-be/docs/android-play-integrity.md
  */
 import { Platform } from 'react-native';
-import { PLAY_STORE } from '../constants/store.android';
+import { PLAY_STORE } from '../constants/playStore';
 import { apiPost } from './http';
 
 const VERIFY_PATH = '/home/android/security/verify-integrity';

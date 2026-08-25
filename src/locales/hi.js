@@ -91,6 +91,20 @@ export default {
   'settings.account.signOut': 'साइन आउट',
   'settings.account.signIn': 'साइन इन',
   'settings.account.signInSubtitle': 'गेस्ट प्रगति अपने खाते में ले जाएँ',
+  'settings.account.delete': 'Delete account',
+  'settings.account.deleteSubtitle': 'Permanently remove your account and data',
+  'settings.account.deleteConfirmTitle': 'Delete account?',
+  'settings.account.deleteConfirmBody':
+    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteFinalTitle': 'Are you sure?',
+  'settings.account.deleteFinalBody':
+    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteDoneTitle': 'Account deleted',
+  'settings.account.deleteDoneBody':
+    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteStatus': 'Check status',
+  'settings.account.deleteFailedTitle': 'Could not delete account',
+  'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
   'settings.shop.label': 'इन-ऐप खरीदारी',
   'settings.shop.subtitle': 'सिक्के और बंडल खरीदें',
   'settings.dev.hint': 'केवल डेव बिल्ड — लेवल के बीच स्क्रीन पूर्वावलोकन',
