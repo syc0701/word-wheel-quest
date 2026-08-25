@@ -2,6 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   FREE_DAILY_PLAYS,
   GUEST_MAX_LEVEL_WITHOUT_STARTER,
+  GRANDFATHER_EXCEPTION_MIN_LEVEL,
+  GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER,
   PUZZLE_PLAY_CREDIT_COST,
   STARTER_PACK_PACKAGE_ID,
   STARTER_PACK_PRODUCT_ID,
@@ -118,22 +120,67 @@ export function normalizeJourneyLevel(level) {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
 }
 
-export function guestCanPlayJourneyLevel(level, hasStarter) {
+/** Last journey level playable without starter (50 default; 59 if already at level 56+). */
+export function resolveMaxLevelWithoutStarter(playerJourneyLevel) {
+  const current = normalizeJourneyLevel(playerJourneyLevel);
+  if (current != null && current >= GRANDFATHER_EXCEPTION_MIN_LEVEL) {
+    return GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER;
+  }
+  return GUEST_MAX_LEVEL_WITHOUT_STARTER;
+}
+
+/** First gated journey level for this player's saved progress. */
+export function resolveStarterUnlockLevel(playerJourneyLevel) {
+  return resolveMaxLevelWithoutStarter(playerJourneyLevel) + 1;
+}
+
+export function guestCanPlayJourneyLevel(level, hasStarter, playerJourneyLevel) {
   const n = normalizeJourneyLevel(level);
   if (n == null) return true;
-  if (n <= GUEST_MAX_LEVEL_WITHOUT_STARTER) return true;
+  const maxFree = resolveMaxLevelWithoutStarter(playerJourneyLevel ?? level);
+  if (n <= maxFree) return true;
   return hasStarter;
 }
 
-export function guestNeedsStarterToContinue(completedLevel, hasStarter) {
+export function guestNeedsStarterToContinue(completedLevel, hasStarter, playerJourneyLevel) {
   const n = normalizeJourneyLevel(completedLevel);
   if (n == null || hasStarter) return false;
-  return n >= GUEST_MAX_LEVEL_WITHOUT_STARTER;
+  const maxFree = resolveMaxLevelWithoutStarter(playerJourneyLevel ?? completedLevel);
+  return n >= maxFree;
 }
 
-export function journeyLevelNeedsCredit(level) {
+export function journeyLevelNeedsCredit(level, playerJourneyLevel) {
   const n = normalizeJourneyLevel(level);
-  return n != null && n > GUEST_MAX_LEVEL_WITHOUT_STARTER;
+  if (n == null) return false;
+  const maxFree = resolveMaxLevelWithoutStarter(playerJourneyLevel ?? level);
+  return n > maxFree;
+}
+
+/**
+ * Journey play access for a specific level (e.g. user at level 56 on Home).
+ * @returns {'free'|'starter'|'no_credits'|'credit'}
+ */
+export async function resolveJourneyPlayAccess(journeyLevel, {
+  hasStarter,
+  loggedIn,
+  creditBalance = 0,
+  playerJourneyLevel = null,
+}) {
+  const n = normalizeJourneyLevel(journeyLevel);
+  const progress = normalizeJourneyLevel(playerJourneyLevel) ?? n;
+  const maxFree = resolveMaxLevelWithoutStarter(progress);
+  if (n == null || n <= maxFree) return 'free';
+  if (!hasStarter) return 'starter';
+  if (loggedIn) {
+    return creditBalance >= PUZZLE_PLAY_CREDIT_COST ? 'credit' : 'no_credits';
+  }
+  const guestCredits = await getGuestPuzzleCredits();
+  return guestCredits >= PUZZLE_PLAY_CREDIT_COST ? 'credit' : 'no_credits';
+}
+
+export async function canPlayJourneyLevel(journeyLevel, opts) {
+  const access = await resolveJourneyPlayAccess(journeyLevel, opts);
+  return access === 'free' || access === 'credit';
 }
 
 /**
@@ -156,8 +203,13 @@ export async function canPlayDailyPuzzle({ hasStarter, loggedIn, creditBalance =
   return access === 'free' || access === 'credit';
 }
 
-export async function canStartJourneyLevel(level, { hasStarter, loggedIn, creditBalance = 0 }) {
-  if (!journeyLevelNeedsCredit(level)) return true;
+export async function canStartJourneyLevel(level, {
+  hasStarter,
+  loggedIn,
+  creditBalance = 0,
+  playerJourneyLevel = null,
+}) {
+  if (!journeyLevelNeedsCredit(level, playerJourneyLevel)) return true;
   if (!hasStarter) return false;
   if (loggedIn) return creditBalance >= PUZZLE_PLAY_CREDIT_COST;
   return (await getGuestPuzzleCredits()) >= PUZZLE_PLAY_CREDIT_COST;
@@ -170,6 +222,7 @@ export async function settlePuzzlePlayCharge({
   puzzleId,
   loggedIn,
   creditBalance = 0,
+  playerJourneyLevel = null,
 }) {
   const hasStarter = await hasStarterPackLocal();
   if (isDaily) {
@@ -190,7 +243,7 @@ export async function settlePuzzlePlayCharge({
     const spent = await consumeGuestPuzzleCredits();
     return spent.ok ? { ok: true } : { ok: false, access: 'no_credits' };
   }
-  if (!journeyLevelNeedsCredit(journeyLevel)) return { ok: true };
+  if (!journeyLevelNeedsCredit(journeyLevel, playerJourneyLevel)) return { ok: true };
   if (!hasStarter) return { ok: false, access: 'starter' };
   if (loggedIn) {
     const result = await CreditApi.consumeCredits({

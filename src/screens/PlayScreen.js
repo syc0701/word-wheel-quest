@@ -57,12 +57,11 @@ import {
 } from '../lib/guestCoinsStorage';
 import { isLoggedIn } from '../lib/auth';
 import {
-  canStartJourneyLevel,
-  guestCanPlayJourneyLevel,
   guestNeedsStarterToContinue,
   hasStarterPackAccess,
-  journeyLevelNeedsCredit,
   resolveDailyPlayAccess,
+  resolveJourneyPlayAccess,
+  resolveStarterUnlockLevel,
   settlePuzzlePlayCharge,
 } from '../lib/guestStarterPack';
 import {
@@ -637,18 +636,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           }
         } else if (!isOnboarding) {
           const level = resolveJourneyLevel(data) ?? Number(data?.puzzleLevel);
-          if (!guestCanPlayJourneyLevel(level, starterAccess)) {
+          const playerJourneyLevel = level;
+          const journeyAccess = await resolveJourneyPlayAccess(level, {
+            hasStarter: starterAccess,
+            loggedIn: authed,
+            creditBalance: wallet.creditBalance,
+            playerJourneyLevel,
+          });
+          if (journeyAccess === 'starter') {
             setPuzzle(null);
             setError(t('play.error.starterRequired'));
             setStarterGateContext('level');
             setStarterGateVisible(true);
             return;
           }
-          if (!(await canStartJourneyLevel(level, {
-            hasStarter: starterAccess,
-            loggedIn: authed,
-            creditBalance: wallet.creditBalance,
-          }))) {
+          if (journeyAccess === 'no_credits') {
             setPuzzle(null);
             setError(t('play.error.noCredits'));
             setStarterGateContext('credits');
@@ -677,6 +679,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             puzzleId: data.id,
             loggedIn: authed,
             creditBalance: wallet.creditBalance,
+            playerJourneyLevel: journeyLevel,
           });
           if (!charge.ok) {
             setPuzzle(null);
@@ -756,23 +759,22 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     }
     const completedLevel = resolveJourneyLevel(puzzle) ?? Number(puzzle?.puzzleLevel) ?? null;
     const starterAccess = await hasStarterPackAccess();
-    if (guestNeedsStarterToContinue(completedLevel, starterAccess)) {
+    const authed = await isLoggedIn();
+    const nextLevel = (completedLevel ?? 0) + 1;
+    const access = await resolveJourneyPlayAccess(nextLevel, {
+      hasStarter: starterAccess,
+      loggedIn: authed,
+      creditBalance: wallet.creditBalance,
+      playerJourneyLevel: completedLevel,
+    });
+    if (access === 'starter') {
       setCompletionDialogOpen(false);
       setShowHeaderNext(false);
       setStarterGateContext('level');
       setStarterGateVisible(true);
       return;
     }
-    const nextLevel = (completedLevel ?? 0) + 1;
-    const authed = await isLoggedIn();
-    if (
-      journeyLevelNeedsCredit(nextLevel)
-      && !(await canStartJourneyLevel(nextLevel, {
-        hasStarter: starterAccess,
-        loggedIn: authed,
-        creditBalance: wallet.creditBalance,
-      }))
-    ) {
+    if (access === 'no_credits') {
       setCompletionDialogOpen(false);
       setShowHeaderNext(false);
       setStarterGateContext('credits');
@@ -819,8 +821,19 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       !isOnboarding
       && !isDaily
       && !hasStarterAccess
-      && guestNeedsStarterToContinue(completionStats?.levelNumber, false),
+      && guestNeedsStarterToContinue(
+        completionStats?.levelNumber,
+        false,
+        completionStats?.levelNumber
+      ),
     [isOnboarding, isDaily, hasStarterAccess, completionStats?.levelNumber]
+  );
+
+  const starterUnlockLevel = useMemo(
+    () => resolveStarterUnlockLevel(
+      resolveJourneyLevel(puzzle) ?? completionStats?.levelNumber ?? null
+    ),
+    [puzzle, completionStats?.levelNumber]
   );
 
   const finishOnboarding = useCallback(async () => {
@@ -1671,6 +1684,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       <StarterPackGateModal
         visible={starterGateVisible}
         context={starterGateContext}
+        unlockLevel={starterUnlockLevel}
         onClose={() => setStarterGateVisible(false)}
         onShop={handleStarterGateShop}
       />

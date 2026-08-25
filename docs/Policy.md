@@ -12,8 +12,11 @@ Constants (`src/constants/guestAccess.js`):
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `GUEST_MAX_LEVEL_WITHOUT_STARTER` | **50** | Last free Season Journey level |
-| `GUEST_STARTER_UNLOCK_LEVEL` | **51** | First level that needs Starter Fun Bundle |
+| `GUEST_MAX_LEVEL_WITHOUT_STARTER` | **50** | Last free Season Journey level (default) |
+| `GUEST_STARTER_UNLOCK_LEVEL` | **51** | First gated level (default) |
+| `GRANDFATHER_EXCEPTION_MIN_LEVEL` | **56** | Saved journey level ≥ this → extended free tier |
+| `GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER` | **59** | Last free level for grandfathered players |
+| `GRANDFATHER_STARTER_UNLOCK_LEVEL` | **60** | First gated level for grandfathered players |
 | `FREE_DAILY_PLAYS` | **10** | Daily puzzles playable without starter/credits |
 | `STARTER_PACK_PUZZLE_CREDITS` | **50** | Credits bundled with starter (guest local grant) |
 | `PUZZLE_PLAY_CREDIT_COST` | **1** | Credits spent to **start** one gated puzzle |
@@ -27,7 +30,9 @@ Product: **Starter Fun Bundle** (`bundle_starter` / `word_wheel_pack_starter`) i
 | **1–50** | Free — no starter pack, no puzzle credits |
 | **51–1100** | Requires **Starter Fun Bundle** **and** **1 puzzle credit** per level started |
 
-After completing level **50**, the app shows the starter upsell. Level **51+** is blocked until the pack is owned **and** the player has credits remaining.
+**Grandfather exception:** players whose **saved journey level is already 56 or higher** may continue **51–59** for free (no starter, no credits). The paywall starts at **level 60** for them. Everyone else is gated at **level 51** as above.
+
+After completing the last free level (**50** for most players, **59** for grandfathered), the app shows the starter upsell. The next level is blocked until the pack is owned **and** the player has credits remaining.
 
 Replay of an already-unlocked journey level still consumes **1 credit** when the play session starts (same as a new level).
 

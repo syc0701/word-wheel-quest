@@ -184,7 +184,7 @@ function AppShell() {
             exiting={FadeOut.duration(200)}
             style={styles.screen}
           >
-            <HomeScreen navigate={navigate} />
+            <HomeScreen navigate={navigate} routeParams={params} />
           </Animated.View>
         );
     }

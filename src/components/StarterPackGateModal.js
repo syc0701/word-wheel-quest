@@ -7,7 +7,13 @@ import { FREE_DAILY_PLAYS, GUEST_STARTER_UNLOCK_LEVEL, STARTER_PACK_PUZZLE_CREDI
 /**
  * Starter pack / credits gate for journey 51+ and daily after free quota.
  */
-export default function StarterPackGateModal({ visible, onClose, onShop, context = 'level' }) {
+export default function StarterPackGateModal({
+  visible,
+  onClose,
+  onShop,
+  context = 'level',
+  unlockLevel,
+}) {
   const { colors } = useAppearance();
   const t = useT();
   const titleKey =
@@ -27,7 +33,7 @@ export default function StarterPackGateModal({ visible, onClose, onShop, context
       ? { n: FREE_DAILY_PLAYS }
       : context === 'credits'
         ? { n: STARTER_PACK_PUZZLE_CREDITS }
-        : { n: GUEST_STARTER_UNLOCK_LEVEL };
+        : { n: unlockLevel ?? GUEST_STARTER_UNLOCK_LEVEL };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
