@@ -19,7 +19,7 @@
     "android": {
       "package": "com.puzint.wordwheel.app",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 13,
+      "versionCode": 14,
       "compileSdkVersion": 36,
       "targetSdkVersion": 36,
       "permissions": [

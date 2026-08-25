@@ -30,6 +30,12 @@
 }
 -dontwarn expo.modules.**
 
+# kotlin-reflect / Expo ClassComponentBuilder (cold-start KotlinReflectionInternalError)
+-keep class kotlin.Metadata { *; }
+-keep class kotlin.reflect.** { *; }
+-keepattributes InnerClasses,Signature,RuntimeVisible*Annotations,EnclosingMethod,AnnotationDefault
+-dontwarn kotlin.reflect.jvm.internal.**
+
 # RevenueCat
 -keep class com.revenuecat.purchases.** { *; }
 -dontwarn com.revenuecat.purchases.**
