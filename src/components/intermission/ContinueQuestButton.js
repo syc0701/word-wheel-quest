@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Coins } from 'lucide-react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -12,11 +13,17 @@ import Animated, {
 import { INTERMISSION } from './intermissionTheme';
 
 /**
- * Sculpted pearlescent teal oval with gold rim + sweeping shine.
+ * Warm terracotta→chocolate pill CTA. Optional coin reward chip near the label.
  */
-export default function ContinueQuestButton({ label, onPress, accessibilityLabel }) {
+export default function ContinueQuestButton({
+  label,
+  onPress,
+  accessibilityLabel,
+  rewardCoins = null,
+}) {
   const shineX = useSharedValue(-120);
   const pressScale = useSharedValue(1);
+  const showReward = Number(rewardCoins) > 0;
 
   useEffect(() => {
     shineX.value = withDelay(
@@ -54,13 +61,21 @@ export default function ContinueQuestButton({ label, onPress, accessibilityLabel
         <View style={styles.rim}>
           <LinearGradient
             colors={INTERMISSION.button}
-            start={{ x: 0.15, y: 0 }}
-            end={{ x: 0.85, y: 1 }}
+            start={{ x: 0.05, y: 0 }}
+            end={{ x: 0.95, y: 1 }}
             style={styles.oval}
           >
             <View style={styles.pearlHighlight} />
             <Animated.View style={[styles.shine, shineStyle]} />
-            <Text style={styles.label}>{label}</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>{label}</Text>
+              {showReward ? (
+                <View style={styles.coinChip}>
+                  <Coins size={14} color="#FFF8E7" strokeWidth={2.4} />
+                  <Text style={styles.coinChipText}>+{Math.floor(Number(rewardCoins))}</Text>
+                </View>
+              ) : null}
+            </View>
           </LinearGradient>
         </View>
       </Pressable>
@@ -80,20 +95,21 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     padding: 2.5,
     backgroundColor: INTERMISSION.buttonRim,
-    shadowColor: '#0f3d36',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
+    shadowColor: '#5C2E12',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
     elevation: 8,
   },
   oval: {
-    minHeight: 52,
+    minHeight: 54,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.28)',
+    paddingHorizontal: 18,
   },
   pearlHighlight: {
     position: 'absolute',
@@ -102,23 +118,46 @@ const styles = StyleSheet.create({
     right: 18,
     height: 14,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   shine: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     width: 42,
-    backgroundColor: 'rgba(255,255,255,0.38)',
+    backgroundColor: 'rgba(255,255,255,0.28)',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
   },
   label: {
-    fontFamily: INTERMISSION.serifBold,
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 1.1,
+    fontFamily: INTERMISSION.displayBold,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 1.2,
     color: INTERMISSION.buttonText,
-    textShadowColor: 'rgba(0,40,35,0.35)',
+    textShadowColor: 'rgba(50, 20, 5, 0.4)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  coinChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: 'rgba(40, 18, 6, 0.28)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 236, 179, 0.45)',
+  },
+  coinChipText: {
+    fontFamily: INTERMISSION.displayBold,
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFF4D6',
   },
 });

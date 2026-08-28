@@ -235,6 +235,7 @@ export default {
   'complete.compliment.goodJob': '干得好！',
   'complete.compliment.niceWork': '不错！',
   'complete.compliment.wellDone': '出色！',
+  'complete.compliment.awesomeJob': '干得漂亮！',
   'complete.compliment.awesome': '太棒了！',
   'complete.compliment.brilliant': '精彩！',
   'complete.compliment.youNailedIt': '完美搞定！',
@@ -245,7 +246,9 @@ export default {
   'complete.stat.time': '时间',
   'complete.stat.score': '得分',
   'complete.stat.hints': '提示',
-  'complete.hintsUsed': '已用提示：−{n} 金币',
+  'complete.levelComplete': '第 {n} 关完成',
+  'complete.hintsUsed': '已用提示：{n} 金币',
+  'complete.rewards': '奖励：+{n} 金币',
   'complete.close': '关闭',
   'complete.next': '下一关',
 

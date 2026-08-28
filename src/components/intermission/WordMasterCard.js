@@ -19,47 +19,94 @@ import { INTERMISSION } from './intermissionTheme';
 function PulsingStarBadge() {
   const pulse = useSharedValue(0.55);
   const scale = useSharedValue(1);
+  const spin = useSharedValue(0);
+  const starTwinkle = useSharedValue(1);
+  const rayOpacity = useSharedValue(0.35);
 
   useEffect(() => {
     pulse.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.45, { duration: 1400, easing: Easing.inOut(Easing.sin) })
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.4, { duration: 1200, easing: Easing.inOut(Easing.sin) })
       ),
       -1,
       false
     );
     scale.value = withRepeat(
       withSequence(
-        withTiming(1.06, { duration: 1400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) })
+        withTiming(1.1, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.sin) })
       ),
       -1,
       false
     );
-  }, [pulse, scale]);
+    spin.value = withRepeat(
+      withTiming(360, { duration: 8000, easing: Easing.linear }),
+      -1,
+      false
+    );
+    starTwinkle.value = withRepeat(
+      withSequence(
+        withTiming(1.25, { duration: 700, easing: Easing.out(Easing.quad) }),
+        withTiming(0.85, { duration: 700, easing: Easing.in(Easing.quad) }),
+        withTiming(1, { duration: 500, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      false
+    );
+    rayOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.75, { duration: 900, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.25, { duration: 900, easing: Easing.inOut(Easing.sin) })
+      ),
+      -1,
+      false
+    );
+  }, [pulse, scale, spin, starTwinkle, rayOpacity]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: pulse.value,
-    transform: [{ scale: 0.85 + pulse.value * 0.45 }],
+    transform: [{ scale: 0.8 + pulse.value * 0.55 }],
   }));
 
   const badgeStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  const raysStyle = useAnimatedStyle(() => ({
+    opacity: rayOpacity.value,
+    transform: [{ rotate: `${spin.value}deg` }],
+  }));
+
+  const starStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: starTwinkle.value }],
+  }));
+
   return (
     <View style={styles.badgeWrap}>
       <Animated.View style={[styles.radialGlow, glowStyle]} />
+      <Animated.View style={[styles.sparkleRing, raysStyle]}>
+        {[0, 45, 90, 135].map((deg) => (
+          <View
+            key={deg}
+            style={[
+              styles.sparkRay,
+              { transform: [{ rotate: `${deg}deg` }, { translateY: -46 }] },
+            ]}
+          />
+        ))}
+      </Animated.View>
       <Animated.View style={badgeStyle}>
         <LinearGradient
-          colors={['#f6e27a', '#d4af37', '#a67c1a']}
+          colors={['#fff4c2', '#f6e27a', '#d4af37', '#a67c1a']}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           style={styles.metalBadge}
         >
           <View style={styles.badgeInner}>
-            <Star size={34} color="#fff8dc" fill="#ffe08a" strokeWidth={1.4} />
+            <Animated.View style={starStyle}>
+              <Star size={36} color="#fffef0" fill="#ffe08a" strokeWidth={1.2} />
+            </Animated.View>
           </View>
         </LinearGradient>
       </Animated.View>
@@ -181,15 +228,33 @@ const styles = StyleSheet.create({
   },
   radialGlow: {
     position: 'absolute',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(252, 211, 77, 0.5)',
+  },
+  sparkleRing: {
+    position: 'absolute',
     width: 96,
     height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(252, 211, 77, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sparkRay: {
+    position: 'absolute',
+    width: 3,
+    height: 14,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 236, 179, 0.95)',
+    shadowColor: '#fbbf24',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   metalBadge: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -209,10 +274,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(120, 80, 10, 0.22)',
   },
   title: {
-    fontFamily: INTERMISSION.serif,
+    fontFamily: INTERMISSION.displayBold,
     fontSize: 28,
-    fontWeight: '700',
-    color: INTERMISSION.titleGold,
+    fontWeight: '800',
+    color: INTERMISSION.titleChocolate,
     textAlign: 'center',
     marginBottom: 10,
     letterSpacing: 0.3,
@@ -221,7 +286,7 @@ const styles = StyleSheet.create({
     fontFamily: INTERMISSION.serif,
     fontSize: 16,
     fontWeight: '600',
-    color: INTERMISSION.titleTeal,
+    color: INTERMISSION.bodyBeige,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 16,

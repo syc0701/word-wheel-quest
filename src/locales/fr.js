@@ -238,6 +238,7 @@ export default {
   'complete.compliment.goodJob': 'Bien joué !',
   'complete.compliment.niceWork': 'Beau travail !',
   'complete.compliment.wellDone': 'Bravo !',
+  'complete.compliment.awesomeJob': 'Super boulot !',
   'complete.compliment.awesome': 'Génial !',
   'complete.compliment.brilliant': 'Brillant !',
   'complete.compliment.youNailedIt': 'Tu as cartonné !',
@@ -248,7 +249,9 @@ export default {
   'complete.stat.time': 'Temps',
   'complete.stat.score': 'Score',
   'complete.stat.hints': 'Indices',
-  'complete.hintsUsed': 'Indices utilisés : −{n} pièces',
+  'complete.levelComplete': 'Niveau {n} terminé',
+  'complete.hintsUsed': 'Indices utilisés : {n} pièces',
+  'complete.rewards': 'Récompenses : +{n} pièces',
   'complete.close': 'Fermer',
   'complete.next': 'Suivant',
 

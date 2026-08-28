@@ -238,6 +238,7 @@ export default {
   'complete.compliment.goodJob': 'शाबाश!',
   'complete.compliment.niceWork': 'बढ़िया काम!',
   'complete.compliment.wellDone': 'बहुत अच्छे!',
+  'complete.compliment.awesomeJob': 'शानदार काम!',
   'complete.compliment.awesome': 'शानदार!',
   'complete.compliment.brilliant': 'उत्कृष्ट!',
   'complete.compliment.youNailedIt': 'बिल्कुल सही!',
@@ -248,7 +249,9 @@ export default {
   'complete.stat.time': 'समय',
   'complete.stat.score': 'स्कोर',
   'complete.stat.hints': 'संकेत',
-  'complete.hintsUsed': 'उपयोग किए संकेत: −{n} सिक्के',
+  'complete.levelComplete': 'लेवल {n} पूरा',
+  'complete.hintsUsed': 'उपयोग किए संकेत: {n} सिक्के',
+  'complete.rewards': 'पुरस्कार: +{n} सिक्के',
   'complete.close': 'बंद करें',
   'complete.next': 'अगला',
 

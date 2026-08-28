@@ -238,6 +238,7 @@ export default {
   'complete.compliment.goodJob': 'Bom trabalho!',
   'complete.compliment.niceWork': 'Muito bem!',
   'complete.compliment.wellDone': 'Excelente!',
+  'complete.compliment.awesomeJob': 'Ótimo trabalho!',
   'complete.compliment.awesome': 'Incrível!',
   'complete.compliment.brilliant': 'Brilhante!',
   'complete.compliment.youNailedIt': 'Mandou bem!',
@@ -248,7 +249,9 @@ export default {
   'complete.stat.time': 'Tempo',
   'complete.stat.score': 'Pontuação',
   'complete.stat.hints': 'Dicas',
-  'complete.hintsUsed': 'Dicas usadas: −{n} moedas',
+  'complete.levelComplete': 'Nível {n} concluído',
+  'complete.hintsUsed': 'Dicas usadas: {n} moedas',
+  'complete.rewards': 'Recompensas: +{n} moedas',
   'complete.close': 'Fechar',
   'complete.next': 'Próximo',
 

@@ -238,6 +238,7 @@ export default {
   'complete.compliment.goodJob': 'よくできました！',
   'complete.compliment.niceWork': 'ナイス！',
   'complete.compliment.wellDone': 'お疲れさま！',
+  'complete.compliment.awesomeJob': 'よくできました！',
   'complete.compliment.awesome': 'すごい！',
   'complete.compliment.brilliant': '素晴らしい！',
   'complete.compliment.youNailedIt': '完璧！',
@@ -248,7 +249,9 @@ export default {
   'complete.stat.time': '時間',
   'complete.stat.score': 'スコア',
   'complete.stat.hints': 'ヒント',
-  'complete.hintsUsed': '使用ヒント：−{n}コイン',
+  'complete.levelComplete': 'レベル{n}クリア',
+  'complete.hintsUsed': '使用ヒント：{n}コイン',
+  'complete.rewards': '報酬：+{n}コイン',
   'complete.close': '閉じる',
   'complete.next': '次へ',
 

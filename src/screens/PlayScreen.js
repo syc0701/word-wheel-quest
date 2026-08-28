@@ -79,12 +79,14 @@ import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Vertical space the play chrome needs on top of the board: scroll padding,
- * header, and the clue strip with its margins.
+ * Vertical space above the board: scroll padding + header.
+ * Clue sits under the grid; taller multi-line clues need room.
  */
-const CHROME_H = 164;
+const CHROME_H = 96;
 /** Extra row shown only while the timer setting is on. */
 const TIMER_ROW_H = 28;
+/** Clue strip + margins under the grid. */
+const CLUE_STACK_H = 96;
 /** Padding and margins around the wheel inside its dock. */
 const WHEEL_DOCK_H = 40;
 
@@ -102,7 +104,7 @@ function usePlayMetrics(insets, timerEnabled) {
     : Math.min(width - 120, Math.max(200, height * 0.28), 260);
 
   const verticalChrome =
-    insets.top + insets.bottom + CHROME_H + (timerEnabled ? TIMER_ROW_H : 0);
+    insets.top + insets.bottom + CHROME_H + CLUE_STACK_H + (timerEnabled ? TIMER_ROW_H : 0);
   // In landscape the wheel sits beside the board, so it costs no height.
   const gridMaxSize = Math.max(
     150,
@@ -233,20 +235,22 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [puzzle?.filledCoordinates, puzzle?.displayClue, foundWords, wordPositions, hintedCellKeys, displayGrid]
   );
 
-  // Keep clue strip on an unsolved word; default to the first remaining clue.
+  // Default the clue strip to the first unsolved word; keep an explicit cell
+  // selection (including completed words) so tapping a cell shows that clue.
   useEffect(() => {
-    if (unfoundClues.length === 0) {
-      if (selectedWord && foundWords.includes(normalizeWord(selectedWord))) {
-        setSelectedWord(null);
-      }
+    if (!selectedWord && unfoundClues.length > 0) {
+      setSelectedWord(unfoundClues[0].word);
       return;
     }
-    const normalizedSelected = selectedWord ? normalizeWord(selectedWord) : '';
-    const stillOpen = unfoundClues.some((entry) => entry.word === normalizedSelected);
-    if (!stillOpen) {
+    if (!selectedWord) return;
+    const normalizedSelected = normalizeWord(selectedWord);
+    const stillExists =
+      unfoundClues.some((entry) => entry.word === normalizedSelected)
+      || Boolean(wordPositions[normalizedSelected]);
+    if (!stillExists && unfoundClues.length > 0) {
       setSelectedWord(unfoundClues[0].word);
     }
-  }, [unfoundClues, selectedWord, foundWords]);
+  }, [unfoundClues, selectedWord, wordPositions]);
 
   const clueIndex = useMemo(() => {
     if (!selectedWord) return 0;
@@ -269,17 +273,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       ),
     [puzzle?.filledCoordinates, foundWords, wordPositions, hintedCellKeys, hintPreferredWord]
   );
-  const selectedWordNumber = activeClue?.number
-    ?? (selectedWord ? wordToNumber.get(normalizeWord(selectedWord)) ?? null : null);
-  const selectedClue = activeClue
-    ? (activeClue.clue || '')
-    : (selectedWord ? clueMap.get(normalizeWord(selectedWord)) || '' : '');
+  const selectedNorm = selectedWord ? normalizeWord(selectedWord) : '';
+  const selectedWordNumber =
+    (selectedNorm ? wordToNumber.get(selectedNorm) : null)
+    ?? activeClue?.number
+    ?? null;
+  const selectedClue =
+    (selectedNorm ? clueMap.get(selectedNorm) : '')
+    || activeClue?.clue
+    || '';
   const selectedWordCells = useMemo(() => {
-    // Prefer the word the player just picked/found; fall back to the clue strip word.
-    const word = selectedWord || activeClue?.word;
+    const word = selectedNorm || activeClue?.word;
     if (!word || !wordPositions[normalizeWord(word)]) return new Set();
     return new Set(wordPositions[normalizeWord(word)].map((p) => `${p.row},${p.col}`));
-  }, [activeClue, selectedWord, wordPositions]);
+  }, [activeClue, selectedNorm, wordPositions]);
 
   const goClue = useCallback(
     (delta) => {
@@ -296,12 +303,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     },
     [unfoundClues, clueIndex, isOnboarding, onboardingStep, onboardingSuccessVisible, playSfx]
   );
-  const clueStripText = activeClue
-    ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
-    : selectedWord
-      ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
+  const clueStripText = selectedNorm
+    ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
+    : activeClue
+      ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
       : t('play.clue.placeholder');
-  const clueStripPlaceholder = !activeClue && !selectedWord;
+  const clueStripPlaceholder = !selectedNorm && !activeClue;
 
   const hintOnlyCells = useMemo(() => {
     const keys = new Set();
@@ -1048,11 +1055,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     (row, col) => {
       setSelectedIndices([]);
       const matches = findWordsAtCell(puzzle?.filledCoordinates, row, col, cellWordNumbers);
-      const open = matches.find((m) => !foundWords.includes(m.word));
-      if (open) setSelectedWord(open.word);
-      else if (matches.length > 0) setSelectedWord(matches[0].word);
+      if (!matches.length) return;
+
+      const open = matches.filter((m) => !foundWords.includes(m.word));
+      const pool = open.length ? open : matches;
+      if (pool.length === 1) {
+        setSelectedWord(pool[0].word);
+        return;
+      }
+      // Crossing cell: tap again to cycle the other word's clue.
+      const current = selectedWord ? normalizeWord(selectedWord) : '';
+      const idx = pool.findIndex((m) => m.word === current);
+      const next = pool[(idx + 1) % pool.length];
+      setSelectedWord(next.word);
     },
-    [puzzle?.filledCoordinates, cellWordNumbers, foundWords]
+    [puzzle?.filledCoordinates, cellWordNumbers, foundWords, selectedWord]
   );
 
   const handleShuffle = useCallback(() => {
