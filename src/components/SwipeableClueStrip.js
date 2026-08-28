@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Animated as RNAnimated, Easing as RNEasing, StyleSheet, Text, View } from 'react-native';
+import { Animated as RNAnimated, Easing as RNEasing, Platform, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -230,6 +230,7 @@ export default function SwipeableClueStrip({
                     styles.clueText,
                     placeholder ? styles.cluePlaceholder : null,
                   ]}
+                  numberOfLines={3}
                 >
                   {text}
                 </Text>
@@ -251,8 +252,8 @@ export default function SwipeableClueStrip({
 
 const styles = StyleSheet.create({
   clueBoxWrap: {
-    marginTop: 14,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 4,
     borderRadius: 22,
     shadowColor: '#8B5A2B',
     shadowOffset: { width: 0, height: 3 },
@@ -265,11 +266,14 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: ORANGE,
     backgroundColor: CREAM,
-    minHeight: 64,
+    minHeight: 78,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingTop: 12,
+    paddingBottom: 14,
     justifyContent: 'center',
-    overflow: 'visible',
+    // Android clips children when borderRadius is set; keep padding large enough
+    // that two-line clues never sit under the border edge.
+    overflow: 'hidden',
   },
   card: {
     width: '100%',
@@ -284,14 +288,14 @@ const styles = StyleSheet.create({
   },
   clueRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
   },
   clueRowWithHints: {
     paddingHorizontal: 28,
   },
   clueRowPlaceholder: {
-    minHeight: 40,
+    minHeight: 48,
     width: '100%',
   },
   swipeArrow: {
@@ -323,6 +327,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    marginTop: 2,
     backgroundColor: ORANGE,
     alignItems: 'center',
     justifyContent: 'center',
@@ -336,9 +341,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontWeight: '800',
-    lineHeight: 22,
+    lineHeight: 24,
     color: CLUE_TEXT,
     textAlign: 'left',
+    // Extra room for bold metrics on Android so line 2 isn’t cropped.
+    paddingBottom: 2,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
   },
   cluePlaceholder: {
     color: CLUE_MUTED,

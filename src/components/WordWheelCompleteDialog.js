@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { usePlayTimer } from '../context/PlayTimerContext';
 import { useT } from '../context/LanguageContext';
 import {
   LEVEL_SCREEN_TYPES,
@@ -10,6 +9,7 @@ import {
 import { isPurchasesConfigured } from '../services/purchases';
 import IntermissionCardShell from './intermission/IntermissionCardShell';
 import WordMasterCard from './intermission/WordMasterCard';
+import LevelCompleteCard from './intermission/LevelCompleteCard';
 import StreaksSparksCard from './intermission/StreaksSparksCard';
 import BrainPowerCard from './intermission/BrainPowerCard';
 import ShopOfferButton from './intermission/ShopOfferButton';
@@ -20,9 +20,9 @@ const COMPLIMENT_KEYS = [
   'complete.compliment.goodJob',
   'complete.compliment.niceWork',
   'complete.compliment.wellDone',
+  'complete.compliment.awesomeJob',
   'complete.compliment.awesome',
   'complete.compliment.brilliant',
-  'complete.compliment.youNailedIt',
   'complete.compliment.greatSolve',
   'complete.compliment.fantastic',
   'complete.compliment.impressive',
@@ -44,7 +44,7 @@ export default function WordWheelCompleteDialog({
   onClose,
   onNext,
   onShop,
-  durationLabel,
+  durationLabel: _durationLabel,
   scoreCoins = 0,
   hintCoinsSpent = 0,
   levelNumber,
@@ -53,7 +53,6 @@ export default function WordWheelCompleteDialog({
   showStarterOffer = false,
 }) {
   const t = useT();
-  const { timerEnabled } = usePlayTimer();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
   const autoTimerRef = useRef(null);
 
@@ -112,7 +111,6 @@ export default function WordWheelCompleteDialog({
     return clearAutoTimer;
   }, [visible, onNext, onClose, clearAutoTimer, guestUpsell]);
 
-  const hasHints = hintCoinsSpent > 0;
   const level = Number(levelNumber) || 0;
   const streakBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.STREAK_SPARKS];
   const brainBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.BRAIN_POWER];
@@ -147,10 +145,13 @@ export default function WordWheelCompleteDialog({
     );
   } else {
     body = (
-      <WordMasterCard
+      <LevelCompleteCard
         title={t(titleKey)}
-        timeCaption={timerEnabled ? t('complete.stat.time') : undefined}
-        timeLabel={timerEnabled ? (durationLabel || t('common.emDash')) : undefined}
+        levelLabel={
+          level > 0 ? t('complete.levelComplete', { n: level }) : t('intermission.levelComplete.headline')
+        }
+        hintsLabel={t('complete.hintsUsed', { n: hintCoinsSpent })}
+        rewardsLabel={t('complete.rewards', { n: scoreCoins })}
       />
     );
   }
@@ -168,6 +169,11 @@ export default function WordWheelCompleteDialog({
     </View>
   ) : undefined;
 
+  const continueLabel =
+    screenType === LEVEL_SCREEN_TYPES.LEVEL_COMPLETE
+      ? `${t('complete.next').toUpperCase()} →`
+      : `${t('complete.next').toUpperCase()} ➔`;
+
   return (
     <Modal
       visible={visible}
@@ -180,10 +186,15 @@ export default function WordWheelCompleteDialog({
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} accessibilityRole="button" />
         <View style={styles.wrap} pointerEvents="box-none">
           <IntermissionCardShell
-            continueLabel={`${t('complete.next').toUpperCase()} ➔`}
+            continueLabel={continueLabel}
             continueA11y={t('complete.next')}
             onContinue={handleContinue}
             footer={footer}
+            rewardCoins={
+              screenType === LEVEL_SCREEN_TYPES.LEVEL_COMPLETE && scoreCoins > 0
+                ? scoreCoins
+                : null
+            }
           >
             {body}
             {guestUpsell ? (
@@ -199,11 +210,6 @@ export default function WordWheelCompleteDialog({
                 <Text style={styles.unlockBody}>{t('complete.unlock.dailyPuzzle.body')}</Text>
               </View>
             ) : null}
-            {hasHints ? (
-              <Text style={styles.hintsNote}>
-                {t('complete.hintsUsed', { n: hintCoinsSpent })}
-              </Text>
-            ) : null}
           </IntermissionCardShell>
         </View>
       </View>
@@ -214,7 +220,7 @@ export default function WordWheelCompleteDialog({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(4, 28, 34, 0.55)',
+    backgroundColor: 'rgba(42, 24, 12, 0.58)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -230,16 +236,16 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: 'rgba(234, 179, 8, 0.55)',
-    backgroundColor: 'rgba(250, 204, 21, 0.12)',
+    borderColor: 'rgba(212, 148, 72, 0.55)',
+    backgroundColor: 'rgba(245, 210, 140, 0.22)',
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   unlockTitle: {
-    fontFamily: INTERMISSION.serifBold || INTERMISSION.serif,
+    fontFamily: INTERMISSION.displayBold,
     fontSize: 16,
     fontWeight: '800',
-    color: '#a16207',
+    color: '#8B5A1A',
     textAlign: 'center',
     marginBottom: 4,
   },
@@ -250,13 +256,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
-  hintsNote: {
-    marginTop: 12,
-    fontFamily: INTERMISSION.serif,
-    fontSize: 13,
-    color: INTERMISSION.bodyMuted,
-    textAlign: 'center',
-  },
   linkFooter: {
     marginTop: 18,
     width: '100%',
@@ -264,10 +263,10 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   actionLink: {
-    fontFamily: INTERMISSION.serifBold || INTERMISSION.serif,
+    fontFamily: INTERMISSION.displayBold,
     fontSize: 15,
     fontWeight: '700',
-    color: INTERMISSION.titleTeal,
+    color: '#8B4518',
     textDecorationLine: 'underline',
     textAlign: 'center',
   },

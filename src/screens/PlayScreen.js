@@ -90,12 +90,14 @@ import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Vertical space the play chrome needs on top of the board: scroll padding,
- * header, and the clue strip with its margins.
+ * Vertical space above the board: scroll padding + header.
+ * Clue/wheel sit in a fixed bottom stack (not under the ad).
  */
-const CHROME_H = 164;
+const CHROME_H = 96;
 /** Extra row shown only while the timer setting is on. */
 const TIMER_ROW_H = 28;
+/** Clue strip + margins in the bottom stack (portrait). */
+const CLUE_STACK_H = 96;
 /** Padding and margins around the wheel inside its dock. */
 const WHEEL_DOCK_H = 40;
 
@@ -103,6 +105,10 @@ const WHEEL_DOCK_H = 40;
  * The board is square and the wheel has a floor size, so on a short viewport
  * they cannot both be laid out vertically. Landscape puts them side by side,
  * which is also the only way an 8x8 board stays readable on a tablet.
+ *
+ * Portrait stacks clue → wheel → ad. Clue + wheel keep intrinsic height; the
+ * board ScrollView shrinks first. The ad may clip off the bottom on short
+ * screens — that is intentional.
  */
 function usePlayMetrics(insets, timerEnabled) {
   const { width, height } = useWindowDimensions();
@@ -112,8 +118,9 @@ function usePlayMetrics(insets, timerEnabled) {
     ? Math.min(260, Math.max(170, height - 220), width * 0.42)
     : Math.min(width - 120, Math.max(200, height * 0.28), 260);
 
+  // Do not reserve banner height — ad is allowed to clip under the fold.
   const verticalChrome =
-    insets.top + insets.bottom + CHROME_H + (timerEnabled ? TIMER_ROW_H : 0);
+    insets.top + CHROME_H + CLUE_STACK_H + (timerEnabled ? TIMER_ROW_H : 0);
   // In landscape the wheel sits beside the board, so it costs no height.
   const gridMaxSize = Math.max(
     150,
@@ -247,20 +254,22 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [puzzle?.filledCoordinates, puzzle?.displayClue, foundWords, wordPositions, hintedCellKeys, displayGrid]
   );
 
-  // Keep clue strip on an unsolved word; default to the first remaining clue.
+  // Default the clue strip to the first unsolved word; keep an explicit cell
+  // selection (including completed words) so tapping a cell shows that clue.
   useEffect(() => {
-    if (unfoundClues.length === 0) {
-      if (selectedWord && foundWords.includes(normalizeWord(selectedWord))) {
-        setSelectedWord(null);
-      }
+    if (!selectedWord && unfoundClues.length > 0) {
+      setSelectedWord(unfoundClues[0].word);
       return;
     }
-    const normalizedSelected = selectedWord ? normalizeWord(selectedWord) : '';
-    const stillOpen = unfoundClues.some((entry) => entry.word === normalizedSelected);
-    if (!stillOpen) {
+    if (!selectedWord) return;
+    const normalizedSelected = normalizeWord(selectedWord);
+    const stillExists =
+      unfoundClues.some((entry) => entry.word === normalizedSelected)
+      || Boolean(wordPositions[normalizedSelected]);
+    if (!stillExists && unfoundClues.length > 0) {
       setSelectedWord(unfoundClues[0].word);
     }
-  }, [unfoundClues, selectedWord, foundWords]);
+  }, [unfoundClues, selectedWord, wordPositions]);
 
   const clueIndex = useMemo(() => {
     if (!selectedWord) return 0;
@@ -283,17 +292,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       ),
     [puzzle?.filledCoordinates, foundWords, wordPositions, hintedCellKeys, hintPreferredWord]
   );
-  const selectedWordNumber = activeClue?.number
-    ?? (selectedWord ? wordToNumber.get(normalizeWord(selectedWord)) ?? null : null);
-  const selectedClue = activeClue
-    ? (activeClue.clue || '')
-    : (selectedWord ? clueMap.get(normalizeWord(selectedWord)) || '' : '');
+  const selectedNorm = selectedWord ? normalizeWord(selectedWord) : '';
+  const selectedWordNumber =
+    (selectedNorm ? wordToNumber.get(selectedNorm) : null)
+    ?? activeClue?.number
+    ?? null;
+  const selectedClue =
+    (selectedNorm ? clueMap.get(selectedNorm) : '')
+    || activeClue?.clue
+    || '';
   const selectedWordCells = useMemo(() => {
-    // Prefer the word the player just picked/found; fall back to the clue strip word.
-    const word = selectedWord || activeClue?.word;
+    const word = selectedNorm || activeClue?.word;
     if (!word || !wordPositions[normalizeWord(word)]) return new Set();
     return new Set(wordPositions[normalizeWord(word)].map((p) => `${p.row},${p.col}`));
-  }, [activeClue, selectedWord, wordPositions]);
+  }, [activeClue, selectedNorm, wordPositions]);
 
   const goClue = useCallback(
     (delta) => {
@@ -310,12 +322,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     },
     [unfoundClues, clueIndex, isOnboarding, onboardingStep, onboardingSuccessVisible, playSfx]
   );
-  const clueStripText = activeClue
-    ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
-    : selectedWord
-      ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
+  const clueStripText = selectedNorm
+    ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
+    : activeClue
+      ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
       : t('play.clue.placeholder');
-  const clueStripPlaceholder = !activeClue && !selectedWord;
+  const clueStripPlaceholder = !selectedNorm && !activeClue;
 
   const hintOnlyCells = useMemo(() => {
     const keys = new Set();
@@ -867,27 +879,24 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       }
     };
 
-    // Clue sits inside GH ScrollView — derive band from content layout + scroll offset.
+    // Clue may sit in the bottom stack (portrait) or inside the board ScrollView
+    // (landscape). measureInWindow works for both.
     const measureClueBand = () => {
-      const scrollNode = onboardingScrollRef.current;
-      const layout = onboardingClueContentLayoutRef.current;
-      if (
-        !scrollNode
-        || typeof scrollNode.measureInWindow !== 'function'
-        || !(layout.height > 0)
-      ) {
+      const clueNode = onboardingClueWrapRef.current;
+      if (!clueNode || typeof clueNode.measureInWindow !== 'function') {
         done();
         return;
       }
       overlayNode.measureInWindow((ox, oy, overlayW) => {
-        scrollNode.measureInWindow((_sx, sy) => {
-          const y = sy + layout.y - onboardingScrollYRef.current - oy;
-          next.clue = {
-            x: 0,
-            y,
-            width: overlayW > 0 ? overlayW : Dimensions.get('window').width,
-            height: layout.height,
-          };
+        clueNode.measureInWindow((x, y, width, height) => {
+          if (height > 0) {
+            next.clue = {
+              x: 0,
+              y: y - oy,
+              width: overlayW > 0 ? overlayW : Dimensions.get('window').width,
+              height,
+            };
+          }
           done();
         });
       });
@@ -1215,11 +1224,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     (row, col) => {
       setSelectedIndices([]);
       const matches = findWordsAtCell(puzzle?.filledCoordinates, row, col, cellWordNumbers);
-      const open = matches.find((m) => !foundWords.includes(m.word));
-      if (open) setSelectedWord(open.word);
-      else if (matches.length > 0) setSelectedWord(matches[0].word);
+      if (!matches.length) return;
+
+      const open = matches.filter((m) => !foundWords.includes(m.word));
+      const pool = open.length ? open : matches;
+      if (pool.length === 1) {
+        setSelectedWord(pool[0].word);
+        return;
+      }
+      // Crossing cell: tap again to cycle the other word's clue.
+      const current = selectedWord ? normalizeWord(selectedWord) : '';
+      const idx = pool.findIndex((m) => m.word === current);
+      const next = pool[(idx + 1) % pool.length];
+      setSelectedWord(next.word);
     },
-    [puzzle?.filledCoordinates, cellWordNumbers, foundWords]
+    [puzzle?.filledCoordinates, cellWordNumbers, foundWords, selectedWord]
   );
 
   const handleShuffle = useCallback(() => {
@@ -1392,6 +1411,52 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     );
   }
 
+  const clueStrip = (
+    <View
+      ref={onboardingClueWrapRef}
+      collapsable={false}
+      onLayout={(e) => {
+        const { y, height } = e.nativeEvent.layout;
+        onboardingClueContentLayoutRef.current = { y, height };
+        if (isOnboarding) measureOnboardingFocus();
+      }}
+    >
+      <SwipeableClueStrip
+        cardRef={onboardingClueRef}
+        text={clueStripText}
+        placeholder={clueStripPlaceholder}
+        canSwipe={unfoundClues.length > 1 || (isOnboarding && onboardingStep === 0)}
+        showSwipeHints={isOnboarding && onboardingStep === 0}
+        onSwipe={goClue}
+        backgroundColor={ww.clueBg}
+        gradientColors={ww.clueGradient}
+        borderColor={ww.borderStrong}
+        textColor={
+          clueStripPlaceholder
+            ? ww.textMuted || ww.clueText
+            : ww.clueText || ww.text
+        }
+        prevA11y={t('play.clue.prev')}
+        nextA11y={t('play.clue.next')}
+        active={false}
+        overlay={null}
+      />
+    </View>
+  );
+
+  const timerRow = timerEnabled ? (
+    <View
+      style={styles.playTimerRow}
+      accessibilityRole="text"
+      accessibilityLabel={t('play.timer.a11y', { time: elapsedLabel })}
+    >
+      <Clock color={ww.textMuted || ww.clueText || ww.text} size={14} strokeWidth={2.2} />
+      <Text style={[styles.playTimerText, { color: ww.clueText || ww.text }]}>
+        {elapsedLabel}
+      </Text>
+    </View>
+  ) : null;
+
   return (
     <GradientBackground variant="play">
       <View style={styles.shell}>
@@ -1482,57 +1547,22 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           boardHostRef={isOnboarding ? onboardingGridBoardRef : null}
         />
 
-        <View
-          ref={onboardingClueWrapRef}
-          collapsable={false}
-          onLayout={(e) => {
-            const { y, height } = e.nativeEvent.layout;
-            onboardingClueContentLayoutRef.current = { y, height };
-            if (isOnboarding) measureOnboardingFocus();
-          }}
-        >
-          <SwipeableClueStrip
-            cardRef={onboardingClueRef}
-            text={clueStripText}
-            placeholder={clueStripPlaceholder}
-            canSwipe={unfoundClues.length > 1 || (isOnboarding && onboardingStep === 0)}
-            showSwipeHints={isOnboarding && onboardingStep === 0}
-            onSwipe={goClue}
-            backgroundColor={ww.clueBg}
-            gradientColors={ww.clueGradient}
-            borderColor={ww.borderStrong}
-            textColor={
-              clueStripPlaceholder
-                ? ww.textMuted || ww.clueText
-                : ww.clueText || ww.text
-            }
-            prevA11y={t('play.clue.prev')}
-            nextA11y={t('play.clue.next')}
-            active={false}
-            overlay={null}
-          />
-        </View>
-
-        {timerEnabled ? (
-          <View
-            style={styles.playTimerRow}
-            accessibilityRole="text"
-            accessibilityLabel={t('play.timer.a11y', { time: elapsedLabel })}
-          >
-            <Clock color={ww.textMuted || ww.clueText || ww.text} size={14} strokeWidth={2.2} />
-            <Text style={[styles.playTimerText, { color: ww.clueText || ww.text }]}>
-              {elapsedLabel}
-            </Text>
-          </View>
-        ) : null}
+        {clueStrip}
+        {timerRow}
       </ScrollView>
 
-      {/* Wheel lives outside ScrollView so pan gestures are never stolen mid-drag. */}
+      {/* Wheel stays outside ScrollView so pan gestures are never stolen mid-drag. */}
       <View
         style={[
           styles.wheelDock,
           isLandscape && styles.wheelDockLandscape,
-          { paddingBottom: isLandscape ? 12 : 8 },
+          {
+            paddingBottom: isLandscape
+              ? 12
+              : isOnboarding
+                ? Math.max(insets.bottom, 8)
+                : 4,
+          },
         ]}
       >
         <View style={styles.wheelRow}>
@@ -1654,7 +1684,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         </View>
       </View>
       </View>
-      {!isOnboarding ? <AdBanner style={styles.playAdBanner} /> : null}
+      {!isOnboarding ? (
+        <View style={styles.playAdSlot}>
+          <AdBanner style={[styles.playAdBanner, { paddingBottom: 0 }]} />
+        </View>
+      ) : null}
       </View>
 
       <WordWheelDictionarySheet
@@ -1761,27 +1795,40 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
+    // Banner may clip under the fold so clue + wheel stay fully visible.
+    overflow: 'hidden',
   },
   playBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
+    minHeight: 0,
   },
   playBodyLandscape: {
     flexDirection: 'row',
   },
+  playAdSlot: {
+    flexGrow: 0,
+    flexShrink: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
   playAdBanner: {
-    paddingTop: 4,
+    paddingTop: 2,
   },
   scrollView: {
     flex: 1,
+    minHeight: 0,
   },
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   wheelDock: {
     paddingHorizontal: 16,
-    paddingTop: 4,
+    paddingTop: 0,
+    flexShrink: 0,
+    zIndex: 2,
   },
   wheelDockLandscape: {
     justifyContent: 'center',

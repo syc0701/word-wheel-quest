@@ -16,7 +16,11 @@ import { FREE_DAILY_PLAYS, STARTER_PACK_PACKAGE_ID } from '../constants/guestAcc
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
   buildCellWordNumbers,
+  buildClueMapFromDisplayClue,
   buildDisplayGrid,
+  buildWordToNumberMap,
+  findWordsAtCell,
+  normalizeWord,
   parseWordPositions,
   puzzleCellKeys,
 } from '../lib/gridReveal';
@@ -42,12 +46,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const EMPTY_SET = new Set();
 const EMPTY_HINT_LETTERS = {};
 
-function formatDifficulty(level) {
-  const raw = String(level || '').trim();
-  if (!raw) return '';
-  return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-}
-
 export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
@@ -72,6 +70,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [selectedDate, setSelectedDate] = useState(() =>
     clampYmd(routeParams.date || todayYmd, minYmd, todayYmd)
   );
+  const [selectedWord, setSelectedWord] = useState(null);
 
   useEffect(() => {
     if (routeParams.date) {
@@ -121,6 +120,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           return;
         }
         setPuzzle(data);
+        setSelectedWord(null);
       } catch (e) {
         if (!cancelled) setError(e?.message || t('daily.error.loadFailed'));
       } finally {
@@ -153,10 +153,42 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
       ),
     [puzzle?.filledCoordinates, wordPositions, displayGrid]
   );
+  const clueMap = useMemo(
+    () => buildClueMapFromDisplayClue(puzzle?.displayClue),
+    [puzzle?.displayClue]
+  );
+  const wordToNumber = useMemo(
+    () => buildWordToNumberMap(puzzle?.filledCoordinates, cellWordNumbers),
+    [puzzle?.filledCoordinates, cellWordNumbers]
+  );
+  const selectedNorm = selectedWord ? normalizeWord(selectedWord) : '';
+  const selectedWordCells = useMemo(() => {
+    if (!selectedNorm || !wordPositions[selectedNorm]) return EMPTY_SET;
+    return new Set(wordPositions[selectedNorm].map((p) => `${p.row},${p.col}`));
+  }, [selectedNorm, wordPositions]);
+  const selectedClueText = useMemo(() => {
+    if (!selectedNorm) return '';
+    const number = wordToNumber.get(selectedNorm);
+    const clue = clueMap.get(selectedNorm) || t('play.clue.missing');
+    return `${number != null ? `${number}. ` : ''}${clue}`;
+  }, [selectedNorm, wordToNumber, clueMap, t]);
+
+  const handlePreviewCellPress = useCallback(
+    (row, col) => {
+      const matches = findWordsAtCell(puzzle?.filledCoordinates, row, col, cellWordNumbers);
+      if (!matches.length) return;
+      if (matches.length === 1) {
+        setSelectedWord(matches[0].word);
+        return;
+      }
+      const current = selectedWord ? normalizeWord(selectedWord) : '';
+      const idx = matches.findIndex((m) => m.word === current);
+      setSelectedWord(matches[(idx + 1) % matches.length].word);
+    },
+    [puzzle?.filledCoordinates, cellWordNumbers, selectedWord]
+  );
 
   const puzzleCompleted = Boolean(puzzle?.completed);
-  const puzzleTitle = String(puzzle?.title || '').trim();
-  const difficultyLabel = formatDifficulty(puzzle?.difficultyLevel);
   const isToday = selectedDate === todayYmd;
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
@@ -273,26 +305,14 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
           ) : puzzle?.id ? (
             <>
-              <View style={styles.previewHeader}>
-                {difficultyLabel ? (
-                  <View style={[styles.difficultyChip, { backgroundColor: colors.surfaceLight }]}>
-                    <Text style={[styles.difficultyChipText, { color: colors.primaryGlow }]}>
-                      {difficultyLabel}
-                    </Text>
-                  </View>
-                ) : null}
-                {puzzleCompleted ? (
+              {puzzleCompleted ? (
+                <View style={styles.previewHeader}>
                   <View style={[styles.completedChip, { backgroundColor: colors.surfaceLight }]}>
                     <Text style={[styles.completedChipText, { color: colors.primaryGlow }]}>
                       {t('daily.completed')}
                     </Text>
                   </View>
-                ) : null}
-              </View>
-              {puzzleTitle ? (
-                <Text style={[styles.puzzleTitle, { color: colors.text }]} numberOfLines={2}>
-                  {puzzleTitle}
-                </Text>
+                </View>
               ) : null}
               {showGrid ? (
                 <View style={styles.gridPreview}>
@@ -301,11 +321,31 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                     displayGrid={displayGrid}
                     puzzleCells={puzzleCells}
                     cellWordNumbers={cellWordNumbers}
-                    selectedWordCells={EMPTY_SET}
+                    selectedWordCells={selectedWordCells}
                     hintOnlyCells={EMPTY_SET}
                     celebratingCellKeys={EMPTY_SET}
-                    onCellPress={() => {}}
+                    onCellPress={handlePreviewCellPress}
                   />
+                  <View
+                    style={[
+                      styles.clueUnderGrid,
+                      {
+                        backgroundColor: colors.surfaceLight,
+                        borderColor: colors.primaryGlow,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.clueUnderGridText,
+                        {
+                          color: selectedClueText ? colors.text : colors.textMuted,
+                        },
+                      ]}
+                    >
+                      {selectedClueText || t('play.clue.placeholder')}
+                    </Text>
+                  </View>
                 </View>
               ) : null}
             </>
@@ -435,12 +475,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 12,
   },
-  puzzleTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'left',
-    marginBottom: 12,
-  },
   puzzleMeta: {
     fontSize: 14,
     marginTop: 10,
@@ -449,6 +483,18 @@ const styles = StyleSheet.create({
   gridPreview: {
     width: '100%',
     alignSelf: 'stretch',
+  },
+  clueUnderGrid: {
+    marginTop: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  clueUnderGridText: {
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 22,
   },
   completedChip: {
     paddingHorizontal: 12,
@@ -459,17 +505,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
-  },
-  difficultyChip: {
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  difficultyChipText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.3,
   },
   primaryBtn: {
     marginTop: 4,

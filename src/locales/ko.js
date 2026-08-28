@@ -222,6 +222,7 @@ export default {
   'complete.compliment.goodJob': '잘했어요!',
   'complete.compliment.niceWork': '멋져요!',
   'complete.compliment.wellDone': '훌륭해요!',
+  'complete.compliment.awesomeJob': '잘했어요!',
   'complete.compliment.awesome': '대단해요!',
   'complete.compliment.brilliant': '훌륭해요!',
   'complete.compliment.youNailedIt': '완벽해요!',
@@ -232,7 +233,9 @@ export default {
   'complete.stat.time': '시간',
   'complete.stat.score': '점수',
   'complete.stat.hints': '힌트',
-  'complete.hintsUsed': '사용한 힌트: −{n}코인',
+  'complete.levelComplete': '레벨 {n} 완료',
+  'complete.hintsUsed': '사용한 힌트: {n}코인',
+  'complete.rewards': '보상: +{n}코인',
   'complete.close': '닫기',
   'complete.next': '다음',
 

@@ -222,6 +222,7 @@ export default {
   'complete.compliment.goodJob': 'Gut gemacht!',
   'complete.compliment.niceWork': 'Schöne Arbeit!',
   'complete.compliment.wellDone': 'Sehr gut!',
+  'complete.compliment.awesomeJob': 'Tolle Arbeit!',
   'complete.compliment.awesome': 'Fantastisch!',
   'complete.compliment.brilliant': 'Brillant!',
   'complete.compliment.youNailedIt': 'Voll getroffen!',
@@ -232,7 +233,9 @@ export default {
   'complete.stat.time': 'Zeit',
   'complete.stat.score': 'Punktzahl',
   'complete.stat.hints': 'Tipps',
-  'complete.hintsUsed': 'Hinweise genutzt: −{n} Münzen',
+  'complete.levelComplete': 'Level {n} geschafft',
+  'complete.hintsUsed': 'Hinweise genutzt: {n} Münzen',
+  'complete.rewards': 'Belohnungen: +{n} Münzen',
   'complete.close': 'Schließen',
   'complete.next': 'Weiter',
 

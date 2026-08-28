@@ -222,6 +222,7 @@ export default {
   'complete.compliment.goodJob': 'أحسنت!',
   'complete.compliment.niceWork': 'عمل رائع!',
   'complete.compliment.wellDone': 'ممتاز!',
+  'complete.compliment.awesomeJob': 'عمل رائع!',
   'complete.compliment.awesome': 'مذهل!',
   'complete.compliment.brilliant': 'عبقري!',
   'complete.compliment.youNailedIt': 'أتقنتها!',
@@ -232,7 +233,9 @@ export default {
   'complete.stat.time': 'الوقت',
   'complete.stat.score': 'النتيجة',
   'complete.stat.hints': 'تلميحات',
-  'complete.hintsUsed': 'التلميحات المستخدمة: −{n} عملات',
+  'complete.levelComplete': 'اكتمل المستوى {n}',
+  'complete.hintsUsed': 'التلميحات المستخدمة: {n} عملات',
+  'complete.rewards': 'المكافآت: +{n} عملات',
   'complete.close': 'إغلاق',
   'complete.next': 'التالي',
 
