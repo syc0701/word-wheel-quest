@@ -18,6 +18,7 @@ import LetterWheel from '../components/LetterWheel';
 import SwipeableClueStrip from '../components/SwipeableClueStrip';
 import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
+import AdBanner from '../components/AdBanner';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 // import BonusWordModal from '../components/BonusWordModal';
@@ -1244,7 +1245,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   return (
     <GradientBackground variant="play">
-      <View style={[styles.shell, isLandscape && styles.shellLandscape]}>
+      <View style={styles.shell}>
+      <View style={[styles.playBody, isLandscape && styles.playBodyLandscape]}>
       <ScrollView
         ref={onboardingScrollRef}
         style={styles.scrollView}
@@ -1402,7 +1404,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         style={[
           styles.wheelDock,
           isLandscape && styles.wheelDockLandscape,
-          { paddingBottom: (isLandscape ? 12 : 28) + insets.bottom },
+          {
+            paddingBottom: isLandscape
+              ? 12
+              : isOnboarding
+                ? Math.max(insets.bottom, 8)
+                : 4,
+          },
         ]}
       >
         <View style={styles.wheelRow}>
@@ -1506,6 +1514,17 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         </View>
       </View>
       </View>
+      {!isOnboarding ? (
+        <View style={styles.playAdSlot}>
+          <AdBanner
+            style={[
+              styles.playAdBanner,
+              { paddingBottom: Math.max(insets.bottom, 4) },
+            ]}
+          />
+        </View>
+      ) : null}
+      </View>
 
       <WordWheelDictionarySheet
         visible={dictionaryOpen}
@@ -1602,11 +1621,25 @@ const styles = StyleSheet.create({
   shell: {
     flex: 1,
   },
-  shellLandscape: {
+  playBody: {
+    flex: 1,
+    minHeight: 0,
+  },
+  playBodyLandscape: {
     flexDirection: 'row',
+  },
+  playAdSlot: {
+    flexGrow: 0,
+    flexShrink: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  playAdBanner: {
+    paddingTop: 2,
   },
   scrollView: {
     flex: 1,
+    minHeight: 0,
   },
   scroll: {
     flexGrow: 1,
