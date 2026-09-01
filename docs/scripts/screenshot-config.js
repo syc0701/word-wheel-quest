@@ -29,8 +29,8 @@ const DEVICES = {
   phone: {
     name: 'phone',
     playFolder: 'phoneScreenshots',
-    // Was 430×940 — too small for current Play rules; keep ~same aspect.
-    viewport: { width: 1080, height: 2361 },
+    // Play recommended portrait 9:16 (was 1080×2361 ≈ 2.19:1 — over 2:1 limit).
+    viewport: { width: 1080, height: 1920 },
     deviceScaleFactor: 1,
   },
   sevenInch: {
