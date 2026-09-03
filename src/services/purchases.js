@@ -74,7 +74,17 @@ export async function configurePurchases() {
 
   // App.js calls this without awaiting, so nothing here may reject.
   try {
-    Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+    if (typeof Purchases.configure === 'function') {
+      const maybe = Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+      if (maybe && typeof maybe.then === 'function') {
+        await maybe;
+      }
+    } else if (typeof Purchases.setup === 'function') {
+      // react-native-purchases v3–v5
+      Purchases.setup(REVENUECAT_API_KEY);
+    } else {
+      return;
+    }
     configured = true;
   } catch (error) {
     if (__DEV__) console.warn(`[Purchases] configure failed: ${error?.message}`);
@@ -145,4 +155,118 @@ export function readPurchaseTransactionId(purchaseResult) {
 export async function restorePurchases() {
   assertStoreReady();
   return Purchases.restorePurchases();
+}
+
+const EMPTY_IDENTITY = { revenueCatAppUserId: '', revenueCatOriginalAppUserId: '' };
+
+let cachedIdentity = EMPTY_IDENTITY;
+
+function pickId(...values) {
+  for (const value of values) {
+    const text = value == null ? '' : String(value).trim();
+    if (text && text !== 'undefined' && text !== 'null') {
+      return text;
+    }
+  }
+  return '';
+}
+
+/** Works with current CustomerInfo and older PurchaserInfo field names. */
+export function identityFromCustomerInfo(info) {
+  if (!info || typeof info !== 'object') {
+    return { ...EMPTY_IDENTITY };
+  }
+  const original = pickId(
+    info.originalAppUserId,
+    info.originalAppUserID,
+    info.originalAppUserIdentifier
+  );
+  const current = pickId(info.appUserId, info.appUserID, original);
+  return {
+    revenueCatAppUserId: current,
+    revenueCatOriginalAppUserId: original || current,
+  };
+}
+
+export function rememberRevenueCatIdentityFromPurchase(purchaseResult) {
+  const info =
+    purchaseResult?.customerInfo
+    || purchaseResult?.purchaserInfo
+    || purchaseResult?.customer_info
+    || null;
+  const next = identityFromCustomerInfo(info);
+  if (next.revenueCatAppUserId) {
+    cachedIdentity = next;
+  }
+  return next.revenueCatAppUserId ? next : cachedIdentity;
+}
+
+export function clearRevenueCatIdentityCache() {
+  cachedIdentity = { ...EMPTY_IDENTITY };
+}
+
+/**
+ * Current and original RevenueCat App User IDs.
+ * Guests are typically {@code $RCAnonymousID:…}; after Google sign-in this becomes the Cognito sub.
+ * Safe on older Android / older Purchases SDK / devices without Play Billing — never throws.
+ */
+export async function getRevenueCatIdentity() {
+  if (cachedIdentity.revenueCatAppUserId) {
+    return cachedIdentity;
+  }
+  try {
+    if (!configured) {
+      await Promise.race([
+        configurePurchases(),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
+    }
+    if (!configured) {
+      return cachedIdentity;
+    }
+
+    let current = '';
+    if (typeof Purchases.getAppUserID === 'function') {
+      try {
+        current = pickId(await Purchases.getAppUserID());
+      } catch {
+        /* missing on some older native binaries */
+      }
+    }
+    if (!current) {
+      current = pickId(Purchases.appUserID, Purchases.appUserId);
+    }
+
+    let original = '';
+    const readInfo =
+      typeof Purchases.getCustomerInfo === 'function'
+        ? () => Purchases.getCustomerInfo()
+        : typeof Purchases.getPurchaserInfo === 'function'
+          ? () => Purchases.getPurchaserInfo()
+          : null;
+    if (readInfo) {
+      try {
+        const info = await Promise.race([
+          readInfo(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 800)),
+        ]);
+        const fromInfo = identityFromCustomerInfo(info);
+        current = current || fromInfo.revenueCatAppUserId;
+        original = fromInfo.revenueCatOriginalAppUserId;
+      } catch {
+        /* Play billing missing on older devices / emulators */
+      }
+    }
+
+    const next = {
+      revenueCatAppUserId: current,
+      revenueCatOriginalAppUserId: original || current,
+    };
+    if (next.revenueCatAppUserId) {
+      cachedIdentity = next;
+    }
+    return next.revenueCatAppUserId ? next : cachedIdentity;
+  } catch {
+    return cachedIdentity;
+  }
 }

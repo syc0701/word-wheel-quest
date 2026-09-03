@@ -11,10 +11,12 @@ import { IAP_PACKAGES, APP_STORE } from '../constants/store';
 import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import {
   getDefaultOffering,
+  getRevenueCatIdentity,
   isPurchasesConfigured,
   isStoreUnavailable,
   purchasePackage,
   readPurchaseTransactionId,
+  rememberRevenueCatIdentityFromPurchase,
 } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
@@ -144,16 +146,22 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       const authed = await isLoggedIn();
       const transactionId = readPurchaseTransactionId(purchaseResult);
       const productId = rcPackage.product.identifier;
+      const fromPurchase = rememberRevenueCatIdentityFromPurchase(purchaseResult);
+      const rcIdentity = fromPurchase.revenueCatAppUserId
+        ? fromPurchase
+        : await getRevenueCatIdentity();
+      const storePayload = {
+        platform: 'google',
+        storeProductId: productId,
+        packageKey: meta.packageId,
+        ...rcIdentity,
+      };
       if (authed) {
         const verify = await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
           productId,
           transactionId,
-          rawPayload: {
-            platform: 'google',
-            storeProductId: productId,
-            packageKey: meta.packageId,
-          },
+          rawPayload: storePayload,
         });
         if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
           await markStarterPackPurchased({ grantGuestCredits: false });
@@ -177,6 +185,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           productId,
           transactionId,
           packageKey: meta.packageId,
+          ...rcIdentity,
         });
         const { packageId: _pkg, ...backParams } = routeParams;
         Alert.alert(
@@ -201,6 +210,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           productId,
           transactionId,
           packageKey: meta.packageId,
+          ...rcIdentity,
         });
         Alert.alert(
           t('shop.alert.signInRequired.title'),

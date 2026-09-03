@@ -45,6 +45,8 @@ export async function verifyPendingIapIfNeeded() {
         platform: 'google',
         storeProductId: pending.productId,
         packageKey: pending.packageKey,
+        revenueCatAppUserId: pending.revenueCatAppUserId,
+        revenueCatOriginalAppUserId: pending.revenueCatOriginalAppUserId,
       },
     });
     await clearPendingIap();
