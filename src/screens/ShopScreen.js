@@ -10,10 +10,12 @@ import { SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
 import {
   getDefaultOffering,
+  getRevenueCatIdentity,
   isPurchasesConfigured,
   isStoreUnavailable,
   purchasePackage,
   readPurchaseTransactionId,
+  rememberRevenueCatIdentityFromPurchase,
 } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
@@ -169,6 +171,10 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       const authed = await isLoggedIn();
       const transactionId = readPurchaseTransactionId(purchaseResult);
       const productId = rcPackage.product.identifier;
+      const fromPurchase = rememberRevenueCatIdentityFromPurchase(purchaseResult);
+      const rcIdentity = fromPurchase.revenueCatAppUserId
+        ? fromPurchase
+        : await getRevenueCatIdentity();
       if (authed) {
         await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
@@ -178,6 +184,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
             platform: Platform.OS === 'ios' ? 'apple' : 'google',
             storeProductId: productId,
             packageKey: meta.packageId,
+            ...rcIdentity,
           },
         });
         const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
@@ -187,6 +194,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           productId,
           transactionId,
           packageKey: meta.packageId,
+          ...rcIdentity,
         });
         Alert.alert(
           t('shop.alert.signInRequired.title'),

@@ -18,7 +18,7 @@ import { APP_STORE } from '../constants/store';
 import { getAuthTokenClaims, signInWithToken, clearStoredAuthToken } from '../lib/auth';
 import { t } from '../lib/i18n';
 import { ensureUserAfterSignup } from '../lib/userApi';
-import { isPurchasesConfigured } from './purchases';
+import { clearRevenueCatIdentityCache, isPurchasesConfigured } from './purchases';
 
 const userPool = new CognitoUserPool({
   UserPoolId: COGNITO_USER_POOL_ID,
@@ -202,6 +202,7 @@ export async function identifyPurchasesUser() {
     const appUserId = claims?.sub;
     if (appUserId) {
       await Purchases.logIn(String(appUserId));
+      clearRevenueCatIdentityCache();
     }
   } catch {
     /* ignore */
@@ -363,6 +364,7 @@ export async function signOutAll() {
     if (isPurchasesConfigured()) {
       const Purchases = (await import('react-native-purchases')).default;
       await Purchases.logOut();
+      clearRevenueCatIdentityCache();
     }
   } catch {
     /* ignore */

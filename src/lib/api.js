@@ -2,6 +2,7 @@ import { getOrCreateWordWheelSession, getWordWheelSession, clearWordWheelSession
 import { reconcileGuestCoinsWithAccount } from './guestCoinsMigration';
 import { isLoggedIn } from './auth';
 import { apiGet, apiPost, apiPut } from './http';
+import { getRevenueCatIdentity } from '../services/purchases';
 
 async function getSessionForRequest() {
   const loggedIn = await isLoggedIn();
@@ -20,6 +21,27 @@ function clearSessionAfterLoginMigration(loggedIn, session) {
     clearWordWheelSession();
     reconcileGuestCoinsWithAccount().catch(() => {});
   }
+}
+
+async function attachOptionalRevenueCatIdentity(payload) {
+  try {
+    const ids = await Promise.race([
+      getRevenueCatIdentity(),
+      new Promise((resolve) => setTimeout(() => resolve({
+        revenueCatAppUserId: '',
+        revenueCatOriginalAppUserId: '',
+      }), 400)),
+    ]);
+    if (ids?.revenueCatAppUserId) {
+      payload.revenueCatAppUserId = ids.revenueCatAppUserId;
+    }
+    if (ids?.revenueCatOriginalAppUserId) {
+      payload.revenueCatOriginalAppUserId = ids.revenueCatOriginalAppUserId;
+    }
+  } catch {
+    /* Old iOS / no StoreKit — play start and progress must still succeed. */
+  }
+  return payload;
 }
 
 const WordWheelApi = {
@@ -70,6 +92,7 @@ const WordWheelApi = {
       payload.sessionId = session.sessionId;
       payload.sessionCreatedAt = session.createdAt;
     }
+    await attachOptionalRevenueCatIdentity(payload);
     const data = await apiPost('/v1/puzzle/wordwheel-play/start', payload);
     clearSessionAfterLoginMigration(loggedIn, session);
     return data;
@@ -82,6 +105,7 @@ const WordWheelApi = {
       payload.bonusWords = bonusWords;
     }
     if (session) payload.sessionId = session.sessionId;
+    await attachOptionalRevenueCatIdentity(payload);
     const data = await apiPut('/v1/puzzle/wordwheel-play/progress', payload);
     clearSessionAfterLoginMigration(loggedIn, session);
     return data;

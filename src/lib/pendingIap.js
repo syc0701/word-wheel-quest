@@ -46,6 +46,8 @@ export async function verifyPendingIapIfNeeded() {
         platform: Platform.OS === 'ios' ? 'apple' : 'google',
         storeProductId: pending.productId,
         packageKey: pending.packageKey,
+        revenueCatAppUserId: pending.revenueCatAppUserId,
+        revenueCatOriginalAppUserId: pending.revenueCatOriginalAppUserId,
       },
     });
     await clearPendingIap();
