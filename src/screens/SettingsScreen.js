@@ -19,6 +19,7 @@ import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
 import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEV_INTERMISSION_LINKS = [
   {
@@ -93,6 +94,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const wallet = useWordWheelWallet();
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
   const [scoreStanding, setScoreStanding] = useState(null);
@@ -242,8 +244,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         }
       />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: Math.max(insets.bottom, 16) + 40 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
         <View style={[styles.groupCard, themed.walletCard]}>
           {authed || wallet.loggedIn ? (
             <>
@@ -391,7 +398,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         </View>
 
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.legal')}</Text>
-        <View style={[styles.groupCard, themed.walletCard]}>
+        <View style={[styles.groupCard, styles.legalCard, themed.walletCard]}>
           {LEGAL_LINKS.map((link, index) => (
             <View key={link.id}>
               {index > 0 ? (
@@ -492,6 +499,9 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 32,
+  },
+  legalCard: {
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 12,
@@ -623,7 +633,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginBottom: 4,
     borderWidth: 1,
-    overflow: 'hidden',
   },
   groupDivider: {
     height: StyleSheet.hairlineWidth,

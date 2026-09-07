@@ -1,0 +1,10 @@
+What's new in version 2.0.1:
+
+- Clues advance automatically after you solve each word
+- Scene photos and play music refresh every 5 levels
+- Smoother background music on phones (including Settings)
+- Faster, lighter images and Google Play readiness improvements
+- Clearer Google Sign-In setup help when a device needs SHA-1 registration
+- Daily puzzle preview cleaned up; Show timer option removed
+
+Thanks for playing!
