@@ -187,6 +187,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [timerStartedAt, setTimerStartedAt] = useState(null);
   const [elapsedLabel, setElapsedLabel] = useState('0:00');
   const bonusWordLookupRef = useRef(false);
+  const pinCompletedClueRef = useRef(false);
   const completedPuzzleIdRef = useRef(null);
   const completedLevelRef = useRef(null);
   const completedSeasonRef = useRef(null);
@@ -236,22 +237,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     [puzzle?.filledCoordinates, puzzle?.displayClue, foundWords, wordPositions, hintedCellKeys, displayGrid]
   );
 
-  // Default the clue strip to the first unsolved word; keep an explicit cell
-  // selection (including completed words) so tapping a cell shows that clue.
+  // Default the clue strip to the first unsolved word; advance when the current
+  // selection is solved unless the player tapped a completed cell to review it.
   useEffect(() => {
     if (!selectedWord && unfoundClues.length > 0) {
       setSelectedWord(unfoundClues[0].word);
+      pinCompletedClueRef.current = false;
       return;
     }
     if (!selectedWord) return;
     const normalizedSelected = normalizeWord(selectedWord);
-    const stillExists =
-      unfoundClues.some((entry) => entry.word === normalizedSelected)
-      || Boolean(wordPositions[normalizedSelected]);
-    if (!stillExists && unfoundClues.length > 0) {
+    const isUnfound = unfoundClues.some((entry) => entry.word === normalizedSelected);
+    if (!isUnfound && unfoundClues.length > 0 && !pinCompletedClueRef.current) {
       setSelectedWord(unfoundClues[0].word);
     }
-  }, [unfoundClues, selectedWord, wordPositions]);
+  }, [unfoundClues, selectedWord]);
 
   const clueIndex = useMemo(() => {
     if (!selectedWord) return 0;
@@ -292,6 +292,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const goClue = useCallback(
     (delta) => {
       if (unfoundClues.length > 0) {
+        pinCompletedClueRef.current = false;
         const next = (clueIndex + delta + unfoundClues.length) % unfoundClues.length;
         setSelectedWord(unfoundClues[next].word);
       }
@@ -423,6 +424,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setSelectedIndices([]);
     setPlaySession(null);
     setSelectedWord(null);
+    pinCompletedClueRef.current = false;
     setHintLetters(new Map());
     setHintCoinsSpent(0);
     setHintPending(false);
@@ -978,6 +980,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       // Already revealed — pulse the cells so the player knows.
       if (foundWords.includes(word)) {
         playSfx('chime');
+        pinCompletedClueRef.current = true;
         setSelectedWord(word);
         triggerWordRevealEffect(word, 'already');
         return true;
@@ -990,8 +993,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       cascaded.forEach((w) => {
         if (!next.includes(w)) next.push(w);
       });
+      pinCompletedClueRef.current = false;
       setFoundWords(next);
-      setSelectedWord(word);
+      setSelectedWord(null);
       triggerWordRevealEffect(word, 'new');
       cascaded.forEach((w) => {
         if (w !== word) triggerWordRevealEffect(w, 'new');
@@ -1060,6 +1064,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
       const open = matches.filter((m) => !foundWords.includes(m.word));
       const pool = open.length ? open : matches;
+      pinCompletedClueRef.current = open.length === 0;
       if (pool.length === 1) {
         setSelectedWord(pool[0].word);
         return;

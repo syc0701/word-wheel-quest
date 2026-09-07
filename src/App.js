@@ -50,7 +50,6 @@ function AppShell() {
     }
     if (
       screen === SCREENS.DAILY
-      || screen === SCREENS.SETTINGS
       || screen === SCREENS.SHOP
       || screen === SCREENS.SIGN_IN
       || screen === SCREENS.WEBVIEW

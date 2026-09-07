@@ -11,6 +11,63 @@ function deletionStatusUrl(confirmationCode) {
   return `https://www.puzzleinteract.com/deletion-status?code=${encodeURIComponent(confirmationCode)}`;
 }
 
+/** Cognito ID token `identities` is often a JSON string. */
+function parseFederatedIdentities(identities) {
+  if (!identities) return [];
+  if (Array.isArray(identities)) return identities;
+  if (typeof identities === 'string') {
+    try {
+      const parsed = JSON.parse(identities);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * Federated subs + signup source for `/home/user/after-signup`.
+ * Native app defaults to IOS/ANDROID when not Google/Apple federated.
+ */
+function federatedFromClaims(claims) {
+  const list = parseFederatedIdentities(claims?.identities);
+  const ordered = [...list].sort((a, b) => {
+    const ap = a.primary === true || a.primary === 'true';
+    const bp = b.primary === true || b.primary === 'true';
+    if (ap && !bp) return -1;
+    if (!ap && bp) return 1;
+    return 0;
+  });
+
+  let googleSub = null;
+  let appleSignInSub = null;
+  let signupSource = null;
+
+  for (const id of ordered) {
+    const name = String(id.providerName || id.providerType || '');
+    const userId = id.userId != null ? String(id.userId).trim() : '';
+    if (!userId) continue;
+    if (name === 'Google' || /^google$/i.test(name)) {
+      googleSub = googleSub || userId;
+      if (!signupSource) signupSource = 'GOOGLE';
+    } else if (
+      name === 'SignInWithApple' ||
+      name === 'Apple' ||
+      /^sign\s*in\s*with\s*apple$/i.test(name)
+    ) {
+      appleSignInSub = appleSignInSub || userId;
+      if (!signupSource) signupSource = 'APPLE';
+    }
+  }
+
+  return {
+    googleSub,
+    appleSignInSub,
+    signupSource: signupSource || (Platform.OS === 'ios' ? 'IOS' : 'ANDROID'),
+  };
+}
+
 export function resolveWordWheelQuestCoins(cloudUser) {
   const map = cloudUser?.puzzleCoins;
   if (!map || typeof map !== 'object') return 0;
@@ -103,16 +160,30 @@ export async function fetchUserInfo() {
 }
 
 export async function ensureUserAfterSignup(claims = null) {
-  const body = {};
-  if (claims && typeof claims === 'object') {
-    if (claims.email) body.email = claims.email;
-    if (claims['cognito:username'] || claims.sub) {
-      body['cognito:username'] = claims['cognito:username'] || claims.sub;
-    }
-    if (claims.email_verified != null) body.email_verified = Boolean(claims.email_verified);
-    if (claims.given_name) body.given_name = claims.given_name;
-    if (claims.family_name) body.family_name = claims.family_name;
+  let resolved = claims && typeof claims === 'object' ? claims : null;
+  if (!resolved) {
+    resolved = await getAuthTokenClaims().catch(() => null);
   }
+
+  const body = {};
+  if (resolved) {
+    if (resolved.email) body.email = resolved.email;
+    if (resolved['cognito:username'] || resolved.sub) {
+      body['cognito:username'] = resolved['cognito:username'] || resolved.sub;
+    }
+    if (resolved.email_verified != null) {
+      body.email_verified = Boolean(resolved.email_verified);
+    }
+    if (resolved.given_name) body.given_name = resolved.given_name;
+    if (resolved.family_name) body.family_name = resolved.family_name;
+  }
+
+  // Always send a mobile signup source. Missing → backend defaults to WEB.
+  const { googleSub, appleSignInSub, signupSource } = federatedFromClaims(resolved || {});
+  body.signupSource = signupSource;
+  if (googleSub) body.googleSub = googleSub;
+  if (appleSignInSub) body.appleSignInSub = appleSignInSub;
+
   try {
     await apiPost('/home/user/after-signup', body);
   } catch {

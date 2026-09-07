@@ -117,7 +117,7 @@ export async function loginWithPassword(email, password) {
         return { success: false, errorKey: 'generic', message: t('auth.error.noToken') };
       }
       await signInWithToken(idToken);
-      await ensureUserAfterSignup();
+      await ensureUserAfterSignup(await getAuthTokenClaims().catch(() => null));
       await identifyPurchasesUser();
       return { success: true };
     } catch (error) {
@@ -281,7 +281,7 @@ export async function signInWithApple() {
 
   const idToken = parseAppleExchangeResponse(json);
   await signInWithToken(idToken);
-  await ensureUserAfterSignup();
+  await ensureUserAfterSignup(await getAuthTokenClaims().catch(() => null));
   await identifyPurchasesUser();
   return { success: true };
 }
@@ -339,7 +339,7 @@ export async function signInWithGoogle() {
 
   const idToken = parseNativeExchangeResponse(json);
   await signInWithToken(idToken);
-  await ensureUserAfterSignup();
+  await ensureUserAfterSignup(await getAuthTokenClaims().catch(() => null));
   await identifyPurchasesUser();
   return { success: true };
 }
