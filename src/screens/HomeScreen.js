@@ -38,7 +38,7 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const WHEEL_ART = require('../assets/icon.png');
+const WHEEL_ART = require('../assets/home-wheel-art.webp');
 
 function logHomePuzzle(data, source) {
   const wordsInUse = data?.wordsInUse;

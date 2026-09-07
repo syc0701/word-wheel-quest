@@ -33,6 +33,8 @@ function withEnableEdgeToEdge(config) {
     // @generated end expo-splashscreen
     super.onCreate(null)
 
+    // Prefer WindowCompat + Theme.EdgeToEdge over androidx.activity.enableEdgeToEdge()
+    // (that helper still touches deprecated status/nav bar color APIs).
     WindowCompat.setDecorFitsSystemWindows(window, false)
     WindowInsetsControllerCompat(window, window.decorView).apply {
       isAppearanceLightStatusBars = false

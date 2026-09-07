@@ -1,6 +1,7 @@
 import { AppState } from 'react-native';
 import { createAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'expo-audio';
-import { BGM_SCENES, AUDIO, pickRandomBgmTrack } from './audioAssets';
+import { BGM_SCENES, AUDIO, pickBgmTrack } from './audioAssets';
+import { getSceneBandForLevel } from './bgAssets';
 
 const BGM_VOLUME = 0.55;
 const SFX_VOLUME = 0.85;
@@ -11,6 +12,8 @@ let modeConfigured = false;
 let musicEnabled = true;
 let sfxEnabled = true;
 let scene = BGM_SCENES.NONE;
+let journeyLevel = 0;
+let journeyBand = 0;
 let activeBgmId = null;
 let activeBgmSource = null;
 let bgmPlayer = null;
@@ -195,7 +198,7 @@ async function applyBgm({ forceRestart = false, pickNew = false } = {}) {
 
   const scenePrefix = `${scene}:`;
   if (pickNew || !activeBgmId?.startsWith(scenePrefix)) {
-    const pick = pickRandomBgmTrack(scene);
+    const pick = pickBgmTrack(scene, journeyLevel);
     if (!pick) return;
     const player = ensureBgmPlayer(pick.source);
     if (!player) return;
@@ -205,7 +208,7 @@ async function applyBgm({ forceRestart = false, pickNew = false } = {}) {
 
   if (!bgmPlayer) {
     // Preference said music on, but player was lost — pick again.
-    const pick = pickRandomBgmTrack(scene);
+    const pick = pickBgmTrack(scene, journeyLevel);
     if (!pick) return;
     const player = ensureBgmPlayer(pick.source);
     if (!player) return;
@@ -282,6 +285,24 @@ export const soundManager = {
 
   async setSfxEnabled(enabled) {
     sfxEnabled = Boolean(enabled);
+  },
+
+  /**
+   * Keep play BGM in sync with journey level bands (same cadence as scene photos).
+   */
+  async setJourneyLevel(level) {
+    const n = Number(level);
+    if (!Number.isFinite(n) || n <= 0) return;
+    const nextLevel = Math.floor(n);
+    const nextBand = getSceneBandForLevel(nextLevel);
+    const bandChanged = nextBand !== journeyBand;
+    journeyLevel = nextLevel;
+    journeyBand = nextBand;
+    if (!bandChanged) return;
+    if (!musicEnabled || !bgmSceneHasTracks(scene)) return;
+    const pick = pickBgmTrack(scene, journeyLevel);
+    if (!pick || pick.id === activeBgmId) return;
+    await applyBgm({ forceRestart: true, pickNew: true });
   },
 
   async setScene(nextScene) {

@@ -1,11 +1,13 @@
 /** Bundled Simber Chill Simple Lofi BGM + UI SFX. */
 
+import { getSceneBandForLevel } from './bgAssets';
+
 /** Home and other non-play screens. */
 export const HOME_BGM_TRACKS = [
   require('../assets/audio/Smb_CSL_Relaxing_Piano_Melo_70_Ab.m4a'),
 ];
 
-/** Puzzle play — remaining tracks from assets/audio (+ unique lofi-only). */
+/** Puzzle play — remaining tracks; rotate with journey level bands (every 5 levels). */
 export const PLAY_BGM_TRACKS = [
   require('../assets/audio/Smb_CSL_Pitched_EPiano_57_E.m4a'),
   require('../assets/audio/Smb_CSL_Low_Ambient_Syn_Pad_58_Ab.m4a'),
@@ -14,8 +16,8 @@ export const PLAY_BGM_TRACKS = [
   require('../assets/audio/Smb_CSL_High_Melo_EPiano_54_F.m4a'),
   require('../assets/audio/Smb_CSL_Chill_Dist_Guitar_54_Dm.m4a'),
   require('../assets/audio/Smb_CSL_Sleepy_Melody_Guitar_56_Gm.m4a'),
-  require('../assets/audio/lofi/Smb_CSL_High_Sweet_Piano_70_C.m4a'),
-  require('../assets/audio/lofi/Smb_CSL_Very_Wet_Guitar_56_C.wav'),
+  require('../assets/audio/Smb_CSL_High_Sweet_Piano_70_C.m4a'),
+  require('../assets/audio/Smb_CSL_Very_Wet_Guitar_56_C.wav'),
 ];
 
 export const AUDIO = {
@@ -35,7 +37,12 @@ export const BGM_SCENES = {
   NONE: 'none',
 };
 
-export function pickRandomBgmTrack(scene) {
+/**
+ * Pick BGM for a screen. Play tracks advance with the same 5-level bands as scene photos.
+ * @param {string} scene
+ * @param {number} [journeyLevel]
+ */
+export function pickBgmTrack(scene, journeyLevel = 0) {
   const pool =
     scene === BGM_SCENES.HOME
       ? HOME_BGM_TRACKS
@@ -43,6 +50,12 @@ export function pickRandomBgmTrack(scene) {
         ? PLAY_BGM_TRACKS
         : null;
   if (!pool?.length) return null;
-  const index = Math.floor(Math.random() * pool.length);
-  return { source: pool[index], id: `${scene}:${index}` };
+  const band = getSceneBandForLevel(journeyLevel);
+  const index = pool.length === 1 ? 0 : band % pool.length;
+  return { source: pool[index], id: `${scene}:${band}:${index}` };
+}
+
+/** @deprecated Prefer {@link pickBgmTrack}. */
+export function pickRandomBgmTrack(scene, journeyLevel = 0) {
+  return pickBgmTrack(scene, journeyLevel);
 }

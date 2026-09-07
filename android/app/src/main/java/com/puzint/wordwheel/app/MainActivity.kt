@@ -16,18 +16,18 @@ import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Apply AppTheme before splash so system bars don't use the light window default.
+    // AppTheme (Theme.EdgeToEdge) before splash — required for consistent
+    // edge-to-edge without deprecated Window.setStatusBarColor APIs.
     // setTheme(R.style.AppTheme)
     // @generated begin expo-splashscreen - expo prebuild (DO NOT MODIFY) sync-f3ff59a738c56c9a6119210cb55f0b613eb8b6af
     SplashScreenManager.registerOnActivity(this)
     // @generated end expo-splashscreen
     super.onCreate(null)
 
-    // Edge-to-edge without deprecated Window.setStatusBarColor / setNavigationBarColor.
-    // (androidx.activity.enableEdgeToEdge still calls those APIs internally.)
+    // Prefer WindowCompat + Theme.EdgeToEdge over androidx.activity.enableEdgeToEdge()
+    // (that helper still touches deprecated status/nav bar color APIs).
     WindowCompat.setDecorFitsSystemWindows(window, false)
     WindowInsetsControllerCompat(window, window.decorView).apply {
-      // Dark UI → light (white) status/nav icons.
       isAppearanceLightStatusBars = false
       isAppearanceLightNavigationBars = false
     }
@@ -36,7 +36,6 @@ class MainActivity : ReactActivity() {
       window.isNavigationBarContrastEnforced = false
     }
 
-    // Hide native activity title / ActionBar.
     title = ""
     supportActionBar?.hide()
   }

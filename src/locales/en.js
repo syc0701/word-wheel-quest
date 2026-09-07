@@ -160,7 +160,7 @@ export default {
   'settings.appearance.light': 'Light',
   'settings.appearance.dark': 'Dark',
   'settings.appearance.random': 'Image',
-  'settings.appearance.randomHint': 'Scene photo changes every 50 levels',
+  'settings.appearance.randomHint': 'Scene photo and music change every 5 levels',
   'settings.sound.music': 'Play background music',
   'settings.sound.musicSubtitle': 'Loops on Home and Play',
   'settings.sound.sfx': 'Play sound effects',

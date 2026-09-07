@@ -26,9 +26,9 @@ import { markStarterPackPurchased } from '../lib/guestStarterPack';
 const GOLD = '#facc15';
 
 const PACKAGE_ICONS = {
-  starterChest: require('../assets/icons/starter-chest.png'),
-  classicSwords: require('../assets/icons/classic-swords.png'),
-  masterScroll: require('../assets/icons/master-scroll.png'),
+  starterChest: require('../assets/icons/starter-chest.webp'),
+  classicSwords: require('../assets/icons/classic-swords.webp'),
+  masterScroll: require('../assets/icons/master-scroll.webp'),
 };
 
 function ProductIcon({ icon, colors }) {

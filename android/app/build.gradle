@@ -96,7 +96,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         // Google Play: new updates must target API 36+ (Android 16)
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 18
+        versionCode 19
         versionName "2.0.1"
     }
     signingConfigs {
@@ -117,8 +117,9 @@ android {
             signingConfig signingConfigs.debug
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: true)
             minifyEnabled enableProguardInReleaseBuilds
-            // Prefer non-optimize rules — optimize + fullMode caused launch crashes for some devices.
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // R8 with optimize rules (Play memory guidance). fullMode stays off —
+            // that combo previously crashed some Pixel cold starts.
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }

@@ -16,6 +16,7 @@ import {
   resolveSceneBackground,
   saveStoredSceneLevel,
 } from '../lib/bgAssets';
+import { soundManager } from '../lib/soundManager';
 
 const AppearanceContext = createContext(null);
 
@@ -45,6 +46,9 @@ export function AppearanceProvider({ children }) {
       setModeState(loaded);
       sceneLevelRef.current = storedLevel;
       setSceneLevelState(storedLevel);
+      if (storedLevel > 0) {
+        soundManager.setJourneyLevel(storedLevel);
+      }
       if (loaded === APPEARANCE_RANDOM) {
         applySceneBackgrounds(storedLevel);
       }
@@ -68,7 +72,7 @@ export function AppearanceProvider({ children }) {
     return normalized;
   }, [applySceneBackgrounds]);
 
-  /** Keep Image theme scene in sync with season journey level (changes every 50 levels). */
+  /** Keep Image theme scene + play BGM in sync with journey level (every 5 levels). */
   const setSceneLevel = useCallback((level) => {
     const n = Number(level);
     if (!Number.isFinite(n) || n <= 0) return;
@@ -77,6 +81,7 @@ export function AppearanceProvider({ children }) {
     sceneLevelRef.current = next;
     setSceneLevelState(next);
     saveStoredSceneLevel(next);
+    soundManager.setJourneyLevel(next);
   }, []);
 
   useEffect(() => {
