@@ -53,6 +53,10 @@ export function AudioProvider({ children }) {
     setMusicState(music);
     setSfxState(sfx);
     await soundManager.configure({ music, sfx });
+    if (on) {
+      // Extra kick for Android devices that ignore the first play() after unmute.
+      setTimeout(() => soundManager.resumeBgm(), 250);
+    }
   }, []);
 
   const setBgmScene = useCallback(async (scene) => {

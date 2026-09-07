@@ -416,5 +416,11 @@ export default {
   'auth.google.noCode': 'Google sign-in did not return an ID token.',
   'auth.google.developerError':
     'Google Sign-In is not set up for this Android build. Add the app SHA-1 to the Google Cloud Android OAuth client.',
+  'auth.google.developerErrorTitle': 'Google Sign-In setup',
+  'auth.google.diag.package': 'Package',
+  'auth.google.diag.sha1': 'SHA-1',
+  'auth.google.diag.sha256': 'SHA-256',
+  'auth.google.diag.webClient': 'Web client ID',
+  'auth.google.shareKeys': 'Share keys',
   'auth.google.stateMismatch': 'Google sign-in could not be verified. Try again.',
 };

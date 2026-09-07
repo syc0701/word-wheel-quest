@@ -12,6 +12,7 @@ import { PlayTimerProvider } from './context/PlayTimerContext';
 import AppBackground from './components/AppBackground';
 import LaunchSplashOverlay from './components/LaunchSplashOverlay';
 import { initializeMobileAds } from './lib/ads';
+import { soundManager } from './lib/soundManager';
 import { configurePurchases } from './services/purchases';
 import PushNotificationService from './services/PushNotificationService';
 import HomeScreen from './screens/HomeScreen';
@@ -37,6 +38,14 @@ function AppShell() {
         /* ignore */
       }
       initializeMobileAds();
+      // Ads can steal Android audio focus on init — nudge BGM back.
+      setTimeout(() => {
+        try {
+          soundManager.resumeBgm();
+        } catch {
+          /* ignore */
+        }
+      }, 600);
     }, 400);
     return () => clearTimeout(t);
   }, []);
@@ -44,22 +53,12 @@ function AppShell() {
   useEffect(() => {
     if (!audioReady) return;
     const { screen } = route;
+    // Play screens use play BGM; everywhere else (incl. Settings) keeps main BGM on.
     if (screen === SCREENS.PLAY || screen === SCREENS.DAILY_PLAY) {
       setBgmScene(BGM_SCENES.PLAY);
       return;
     }
-    if (
-      screen === SCREENS.HOME
-      || screen === SCREENS.DAILY
-      || screen === SCREENS.SHOP
-      || screen === SCREENS.SIGN_IN
-      || screen === SCREENS.WEBVIEW
-      || screen === SCREENS.DEV_INTERMISSION
-    ) {
-      setBgmScene(BGM_SCENES.HOME);
-      return;
-    }
-    setBgmScene(BGM_SCENES.NONE);
+    setBgmScene(BGM_SCENES.HOME);
   }, [route.screen, audioReady, setBgmScene]);
 
   const navigate = useCallback((screen, params = {}) => {

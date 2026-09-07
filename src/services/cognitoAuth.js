@@ -27,6 +27,35 @@ if (__DEV__ && typeof global.crypto?.getRandomValues !== 'function') {
   );
 }
 
+/** Thrown when Google Sign-In returns DEVELOPER_ERROR (usually missing SHA-1). */
+export class GoogleSignInSetupError extends Error {
+  constructor(message, details = {}) {
+    super(message);
+    this.name = 'GoogleSignInSetupError';
+    this.code = 'DEVELOPER_ERROR';
+    this.details = details;
+  }
+}
+
+async function loadGoogleSignInDiagnostics() {
+  const details = {
+    packageName: 'com.puzint.wordwheel.app',
+    sha1: '',
+    sha256: '',
+    webClientId: GOOGLE_WEB_CLIENT_ID,
+  };
+  try {
+    const { getSigningInfo } = require('play-integrity');
+    const info = await getSigningInfo();
+    if (info?.packageName) details.packageName = String(info.packageName);
+    if (info?.sha1) details.sha1 = String(info.sha1);
+    if (info?.sha256) details.sha256 = String(info.sha256);
+  } catch {
+    /* native module unavailable — still show web client id */
+  }
+  return details;
+}
+
 export function getSignInErrorKey(error) {
   const name = error?.name || error?.code || error?.__type || '';
   const normalized = String(name).replace(/^com\.amazonaws\.cognito\.idp\.model\./, '');
@@ -196,7 +225,8 @@ export async function signInWithGoogle() {
       return { success: false, cancelled: true };
     }
     if (code === '10' || code === 'DEVELOPER_ERROR') {
-      throw new Error(t('auth.google.developerError'));
+      const details = await loadGoogleSignInDiagnostics();
+      throw new GoogleSignInSetupError(t('auth.google.developerError'), details);
     }
     throw error;
   }

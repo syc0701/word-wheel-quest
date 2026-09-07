@@ -5,7 +5,6 @@ import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
 import NotificationsSettingsCard from '../components/NotificationsSettingsCard';
-import PlayTimerSettingsCard from '../components/PlayTimerSettingsCard';
 import PushNotificationService from '../services/PushNotificationService';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
@@ -357,8 +356,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           ) : null}
           <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
           <AudioSettingsCard />
-          <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
-          <PlayTimerSettingsCard />
           {PushNotificationService.isPushSupported() ? (
             <>
               <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />

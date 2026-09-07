@@ -2,6 +2,7 @@ import { requireNativeModule, Platform } from 'expo-modules-core';
 
 /**
  * @typedef {{ token: string, nonce: string }} PlayIntegrityTokenResult
+ * @typedef {{ packageName: string, sha1: string, sha256: string }} AppSigningInfo
  */
 
 const NativePlayIntegrity =
@@ -19,4 +20,15 @@ export async function requestToken(options = {}) {
   return NativePlayIntegrity.requestToken(options);
 }
 
-export default { requestToken };
+/**
+ * Read this install's package name + signing certificate fingerprints (Android only).
+ * @returns {Promise<AppSigningInfo>}
+ */
+export async function getSigningInfo() {
+  if (!NativePlayIntegrity?.getSigningInfo) {
+    throw new Error('App signing info is only available on Android');
+  }
+  return NativePlayIntegrity.getSigningInfo();
+}
+
+export default { requestToken, getSigningInfo };

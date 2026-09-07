@@ -1,17 +1,21 @@
 /** Bundled Simber Chill Simple Lofi BGM + UI SFX. */
 
-/** Main / menu screens — one picked at random when entering Home BGM. */
+/** Home and other non-play screens. */
 export const HOME_BGM_TRACKS = [
-  require('../assets/audio/lofi/Smb_CSL_Low_Ambient_Syn_Pad_58_Ab.m4a'),
-  require('../assets/audio/lofi/Smb_CSL_Clean_Chill_EPiano_70_Ab.m4a'),
-  require('../assets/audio/lofi/Smb_CSL_Very_Wet_Guitar_56_C.wav'),
+  require('../assets/audio/Smb_CSL_Relaxing_Piano_Melo_70_Ab.m4a'),
 ];
 
-/** Puzzle play — one picked at random when entering Play BGM. */
+/** Puzzle play — remaining tracks from assets/audio (+ unique lofi-only). */
 export const PLAY_BGM_TRACKS = [
-  require('../assets/audio/lofi/Smb_CSL_Relaxing_Piano_Melo_70_Ab.m4a'),
+  require('../assets/audio/Smb_CSL_Pitched_EPiano_57_E.m4a'),
+  require('../assets/audio/Smb_CSL_Low_Ambient_Syn_Pad_58_Ab.m4a'),
+  require('../assets/audio/Smb_CSL_Chill_Piano_Melo_56_G.m4a'),
+  require('../assets/audio/Smb_CSL_Clean_Chill_EPiano_70_Ab.m4a'),
+  require('../assets/audio/Smb_CSL_High_Melo_EPiano_54_F.m4a'),
+  require('../assets/audio/Smb_CSL_Chill_Dist_Guitar_54_Dm.m4a'),
+  require('../assets/audio/Smb_CSL_Sleepy_Melody_Guitar_56_Gm.m4a'),
   require('../assets/audio/lofi/Smb_CSL_High_Sweet_Piano_70_C.m4a'),
-  require('../assets/audio/lofi/Smb_CSL_Sleepy_Melody_Guitar_56_Gm.m4a'),
+  require('../assets/audio/lofi/Smb_CSL_Very_Wet_Guitar_56_C.wav'),
 ];
 
 export const AUDIO = {

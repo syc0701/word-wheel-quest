@@ -96,8 +96,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         // Google Play: new updates must target API 36+ (Android 16)
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 15
-        versionName "1.0.1"
+        versionCode 18
+        versionName "2.0.1"
     }
     signingConfigs {
         debug {

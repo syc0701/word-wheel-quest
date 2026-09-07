@@ -45,6 +45,9 @@ android/build/
 modules/**/android/build/
 modules/**/.gradle/
 
+# Expo regenerates these from src/assets/splash-native.png on prebuild / run:android
+android/app/src/main/res/drawable-*/splashscreen_logo.png
+
 # fastlane / Google Play secrets + outputs (kept outside android/ so
 # `expo prebuild --clean` does not wipe them)
 vendor/bundle/

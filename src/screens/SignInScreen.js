@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +20,7 @@ import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { verifyPendingIapIfNeeded } from '../lib/pendingIap';
 import {
+  GoogleSignInSetupError,
   loginWithPassword,
   signInErrorMessage,
   signInWithGoogle,
@@ -133,6 +136,26 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
         await finishSignIn();
       }
     } catch (e) {
+      if (e instanceof GoogleSignInSetupError || e?.name === 'GoogleSignInSetupError') {
+        const d = e.details || {};
+        const diagnostic = [
+          `${t('auth.google.diag.package')}: ${d.packageName || '—'}`,
+          `${t('auth.google.diag.sha1')}: ${d.sha1 || '—'}`,
+          `${t('auth.google.diag.sha256')}: ${d.sha256 || '—'}`,
+          `${t('auth.google.diag.webClient')}: ${d.webClientId || '—'}`,
+        ].join('\n');
+        const body = `${e.message || t('auth.google.developerError')}\n\n${diagnostic}`;
+        Alert.alert(t('auth.google.developerErrorTitle'), body, [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('auth.google.shareKeys'),
+            onPress: () => {
+              Share.share({ message: body }).catch(() => {});
+            },
+          },
+        ]);
+        return;
+      }
       setError(e?.message || t('auth.google.failed'));
     } finally {
       setGoogleBusy(false);
