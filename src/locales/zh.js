@@ -22,8 +22,7 @@ export default {
   'home.section.more': '更多',
   'home.dailyPuzzle.label': '每日拼图',
   'home.dailyPuzzle.subtitle': '今日奖励 — 独立于赛季旅程',
-  'home.footer':
-    '进度保存在本设备。登录一次即可将游客进度转移到你的账户。',
+  'home.footer': '进度保存在本设备。登录一次即可将游客进度转移到你的账户。',
 
   // daily
   'daily.a11y.back': '返回',
@@ -79,8 +78,7 @@ export default {
   'settings.wallet.puzzleCoins': '拼图金币',
   'settings.wallet.credits': '点数',
   'settings.wallet.creditsSuffix': ' 点数',
-  'settings.wallet.hint':
-    '提示每个字母消耗 10 枚金币（金币用完时使用点数）。',
+  'settings.wallet.hint': '提示每个字母消耗 10 枚金币（金币用完时使用点数）。',
   'settings.score.wordsFound': '找到的单词',
   'settings.score.rank': '排名',
   'settings.score.rankValue': '#{n}',
@@ -94,14 +92,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -130,8 +125,7 @@ export default {
   'settings.feedback.rowDesc': '告诉我们你喜欢什么，或我们该改进什么。',
   'settings.feedback.button': '反馈',
   'settings.feedback.title': '帮助我们改进',
-  'settings.feedback.intro':
-    '分享你对 Word Wheel Quest 的想法。建议、想玩的谜题或一般反馈都欢迎。',
+  'settings.feedback.intro': '分享你对 Word Wheel Quest 的想法。建议、想玩的谜题或一般反馈都欢迎。',
   'settings.feedback.category': '类别',
   'settings.feedback.category.puzzles': '谜题',
   'settings.feedback.category.gameplay': '玩法',
@@ -141,8 +135,7 @@ export default {
   'settings.feedback.opinion': '你的意见',
   'settings.feedback.opinionPlaceholder': '告诉我们更多…',
   'settings.feedback.opinionRequired': '发送前请先写一段简短说明。',
-  'settings.feedback.privacyNote':
-    '不会收集个人数据。仅包含标准诊断信息（应用版本和操作系统）。',
+  'settings.feedback.privacyNote': '不会收集个人数据。仅包含标准诊断信息（应用版本和操作系统）。',
   'settings.feedback.cancel': '取消',
   'settings.feedback.send': '发送',
   'settings.feedback.sendError': '无法发送反馈，请重试。',
@@ -178,13 +171,11 @@ export default {
   'shop.alert.unavailable.title': '商店不可用',
   'shop.alert.unavailable.body': '无法加载商品。',
   'shop.alert.productUnavailable.title': '不可用',
-  'shop.alert.productUnavailable.body':
-    '该商品尚未加载。请稍后再试。',
+  'shop.alert.productUnavailable.body': '该商品尚未加载。请稍后再试。',
   'shop.alert.success.title': '谢谢！',
   'shop.alert.success.body': '{name} 购买成功。',
   'shop.alert.signInRequired.title': '需要登录',
-  'shop.alert.signInRequired.body':
-    '购买已记录。请登录以同步到你的账户。',
+  'shop.alert.signInRequired.body': '购买已记录。请登录以同步到你的账户。',
   'shop.alert.signInRequired.action': '登录',
   'shop.alert.purchaseFailed.title': '购买失败',
   'shop.alert.purchaseFailed.body': '出了点问题。',
@@ -196,18 +187,12 @@ export default {
   'shop.restore': '恢复购买',
   'shop.restore.subtitleIos': '已在此 Apple ID 上购买？在此恢复。',
   'shop.restore.subtitleAndroid': '已购买？在此恢复。',
-
-  // webview
   'webview.titleFallback': '页面',
-
-  // dev intermission
   'devIntermission.title.wordMaster': '单词大师',
   'devIntermission.title.streaksSparks': '连胜与火花',
   'devIntermission.title.brainPower': '脑力',
   'devIntermission.title.fallback': '过场',
   'devIntermission.hint': '开发者预览 · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': '势不可挡！',
   'intermission.streak.onFire': '火力全开！',
   'intermission.streak.sparkStreak': '火花连胜！',
@@ -230,8 +215,6 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': '继续冒险 ➔',
   'intermission.a11y.continue': '继续冒险',
-
-  // complete dialog
   'complete.compliment.goodJob': '干得好！',
   'complete.compliment.niceWork': '不错！',
   'complete.compliment.wellDone': '出色！',
@@ -262,34 +245,22 @@ export default {
   'toast.dailyFallback': '每日',
   'toast.level': '第 {n} 关',
   'toast.levelFallback': '关卡',
-
-  // points table
   'pointsTable.header.letters': '字母数',
   'pointsTable.header.coins': '金币',
   'pointsTable.empty': '金币目录不可用。',
   'pointsTable.row.letters': '{n} 个字母',
-  'pointsTable.footer':
-    '拼图得分是你找到的每个单词金币之和。',
-
-  // duration
+  'pointsTable.footer': '拼图得分是你找到的每个单词金币之和。',
   'duration.lessThanMinute': '不到一分钟',
   'duration.hoursMinutes': '{hrs}小时 {rem}分',
   'duration.hours': '{hrs}小时',
   'duration.minutesSeconds': '{mins}分 {secs}秒',
   'duration.minutes': '{mins}分',
-
-  // wallet
   'wallet.error.loadFailed': '加载钱包失败',
-
-  // auth
   'auth.error.userNotConfirmed': '登录前请先确认邮箱。',
-  'auth.error.passwordResetRequired':
-    '登录前必须重置密码。',
+  'auth.error.passwordResetRequired': '登录前必须重置密码。',
   'auth.error.invalidInput': '请输入邮箱和密码。',
-  'auth.error.invalidParameter':
-    '无法完成登录。请检查邮箱和密码后重试。',
-  'auth.error.tooManyAttempts':
-    '尝试次数过多。请稍等几分钟后再试。',
+  'auth.error.invalidParameter': '无法完成登录。请检查邮箱和密码后重试。',
+  'auth.error.tooManyAttempts': '尝试次数过多。请稍等几分钟后再试。',
   'auth.error.generic': '登录失败。请重试。',
   'auth.error.noToken': '登录未返回令牌。',
   'auth.google.failed': 'Google 登录失败，请重试。',

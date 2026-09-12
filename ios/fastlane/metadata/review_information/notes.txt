@@ -8,6 +8,12 @@ Play-screen tools (reviewers):
 
 Bonus words: spelling a real dictionary word that is not on the board awards +1 coin once per unique word and stores it in the treasure chest.
 
+Access / IAP (version 1.0.3):
+• Journey levels 1–50 and the first 10 Daily puzzles are free.
+• Level 51+ and extra Daily puzzles require the Starter Fun Bundle (or puzzle credits).
+• Shop is under Home / Settings. Restore purchases is in Settings → Account.
+• Sign in with Apple is available; account deletion is in Settings → Account.
+
 Test notes:
 • Open any Season Journey puzzle (e.g. Level 15+).
 • Tap numbered cells for clues; select letters on the wheel to form words.

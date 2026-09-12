@@ -7,6 +7,7 @@ export default {
   'common.level': 'Level {n}',
   'common.levelFallback': 'Level',
   'common.play': 'Play',
+  'common.continue': 'Continue',
   'common.daily': 'Daily',
   'common.words': '{n} words',
   'common.coins': '{n} coins',
@@ -34,22 +35,22 @@ export default {
   'home.dailyPuzzle.subtitle': 'New puzzle every day',
   'home.dailyPuzzle.lockedSubtitle': 'Unlocks at Level {n}',
   'home.dailyPuzzle.lockedTitle': 'Daily Puzzle Locked',
-  'home.dailyPuzzle.lockedBody':
-    'Reach Level {n} in the Season Journey to unlock the Daily Puzzle.',
+  'home.dailyPuzzle.lockedBody': 'Reach Level {n} in the Season Journey to unlock the Daily Puzzle.',
   'home.dailyPuzzle.lockedOk': 'Got it',
   'home.shop.label': 'Shop',
   'home.shop.subtitle': 'Coins, bundles and more',
   'home.guest.title': 'Guest Mode',
   'home.guest.body': 'Sign in to sync your progress and play on any device',
   'home.guest.signIn': 'Sign In',
-  'home.footer':
-    'Progress is saved on this device. Sign in once to move guest progress to your account.',
+  'home.footer': 'Progress is saved on this device. Sign in once to move guest progress to your account.',
 
   // daily
   'daily.a11y.back': 'Back',
   'daily.kicker': 'BONUS PUZZLE',
   'daily.title': 'Daily Puzzle',
   'daily.subtitle': "Pick a date to preview and play that day's puzzle.",
+  'daily.subtitleFreePlays': '{left} of {total} free daily puzzles left.',
+  'daily.subtitleCredits': 'Each daily puzzle uses 1 credit after your free plays.',
   'daily.today': 'Today',
   'daily.weekday.sun': 'S',
   'daily.weekday.mon': 'M',
@@ -74,6 +75,8 @@ export default {
   'play.error.noDaily': 'No daily puzzle available.',
   'play.error.noPuzzle': 'No puzzle available.',
   'play.error.loadFailed': 'Could not load puzzle.',
+  'play.error.starterRequired': 'Get the Starter Fun Bundle to continue past Level 50.',
+  'play.error.noCredits': 'No puzzle credits left. Get the Starter Fun Bundle or more credits in the Shop.',
   'play.error.generic': 'Failed to load',
   'play.error.saveFailed': 'Could not save progress',
   'play.alert.notEnoughCoins.title': 'Not enough coins',
@@ -90,7 +93,7 @@ export default {
   'play.a11y.shuffle': 'Shuffle',
   'play.a11y.dictionary': 'Dictionary',
 
-  // first-run onboarding (PlayScreen overlay)
+  // onboarding
   'onboarding.title': 'Tutorial',
   'onboarding.skip': 'Skip',
   'onboarding.next': 'Next',
@@ -103,8 +106,7 @@ export default {
   'onboarding.finish': "Let's go",
   'onboarding.welcome.kicker': 'Welcome',
   'onboarding.welcome.title': 'Let’s learn the game',
-  'onboarding.welcome.body':
-    'We’ll guide you through how to play Word Wheel Quest — clues, the letter wheel, and hints. It only takes a minute!',
+  'onboarding.welcome.body': 'We’ll guide you through how to play Word Wheel Quest — clues, the letter wheel, and hints. It only takes a minute!',
   'onboarding.welcome.start': 'Start',
   'onboarding.success.kicker': 'Congratulations',
   'onboarding.success.title': 'Good Job!!',
@@ -128,8 +130,7 @@ export default {
   'settings.wallet.puzzleCoins': 'Puzzle coins',
   'settings.wallet.credits': 'Credits',
   'settings.wallet.creditsSuffix': ' credits',
-  'settings.wallet.hint':
-    'Hints cost 10 coins per letter (or credits when coins run out).',
+  'settings.wallet.hint': 'Hints cost 10 coins per letter (or credits when coins run out).',
   'settings.score.wordsFound': 'Words found',
   'settings.score.rank': 'Rank',
   'settings.score.rankValue': '#{n}',
@@ -143,14 +144,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -169,7 +167,7 @@ export default {
   'settings.appearance.light': 'Light',
   'settings.appearance.dark': 'Dark',
   'settings.appearance.random': 'Image',
-  'settings.appearance.randomHint': 'Scene photo changes every 50 levels',
+  'settings.appearance.randomHint': 'Scene photo and music change every 5 levels',
   'settings.sound.music': 'Play background music',
   'settings.sound.musicSubtitle': 'Loops on Home and Play',
   'settings.sound.sfx': 'Play sound effects',
@@ -178,21 +176,17 @@ export default {
   'settings.notifications.subtitle': 'Get notified when a new puzzle is published.',
   'settings.notifications.signInSubtitle': 'Sign in to get notified when a new puzzle is published.',
   'settings.notifications.signInTitle': 'Sign in required',
-  'settings.notifications.signInBody':
-    'Sign in to turn on notifications for new Word Wheel puzzles.',
+  'settings.notifications.signInBody': 'Sign in to turn on notifications for new Word Wheel puzzles.',
   'settings.notifications.deniedTitle': 'Notifications blocked',
-  'settings.notifications.deniedBody':
-    'Notifications are off in device Settings. Enable them there to get alerts for new puzzles.',
+  'settings.notifications.deniedBody': 'Notifications are off in device Settings. Enable them there to get alerts for new puzzles.',
   'settings.notifications.saveFailedTitle': 'Could not update',
-  'settings.notifications.saveFailedBody':
-    'Could not update notification settings. Try again.',
+  'settings.notifications.saveFailedBody': 'Could not update notification settings. Try again.',
   'settings.language.a11y': 'Language',
   'settings.section.feedback': 'Feedback',
   'settings.feedback.rowDesc': 'Tell us what you like or what we should improve.',
   'settings.feedback.button': 'Feedback',
   'settings.feedback.title': 'Help us improve',
-  'settings.feedback.intro':
-    "Share your thoughts on Word Wheel Quest. Suggestions, puzzles you'd like, or general feedback are all welcome.",
+  'settings.feedback.intro': "Share your thoughts on Word Wheel Quest. Suggestions, puzzles you'd like, or general feedback are all welcome.",
   'settings.feedback.category': 'Category',
   'settings.feedback.category.puzzles': 'Puzzles',
   'settings.feedback.category.gameplay': 'Gameplay',
@@ -202,14 +196,12 @@ export default {
   'settings.feedback.opinion': 'Your opinion',
   'settings.feedback.opinionPlaceholder': 'Tell us more...',
   'settings.feedback.opinionRequired': 'Please share a short note before sending.',
-  'settings.feedback.privacyNote':
-    'No personal data is collected. Only standard diagnostic info (app version and OS) is included with your feedback.',
+  'settings.feedback.privacyNote': 'No personal data is collected. Only standard diagnostic info (app version and OS) is included with your feedback.',
   'settings.feedback.cancel': 'Cancel',
   'settings.feedback.send': 'Send',
   'settings.feedback.sendError': 'Could not send feedback. Try again.',
   'settings.feedback.thanksTitle': 'Thank you',
-  'settings.feedback.thanksMessage':
-    'Thank you for your feedback! We will continue working hard to improve the app.',
+  'settings.feedback.thanksMessage': 'Thank you for your feedback! We will continue working hard to improve the app.',
   'settings.feedback.close': 'Close',
 
   // legal
@@ -235,8 +227,7 @@ export default {
   'signIn.apple.hint': 'Sign in with Apple is available on iPhone and iPad.',
   'signIn.divider': '— or —',
   'signIn.required.title': 'Sign in required',
-  'signIn.required.body':
-    'Sign in to sync this purchase to your account.',
+  'signIn.required.body': 'Sign in to sync this purchase to your account.',
 
   // shop
   'shop.title': 'Shop',
@@ -254,17 +245,16 @@ export default {
   'shop.pack.coinsLarge.description': 'Adds 1,000 coins to player balance',
   'shop.alert.unavailable.title': 'Shop unavailable',
   'shop.alert.unavailable.body': 'Could not load products. Try again in a moment.',
-  'shop.alert.deviceUnavailable.body':
-    'In-app purchases are not available on this device right now.',
+  'shop.alert.deviceUnavailable.body': 'In-app purchases are not available on this device right now.',
   'shop.alert.productUnavailable.title': 'Unavailable',
-  'shop.alert.productUnavailable.body':
-    'This product is not loaded yet. Try again in a moment.',
+  'shop.alert.productUnavailable.body': 'This product is not loaded yet. Try again in a moment.',
   'shop.alert.success.title': 'Thank you!',
   'shop.alert.success.body': '{name} purchased successfully.',
   'shop.alert.signInRequired.title': 'Sign in required',
-  'shop.alert.signInRequired.body':
-    'Purchase recorded. Sign in to sync it to your account.',
+  'shop.alert.signInRequired.body': 'Purchase recorded. Sign in to sync it to your account.',
   'shop.alert.signInRequired.action': 'Sign in',
+  'shop.alert.starterUnlocked.title': 'Starter pack unlocked!',
+  'shop.alert.starterUnlocked.body': 'Level 51+ and extra daily puzzles are unlocked. Each play uses 1 credit from your balance.',
   'shop.alert.purchaseFailed.title': 'Purchase failed',
   'shop.alert.purchaseFailed.body': 'Something went wrong.',
   'shop.alert.restored.title': 'Restored',
@@ -275,18 +265,13 @@ export default {
   'shop.restore': 'Restore purchases',
   'shop.restore.subtitleIos': 'Already bought on this Apple ID? Restore here.',
   'shop.restore.subtitleAndroid': 'Already purchased? Restore here.',
-
-  // webview
+  'shop.restore.subtitle': 'Already bought on this Google Play account? Restore here.',
   'webview.titleFallback': 'Page',
-
-  // dev intermission
   'devIntermission.title.wordMaster': 'Word Master',
   'devIntermission.title.streaksSparks': 'Streaks & Sparks',
   'devIntermission.title.brainPower': 'Brain Power',
   'devIntermission.title.fallback': 'Intermission',
   'devIntermission.hint': 'Developer preview · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': 'UNSTOPPABLE!',
   'intermission.streak.onFire': 'ON FIRE!',
   'intermission.streak.sparkStreak': 'SPARK STREAK!',
@@ -296,8 +281,7 @@ export default {
   'intermission.streak.bonusCoins': '+{n}',
   'intermission.wordMaster.title': 'Word Master',
   'intermission.wordMaster.headline': 'Level Complete!',
-  'intermission.wordMaster.message':
-    "Congratulations! You've completed the entire journey.",
+  'intermission.wordMaster.message': "Congratulations! You've completed the entire journey.",
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.timeTaken': 'Time Taken',
   'intermission.wordMaster.starWord': 'Star Word',
@@ -310,13 +294,11 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': 'CONTINUE QUEST ➔',
   'intermission.a11y.continue': 'Continue quest',
-
-  // complete dialog
   'complete.compliment.goodJob': 'Good job!',
   'complete.compliment.niceWork': 'Nice work!',
   'complete.compliment.wellDone': 'Well done!',
-  'complete.compliment.awesomeJob': 'Awesome Job!',
   'complete.compliment.awesome': 'Awesome!',
+  'complete.compliment.awesomeJob': 'Awesome Job!',
   'complete.compliment.brilliant': 'Brilliant!',
   'complete.compliment.youNailedIt': 'You nailed it!',
   'complete.compliment.greatSolve': 'Great solve!',
@@ -331,6 +313,17 @@ export default {
   'complete.rewards': 'Rewards: +{n} coins',
   'complete.close': 'Close',
   'complete.next': 'Next',
+  'complete.guest.starterLink': 'Get Starter Fun Bundle',
+
+  // guest starter
+  'guest.starter.levelTitle': 'Continue your journey',
+  'guest.starter.levelBody': 'You reached Level 50! Get the Starter Fun Bundle to play Level {n} and beyond.',
+  'guest.starter.dailyTitle': 'Daily Puzzle',
+  'guest.starter.dailyBody': 'You used your {n} free daily puzzles. Get the Starter Fun Bundle to keep playing — each puzzle uses 1 credit.',
+  'guest.starter.creditsTitle': 'Out of puzzle credits',
+  'guest.starter.creditsBody': 'Get the Starter Fun Bundle for {n} credits, or buy more in the Shop. Each Level 51+ or daily puzzle uses 1 credit.',
+  'guest.starter.shopCta': 'Get Starter Fun Bundle',
+  'guest.starter.notNow': 'Not now',
   'complete.unlock.dailyPuzzle': 'Unlocked: Daily Puzzle',
   'complete.unlock.dailyPuzzle.body': 'A new puzzle every day is now available from Home.',
 
@@ -346,75 +339,61 @@ export default {
   'toast.levelFallback': 'Level',
   'toast.words': '{n} words',
   'toast.maxScore': 'Up to +{n} score',
-  'toast.guide':
-    'Swipe letters on the wheel to spell words. Find every word on the grid to clear the level.',
-  'toast.guideDaily':
-    'Swipe letters on the wheel to spell words. Clear every word on today’s bonus grid.',
-
-  // bonus word (off-grid dictionary find)
+  'toast.guide': 'Swipe letters on the wheel to spell words. Find every word on the grid to clear the level.',
+  'toast.guideDaily': 'Swipe letters on the wheel to spell words. Clear every word on today’s bonus grid.',
   'bonusWord.title': 'Word Discovery!',
-  'bonusWord.bodyGift':
-    'You found a real word that is not in this puzzle. We are giving you {n} coin right away!',
+  'bonusWord.bodyGift': 'You found a real word that is not in this puzzle. We are giving you {n} coin right away!',
   'bonusWord.giftAmount': '+{n} coin',
   'bonusWord.ok': 'Nice!',
-
-  // treasure chest (bonus words found)
   'treasureChest.title': 'Treasure Finds',
-  'treasureChest.subtitle':
-    'Real words you found that are not on this puzzle. Each new word earns +{n} coin once.',
-  'treasureChest.empty':
-    'No bonus words yet. Spell a real word that is not on the grid to stash it here.',
+  'treasureChest.subtitle': 'Real words you found that are not on this puzzle. Each new word earns +{n} coin once.',
+  'treasureChest.empty': 'No bonus words yet. Spell a real word that is not on the grid to stash it here.',
   'treasureChest.giftBadge': '+{n}',
   'treasureChest.close': 'Close',
   'treasureChest.openDictionary': 'Look up {word}',
   'play.a11y.treasureChest': 'Bonus words treasure chest',
   'play.a11y.musicOn': 'Turn on background music',
   'play.a11y.musicOff': 'Turn off background music',
-
-  // points table
+  'play.a11y.soundOn': 'Turn on sound',
+  'play.a11y.soundOff': 'Turn off sound',
   'pointsTable.header.letters': 'Letters',
   'pointsTable.header.coins': 'Coins',
   'pointsTable.empty': 'Coins catalog unavailable.',
   'pointsTable.row.letters': '{n} letters',
-  'pointsTable.footer':
-    'Puzzle score is the sum of coins for every word you find.',
-
-  // duration
+  'pointsTable.footer': 'Puzzle score is the sum of coins for every word you find.',
   'duration.lessThanMinute': 'Less than a minute',
   'duration.seconds': '{n}s',
   'duration.hoursMinutes': '{hrs}h {rem}m',
   'duration.hours': '{hrs}h',
   'duration.minutesSeconds': '{mins}m {secs}s',
   'duration.minutes': '{mins}m',
-
-  // wallet
   'wallet.error.loadFailed': 'Failed to load wallet',
 
   // auth
-  'auth.error.userNotFound':
-    'No account found for this email. If you signed up with Google on the website, set a password at puzzleinteract.com or use that email/password here.',
-  'auth.error.wrongPassword':
-    'Incorrect password, or this account uses Google sign-in from the website. Reset your password at puzzleinteract.com.',
+  'auth.error.userNotFound': 'No account found for this email. If you signed up with Google on the website, set a password at puzzleinteract.com or use that email/password here.',
+  'auth.error.wrongPassword': 'Incorrect password, or this account uses Google sign-in from the website. Reset your password at puzzleinteract.com.',
   'auth.error.userNotConfirmed': 'Please confirm your email before signing in.',
-  'auth.error.passwordResetRequired':
-    'You must reset your password before signing in.',
+  'auth.error.passwordResetRequired': 'You must reset your password before signing in.',
   'auth.error.invalidInput': 'Enter your email and password.',
-  'auth.error.invalidParameter':
-    'Sign-in could not be completed. Check your email and password and try again.',
-  'auth.error.tooManyAttempts':
-    'Too many attempts. Please wait a few minutes and try again.',
+  'auth.error.invalidParameter': 'Sign-in could not be completed. Check your email and password and try again.',
+  'auth.error.tooManyAttempts': 'Too many attempts. Please wait a few minutes and try again.',
   'auth.error.generic': 'Sign-in failed. Please try again.',
   'auth.error.noToken': 'Sign-in did not return a token.',
   'auth.google.failed': 'Google sign-in failed. Please try again.',
-  'auth.google.iosUnavailable': 'Google Sign-In is not available on iOS. Please use Sign in with Apple.',
   'auth.google.exchangeFailed': 'Could not complete Google sign-in.',
   'auth.google.noCode': 'Google sign-in did not return an ID token.',
-  'auth.google.developerError':
-    'Google Sign-In is not set up for this Android build. Add the app SHA-1 to the Google Cloud Android OAuth client.',
+  'auth.google.developerError': 'Google Sign-In is not set up for this Android build. Add the app SHA-1 to the Google Cloud Android OAuth client.',
+  'auth.google.developerErrorTitle': 'Google Sign-In setup',
+  'auth.google.diag.package': 'Package',
+  'auth.google.diag.sha1': 'SHA-1',
+  'auth.google.diag.sha256': 'SHA-256',
+  'auth.google.diag.webClient': 'Web client ID',
+  'auth.google.shareKeys': 'Share keys',
   'auth.google.stateMismatch': 'Google sign-in could not be verified. Try again.',
   'auth.apple.iosOnly': 'Sign in with Apple is available on iOS devices.',
   'auth.apple.unavailable': 'Sign in with Apple is not available on this device.',
   'auth.apple.noIdentityToken': 'Sign in with Apple did not return an identity token.',
   'auth.apple.exchangeFailed': 'Apple sign-in exchange failed.',
   'auth.apple.httpFailed': 'Apple sign-in failed (HTTP {status})',
+  'auth.google.iosUnavailable': 'Google Sign-In is not available on iOS. Please use Sign in with Apple.',
 };

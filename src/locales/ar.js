@@ -22,8 +22,7 @@ export default {
   'home.section.more': 'المزيد',
   'home.dailyPuzzle.label': 'اللغز اليومي',
   'home.dailyPuzzle.subtitle': 'مكافأة اليوم — منفصلة عن رحلة الموسم',
-  'home.footer':
-    'يُحفظ التقدم على هذا الجهاز. سجّل الدخول مرة لنقل تقدم الضيف إلى حسابك.',
+  'home.footer': 'يُحفظ التقدم على هذا الجهاز. سجّل الدخول مرة لنقل تقدم الضيف إلى حسابك.',
 
   // daily
   'daily.a11y.back': 'رجوع',
@@ -79,8 +78,7 @@ export default {
   'settings.wallet.puzzleCoins': 'عملات الألغاز',
   'settings.wallet.credits': 'الأرصدة',
   'settings.wallet.creditsSuffix': ' أرصدة',
-  'settings.wallet.hint':
-    'التلميحات تكلّف 10 عملات لكل حرف (أو أرصدة عند نفاد العملات).',
+  'settings.wallet.hint': 'التلميحات تكلّف 10 عملات لكل حرف (أو أرصدة عند نفاد العملات).',
   'settings.score.wordsFound': 'كلمات وُجدت',
   'settings.score.rank': 'الترتيب',
   'settings.score.rankValue': '#{n}',
@@ -94,14 +92,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -130,8 +125,7 @@ export default {
   'settings.feedback.rowDesc': 'أخبرنا بما يعجبك أو بما يجب تحسينه.',
   'settings.feedback.button': 'ملاحظات',
   'settings.feedback.title': 'ساعدنا على التحسين',
-  'settings.feedback.intro':
-    'شاركنا رأيك في Word Wheel Quest. الاقتراحات والألغاز التي تودّها أو الملاحظات العامة كلها مرحّب بها.',
+  'settings.feedback.intro': 'شاركنا رأيك في Word Wheel Quest. الاقتراحات والألغاز التي تودّها أو الملاحظات العامة كلها مرحّب بها.',
   'settings.feedback.category': 'الفئة',
   'settings.feedback.category.puzzles': 'الألغاز',
   'settings.feedback.category.gameplay': 'أسلوب اللعب',
@@ -141,14 +135,12 @@ export default {
   'settings.feedback.opinion': 'رأيك',
   'settings.feedback.opinionPlaceholder': 'أخبرنا بالمزيد...',
   'settings.feedback.opinionRequired': 'يرجى كتابة ملاحظة قصيرة قبل الإرسال.',
-  'settings.feedback.privacyNote':
-    'لا يتم جمع بيانات شخصية. تُرفق فقط معلومات تشخيصية قياسية (إصدار التطبيق ونظام التشغيل).',
+  'settings.feedback.privacyNote': 'لا يتم جمع بيانات شخصية. تُرفق فقط معلومات تشخيصية قياسية (إصدار التطبيق ونظام التشغيل).',
   'settings.feedback.cancel': 'إلغاء',
   'settings.feedback.send': 'إرسال',
   'settings.feedback.sendError': 'تعذّر إرسال الملاحظات. حاول مرة أخرى.',
   'settings.feedback.thanksTitle': 'شكرًا',
-  'settings.feedback.thanksMessage':
-    'شكرًا على ملاحظاتك! سنواصل العمل على تحسين التطبيق.',
+  'settings.feedback.thanksMessage': 'شكرًا على ملاحظاتك! سنواصل العمل على تحسين التطبيق.',
   'settings.feedback.close': 'إغلاق',
 
   // legal
@@ -172,21 +164,18 @@ export default {
   'signIn.button.google': 'تسجيل الدخول عبر Google',
   'signIn.divider': '— أو —',
   'signIn.required.title': 'تسجيل الدخول مطلوب',
-  'signIn.required.body':
-    'سجّل الدخول لمزامنة هذا الشراء مع حسابك.',
+  'signIn.required.body': 'سجّل الدخول لمزامنة هذا الشراء مع حسابك.',
 
   // shop
   'shop.title': 'المتجر',
   'shop.alert.unavailable.title': 'المتجر غير متاح',
   'shop.alert.unavailable.body': 'تعذّر تحميل المنتجات.',
   'shop.alert.productUnavailable.title': 'غير متاح',
-  'shop.alert.productUnavailable.body':
-    'هذا المنتج غير محمّل بعد. حاول مرة أخرى بعد لحظات.',
+  'shop.alert.productUnavailable.body': 'هذا المنتج غير محمّل بعد. حاول مرة أخرى بعد لحظات.',
   'shop.alert.success.title': 'شكراً لك!',
   'shop.alert.success.body': 'تم شراء {name} بنجاح.',
   'shop.alert.signInRequired.title': 'تسجيل الدخول مطلوب',
-  'shop.alert.signInRequired.body':
-    'تم تسجيل الشراء. سجّل الدخول لمزامنته مع حسابك.',
+  'shop.alert.signInRequired.body': 'تم تسجيل الشراء. سجّل الدخول لمزامنته مع حسابك.',
   'shop.alert.signInRequired.action': 'تسجيل الدخول',
   'shop.alert.purchaseFailed.title': 'فشل الشراء',
   'shop.alert.purchaseFailed.body': 'حدث خطأ ما.',
@@ -198,18 +187,12 @@ export default {
   'shop.restore': 'استعادة المشتريات',
   'shop.restore.subtitleIos': 'اشتريت مسبقًا بهذا Apple ID؟ استعد هنا.',
   'shop.restore.subtitleAndroid': 'اشتريت مسبقًا؟ استعد هنا.',
-
-  // webview
   'webview.titleFallback': 'صفحة',
-
-  // dev intermission
   'devIntermission.title.wordMaster': 'سيد الكلمات',
   'devIntermission.title.streaksSparks': 'السلاسل والشرارات',
   'devIntermission.title.brainPower': 'قوة الدماغ',
   'devIntermission.title.fallback': 'فاصل',
   'devIntermission.hint': 'معاينة المطوّر · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': 'لا يُوقف!',
   'intermission.streak.onFire': 'مشتعل!',
   'intermission.streak.sparkStreak': 'سلسلة الشرارات!',
@@ -220,8 +203,7 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'اكتمل المستوى!',
-  'intermission.wordMaster.message':
-    'تهانينا! لقد أكملت الرحلة بأكملها.',
+  'intermission.wordMaster.message': 'تهانينا! لقد أكملت الرحلة بأكملها.',
   'intermission.wordMaster.timeTaken': 'الوقت المستغرق',
   'intermission.wordMaster.starWord': 'الكلمة النجمية',
   'intermission.duration.seconds': '{n}ث',
@@ -233,8 +215,6 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': 'تابع المغامرة ➔',
   'intermission.a11y.continue': 'تابع المغامرة',
-
-  // complete dialog
   'complete.compliment.goodJob': 'أحسنت!',
   'complete.compliment.niceWork': 'عمل رائع!',
   'complete.compliment.wellDone': 'ممتاز!',
@@ -265,34 +245,22 @@ export default {
   'toast.dailyFallback': 'اليومي',
   'toast.level': 'المستوى {n}',
   'toast.levelFallback': 'المستوى',
-
-  // points table
   'pointsTable.header.letters': 'الحروف',
   'pointsTable.header.coins': 'العملات',
   'pointsTable.empty': 'كتالوج العملات غير متاح.',
   'pointsTable.row.letters': '{n} حروف',
-  'pointsTable.footer':
-    'نقاط اللغز هي مجموع عملات كل كلمة تجدها.',
-
-  // duration
+  'pointsTable.footer': 'نقاط اللغز هي مجموع عملات كل كلمة تجدها.',
   'duration.lessThanMinute': 'أقل من دقيقة',
   'duration.hoursMinutes': '{hrs}س {rem}د',
   'duration.hours': '{hrs}س',
   'duration.minutesSeconds': '{mins}د {secs}ث',
   'duration.minutes': '{mins}د',
-
-  // wallet
   'wallet.error.loadFailed': 'فشل تحميل المحفظة',
-
-  // auth
   'auth.error.userNotConfirmed': 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.',
-  'auth.error.passwordResetRequired':
-    'يجب إعادة تعيين كلمة المرور قبل تسجيل الدخول.',
+  'auth.error.passwordResetRequired': 'يجب إعادة تعيين كلمة المرور قبل تسجيل الدخول.',
   'auth.error.invalidInput': 'أدخل بريدك الإلكتروني وكلمة المرور.',
-  'auth.error.invalidParameter':
-    'تعذّر إكمال تسجيل الدخول. تحقق من بريدك وكلمة المرور وحاول مجدداً.',
-  'auth.error.tooManyAttempts':
-    'محاولات كثيرة جداً. انتظر بضع دقائق وحاول مجدداً.',
+  'auth.error.invalidParameter': 'تعذّر إكمال تسجيل الدخول. تحقق من بريدك وكلمة المرور وحاول مجدداً.',
+  'auth.error.tooManyAttempts': 'محاولات كثيرة جداً. انتظر بضع دقائق وحاول مجدداً.',
   'auth.error.generic': 'فشل تسجيل الدخول. يرجى المحاولة مجدداً.',
   'auth.error.noToken': 'تسجيل الدخول لم يُرجع رمزاً.',
   'auth.google.failed': 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.',

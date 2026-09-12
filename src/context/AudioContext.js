@@ -43,6 +43,22 @@ export function AudioProvider({ children }) {
     await soundManager.setSfxEnabled(next);
   }, []);
 
+  /** Master mute — background music and game SFX together (Play screen volume control). */
+  const setSoundEnabled = useCallback(async (enabled) => {
+    const on = Boolean(enabled);
+    const [music, sfx] = await Promise.all([
+      saveMusicEnabled(on),
+      saveSfxEnabled(on),
+    ]);
+    setMusicState(music);
+    setSfxState(sfx);
+    await soundManager.configure({ music, sfx });
+    if (on) {
+      // Extra kick for Android devices that ignore the first play() after unmute.
+      setTimeout(() => soundManager.resumeBgm(), 250);
+    }
+  }, []);
+
   const setBgmScene = useCallback(async (scene) => {
     await soundManager.setScene(scene);
   }, []);
@@ -51,17 +67,31 @@ export function AudioProvider({ children }) {
     await soundManager.playSfx(key);
   }, []);
 
+  const soundEnabled = musicEnabled && sfxEnabled;
+
   const value = useMemo(
     () => ({
       ready,
       musicEnabled,
       sfxEnabled,
+      soundEnabled,
       setMusicEnabled,
       setSfxEnabled,
+      setSoundEnabled,
       setBgmScene,
       playSfx,
     }),
-    [ready, musicEnabled, sfxEnabled, setMusicEnabled, setSfxEnabled, setBgmScene, playSfx]
+    [
+      ready,
+      musicEnabled,
+      sfxEnabled,
+      soundEnabled,
+      setMusicEnabled,
+      setSfxEnabled,
+      setSoundEnabled,
+      setBgmScene,
+      playSfx,
+    ]
   );
 
   return <AudioContext.Provider value={value}>{children}</AudioContext.Provider>;
@@ -74,8 +104,10 @@ export function useAudio() {
       ready: true,
       musicEnabled: true,
       sfxEnabled: true,
+      soundEnabled: true,
       setMusicEnabled: async () => {},
       setSfxEnabled: async () => {},
+      setSoundEnabled: async () => {},
       setBgmScene: async () => {},
       playSfx: async () => {},
     };

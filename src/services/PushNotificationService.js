@@ -8,10 +8,13 @@ import { SCREENS } from '../constants/theme';
 
 const APP_CODE = APP_STORE.appSiteId || 'word_wheel_quest';
 const STORED_TOKEN_KEY = 'word-wheel-push-device-token-v1';
+/** Must match backend FCM `android_channel_id` (MobilePushDeliveryService). */
+export const ANDROID_PUSH_CHANNEL_ID = 'word_wheel_default';
 
 let listenersAttached = false;
 let navigateHandler = null;
 let notificationHandlerReady = false;
+let androidChannelReady = false;
 
 function ensureNotificationHandler() {
   if (notificationHandlerReady) return;
@@ -29,6 +32,26 @@ function ensureNotificationHandler() {
   } catch (e) {
     if (__DEV__) {
       console.warn('[Push] setNotificationHandler failed', e?.message || e);
+    }
+  }
+}
+
+async function ensureAndroidChannel() {
+  if (Platform.OS !== 'android' || androidChannelReady) {
+    return;
+  }
+  try {
+    await Notifications.setNotificationChannelAsync(ANDROID_PUSH_CHANNEL_ID, {
+      name: 'Word Wheel Quest',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#0A2A4A',
+      sound: 'default',
+    });
+    androidChannelReady = true;
+  } catch (e) {
+    if (__DEV__) {
+      console.warn('[Push] setNotificationChannelAsync failed', e?.message || e);
     }
   }
 }
@@ -118,6 +141,20 @@ function attachListeners() {
   });
 }
 
+/** Handle a tap that launched the app from a killed state. */
+async function consumeLastNotificationResponse() {
+  try {
+    const response = await Notifications.getLastNotificationResponseAsync();
+    if (response) {
+      handleNotificationData(response?.notification?.request?.content?.data);
+    }
+  } catch (e) {
+    if (__DEV__) {
+      console.warn('[Push] getLastNotificationResponseAsync failed', e?.message || e);
+    }
+  }
+}
+
 async function getAppNotificationPreference() {
   const response = await apiGet('/home/push/preference', { appCode: APP_CODE });
   if (response?.code === 'FAILURE') {
@@ -176,7 +213,9 @@ const PushNotificationService = {
       return;
     }
     ensureNotificationHandler();
+    await ensureAndroidChannel();
     attachListeners();
+    await consumeLastNotificationResponse();
 
     const authed = await isLoggedIn();
     if (!authed) {
@@ -214,6 +253,7 @@ const PushNotificationService = {
       return { ok: false, reason: 'unsupported' };
     }
     ensureNotificationHandler();
+    await ensureAndroidChannel();
     attachListeners();
     const perm = await Notifications.requestPermissionsAsync();
     if (perm.status !== 'granted') {

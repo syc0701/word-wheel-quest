@@ -6,8 +6,9 @@ import { GiTwoCoins } from '../components/GiTwoCoins';
 import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
-import { SCREENS } from '../constants/theme';
+import { PLAY_MODE, SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
+import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import {
   getDefaultOffering,
   getRevenueCatIdentity,
@@ -20,13 +21,14 @@ import {
 import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 import { savePendingIap } from '../lib/pendingIap';
+import { markStarterPackPurchased } from '../lib/guestStarterPack';
 
 const GOLD = '#facc15';
 
 const PACKAGE_ICONS = {
-  starterChest: require('../assets/icons/starter-chest.png'),
-  classicSwords: require('../assets/icons/classic-swords.png'),
-  masterScroll: require('../assets/icons/master-scroll.png'),
+  starterChest: require('../assets/icons/starter-chest.webp'),
+  classicSwords: require('../assets/icons/classic-swords.webp'),
+  masterScroll: require('../assets/icons/master-scroll.webp'),
 };
 
 function ProductIcon({ icon, colors }) {
@@ -40,31 +42,13 @@ function ProductIcon({ icon, colors }) {
   return <ShoppingBag color={colors.primaryGlow} size={22} strokeWidth={1.8} />;
 }
 
-function ProductRow({
-  name,
-  description,
-  priceLabel,
-  purchasing,
-  purchasable,
-  selected,
-  onSelect,
-  colors,
-  icon,
-}) {
-  const disabled = !purchasable || purchasing;
-
+function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors, icon }) {
   return (
-    <Pressable
+    <View
       style={[
         styles.productRow,
         { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
-        selected && purchasable && { borderColor: colors.primary, borderWidth: 2 },
-        !purchasable && styles.productRowDisabled,
       ]}
-      onPress={purchasable ? onSelect : undefined}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !purchasable, busy: purchasing }}
     >
       <View
         style={[
@@ -78,27 +62,22 @@ function ProductRow({
         <Text style={[styles.productName, { color: colors.text }]}>{name}</Text>
         <Text style={[styles.productDescription, { color: colors.textMuted }]}>{description}</Text>
       </View>
-      <View
+      <Pressable
         style={[
           styles.buyBtn,
-          { backgroundColor: purchasable ? colors.primary : colors.surfaceLight },
+          { backgroundColor: colors.primary },
           purchasing && styles.buyBtnDisabled,
         ]}
+        onPress={onBuy}
+        disabled={purchasing}
       >
         {purchasing ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <Text
-            style={[
-              styles.buyBtnText,
-              !purchasable && { color: colors.textMuted },
-            ]}
-          >
-            {priceLabel}
-          </Text>
+          <Text style={styles.buyBtnText}>{priceLabel}</Text>
         )}
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
@@ -109,7 +88,6 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
-  const [selectedId, setSelectedId] = useState(null);
 
   const sceneText = isRandomScene
     ? {
@@ -156,15 +134,12 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
   const findRcPackage = (packageId) => rcPackages.find((pkg) => pkg.identifier === packageId);
 
   const handleBuy = async (meta) => {
-    if (!meta.purchasable) return;
-
     const rcPackage = findRcPackage(meta.packageId);
     if (!rcPackage) {
       Alert.alert(t('shop.alert.productUnavailable.title'), t('shop.alert.productUnavailable.body'));
       return;
     }
 
-    setSelectedId(meta.packageId);
     setPurchasingId(meta.packageId);
     try {
       const purchaseResult = await purchasePackage(rcPackage);
@@ -175,20 +150,61 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       const rcIdentity = fromPurchase.revenueCatAppUserId
         ? fromPurchase
         : await getRevenueCatIdentity();
+      const storePayload = {
+        platform: Platform.OS === 'ios' ? 'apple' : 'google',
+        storeProductId: productId,
+        packageKey: meta.packageId,
+        ...rcIdentity,
+      };
       if (authed) {
-        await CreditApi.verifyIapPurchase({
+        const verify = await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
           productId,
           transactionId,
-          rawPayload: {
-            platform: Platform.OS === 'ios' ? 'apple' : 'google',
-            storeProductId: productId,
-            packageKey: meta.packageId,
-            ...rcIdentity,
-          },
+          rawPayload: storePayload,
         });
+        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+          await markStarterPackPurchased({ grantGuestCredits: false });
+        }
         const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+          Alert.alert(
+            t('shop.alert.starterUnlocked.title'),
+            t('shop.alert.starterUnlocked.body'),
+            [{ text: t('common.continue') }]
+          );
+        } else {
+          Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+        }
+        if (verify?.creditBalance != null && __DEV__) {
+          console.log('[Shop] credits after verify', verify.creditBalance);
+        }
+      } else if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+        await markStarterPackPurchased({ grantGuestCredits: true });
+        await savePendingIap({
+          productId,
+          transactionId,
+          packageKey: meta.packageId,
+          ...rcIdentity,
+        });
+        const { packageId: _pkg, ...backParams } = routeParams;
+        Alert.alert(
+          t('shop.alert.starterUnlocked.title'),
+          t('shop.alert.starterUnlocked.body'),
+          [
+            {
+              text: t('common.continue'),
+              onPress: () =>
+                navigate(backScreen, {
+                  ...backParams,
+                  mode: backParams.mode ?? PLAY_MODE.JOURNEY,
+                  starterUnlockTick: Date.now(),
+                  t: Date.now(),
+                }),
+            },
+          ],
+          { cancelable: false }
+        );
       } else {
         await savePendingIap({
           productId,
@@ -218,7 +234,6 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));
     } finally {
       setPurchasingId(null);
-      setSelectedId(null);
     }
   };
 
@@ -255,9 +270,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
                 description={meta.descriptionKey ? t(meta.descriptionKey) : meta.description}
                 priceLabel={priceLabel}
                 purchasing={purchasingId === meta.packageId}
-                purchasable={Boolean(meta.purchasable)}
-                selected={selectedId === meta.packageId}
-                onSelect={() => handleBuy(meta)}
+                onBuy={() => handleBuy(meta)}
                 colors={colors}
                 icon={meta.icon}
               />
@@ -305,9 +318,6 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 10,
     borderWidth: 1,
-  },
-  productRowDisabled: {
-    opacity: 0.55,
   },
   productIcon: {
     width: 44,

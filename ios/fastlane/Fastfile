@@ -293,7 +293,7 @@ def deliver_options(skip_screenshots:, skip_metadata: true, include_review_info:
   options = {
     api_key: load_asc_api_key,
     app_identifier: "com.puzint.wordwheel.app",
-    app_version: ENV.fetch("ASC_APP_VERSION", "1.0.2"),
+    app_version: ENV.fetch("ASC_APP_VERSION", "1.0.3"),
     metadata_path: METADATA_PATH,
     screenshots_path: SCREENSHOTS_PATH,
     skip_binary_upload: true,

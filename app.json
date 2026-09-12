@@ -3,7 +3,7 @@
     "name": "Word Wheel Quest",
     "slug": "word-wheel-quest",
     "scheme": "puzzleinteract",
-    "version": "2.0.1",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./src/assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.puzint.wordwheel.app",
-      "buildNumber": "21",
+      "buildNumber": "22",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"

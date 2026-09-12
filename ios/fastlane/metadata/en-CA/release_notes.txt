@@ -1,8 +1,10 @@
-What's new in this version:
+What's new in version 1.0.3:
 
-- Account deletion in Settings (permanent deletion with confirmation)
-- Banner ads on Home and Play
-- Launch screen background color fix
+- Scene photos and play music refresh every 5 levels
+- Smoother background music throughout the app
+- Starter Fun Bundle unlocks Level 51+ and extra daily puzzles
+- Clues advance automatically after you solve each word
+- Daily puzzle preview cleanup
 - Stability and bug fixes
 
 Thanks for playing!

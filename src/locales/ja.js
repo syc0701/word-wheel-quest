@@ -22,8 +22,7 @@ export default {
   'home.section.more': 'もっと見る',
   'home.dailyPuzzle.label': 'デイリーパズル',
   'home.dailyPuzzle.subtitle': '今日のボーナス — シーズントラベルとは別',
-  'home.footer':
-    '進捗はこの端末に保存されます。ゲストの進捗をアカウントに移すには一度サインインしてください。',
+  'home.footer': '進捗はこの端末に保存されます。ゲストの進捗をアカウントに移すには一度サインインしてください。',
 
   // daily
   'daily.a11y.back': '戻る',
@@ -79,8 +78,7 @@ export default {
   'settings.wallet.puzzleCoins': 'パズルコイン',
   'settings.wallet.credits': 'クレジット',
   'settings.wallet.creditsSuffix': ' クレジット',
-  'settings.wallet.hint':
-    'ヒントは文字1つにつき10コイン（コインがなくなるとクレジット）です。',
+  'settings.wallet.hint': 'ヒントは文字1つにつき10コイン（コインがなくなるとクレジット）です。',
   'settings.score.wordsFound': '見つけた単語',
   'settings.score.rank': '順位',
   'settings.score.rankValue': '#{n}',
@@ -94,14 +92,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -130,8 +125,7 @@ export default {
   'settings.feedback.rowDesc': '気に入った点や改善してほしい点を教えてください。',
   'settings.feedback.button': 'フィードバック',
   'settings.feedback.title': '改善にご協力ください',
-  'settings.feedback.intro':
-    'Word Wheel Questについてのご意見をお聞かせください。ご提案、追加してほしいパズル、一般的な感想など、すべて歓迎します。',
+  'settings.feedback.intro': 'Word Wheel Questについてのご意見をお聞かせください。ご提案、追加してほしいパズル、一般的な感想など、すべて歓迎します。',
   'settings.feedback.category': 'カテゴリ',
   'settings.feedback.category.puzzles': 'パズル',
   'settings.feedback.category.gameplay': 'ゲームプレイ',
@@ -141,14 +135,12 @@ export default {
   'settings.feedback.opinion': 'ご意見',
   'settings.feedback.opinionPlaceholder': '詳しく教えてください…',
   'settings.feedback.opinionRequired': '送信前に短いメッセージを入力してください。',
-  'settings.feedback.privacyNote':
-    '個人データは収集しません。アプリのバージョンとOSなどの標準的な診断情報のみが含まれます。',
+  'settings.feedback.privacyNote': '個人データは収集しません。アプリのバージョンとOSなどの標準的な診断情報のみが含まれます。',
   'settings.feedback.cancel': 'キャンセル',
   'settings.feedback.send': '送信',
   'settings.feedback.sendError': 'フィードバックを送信できませんでした。もう一度お試しください。',
   'settings.feedback.thanksTitle': 'ありがとうございます',
-  'settings.feedback.thanksMessage':
-    'フィードバックありがとうございます。アプリの改善に努めてまいります。',
+  'settings.feedback.thanksMessage': 'フィードバックありがとうございます。アプリの改善に努めてまいります。',
   'settings.feedback.close': '閉じる',
 
   // legal
@@ -172,21 +164,18 @@ export default {
   'signIn.button.google': 'Googleでサインイン',
   'signIn.divider': '— または —',
   'signIn.required.title': 'サインインが必要です',
-  'signIn.required.body':
-    'サインインして、この購入をアカウントに同期してください。',
+  'signIn.required.body': 'サインインして、この購入をアカウントに同期してください。',
 
   // shop
   'shop.title': 'ショップ',
   'shop.alert.unavailable.title': 'ショップ利用不可',
   'shop.alert.unavailable.body': '商品を読み込めませんでした。',
   'shop.alert.productUnavailable.title': '利用不可',
-  'shop.alert.productUnavailable.body':
-    'この商品はまだ読み込まれていません。しばらくしてから再試行してください。',
+  'shop.alert.productUnavailable.body': 'この商品はまだ読み込まれていません。しばらくしてから再試行してください。',
   'shop.alert.success.title': 'ありがとうございます！',
   'shop.alert.success.body': '{name}の購入が完了しました。',
   'shop.alert.signInRequired.title': 'サインインが必要です',
-  'shop.alert.signInRequired.body':
-    '購入を記録しました。サインインしてアカウントに同期してください。',
+  'shop.alert.signInRequired.body': '購入を記録しました。サインインしてアカウントに同期してください。',
   'shop.alert.signInRequired.action': 'サインイン',
   'shop.alert.purchaseFailed.title': '購入に失敗しました',
   'shop.alert.purchaseFailed.body': '問題が発生しました。',
@@ -198,18 +187,12 @@ export default {
   'shop.restore': '購入を復元',
   'shop.restore.subtitleIos': 'このApple IDで購入済みですか？ここで復元。',
   'shop.restore.subtitleAndroid': '購入済みですか？ここで復元。',
-
-  // webview
   'webview.titleFallback': 'ページ',
-
-  // dev intermission
   'devIntermission.title.wordMaster': 'ワードマスター',
   'devIntermission.title.streaksSparks': 'ストリーク＆スパーク',
   'devIntermission.title.brainPower': 'ブレインパワー',
   'devIntermission.title.fallback': 'インターミッション',
   'devIntermission.hint': '開発者プレビュー · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': '止められない！',
   'intermission.streak.onFire': '絶好調！',
   'intermission.streak.sparkStreak': 'スパークストリーク！',
@@ -220,8 +203,7 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'レベルクリア！',
-  'intermission.wordMaster.message':
-    'おめでとうございます！旅のすべてをクリアしました。',
+  'intermission.wordMaster.message': 'おめでとうございます！旅のすべてをクリアしました。',
   'intermission.wordMaster.timeTaken': 'かかった時間',
   'intermission.wordMaster.starWord': 'スターワード',
   'intermission.duration.seconds': '{n}秒',
@@ -233,8 +215,6 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': 'クエストを続ける ➔',
   'intermission.a11y.continue': 'クエストを続ける',
-
-  // complete dialog
   'complete.compliment.goodJob': 'よくできました！',
   'complete.compliment.niceWork': 'ナイス！',
   'complete.compliment.wellDone': 'お疲れさま！',
@@ -265,34 +245,22 @@ export default {
   'toast.dailyFallback': 'デイリー',
   'toast.level': 'レベル {n}',
   'toast.levelFallback': 'レベル',
-
-  // points table
   'pointsTable.header.letters': '文字数',
   'pointsTable.header.coins': 'コイン',
   'pointsTable.empty': 'コインカタログは利用できません。',
   'pointsTable.row.letters': '{n}文字',
-  'pointsTable.footer':
-    'パズルスコアは見つけた各単語のコインの合計です。',
-
-  // duration
+  'pointsTable.footer': 'パズルスコアは見つけた各単語のコインの合計です。',
   'duration.lessThanMinute': '1分未満',
   'duration.hoursMinutes': '{hrs}時間 {rem}分',
   'duration.hours': '{hrs}時間',
   'duration.minutesSeconds': '{mins}分 {secs}秒',
   'duration.minutes': '{mins}分',
-
-  // wallet
   'wallet.error.loadFailed': 'ウォレットの読み込みに失敗しました',
-
-  // auth
   'auth.error.userNotConfirmed': 'サインイン前にメールを確認してください。',
-  'auth.error.passwordResetRequired':
-    'サインイン前にパスワードをリセットする必要があります。',
+  'auth.error.passwordResetRequired': 'サインイン前にパスワードをリセットする必要があります。',
   'auth.error.invalidInput': 'メールとパスワードを入力してください。',
-  'auth.error.invalidParameter':
-    'サインインを完了できませんでした。メールとパスワードを確認して再試行してください。',
-  'auth.error.tooManyAttempts':
-    '試行回数が多すぎます。数分待ってから再試行してください。',
+  'auth.error.invalidParameter': 'サインインを完了できませんでした。メールとパスワードを確認して再試行してください。',
+  'auth.error.tooManyAttempts': '試行回数が多すぎます。数分待ってから再試行してください。',
   'auth.error.generic': 'サインインに失敗しました。もう一度お試しください。',
   'auth.error.noToken': 'サインインがトークンを返しませんでした。',
   'auth.google.failed': 'Googleサインインに失敗しました。もう一度お試しください。',

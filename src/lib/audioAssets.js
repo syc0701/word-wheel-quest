@@ -1,8 +1,26 @@
-/** Bundled tracks from assets/audio — main BGM, play BGM, and SFX. */
+/** Bundled Simber Chill Simple Lofi BGM + UI SFX. */
+
+import { getSceneBandForLevel } from './bgAssets';
+
+/** Home and other non-play screens. */
+export const HOME_BGM_TRACKS = [
+  require('../assets/audio/Smb_CSL_Relaxing_Piano_Melo_70_Ab.m4a'),
+];
+
+/** Puzzle play — remaining tracks; rotate with journey level bands (every 5 levels). */
+export const PLAY_BGM_TRACKS = [
+  require('../assets/audio/Smb_CSL_Pitched_EPiano_57_E.m4a'),
+  require('../assets/audio/Smb_CSL_Low_Ambient_Syn_Pad_58_Ab.m4a'),
+  require('../assets/audio/Smb_CSL_Chill_Piano_Melo_56_G.m4a'),
+  require('../assets/audio/Smb_CSL_Clean_Chill_EPiano_70_Ab.m4a'),
+  require('../assets/audio/Smb_CSL_High_Melo_EPiano_54_F.m4a'),
+  require('../assets/audio/Smb_CSL_Chill_Dist_Guitar_54_Dm.m4a'),
+  require('../assets/audio/Smb_CSL_Sleepy_Melody_Guitar_56_Gm.m4a'),
+  require('../assets/audio/Smb_CSL_High_Sweet_Piano_70_C.m4a'),
+  require('../assets/audio/Smb_CSL_Very_Wet_Guitar_56_C.wav'),
+];
 
 export const AUDIO = {
-  homeBgm: require('../assets/audio/freesound_community-short-game-music-loop-38898.mp3'),
-  playBgm: require('../assets/audio/xtremefreddy-game-music-loop-6-144641.mp3'),
   click: require('../assets/audio/universfield-ui-button-click-147358.mp3'),
   correct: require('../assets/audio/cartoon-music-game-sfx-correct-game-show-alert-494539.mp3'),
   wrong: require('../assets/audio/freesound_community-wrong-47985.mp3'),
@@ -18,3 +36,26 @@ export const BGM_SCENES = {
   PLAY: 'play',
   NONE: 'none',
 };
+
+/**
+ * Pick BGM for a screen. Play tracks advance with the same 5-level bands as scene photos.
+ * @param {string} scene
+ * @param {number} [journeyLevel]
+ */
+export function pickBgmTrack(scene, journeyLevel = 0) {
+  const pool =
+    scene === BGM_SCENES.HOME
+      ? HOME_BGM_TRACKS
+      : scene === BGM_SCENES.PLAY
+        ? PLAY_BGM_TRACKS
+        : null;
+  if (!pool?.length) return null;
+  const band = getSceneBandForLevel(journeyLevel);
+  const index = pool.length === 1 ? 0 : band % pool.length;
+  return { source: pool[index], id: `${scene}:${band}:${index}` };
+}
+
+/** @deprecated Prefer {@link pickBgmTrack}. */
+export function pickRandomBgmTrack(scene, journeyLevel = 0) {
+  return pickBgmTrack(scene, journeyLevel);
+}

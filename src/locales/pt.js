@@ -22,8 +22,7 @@ export default {
   'home.section.more': 'Mais',
   'home.dailyPuzzle.label': 'Puzzle diário',
   'home.dailyPuzzle.subtitle': 'Bônus de hoje — separado da jornada da temporada',
-  'home.footer':
-    'O progresso é salvo neste dispositivo. Entre uma vez para mover o progresso de convidado para sua conta.',
+  'home.footer': 'O progresso é salvo neste dispositivo. Entre uma vez para mover o progresso de convidado para sua conta.',
 
   // daily
   'daily.a11y.back': 'Voltar',
@@ -79,8 +78,7 @@ export default {
   'settings.wallet.puzzleCoins': 'Moedas de puzzle',
   'settings.wallet.credits': 'Créditos',
   'settings.wallet.creditsSuffix': ' créditos',
-  'settings.wallet.hint':
-    'Dicas custam 10 moedas por letra (ou créditos quando as moedas acabam).',
+  'settings.wallet.hint': 'Dicas custam 10 moedas por letra (ou créditos quando as moedas acabam).',
   'settings.score.wordsFound': 'Palavras encontradas',
   'settings.score.rank': 'Colocação',
   'settings.score.rankValue': '#{n}',
@@ -94,14 +92,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -130,8 +125,7 @@ export default {
   'settings.feedback.rowDesc': 'Diga o que você gosta ou o que devemos melhorar.',
   'settings.feedback.button': 'Feedback',
   'settings.feedback.title': 'Ajude-nos a melhorar',
-  'settings.feedback.intro':
-    'Compartilhe sua opinião sobre o Word Wheel Quest. Sugestões, puzzles que você gostaria ou feedback geral são bem-vindos.',
+  'settings.feedback.intro': 'Compartilhe sua opinião sobre o Word Wheel Quest. Sugestões, puzzles que você gostaria ou feedback geral são bem-vindos.',
   'settings.feedback.category': 'Categoria',
   'settings.feedback.category.puzzles': 'Puzzles',
   'settings.feedback.category.gameplay': 'Jogabilidade',
@@ -141,14 +135,12 @@ export default {
   'settings.feedback.opinion': 'Sua opinião',
   'settings.feedback.opinionPlaceholder': 'Conte-nos mais...',
   'settings.feedback.opinionRequired': 'Escreva uma nota curta antes de enviar.',
-  'settings.feedback.privacyNote':
-    'Nenhum dado pessoal é coletado. Apenas informações de diagnóstico padrão (versão do app e sistema) são incluídas.',
+  'settings.feedback.privacyNote': 'Nenhum dado pessoal é coletado. Apenas informações de diagnóstico padrão (versão do app e sistema) são incluídas.',
   'settings.feedback.cancel': 'Cancelar',
   'settings.feedback.send': 'Enviar',
   'settings.feedback.sendError': 'Não foi possível enviar o feedback. Tente novamente.',
   'settings.feedback.thanksTitle': 'Obrigado',
-  'settings.feedback.thanksMessage':
-    'Obrigado pelo seu feedback! Continuaremos trabalhando para melhorar o app.',
+  'settings.feedback.thanksMessage': 'Obrigado pelo seu feedback! Continuaremos trabalhando para melhorar o app.',
   'settings.feedback.close': 'Fechar',
 
   // legal
@@ -172,21 +164,18 @@ export default {
   'signIn.button.google': 'Entrar com o Google',
   'signIn.divider': '— ou —',
   'signIn.required.title': 'Login obrigatório',
-  'signIn.required.body':
-    'Entre com sua conta para sincronizar esta compra.',
+  'signIn.required.body': 'Entre com sua conta para sincronizar esta compra.',
 
   // shop
   'shop.title': 'Loja',
   'shop.alert.unavailable.title': 'Loja indisponível',
   'shop.alert.unavailable.body': 'Não foi possível carregar os produtos.',
   'shop.alert.productUnavailable.title': 'Indisponível',
-  'shop.alert.productUnavailable.body':
-    'Este produto ainda não foi carregado. Tente novamente em um momento.',
+  'shop.alert.productUnavailable.body': 'Este produto ainda não foi carregado. Tente novamente em um momento.',
   'shop.alert.success.title': 'Obrigado!',
   'shop.alert.success.body': '{name} comprado com sucesso.',
   'shop.alert.signInRequired.title': 'Login obrigatório',
-  'shop.alert.signInRequired.body':
-    'Compra registrada. Entre para sincronizá-la com sua conta.',
+  'shop.alert.signInRequired.body': 'Compra registrada. Entre para sincronizá-la com sua conta.',
   'shop.alert.signInRequired.action': 'Entrar',
   'shop.alert.purchaseFailed.title': 'Compra falhou',
   'shop.alert.purchaseFailed.body': 'Algo deu errado.',
@@ -198,18 +187,12 @@ export default {
   'shop.restore': 'Restaurar compras',
   'shop.restore.subtitleIos': 'Já comprou com este Apple ID? Restaure aqui.',
   'shop.restore.subtitleAndroid': 'Já comprou? Restaure aqui.',
-
-  // webview
   'webview.titleFallback': 'Página',
-
-  // dev intermission
   'devIntermission.title.wordMaster': 'Mestre das palavras',
   'devIntermission.title.streaksSparks': 'Sequências e faíscas',
   'devIntermission.title.brainPower': 'Poder cerebral',
   'devIntermission.title.fallback': 'Intervalo',
   'devIntermission.hint': 'Prévia do desenvolvedor · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': 'IMPARÁVEL!',
   'intermission.streak.onFire': 'PEGANDO FOGO!',
   'intermission.streak.sparkStreak': 'SEQUÊNCIA DE FAÍSCAS!',
@@ -220,8 +203,7 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'Nível completo!',
-  'intermission.wordMaster.message':
-    'Parabéns! Você concluiu toda a jornada.',
+  'intermission.wordMaster.message': 'Parabéns! Você concluiu toda a jornada.',
   'intermission.wordMaster.timeTaken': 'Tempo gasto',
   'intermission.wordMaster.starWord': 'Palavra estrela',
   'intermission.duration.seconds': '{n}s',
@@ -233,8 +215,6 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': 'CONTINUAR A BUSCA ➔',
   'intermission.a11y.continue': 'Continuar a busca',
-
-  // complete dialog
   'complete.compliment.goodJob': 'Bom trabalho!',
   'complete.compliment.niceWork': 'Muito bem!',
   'complete.compliment.wellDone': 'Excelente!',
@@ -265,34 +245,22 @@ export default {
   'toast.dailyFallback': 'Diário',
   'toast.level': 'Nível {n}',
   'toast.levelFallback': 'Nível',
-
-  // points table
   'pointsTable.header.letters': 'Letras',
   'pointsTable.header.coins': 'Moedas',
   'pointsTable.empty': 'Catálogo de moedas indisponível.',
   'pointsTable.row.letters': '{n} letras',
-  'pointsTable.footer':
-    'A pontuação do puzzle é a soma das moedas de cada palavra que você encontra.',
-
-  // duration
+  'pointsTable.footer': 'A pontuação do puzzle é a soma das moedas de cada palavra que você encontra.',
   'duration.lessThanMinute': 'Menos de um minuto',
   'duration.hoursMinutes': '{hrs}h {rem}m',
   'duration.hours': '{hrs}h',
   'duration.minutesSeconds': '{mins}m {secs}s',
   'duration.minutes': '{mins}m',
-
-  // wallet
   'wallet.error.loadFailed': 'Falha ao carregar a carteira',
-
-  // auth
   'auth.error.userNotConfirmed': 'Confirme seu e-mail antes de entrar.',
-  'auth.error.passwordResetRequired':
-    'Você deve redefinir sua senha antes de entrar.',
+  'auth.error.passwordResetRequired': 'Você deve redefinir sua senha antes de entrar.',
   'auth.error.invalidInput': 'Digite seu e-mail e senha.',
-  'auth.error.invalidParameter':
-    'Não foi possível concluir o login. Verifique seu e-mail e senha e tente de novo.',
-  'auth.error.tooManyAttempts':
-    'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
+  'auth.error.invalidParameter': 'Não foi possível concluir o login. Verifique seu e-mail e senha e tente de novo.',
+  'auth.error.tooManyAttempts': 'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
   'auth.error.generic': 'Falha ao entrar. Tente novamente.',
   'auth.error.noToken': 'O login não retornou um token.',
   'auth.google.failed': 'Falha ao entrar com o Google. Tente novamente.',

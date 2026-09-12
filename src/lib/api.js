@@ -39,7 +39,7 @@ async function attachOptionalRevenueCatIdentity(payload) {
       payload.revenueCatOriginalAppUserId = ids.revenueCatOriginalAppUserId;
     }
   } catch {
-    /* Old iOS / no StoreKit — play start and progress must still succeed. */
+    /* Old Android / no Play Store — play start and progress must still succeed. */
   }
   return payload;
 }

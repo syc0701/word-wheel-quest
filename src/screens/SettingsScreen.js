@@ -5,7 +5,6 @@ import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
 import NotificationsSettingsCard from '../components/NotificationsSettingsCard';
-import PlayTimerSettingsCard from '../components/PlayTimerSettingsCard';
 import PushNotificationService from '../services/PushNotificationService';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
@@ -21,6 +20,7 @@ import { requestAccountDeletion } from '../lib/userApi';
 import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEV_INTERMISSION_LINKS = [
   {
@@ -95,6 +95,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const wallet = useWordWheelWallet();
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const insets = useSafeAreaInsets();
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
   const [scoreStanding, setScoreStanding] = useState(null);
@@ -318,7 +319,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         }
       />
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scroll,
+          { paddingBottom: Math.max(insets.bottom, 16) + 40 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
         <View style={[styles.groupCard, themed.walletCard]}>
           {authed || wallet.loggedIn ? (
@@ -442,8 +449,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           ) : null}
           <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
           <AudioSettingsCard />
-          <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
-          <PlayTimerSettingsCard />
           {PushNotificationService.isPushSupported() ? (
             <>
               <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />

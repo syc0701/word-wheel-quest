@@ -22,8 +22,7 @@ export default {
   'home.section.more': 'और',
   'home.dailyPuzzle.label': 'दैनिक पज़ल',
   'home.dailyPuzzle.subtitle': 'आज का बोनस — सीज़न यात्रा से अलग',
-  'home.footer':
-    'प्रगति इस डिवाइस पर सहेजी जाती है। गेस्ट प्रगति अपने खाते में ले जाने के लिए एक बार साइन इन करें।',
+  'home.footer': 'प्रगति इस डिवाइस पर सहेजी जाती है। गेस्ट प्रगति अपने खाते में ले जाने के लिए एक बार साइन इन करें।',
 
   // daily
   'daily.a11y.back': 'वापस',
@@ -79,8 +78,7 @@ export default {
   'settings.wallet.puzzleCoins': 'पज़ल सिक्के',
   'settings.wallet.credits': 'क्रेडिट',
   'settings.wallet.creditsSuffix': ' क्रेडिट',
-  'settings.wallet.hint':
-    'संकेत प्रति अक्षर 10 सिक्के खर्च करते हैं (या सिक्के खत्म होने पर क्रेडिट)।',
+  'settings.wallet.hint': 'संकेत प्रति अक्षर 10 सिक्के खर्च करते हैं (या सिक्के खत्म होने पर क्रेडिट)।',
   'settings.score.wordsFound': 'मिले शब्द',
   'settings.score.rank': 'रैंक',
   'settings.score.rankValue': '#{n}',
@@ -94,14 +92,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -130,8 +125,7 @@ export default {
   'settings.feedback.rowDesc': 'बताएँ कि आपको क्या पसंद है या हमें क्या सुधारना चाहिए।',
   'settings.feedback.button': 'प्रतिक्रिया',
   'settings.feedback.title': 'बेहतर बनाने में मदद करें',
-  'settings.feedback.intro':
-    'Word Wheel Quest पर अपने विचार साझा करें। सुझाव, पहेलियाँ या सामान्य प्रतिक्रिया सभी स्वागत योग्य हैं।',
+  'settings.feedback.intro': 'Word Wheel Quest पर अपने विचार साझा करें। सुझाव, पहेलियाँ या सामान्य प्रतिक्रिया सभी स्वागत योग्य हैं।',
   'settings.feedback.category': 'श्रेणी',
   'settings.feedback.category.puzzles': 'पहेलियाँ',
   'settings.feedback.category.gameplay': 'गेमप्ले',
@@ -141,14 +135,12 @@ export default {
   'settings.feedback.opinion': 'आपकी राय',
   'settings.feedback.opinionPlaceholder': 'और बताएँ...',
   'settings.feedback.opinionRequired': 'भेजने से पहले एक छोटी सी टिप्पणी लिखें।',
-  'settings.feedback.privacyNote':
-    'कोई व्यक्तिगत डेटा एकत्र नहीं किया जाता। केवल मानक डायग्नोस्टिक जानकारी (ऐप संस्करण और OS) शामिल है।',
+  'settings.feedback.privacyNote': 'कोई व्यक्तिगत डेटा एकत्र नहीं किया जाता। केवल मानक डायग्नोस्टिक जानकारी (ऐप संस्करण और OS) शामिल है।',
   'settings.feedback.cancel': 'रद्द करें',
   'settings.feedback.send': 'भेजें',
   'settings.feedback.sendError': 'प्रतिक्रिया नहीं भेजी जा सकी। फिर कोशिश करें।',
   'settings.feedback.thanksTitle': 'धन्यवाद',
-  'settings.feedback.thanksMessage':
-    'आपकी प्रतिक्रिया के लिए धन्यवाद! हम ऐप को बेहतर बनाने पर काम करते रहेंगे।',
+  'settings.feedback.thanksMessage': 'आपकी प्रतिक्रिया के लिए धन्यवाद! हम ऐप को बेहतर बनाने पर काम करते रहेंगे।',
   'settings.feedback.close': 'बंद करें',
 
   // legal
@@ -172,21 +164,18 @@ export default {
   'signIn.button.google': 'Google से साइन इन करें',
   'signIn.divider': '— या —',
   'signIn.required.title': 'साइन इन आवश्यक है',
-  'signIn.required.body':
-    'इस खरीदारी को अपने खाते से सिंक करने के लिए साइन इन करें।',
+  'signIn.required.body': 'इस खरीदारी को अपने खाते से सिंक करने के लिए साइन इन करें।',
 
   // shop
   'shop.title': 'दुकान',
   'shop.alert.unavailable.title': 'दुकान उपलब्ध नहीं',
   'shop.alert.unavailable.body': 'उत्पाद लोड नहीं हो सके।',
   'shop.alert.productUnavailable.title': 'उपलब्ध नहीं',
-  'shop.alert.productUnavailable.body':
-    'यह उत्पाद अभी लोड नहीं हुआ। थोड़ी देर बाद फिर कोशिश करें।',
+  'shop.alert.productUnavailable.body': 'यह उत्पाद अभी लोड नहीं हुआ। थोड़ी देर बाद फिर कोशिश करें।',
   'shop.alert.success.title': 'धन्यवाद!',
   'shop.alert.success.body': '{name} सफलतापूर्वक खरीदा गया।',
   'shop.alert.signInRequired.title': 'साइन इन आवश्यक है',
-  'shop.alert.signInRequired.body':
-    'खरीदारी रिकॉर्ड हो गई। अपने खाते से सिंक करने के लिए साइन इन करें।',
+  'shop.alert.signInRequired.body': 'खरीदारी रिकॉर्ड हो गई। अपने खाते से सिंक करने के लिए साइन इन करें।',
   'shop.alert.signInRequired.action': 'साइन इन',
   'shop.alert.purchaseFailed.title': 'खरीदारी विफल',
   'shop.alert.purchaseFailed.body': 'कुछ गलत हो गया।',
@@ -198,18 +187,12 @@ export default {
   'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
   'shop.restore.subtitleIos': 'इस Apple ID पर पहले खरीदा? यहाँ पुनर्स्थापित करें।',
   'shop.restore.subtitleAndroid': 'पहले खरीदा? यहाँ पुनर्स्थापित करें।',
-
-  // webview
   'webview.titleFallback': 'पेज',
-
-  // dev intermission
   'devIntermission.title.wordMaster': 'वर्ड मास्टर',
   'devIntermission.title.streaksSparks': 'स्ट्रीक और स्पार्क्स',
   'devIntermission.title.brainPower': 'ब्रेन पावर',
   'devIntermission.title.fallback': 'अंतराल',
   'devIntermission.hint': 'डेवलपर पूर्वावलोकन · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': 'अजेय!',
   'intermission.streak.onFire': 'आग पर!',
   'intermission.streak.sparkStreak': 'स्पार्क स्ट्रीक!',
@@ -220,8 +203,7 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': 'लेवल पूरा!',
-  'intermission.wordMaster.message':
-    'बधाई हो! आपने पूरी यात्रा पूरी कर ली है।',
+  'intermission.wordMaster.message': 'बधाई हो! आपने पूरी यात्रा पूरी कर ली है।',
   'intermission.wordMaster.timeTaken': 'लगा समय',
   'intermission.wordMaster.starWord': 'स्टार शब्द',
   'intermission.duration.seconds': '{n}से',
@@ -233,8 +215,6 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': 'क्वेस्ट जारी रखें ➔',
   'intermission.a11y.continue': 'क्वेस्ट जारी रखें',
-
-  // complete dialog
   'complete.compliment.goodJob': 'शाबाश!',
   'complete.compliment.niceWork': 'बढ़िया काम!',
   'complete.compliment.wellDone': 'बहुत अच्छे!',
@@ -265,34 +245,22 @@ export default {
   'toast.dailyFallback': 'दैनिक',
   'toast.level': 'लेवल {n}',
   'toast.levelFallback': 'लेवल',
-
-  // points table
   'pointsTable.header.letters': 'अक्षर',
   'pointsTable.header.coins': 'सिक्के',
   'pointsTable.empty': 'सिक्का कैटलॉग उपलब्ध नहीं।',
   'pointsTable.row.letters': '{n} अक्षर',
-  'pointsTable.footer':
-    'पज़ल स्कोर आपके द्वारा पाए गए हर शब्द के सिक्कों का योग है।',
-
-  // duration
+  'pointsTable.footer': 'पज़ल स्कोर आपके द्वारा पाए गए हर शब्द के सिक्कों का योग है।',
   'duration.lessThanMinute': 'एक मिनट से कम',
   'duration.hoursMinutes': '{hrs}घं {rem}मि',
   'duration.hours': '{hrs}घं',
   'duration.minutesSeconds': '{mins}मि {secs}से',
   'duration.minutes': '{mins}मि',
-
-  // wallet
   'wallet.error.loadFailed': 'वॉलेट लोड करने में विफल',
-
-  // auth
   'auth.error.userNotConfirmed': 'साइन इन से पहले अपना ईमेल पुष्टि करें।',
-  'auth.error.passwordResetRequired':
-    'साइन इन से पहले आपको पासवर्ड रीसेट करना होगा।',
+  'auth.error.passwordResetRequired': 'साइन इन से पहले आपको पासवर्ड रीसेट करना होगा।',
   'auth.error.invalidInput': 'अपना ईमेल और पासवर्ड दर्ज करें।',
-  'auth.error.invalidParameter':
-    'साइन इन पूरा नहीं हो सका। अपना ईमेल और पासवर्ड जाँचकर फिर कोशिश करें।',
-  'auth.error.tooManyAttempts':
-    'बहुत ज़्यादा प्रयास। कुछ मिनट प्रतीक्षा करें और फिर कोशिश करें।',
+  'auth.error.invalidParameter': 'साइन इन पूरा नहीं हो सका। अपना ईमेल और पासवर्ड जाँचकर फिर कोशिश करें।',
+  'auth.error.tooManyAttempts': 'बहुत ज़्यादा प्रयास। कुछ मिनट प्रतीक्षा करें और फिर कोशिश करें।',
   'auth.error.generic': 'साइन इन विफल। कृपया फिर कोशिश करें।',
   'auth.error.noToken': 'साइन इन ने टोकन नहीं लौटाया।',
   'auth.google.failed': 'Google साइन इन असफल रहा। कृपया फिर कोशिश करें।',

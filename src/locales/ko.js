@@ -22,8 +22,7 @@ export default {
   'home.section.more': '더보기',
   'home.dailyPuzzle.label': '데일리 퍼즐',
   'home.dailyPuzzle.subtitle': '오늘의 보너스 — 시즌 여정과 별개',
-  'home.footer':
-    '진행 상황은 이 기기에 저장됩니다. 게스트 진행을 계정으로 옮기려면 한 번 로그인하세요.',
+  'home.footer': '진행 상황은 이 기기에 저장됩니다. 게스트 진행을 계정으로 옮기려면 한 번 로그인하세요.',
 
   // daily
   'daily.a11y.back': '뒤로',
@@ -79,8 +78,7 @@ export default {
   'settings.wallet.puzzleCoins': '퍼즐 코인',
   'settings.wallet.credits': '크레딧',
   'settings.wallet.creditsSuffix': ' 크레딧',
-  'settings.wallet.hint':
-    '힌트는 글자당 코인 10개입니다 (코인이 없으면 크레딧 사용).',
+  'settings.wallet.hint': '힌트는 글자당 코인 10개입니다 (코인이 없으면 크레딧 사용).',
   'settings.score.wordsFound': '찾은 단어',
   'settings.score.rank': '순위',
   'settings.score.rankValue': '#{n}',
@@ -94,14 +92,11 @@ export default {
   'settings.account.delete': 'Delete account',
   'settings.account.deleteSubtitle': 'Permanently remove your account and data',
   'settings.account.deleteConfirmTitle': 'Delete account?',
-  'settings.account.deleteConfirmBody':
-    'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
+  'settings.account.deleteConfirmBody': 'This permanently deletes your profile, progress, and cloud data. You will be signed out. Deleting your account does not cancel App Store subscriptions — manage those in Settings → Apple ID → Subscriptions.',
   'settings.account.deleteFinalTitle': 'Are you sure?',
-  'settings.account.deleteFinalBody':
-    'This cannot be undone. Your account and associated data will be permanently deleted.',
+  'settings.account.deleteFinalBody': 'This cannot be undone. Your account and associated data will be permanently deleted.',
   'settings.account.deleteDoneTitle': 'Account deleted',
-  'settings.account.deleteDoneBody':
-    'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
+  'settings.account.deleteDoneBody': 'Your account has been permanently deleted.\n\nConfirmation code: {code}\n\nKeep this code if you need to check deletion status.',
   'settings.account.deleteStatus': 'Check status',
   'settings.account.deleteFailedTitle': 'Could not delete account',
   'settings.account.deleteFailedBody': 'Something went wrong. Please try again.',
@@ -130,8 +125,7 @@ export default {
   'settings.feedback.rowDesc': '마음에 드는 점이나 개선할 점을 알려 주세요.',
   'settings.feedback.button': '피드백',
   'settings.feedback.title': '개선에 도움을 주세요',
-  'settings.feedback.intro':
-    'Word Wheel Quest에 대한 생각을 공유해 주세요. 제안, 원하는 퍼즐, 일반적인 의견 모두 환영합니다.',
+  'settings.feedback.intro': 'Word Wheel Quest에 대한 생각을 공유해 주세요. 제안, 원하는 퍼즐, 일반적인 의견 모두 환영합니다.',
   'settings.feedback.category': '카테고리',
   'settings.feedback.category.puzzles': '퍼즐',
   'settings.feedback.category.gameplay': '게임플레이',
@@ -141,14 +135,12 @@ export default {
   'settings.feedback.opinion': '의견',
   'settings.feedback.opinionPlaceholder': '자세히 알려 주세요...',
   'settings.feedback.opinionRequired': '보내기 전에 짧은 내용을 작성해 주세요.',
-  'settings.feedback.privacyNote':
-    '개인 데이터는 수집하지 않습니다. 앱 버전과 OS 같은 표준 진단 정보만 포함됩니다.',
+  'settings.feedback.privacyNote': '개인 데이터는 수집하지 않습니다. 앱 버전과 OS 같은 표준 진단 정보만 포함됩니다.',
   'settings.feedback.cancel': '취소',
   'settings.feedback.send': '보내기',
   'settings.feedback.sendError': '피드백을 보내지 못했습니다. 다시 시도해 주세요.',
   'settings.feedback.thanksTitle': '감사합니다',
-  'settings.feedback.thanksMessage':
-    '피드백 감사합니다! 앱을 더 좋게 만들기 위해 계속 노력하겠습니다.',
+  'settings.feedback.thanksMessage': '피드백 감사합니다! 앱을 더 좋게 만들기 위해 계속 노력하겠습니다.',
   'settings.feedback.close': '닫기',
 
   // legal
@@ -172,21 +164,18 @@ export default {
   'signIn.button.google': 'Google로 로그인',
   'signIn.divider': '— 또는 —',
   'signIn.required.title': '로그인이 필요합니다',
-  'signIn.required.body':
-    '로그인하여 이 구매를 계정에 동기화하세요.',
+  'signIn.required.body': '로그인하여 이 구매를 계정에 동기화하세요.',
 
   // shop
   'shop.title': '상점',
   'shop.alert.unavailable.title': '상점 이용 불가',
   'shop.alert.unavailable.body': '상품을 불러올 수 없습니다.',
   'shop.alert.productUnavailable.title': '이용 불가',
-  'shop.alert.productUnavailable.body':
-    '이 상품이 아직 로드되지 않았습니다. 잠시 후 다시 시도하세요.',
+  'shop.alert.productUnavailable.body': '이 상품이 아직 로드되지 않았습니다. 잠시 후 다시 시도하세요.',
   'shop.alert.success.title': '감사합니다!',
   'shop.alert.success.body': '{name} 구매가 완료되었습니다.',
   'shop.alert.signInRequired.title': '로그인이 필요합니다',
-  'shop.alert.signInRequired.body':
-    '구매가 기록되었습니다. 로그인하여 계정에 동기화하세요.',
+  'shop.alert.signInRequired.body': '구매가 기록되었습니다. 로그인하여 계정에 동기화하세요.',
   'shop.alert.signInRequired.action': '로그인',
   'shop.alert.purchaseFailed.title': '구매 실패',
   'shop.alert.purchaseFailed.body': '문제가 발생했습니다.',
@@ -198,18 +187,12 @@ export default {
   'shop.restore': '구매 복원',
   'shop.restore.subtitleIos': '이 Apple ID로 구매하셨나요? 여기서 복원하세요.',
   'shop.restore.subtitleAndroid': '이미 구매하셨나요? 여기서 복원하세요.',
-
-  // webview
   'webview.titleFallback': '페이지',
-
-  // dev intermission
   'devIntermission.title.wordMaster': '워드 마스터',
   'devIntermission.title.streaksSparks': '연속 & 스파크',
   'devIntermission.title.brainPower': '브레인 파워',
   'devIntermission.title.fallback': '중간 화면',
   'devIntermission.hint': '개발자 미리보기 · {type}',
-
-  // intermission
   'intermission.streak.unstoppable': '막을 수 없어!',
   'intermission.streak.onFire': '불타오른다!',
   'intermission.streak.sparkStreak': '스파크 연속!',
@@ -220,8 +203,7 @@ export default {
   'intermission.wordMaster.title': 'Word Master',
   'intermission.levelComplete.headline': 'Level Complete!',
   'intermission.wordMaster.headline': '레벨 완료!',
-  'intermission.wordMaster.message':
-    '축하합니다! 여정을 모두 완료했습니다.',
+  'intermission.wordMaster.message': '축하합니다! 여정을 모두 완료했습니다.',
   'intermission.wordMaster.timeTaken': '소요 시간',
   'intermission.wordMaster.starWord': '스타 워드',
   'intermission.duration.seconds': '{n}초',
@@ -233,8 +215,6 @@ export default {
   'intermission.brainPower.bonus': '+{n} Additional Coins',
   'intermission.continue': '퀘스트 계속 ➔',
   'intermission.a11y.continue': '퀘스트 계속',
-
-  // complete dialog
   'complete.compliment.goodJob': '잘했어요!',
   'complete.compliment.niceWork': '멋져요!',
   'complete.compliment.wellDone': '훌륭해요!',
@@ -265,34 +245,22 @@ export default {
   'toast.dailyFallback': '데일리',
   'toast.level': '레벨 {n}',
   'toast.levelFallback': '레벨',
-
-  // points table
   'pointsTable.header.letters': '글자',
   'pointsTable.header.coins': '코인',
   'pointsTable.empty': '코인 카탈로그를 사용할 수 없습니다.',
   'pointsTable.row.letters': '{n}글자',
-  'pointsTable.footer':
-    '퍼즐 점수는 찾은 모든 단어의 코인 합계입니다.',
-
-  // duration
+  'pointsTable.footer': '퍼즐 점수는 찾은 모든 단어의 코인 합계입니다.',
   'duration.lessThanMinute': '1분 미만',
   'duration.hoursMinutes': '{hrs}시간 {rem}분',
   'duration.hours': '{hrs}시간',
   'duration.minutesSeconds': '{mins}분 {secs}초',
   'duration.minutes': '{mins}분',
-
-  // wallet
   'wallet.error.loadFailed': '지갑 불러오기 실패',
-
-  // auth
   'auth.error.userNotConfirmed': '로그인 전에 이메일을 확인하세요.',
-  'auth.error.passwordResetRequired':
-    '로그인 전에 비밀번호를 재설정해야 합니다.',
+  'auth.error.passwordResetRequired': '로그인 전에 비밀번호를 재설정해야 합니다.',
   'auth.error.invalidInput': '이메일과 비밀번호를 입력하세요.',
-  'auth.error.invalidParameter':
-    '로그인을 완료할 수 없습니다. 이메일과 비밀번호를 확인하고 다시 시도하세요.',
-  'auth.error.tooManyAttempts':
-    '시도가 너무 많습니다. 몇 분 기다린 후 다시 시도하세요.',
+  'auth.error.invalidParameter': '로그인을 완료할 수 없습니다. 이메일과 비밀번호를 확인하고 다시 시도하세요.',
+  'auth.error.tooManyAttempts': '시도가 너무 많습니다. 몇 분 기다린 후 다시 시도하세요.',
   'auth.error.generic': '로그인에 실패했습니다. 다시 시도하세요.',
   'auth.error.noToken': '로그인이 토큰을 반환하지 않았습니다.',
   'auth.google.failed': 'Google 로그인에 실패했습니다. 다시 시도해 주세요.',
