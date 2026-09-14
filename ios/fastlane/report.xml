@@ -5,77 +5,77 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.000309">
+      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.000128">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="01: app_store_connect_api_key" time="0.003209">
+      <testcase classname="fastlane.lanes" name="01: app_store_connect_api_key" time="0.002932">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="02: app_store_connect_api_key" time="0.002826">
+      <testcase classname="fastlane.lanes" name="02: app_store_connect_api_key" time="0.001232">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="03: app_store_connect_api_key" time="0.001985">
+      <testcase classname="fastlane.lanes" name="03: app_store_connect_api_key" time="0.00252">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="04: app_store_connect_api_key" time="0.002745">
+      <testcase classname="fastlane.lanes" name="04: app_store_connect_api_key" time="0.003369">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="05: app_store_connect_api_key" time="0.002062">
+      <testcase classname="fastlane.lanes" name="05: app_store_connect_api_key" time="0.002905">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="06: app_store_connect_api_key" time="0.002426">
+      <testcase classname="fastlane.lanes" name="06: app_store_connect_api_key" time="0.003216">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="07: app_store_connect_api_key" time="0.002568">
+      <testcase classname="fastlane.lanes" name="07: app_store_connect_api_key" time="0.002057">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="08: app_store_connect_api_key" time="0.002642">
+      <testcase classname="fastlane.lanes" name="08: app_store_connect_api_key" time="0.003496">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="09: app_store_connect_api_key" time="0.002463">
+      <testcase classname="fastlane.lanes" name="09: app_store_connect_api_key" time="0.002532">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="10: app_store_connect_api_key" time="0.00245">
+      <testcase classname="fastlane.lanes" name="10: app_store_connect_api_key" time="0.012558">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="11: app_store_connect_api_key" time="0.003062">
+      <testcase classname="fastlane.lanes" name="11: app_store_connect_api_key" time="0.00296">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="12: app_store_connect_api_key" time="0.002115">
+      <testcase classname="fastlane.lanes" name="12: app_store_connect_api_key" time="0.003002">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="13: app_store_connect_api_key" time="0.002726">
+      <testcase classname="fastlane.lanes" name="13: app_store_connect_api_key" time="0.00303">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="14: deliver" time="1.193056">
+      <testcase classname="fastlane.lanes" name="14: deliver" time="1.659894">
         
       </testcase>
     
