@@ -245,12 +245,17 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       />
 
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: Math.max(insets.bottom, 16) + 40 },
+          // Edge-to-edge Android often reports a small/zero bottom inset; keep a
+          // hard floor so Help & Legal isn’t clipped by the gesture/nav bar.
+          { paddingBottom: Math.max(insets.bottom, 48) + 72 },
         ]}
         showsVerticalScrollIndicator={false}
-      >        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
         <View style={[styles.groupCard, themed.walletCard]}>
           {authed || wallet.loggedIn ? (
             <>
@@ -260,8 +265,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 label={t('settings.wallet.puzzleCoins')}
                 value={wallet.lifetimePoints}
                 loading={wallet.loading}
-                colors={colors}
-              />
+                colors={colors} />
               <BalanceCard
                 label={t('settings.wallet.credits')}
                 value={wallet.creditBalance}
@@ -421,6 +425,9 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           ))}
         </View>
 
+        {/* Keeps the legal card clear of the system nav even when insets are wrong. */}
+        <View style={{ height: Math.max(insets.bottom, 24) }} />
+
         {__DEV__ ? (
           <>
             <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.developer')}</Text>
@@ -496,12 +503,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 32,
+    flexGrow: 1,
   },
   legalCard: {
-    marginBottom: 16,
+    // Extra bottom pad so Android draws the full rounded border under the last row.
+    marginBottom: 8,
+    paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 12,

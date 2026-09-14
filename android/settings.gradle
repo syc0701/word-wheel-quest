@@ -1,4 +1,27 @@
 pluginManagement {
+  // React Native from-source (hermes-engine) requires ANDROID_HOME even when
+  // android/local.properties has sdk.dir — Android Studio often has neither env var.
+  def _lp = new File(settingsDir, "local.properties")
+  def _sdk = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+  if ((_sdk == null || _sdk.trim().isEmpty()) && _lp.exists()) {
+    def _props = new Properties()
+    _lp.withInputStream { _props.load(it) }
+    _sdk = _props.getProperty("sdk.dir")?.replace("\\:", ":")
+  }
+  if (_sdk == null || _sdk.trim().isEmpty()) {
+    def _mac = new File(System.getProperty("user.home"), "Library/Android/sdk")
+    if (_mac.isDirectory()) _sdk = _mac.absolutePath
+  }
+  if (_sdk != null && !_sdk.trim().isEmpty()) {
+    def _rnLocal = new File(settingsDir, "../node_modules/react-native/local.properties")
+    try {
+      _rnLocal.parentFile?.mkdirs()
+      _rnLocal.text = "sdk.dir=${_sdk}\n"
+    } catch (Throwable ignored) {
+      /* best-effort for Studio builds */
+    }
+  }
+
   def envNode = System.getenv("NODE_BINARY")
   def nodeExecutable = "node"
   if (envNode != null && !envNode.trim().isEmpty() && new File(envNode.trim()).exists()) {
@@ -71,3 +94,51 @@ expoAutolinking.useExpoVersionCatalog()
 
 include ':app'
 includeBuild(expoAutolinking.reactNativeGradlePlugin)
+
+// Build React Native from source so patches/react-native+*.patch (Fabric
+// SurfaceMountingManager soft-fail) are compiled into the app. Prebuilt
+// react-android AARs ignore Java edits under node_modules.
+includeBuild(expoAutolinking.reactNative) {
+  dependencySubstitution {
+    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+  }
+}
+
+includeBuild(expoAutolinking.reactNative) {
+  dependencySubstitution {
+    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+  }
+}
+
+includeBuild(expoAutolinking.reactNative) {
+  dependencySubstitution {
+    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+  }
+}
+
+includeBuild(expoAutolinking.reactNative) {
+  dependencySubstitution {
+    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+  }
+}
+
+includeBuild(expoAutolinking.reactNative) {
+  dependencySubstitution {
+    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))
+    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))
+  }
+}

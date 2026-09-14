@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -23,6 +23,17 @@ import ShopScreen from './screens/ShopScreen';
 import WebViewScreen from './screens/WebViewScreen';
 import SignInScreen from './screens/SignInScreen';
 import DevIntermissionScreen from './screens/DevIntermissionScreen';
+
+/**
+ * Android Fabric + Reanimated entering/exiting can race and crash in
+ * SurfaceMountingManager.getViewState. Keep Android transitions soft (enter-only)
+ * and skip exiting animations that remount while native delete is in flight.
+ */
+const SCREEN_ENTER =
+  Platform.OS === 'android' ? FadeIn.duration(220) : SlideInRight.duration(350).springify();
+const SCREEN_EXIT = Platform.OS === 'android' ? undefined : SlideOutLeft.duration(250);
+const HOME_ENTER = FadeIn.duration(Platform.OS === 'android' ? 220 : 400);
+const HOME_EXIT = Platform.OS === 'android' ? undefined : FadeOut.duration(200);
 
 function AppShell() {
   const [route, setRoute] = useState({ screen: SCREENS.HOME, params: {} });
@@ -95,8 +106,8 @@ function AppShell() {
         return (
           <Animated.View
             key={`play-${params.mode}-${params.date ?? 'journey'}-${params.isOnboarding ? 'onb' : 'std'}-${params.t ?? 0}`}
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
             style={opaqueScreenStyle}
           >
             <PlayScreen navigate={navigate} routeParams={params} />
@@ -106,8 +117,8 @@ function AppShell() {
         return (
           <Animated.View
             key="daily"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
             style={opaqueScreenStyle}
           >
             <DailyScreen navigate={navigate} routeParams={params} />
@@ -117,9 +128,9 @@ function AppShell() {
         return (
           <Animated.View
             key="settings"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
-            style={opaqueScreenStyle}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
+            style={[opaqueScreenStyle, styles.screenOverflowVisible]}
           >
             <SettingsScreen navigate={navigate} routeParams={params} />
           </Animated.View>
@@ -128,8 +139,8 @@ function AppShell() {
         return (
           <Animated.View
             key="shop"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
             style={opaqueScreenStyle}
           >
             <ShopScreen navigate={navigate} routeParams={params} />
@@ -139,8 +150,8 @@ function AppShell() {
         return (
           <Animated.View
             key="sign-in"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
             style={opaqueScreenStyle}
           >
             <SignInScreen navigate={navigate} routeParams={params} />
@@ -150,8 +161,8 @@ function AppShell() {
         return (
           <Animated.View
             key={`webview-${params?.url ?? 'page'}`}
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
             style={opaqueScreenStyle}
           >
             <WebViewScreen
@@ -166,8 +177,8 @@ function AppShell() {
         return (
           <Animated.View
             key={`dev-intermission-${params?.previewType ?? 'default'}`}
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            entering={SCREEN_ENTER}
+            exiting={SCREEN_EXIT}
             style={opaqueScreenStyle}
           >
             <DevIntermissionScreen navigate={navigate} routeParams={params} />
@@ -178,8 +189,8 @@ function AppShell() {
         return (
           <Animated.View
             key="home"
-            entering={FadeIn.duration(400)}
-            exiting={FadeOut.duration(200)}
+            entering={HOME_ENTER}
+            exiting={HOME_EXIT}
             style={styles.screen}
           >
             <HomeScreen navigate={navigate} routeParams={params} />
@@ -246,5 +257,9 @@ const styles = StyleSheet.create({
   },
   screenScrim: {
     backgroundColor: 'rgba(6, 28, 34, 0.28)',
+  },
+  // Reanimated slide transitions can leave overflow:hidden and clip Settings’ last card.
+  screenOverflowVisible: {
+    overflow: 'visible',
   },
 });

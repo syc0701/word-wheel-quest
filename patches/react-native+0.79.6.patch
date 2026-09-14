@@ -1,3 +1,184 @@
+diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/fabric/mounting/SurfaceMountingManager.java b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/fabric/mounting/SurfaceMountingManager.java
+index 2b53a76..1fa9a75 100644
+--- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/fabric/mounting/SurfaceMountingManager.java
++++ b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/fabric/mounting/SurfaceMountingManager.java
+@@ -339,7 +339,23 @@ public class SurfaceMountingManager {
+       return;
+     }
+ 
+-    ViewState parentViewState = getViewState(parentTag);
++    // Defensive: Fabric/Reanimated can race and issue INSERT for a tag that was already
++    // removed (or not yet created). RetryableMountingLayerException here is fatal for
++    // IntBufferBatchMountItem and takes down the React surface in production.
++    ViewState parentViewState = getNullableViewState(parentTag);
++    if (parentViewState == null) {
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find parent viewState for tag: ["
++                  + parentTag
++                  + "] for addViewAt. Child tag: ["
++                  + tag
++                  + "] index: ["
++                  + index
++                  + "]"));
++      return;
++    }
+     if (!(parentViewState.mView instanceof ViewGroup)) {
+       String message =
+           "Unable to add a view into a view that is not a ViewGroup. ParentTag: "
+@@ -352,11 +368,33 @@ public class SurfaceMountingManager {
+       throw new IllegalStateException(message);
+     }
+     final ViewGroup parentView = (ViewGroup) parentViewState.mView;
+-    ViewState viewState = getViewState(tag);
++    ViewState viewState = getNullableViewState(tag);
++    if (viewState == null) {
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find child viewState for tag: ["
++                  + tag
++                  + "] for addViewAt. Parent tag: ["
++                  + parentTag
++                  + "] index: ["
++                  + index
++                  + "]"));
++      return;
++    }
+     final View view = viewState.mView;
+     if (view == null) {
+-      throw new IllegalStateException(
+-          "Unable to find view for viewState " + viewState + " and tag " + tag);
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find child view for tag: ["
++                  + tag
++                  + "] for addViewAt. Parent tag: ["
++                  + parentTag
++                  + "] index: ["
++                  + index
++                  + "]"));
++      return;
+     }
+ 
+     // Display children before inserting
+@@ -405,17 +443,23 @@ public class SurfaceMountingManager {
+     }
+ 
+     try {
+-      getViewGroupManager(parentViewState).addView(parentView, view, index);
++      int safeIndex = Math.max(0, Math.min(index, parentView.getChildCount()));
++      getViewGroupManager(parentViewState).addView(parentView, view, safeIndex);
+     } catch (IllegalStateException | IndexOutOfBoundsException e) {
+-      // Wrap error with more context for debugging
+-      throw new IllegalStateException(
+-          "addViewAt: failed to insert view ["
+-              + tag
+-              + "] into parent ["
+-              + parentTag
+-              + "] at index "
+-              + index,
+-          e);
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "addViewAt recovered from insert failure. Child ["
++                  + tag
++                  + "] parent ["
++                  + parentTag
++                  + "] requested index ["
++                  + index
++                  + "] parent childCount ["
++                  + parentView.getChildCount()
++                  + "]. "
++                  + e.getMessage()));
++      return;
+     }
+ 
+     // Display children after inserting
+@@ -685,16 +729,34 @@ public class SurfaceMountingManager {
+       return;
+     }
+ 
+-    ViewState viewState = getViewState(reactTag);
++    ViewState viewState = getNullableViewState(reactTag);
++    if (viewState == null) {
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find viewState for tag: " + reactTag + " for updateProps"));
++      return;
++    }
+     viewState.mCurrentProps = new ReactStylesDiffMap(props);
+     View view = viewState.mView;
+ 
+     if (view == null) {
+-      throw new IllegalStateException("Unable to find view for tag [" + reactTag + "]");
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find view for tag: " + reactTag + " for updateProps"));
++      return;
+     }
+ 
+-    Assertions.assertNotNull(viewState.mViewManager)
+-        .updateProperties(view, viewState.mCurrentProps);
++    if (viewState.mViewManager == null) {
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find viewManager for tag: " + reactTag + " for updateProps"));
++      return;
++    }
++
++    viewState.mViewManager.updateProperties(view, viewState.mCurrentProps);
+   }
+ 
+   @Deprecated
+@@ -790,7 +852,15 @@ public class SurfaceMountingManager {
+       return;
+     }
+ 
+-    ViewState viewState = getViewState(reactTag);
++    // Missing viewState during layout animation / remount races — soft-fail instead of crashing.
++    ViewState viewState = getNullableViewState(reactTag);
++    if (viewState == null) {
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find viewState for tag: " + reactTag + " for updateLayout"));
++      return;
++    }
+     // Do not layout Root Views
+     if (viewState.mIsRoot) {
+       return;
+@@ -798,7 +868,11 @@ public class SurfaceMountingManager {
+ 
+     View viewToUpdate = viewState.mView;
+     if (viewToUpdate == null) {
+-      throw new IllegalStateException("Unable to find View for tag: " + reactTag);
++      ReactSoftExceptionLogger.logSoftException(
++          TAG,
++          new ReactNoCrashSoftException(
++              "Unable to find View for tag: " + reactTag + " for updateLayout"));
++      return;
+     }
+ 
+     viewToUpdate.setLayoutDirection(
+@@ -833,9 +907,9 @@ public class SurfaceMountingManager {
+       parent.requestLayout();
+     }
+ 
+-    ViewState parentViewState = getViewState(parentTag);
++    ViewState parentViewState = getNullableViewState(parentTag);
+     IViewGroupManager<?> parentViewManager = null;
+-    if (parentViewState.mViewManager != null) {
++    if (parentViewState != null && parentViewState.mViewManager != null) {
+       parentViewManager = (IViewGroupManager) parentViewState.mViewManager;
+     }
+     if (parentViewManager == null || !parentViewManager.needsCustomLayoutForChildren()) {
 diff --git a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt b/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt
 index ca49160..5f73beb 100644
 --- a/node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/statusbar/StatusBarModule.kt
@@ -96,3 +277,72 @@ index 8b0aff2..ce7906a 100644
      WindowInsetsControllerCompat(this, this.decorView).run {
        isAppearanceLightNavigationBars = !isDarkMode
      }
+diff --git a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle.kts b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle.kts
+index 1111111..2222222 100644
+--- a/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle.kts
++++ b/node_modules/react-native/ReactAndroid/hermes-engine/build.gradle.kts
+@@ -24,14 +24,49 @@
+ val cmakePath = "${getSDKPath()}/cmake/$cmakeVersion"
+ val cmakeBinaryPath = "${cmakePath}/bin/cmake"
+ 
++fun readSdkDirFromLocalProperties(file: File): String? {
++  if (!file.isFile) {
++    return null
++  }
++  return file
++      .readLines()
++      .firstOrNull { it.trim().startsWith("sdk.dir=") }
++      ?.substringAfter("sdk.dir=")
++      ?.trim()
++      ?.replace("\\:", ":")
++      ?.takeIf { it.isNotBlank() }
++}
++
+ fun getSDKPath(): String {
+   val androidSdkRoot = System.getenv("ANDROID_SDK_ROOT")
+   val androidHome = System.getenv("ANDROID_HOME")
+-  return when {
+-    !androidSdkRoot.isNullOrBlank() -> androidSdkRoot
+-    !androidHome.isNullOrBlank() -> androidHome
+-    else -> throw IllegalStateException("Neither ANDROID_SDK_ROOT nor ANDROID_HOME is set.")
++  if (!androidSdkRoot.isNullOrBlank()) {
++    return androidSdkRoot
+   }
++  if (!androidHome.isNullOrBlank()) {
++    return androidHome
++  }
++
++  // Android Studio / GUI Gradle often has no ANDROID_HOME. Fall back to local.properties
++  // and the default macOS SDK location used by this project.
++  var dir: File? = projectDir
++  repeat(10) {
++    dir = dir?.parentFile ?: return@repeat
++    val parent = dir!!
++    readSdkDirFromLocalProperties(File(parent, "local.properties"))?.let {
++      return it
++    }
++    readSdkDirFromLocalProperties(File(parent, "android/local.properties"))?.let {
++      return it
++    }
++  }
++
++  val defaultMacSdk = File(System.getProperty("user.home"), "Library/Android/sdk")
++  if (defaultMacSdk.isDirectory) {
++    return defaultMacSdk.absolutePath
++  }
++
++  throw IllegalStateException("Neither ANDROID_SDK_ROOT nor ANDROID_HOME is set.")
+ }
+ 
+ fun getSDKManagerPath(): String {
+@@ -330,7 +365,9 @@
+ 
+ tasks.withType<JavaCompile>().configureEach {
+   options.compilerArgs.add("-Xlint:deprecation,unchecked")
+-  options.compilerArgs.add("-Werror")
++  // JDK 21 emits obsolete source/target 8 warnings; -Werror turns them into
++  // fatal errors when building React Native from source.
++  options.compilerArgs.add("-Xlint:-options")
+ }
+ 
+ /* Publishing Configuration */

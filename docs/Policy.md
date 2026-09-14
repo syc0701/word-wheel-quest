@@ -2,24 +2,24 @@
 
 How the app gates content, manages **puzzle credits**, **puzzle coins**, spending (hints), and bonus rewards. Values match the current client (`src/constants/guestAccess.js`, `src/lib/guestStarterPack.js`, `src/lib/points.js`, `src/hooks/useWordWheelWallet.js`).
 
+> **Note:** The paywall / access section below reflects the **current client** (Season Journey is free). This policy will be revised later when we lock the next monetization rules.
+
 ---
 
 ## Paywalls & access (all users)
 
-These rules apply to **guests and signed-in players**. Sign-in does **not** bypass the starter pack or journey level cap.
+These rules apply to **guests and signed-in players**.
 
 Constants (`src/constants/guestAccess.js`):
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| `GUEST_MAX_LEVEL_WITHOUT_STARTER` | **50** | Last free Season Journey level (default) |
-| `GUEST_STARTER_UNLOCK_LEVEL` | **51** | First gated level (default) |
-| `GRANDFATHER_EXCEPTION_MIN_LEVEL` | **56** | Saved journey level ≥ this → extended free tier |
-| `GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER` | **59** | Last free level for grandfathered players |
-| `GRANDFATHER_STARTER_UNLOCK_LEVEL` | **60** | First gated level for grandfathered players |
+| `GUEST_MAX_LEVEL_WITHOUT_STARTER` | **1_000_000** | Journey paywall off — all Season Journey levels treated as free |
+| `GUEST_STARTER_UNLOCK_LEVEL` | max + 1 | Unused while journey is free |
+| `GRANDFATHER_*` | legacy | Unused while journey paywall is off |
 | `FREE_DAILY_PLAYS` | **10** | Daily puzzles playable without starter/credits |
 | `STARTER_PACK_PUZZLE_CREDITS` | **50** | Credits bundled with starter (guest local grant) |
-| `PUZZLE_PLAY_CREDIT_COST` | **1** | Credits spent to **start** one gated puzzle |
+| `PUZZLE_PLAY_CREDIT_COST` | **1** | Credits spent to **start** one gated **daily** puzzle |
 
 Product: **Starter Fun Bundle** (`bundle_starter` / `word_wheel_pack_starter`) in Shop.
 
@@ -27,20 +27,15 @@ Product: **Starter Fun Bundle** (`bundle_starter` / `word_wheel_pack_starter`) i
 
 | Levels | Cost |
 | --- | --- |
-| **1–50** | Free — no starter pack, no puzzle credits |
-| **51–1100** | Requires **Starter Fun Bundle** **and** **1 puzzle credit** per level started |
+| **1–1100** | **Free** — no starter pack, no puzzle credits |
 
-**Grandfather exception:** players whose **saved journey level is already 56 or higher** may continue **51–59** for free (no starter, no credits). The paywall starts at **level 60** for them. Everyone else is gated at **level 51** as above.
-
-After completing the last free level (**50** for most players, **59** for grandfathered), the app shows the starter upsell. The next level is blocked until the pack is owned **and** the player has credits remaining.
-
-Replay of an already-unlocked journey level still consumes **1 credit** when the play session starts (same as a new level).
+*(Previous policy gated level **51+** behind Starter + 1 credit/level, with a grandfather path through 59. That journey gate is **removed** for now.)*
 
 ### Daily Puzzle
 
 | Rule | Detail |
 | --- | --- |
-| Level gate | **None** — Daily is available from Home without reaching level 50 |
+| Level gate | **None** — Daily is available from Home |
 | Free quota | **10** daily play starts per device (any calendar date in the archive) |
 | After free quota | Requires **Starter Fun Bundle** **and** **1 puzzle credit** per daily play started |
 | Calendar browse | Full date picker; only **starting** a play is gated |
@@ -60,9 +55,10 @@ When a guest later signs in, `verifyPendingIapIfNeeded` attaches the purchase to
 
 | Situation | User sees |
 | --- | --- |
-| Journey 51+ without starter | Starter Fun Bundle upsell |
 | Daily after 10 free plays, no starter | Starter Fun Bundle upsell |
-| Starter owned, **0 puzzle credits** | Out-of-credits → Shop |
+| Starter owned, **0 puzzle credits** (daily) | Out-of-credits → Shop |
+
+Journey no longer shows the level-51 starter gate.
 
 Implementation: `StarterPackGateModal`, `src/screens/PlayScreen.js`, `src/screens/DailyScreen.js`, `src/screens/ShopScreen.js`.
 
@@ -73,10 +69,10 @@ Implementation: `StarterPackGateModal`, `src/screens/PlayScreen.js`, `src/screen
 | Balance | Purpose | Guest | Signed-in |
 | --- | --- | --- | --- |
 | **Puzzle coins** | Earned per word; spent on **hints** in Play | Session pool on device | Profile `puzzleCoins` |
-| **Credits (account)** | **Hints** (fallback) **and** **gated puzzle starts** | Local puzzle-credit pool after guest starter purchase | `/home/credit/balance` |
+| **Credits (account)** | **Hints** (fallback) **and** **paid daily starts** | Local puzzle-credit pool after guest starter purchase | `/home/credit/balance` |
 | **Free daily plays** | Daily-only free tier | Device counter (`ww.free_daily_plays_used`) | Same device counter |
 
-**Puzzle credits** (for level 51+ / daily after free quota) and **hint credits** (account `/home/credit/consume`) share the same signed-in **credit balance** on the server. On guest, starter grants a **separate local puzzle-credit pool** used only for gated puzzle starts.
+**Puzzle credits** (for daily after free quota) and **hint credits** (account `/home/credit/consume`) share the same signed-in **credit balance** on the server. On guest, starter grants a **separate local puzzle-credit pool** used for gated daily starts.
 
 ---
 
@@ -86,9 +82,7 @@ Implementation: `StarterPackGateModal`, `src/screens/PlayScreen.js`, `src/screen
 
 Each **grid word** awards coins by **letter length** from the server coin catalog. Score = sum of awards for every target word found.
 
-### 2. Milestone level bonuses (Season Journey)
-
-| Screen type | When | Bonus coins |
+### 2. Milestone level bonuses (Season Journey) | Screen type | When | Bonus coins |
 | --- | --- | --- |
 | **Brain Power** | Level ÷ **10** (not 100 / 1100) | **+5** |
 | **Streak Sparks** | Level ÷ **100** (not 1100) | **+10** |
@@ -108,7 +102,7 @@ Home → Shop (RevenueCat / Google Play):
 
 | Package | Typical effect |
 | --- | --- |
-| **Starter Fun Bundle** | Unlocks journey 51+ / paid daily; grants puzzle credits |
+| **Starter Fun Bundle** | Unlocks paid daily (after free 10); grants puzzle credits |
 | **Classic / Master bundles** | Coin bundles (signed-in verify) |
 | **300 / 1,000 coins** | Adds puzzle coins to profile |
 
@@ -130,9 +124,9 @@ Non-starter guest purchases still require sign-in to verify; starter pack is the
 
 | Rule | Value |
 | --- | --- |
-| Cost | **1 puzzle credit** per journey 51+ or daily (after free 10) |
+| Cost | **1 puzzle credit** per **daily** play after the free 10 (journey is free) |
 | When charged | On successful `startPlay`, via `settlePuzzlePlayCharge` |
-| Signed-in | `CreditApi.consumeCredits` (`featureUsed`: `word_wheel_journey:*` or `word_wheel_daily:*`) |
+| Signed-in | `CreditApi.consumeCredits` (`featureUsed`: `word_wheel_daily:*`) |
 | Guest | Local `consumeGuestPuzzleCredits` |
 
 Low-balance shop prompts (hints): coins &lt; **10** or credits &lt; **10** (`WORD_WHEEL_LOW_HINT_POINTS_BALANCE`, `WORD_WHEEL_LOW_CREDITS_BALANCE`).
@@ -143,8 +137,7 @@ Low-balance shop prompts (hints): coins &lt; **10** or credits &lt; **10** (`WOR
 
 | Content | Free allowance | Then |
 | --- | --- | --- |
-| Season Journey 1–50 | All levels | Starter pack + 1 credit/level |
-| Season Journey 51–1100 | — | Starter pack + 1 credit/level |
+| Season Journey 1–1100 | **All levels** | — (no journey paywall) |
 | Daily Puzzle | **10** play starts | Starter pack + 1 credit/play |
 | Onboarding / tutorial | Always free | — |
 

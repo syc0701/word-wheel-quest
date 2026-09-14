@@ -257,7 +257,7 @@ export default {
   'shop.alert.signInRequired.action': 'Sign in with Google',
   'shop.alert.starterUnlocked.title': 'Starter pack unlocked!',
   'shop.alert.starterUnlocked.body':
-    'Level 51+ and extra daily puzzles are unlocked. Each play uses 1 credit from your balance.',
+    'Extra daily puzzles are unlocked. Each play uses 1 credit from your balance.',
   'shop.alert.purchaseFailed.title': 'Purchase failed',
   'shop.alert.purchaseFailed.body': 'Something went wrong.',
   'shop.alert.restored.title': 'Restored',
@@ -332,7 +332,7 @@ export default {
     'You used your {n} free daily puzzles. Get the Starter Fun Bundle to keep playing — each puzzle uses 1 credit.',
   'guest.starter.creditsTitle': 'Out of puzzle credits',
   'guest.starter.creditsBody':
-    'Get the Starter Fun Bundle for {n} credits, or buy more in the Shop. Each Level 51+ or daily puzzle uses 1 credit.',
+    'Get the Starter Fun Bundle for {n} credits, or buy more in the Shop. Each extra daily puzzle uses 1 credit.',
   'guest.starter.shopCta': 'Get Starter Fun Bundle',
   'guest.starter.notNow': 'Not now',
   'complete.unlock.dailyPuzzle': 'Unlocked: Daily Puzzle',
