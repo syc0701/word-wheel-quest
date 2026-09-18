@@ -21,6 +21,9 @@ let sfxPlayers = new Map();
 let appStateSub = null;
 let playRetryTimers = [];
 let bgmStatusSub = null;
+let lastBgmRestartAt = 0;
+let adMuteDepth = 0;
+let sfxBeforeAdMute = true;
 
 function clearPlayRetries() {
   playRetryTimers.forEach((id) => clearTimeout(id));
@@ -121,9 +124,17 @@ function schedulePlayRetries() {
   try {
     bgmStatusSub = bgmPlayer.addListener('playbackStatusUpdate', (status) => {
       if (!musicEnabled || !bgmSceneHasTracks(scene) || !bgmPlayer) return;
-      if (status?.isLoaded && !status?.playing && !bgmPlayer.playing) {
-        playBgmNow();
+      if (!status?.isLoaded || status?.playing || bgmPlayer.playing) return;
+      // Avoid restart spam when status flickers or a short clip ends rapidly.
+      const now = Date.now();
+      if (now - lastBgmRestartAt < 1500) return;
+      lastBgmRestartAt = now;
+      try {
+        bgmPlayer.seekTo(0);
+      } catch {
+        /* ignore */
       }
+      playBgmNow();
     });
   } catch {
     /* older expo-audio — retries below still help */
@@ -198,7 +209,7 @@ async function applyBgm({ forceRestart = false, pickNew = false } = {}) {
 
   const scenePrefix = `${scene}:`;
   if (pickNew || !activeBgmId?.startsWith(scenePrefix)) {
-    const pick = pickBgmTrack(scene, journeyLevel);
+    const pick = pickBgmTrack(scene, journeyLevel, { rotate: pickNew });
     if (!pick) return;
     const player = ensureBgmPlayer(pick.source);
     if (!player) return;
@@ -208,7 +219,7 @@ async function applyBgm({ forceRestart = false, pickNew = false } = {}) {
 
   if (!bgmPlayer) {
     // Preference said music on, but player was lost — pick again.
-    const pick = pickBgmTrack(scene, journeyLevel);
+    const pick = pickBgmTrack(scene, journeyLevel, { rotate: true });
     if (!pick) return;
     const player = ensureBgmPlayer(pick.source);
     if (!player) return;
@@ -288,26 +299,25 @@ export const soundManager = {
   },
 
   /**
-   * Keep play BGM in sync with journey level bands (same cadence as scene photos).
+   * Journey level still drives scene photos; play BGM rotates on each play entry instead.
    */
   async setJourneyLevel(level) {
     const n = Number(level);
     if (!Number.isFinite(n) || n <= 0) return;
     const nextLevel = Math.floor(n);
     const nextBand = getSceneBandForLevel(nextLevel);
-    const bandChanged = nextBand !== journeyBand;
     journeyLevel = nextLevel;
     journeyBand = nextBand;
-    if (!bandChanged) return;
-    if (!musicEnabled || !bgmSceneHasTracks(scene)) return;
-    const pick = pickBgmTrack(scene, journeyLevel);
-    if (!pick || pick.id === activeBgmId) return;
-    await applyBgm({ forceRestart: true, pickNew: true });
   },
 
   async setScene(nextScene) {
     const next = nextScene || BGM_SCENES.NONE;
     if (scene === next) {
+      // Re-asserting play (e.g. play → daily play) still advances the track.
+      if (next === BGM_SCENES.PLAY && musicEnabled) {
+        await applyBgm({ forceRestart: true, pickNew: true });
+        return;
+      }
       if (musicEnabled && bgmSceneHasTracks(scene) && bgmPlayer && !bgmPlayer.playing) {
         await activateAudioSession();
         schedulePlayRetries();
@@ -342,7 +352,7 @@ export const soundManager = {
   },
 
   async playSfx(key) {
-    if (!sfxEnabled) return;
+    if (!sfxEnabled || adMuteDepth > 0) return;
     await activateAudioSession();
     const player = getSfxPlayer(key);
     if (!player) return;
@@ -353,6 +363,24 @@ export const soundManager = {
     } catch {
       /* ignore */
     }
+  },
+
+  /** Pause game audio while a rewarded ad is on screen. Does not change user prefs. */
+  muteForAd() {
+    adMuteDepth += 1;
+    if (adMuteDepth === 1) {
+      sfxBeforeAdMute = sfxEnabled;
+      sfxEnabled = false;
+      this.pauseBgm();
+    }
+  },
+
+  unmuteAfterAd() {
+    if (adMuteDepth === 0) return;
+    adMuteDepth -= 1;
+    if (adMuteDepth > 0) return;
+    sfxEnabled = sfxBeforeAdMute;
+    if (musicEnabled) this.resumeBgm();
   },
 
   pauseBgm() {

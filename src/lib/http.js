@@ -60,6 +60,15 @@ export async function apiGet(path, params) {
   return parseResponse(result);
 }
 
+/** Guest/device wallet reads — no JWT so signed-in sessions still hit the guest balance path. */
+export async function apiGetPublic(path, params) {
+  const result = await fetchWithTimeout(buildUrl(path, params), {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  return parseResponse(result);
+}
+
 export async function apiPost(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
   let body;

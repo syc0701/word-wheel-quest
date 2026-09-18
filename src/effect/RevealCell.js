@@ -147,11 +147,17 @@ export default function RevealCell({
     : isHint
       ? GRID_CREAM.hintText
       : GRID_CREAM.revealedText;
+  const numberFontSize =
+    size > 0 ? Math.max(13, Math.min(18, Math.round(size * 0.38))) : 15;
+  const numberBox = Math.max(
+    16,
+    Math.round(numberFontSize * (wordNumberLabel && wordNumberLabel.length > 2 ? 1.55 : 1.2))
+  );
 
   return (
     <Animated.View
       style={[
-        { width: size, height: size },
+        { width: size, height: size, overflow: 'visible' },
         mode === 'already' ? styles.shadowAlready : styles.shadowNew,
         animatedStyle,
       ]}
@@ -161,8 +167,25 @@ export default function RevealCell({
         style={[styles.cell, { width: size, height: size }, cellStyle]}
       >
         {wordNumberLabel ? (
-          <View style={[styles.numberBadge, wordNumberLabel.length > 2 && styles.numberBadgeWide]}>
-            <Text style={[styles.numberText, wordNumberLabel.length > 2 && styles.numberTextCompact]}>
+          <View
+            pointerEvents="none"
+            style={[
+              styles.numberAnchor,
+              {
+                width: numberBox,
+                height: numberBox,
+                top: -numberBox / 2,
+                left: -numberBox / 2,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.numberText,
+                { fontSize: numberFontSize, lineHeight: numberFontSize + 1 },
+                wordNumberLabel.length > 2 && styles.numberTextCompact,
+              ]}
+            >
               {wordNumberLabel}
             </Text>
           </View>
@@ -189,36 +212,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 6,
     position: 'relative',
+    overflow: 'visible',
   },
   letter: {
     fontSize: 17,
     fontWeight: '900',
   },
-  numberBadge: {
+  numberAnchor: {
     position: 'absolute',
-    top: 2,
-    left: 2,
-    minWidth: 18,
-    minHeight: 18,
-    paddingHorizontal: 3,
+    zIndex: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 5,
     backgroundColor: GRID_CREAM.badgeBg,
     borderWidth: 1,
     borderColor: GRID_CREAM.badgeBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  numberBadgeWide: {
-    minWidth: 26,
-    paddingHorizontal: 4,
   },
   numberText: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: '800',
     color: GRID_CREAM.badgeText,
+    includeFontPadding: false,
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
   numberTextCompact: {
-    fontSize: 10,
-    letterSpacing: -0.2,
+    fontSize: 12,
+    letterSpacing: -0.3,
   },
 });

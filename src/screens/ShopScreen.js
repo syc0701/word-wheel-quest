@@ -19,9 +19,8 @@ import {
   rememberRevenueCatIdentityFromPurchase,
 } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
-import { isLoggedIn } from '../lib/auth';
-import { savePendingIap } from '../lib/pendingIap';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
+import { useAudio } from '../context/AudioContext';
 
 const GOLD = '#facc15';
 
@@ -85,6 +84,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const { playSfx } = useAudio();
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
@@ -143,7 +143,6 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     setPurchasingId(meta.packageId);
     try {
       const purchaseResult = await purchasePackage(rcPackage);
-      const authed = await isLoggedIn();
       const transactionId = readPurchaseTransactionId(purchaseResult);
       const productId = rcPackage.product.identifier;
       const fromPurchase = rememberRevenueCatIdentityFromPurchase(purchaseResult);
@@ -156,79 +155,29 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         packageKey: meta.packageId,
         ...rcIdentity,
       };
-      if (authed) {
-        const verify = await CreditApi.verifyIapPurchase({
-          appCode: APP_STORE.appSiteId,
-          productId,
-          transactionId,
-          rawPayload: storePayload,
-        });
-        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-          await markStarterPackPurchased({ grantGuestCredits: false });
-        }
-        const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-          Alert.alert(
-            t('shop.alert.starterUnlocked.title'),
-            t('shop.alert.starterUnlocked.body'),
-            [{ text: t('common.continue') }]
-          );
-        } else {
-          Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
-        }
-        if (verify?.creditBalance != null && __DEV__) {
-          console.log('[Shop] credits after verify', verify.creditBalance);
-        }
-      } else if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-        await markStarterPackPurchased({ grantGuestCredits: true });
-        await savePendingIap({
-          productId,
-          transactionId,
-          packageKey: meta.packageId,
-          ...rcIdentity,
-        });
-        const { packageId: _pkg, ...backParams } = routeParams;
+      const verify = await CreditApi.verifyIapPurchase({
+        appCode: APP_STORE.appSiteId,
+        productId,
+        transactionId,
+        rawPayload: storePayload,
+      });
+      if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+        await markStarterPackPurchased({ grantGuestCredits: false });
+      }
+      const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
+      if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
         Alert.alert(
           t('shop.alert.starterUnlocked.title'),
           t('shop.alert.starterUnlocked.body'),
-          [
-            {
-              text: t('common.continue'),
-              onPress: () =>
-                navigate(backScreen, {
-                  ...backParams,
-                  mode: backParams.mode ?? PLAY_MODE.JOURNEY,
-                  starterUnlockTick: Date.now(),
-                  t: Date.now(),
-                }),
-            },
-          ],
-          { cancelable: false }
+          [{ text: t('common.continue') }]
         );
       } else {
-        await savePendingIap({
-          productId,
-          transactionId,
-          packageKey: meta.packageId,
-          ...rcIdentity,
-        });
-        Alert.alert(
-          t('shop.alert.signInRequired.title'),
-          t('shop.alert.signInRequired.body'),
-          [
-            {
-              text: t('shop.alert.signInRequired.action'),
-              onPress: () =>
-                navigate(SCREENS.SIGN_IN, {
-                  backScreen: SCREENS.SHOP,
-                  returnBackScreen: backScreen,
-                  requireSignIn: true,
-                }),
-            },
-          ],
-          { cancelable: false }
-        );
+        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
       }
+      if (verify?.creditBalance != null && __DEV__) {
+        console.log('[Shop] credits after verify', verify.creditBalance);
+      }
+      playSfx('purchaseWin');
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));

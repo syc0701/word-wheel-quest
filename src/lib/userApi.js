@@ -68,6 +68,8 @@ export function summarizeUserIdentity(cloudUser, claims) {
       'username',
       'emailVerified',
       'puzzleCoins',
+      'isDeveloper',
+      'developer',
     ]),
     claims: pick(claims, [
       'email',

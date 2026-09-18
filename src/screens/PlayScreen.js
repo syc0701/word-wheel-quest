@@ -4,6 +4,7 @@ import {
   Alert,
   Animated,
   Easing,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -11,7 +12,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { ArrowLeft, BookOpen, ChevronRight, Clock, Lightbulb, Tornado, Volume2, VolumeX } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, ChevronRight, Clock, Eye, Lightbulb, Sparkles, Tornado, Volume2, VolumeX } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
@@ -22,6 +23,16 @@ import AdBanner from '../components/AdBanner';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
+import ShopOfferButton from '../components/intermission/ShopOfferButton';
+import {
+  consumeOneLetter,
+  prepareRewardedAd,
+  showRewardedLetterAd,
+  waitForAdCredits,
+  withAdAudioMuted,
+} from '../services/rewardedLetterAd';
+import CreditApi from '../lib/creditApi';
+import { AD_REWARD_LETTERS } from '../constants/ads';
 // import BonusWordModal from '../components/BonusWordModal';
 import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
@@ -49,6 +60,11 @@ import {
   parseBonusWordsFromPlay,
   saveStoredBonusWords,
 } from '../lib/bonusWordsStorage';
+import {
+  clearStoredHintLetters,
+  loadStoredHintLetters,
+  saveStoredHintLetters,
+} from '../lib/hintLettersStorage';
 import {
   addGuestPuzzleCoins,
   loadGuestPuzzleCoins,
@@ -136,13 +152,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const seededPuzzle = routeParams.puzzle;
   const isOnboarding = Boolean(routeParams.isOnboarding);
   const wallet = useWordWheelWallet();
-  const { ww, isRandomScene, setSceneLevel } = useAppearance();
+  const walletRef = useRef(wallet);
+  walletRef.current = wallet;
+  const { ww, colors, isDark, isRandomScene, setSceneLevel } = useAppearance();
   const { playSfx, soundEnabled, setSoundEnabled } = useAudio();
   const { timerEnabled } = usePlayTimer();
   const t = useT();
   const insets = useSafeAreaInsets();
   const { isLandscape, wheelSize, gridMaxSize } = usePlayMetrics(insets, timerEnabled);
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
@@ -154,6 +171,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [hintLetters, setHintLetters] = useState(() => new Map());
   const [hintCoinsSpent, setHintCoinsSpent] = useState(0);
   const [hintPending, setHintPending] = useState(false);
+  const [letterBusy, setLetterBusy] = useState(false);
+  const [creditSheetOpen, setCreditSheetOpen] = useState(false);
   const [playSessionCoins, setPlaySessionCoins] = useState(0);
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [dictionaryWord, setDictionaryWord] = useState('');
@@ -202,6 +221,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [revealBurstId, setRevealBurstId] = useState(0);
   const completionShownRef = useRef(false);
   const levelStartedAtRef = useRef(null);
+  const hintsReadyRef = useRef(false);
   const [timerStartedAt, setTimerStartedAt] = useState(null);
   const [elapsedLabel, setElapsedLabel] = useState('0:00');
   const bonusWordLookupRef = useRef(false);
@@ -471,6 +491,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCelebrateMode('new');
     completionShownRef.current = false;
     levelStartedAtRef.current = null;
+    hintsReadyRef.current = false;
     setTimerStartedAt(null);
     setElapsedLabel('0:00');
     bonusWordLookupRef.current = false;
@@ -632,7 +653,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           const dailyAccess = await resolveDailyPlayAccess({
             hasStarter: starterAccess,
             loggedIn: authed,
-            creditBalance: wallet.creditBalance,
+            creditBalance: walletRef.current.creditBalance,
           });
           if (dailyAccess === 'starter') {
             setPuzzle(null);
@@ -654,7 +675,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           const journeyAccess = await resolveJourneyPlayAccess(level, {
             hasStarter: starterAccess,
             loggedIn: authed,
-            creditBalance: wallet.creditBalance,
+            creditBalance: walletRef.current.creditBalance,
             playerJourneyLevel,
           });
           if (journeyAccess === 'starter') {
@@ -692,7 +713,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             journeyLevel,
             puzzleId: data.id,
             loggedIn: authed,
-            creditBalance: wallet.creditBalance,
+            creditBalance: walletRef.current.creditBalance,
             playerJourneyLevel: journeyLevel,
           });
           if (!charge.ok) {
@@ -707,7 +728,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             return;
           }
           if (charge.creditBalance != null) {
-            wallet.refresh({ silent: true }).catch(() => {});
+            walletRef.current.refresh({ silent: true }).catch(() => {});
           }
           setPlaySession(play);
           const startedAt = Date.now();
@@ -718,6 +739,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             .map(normalizeWord)
             .filter(Boolean);
           setFoundWords(saved);
+          const storedHints = await loadStoredHintLetters(data.id);
+          if (!cancelled) {
+            if (storedHints.size) setHintLetters(storedHints);
+            hintsReadyRef.current = true;
+          }
           const fromServer = parseBonusWordsFromPlay(play);
           const fromLocal = await loadStoredBonusWords(data.id);
           const bonus = mergeBonusWordLists(fromServer, fromLocal);
@@ -747,6 +773,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           const startedAt = Date.now();
           levelStartedAtRef.current = startedAt;
           setTimerStartedAt(startedAt);
+          const storedHints = await loadStoredHintLetters(data.id);
+          if (!cancelled) {
+            if (storedHints.size) setHintLetters(storedHints);
+            hintsReadyRef.current = true;
+          }
           const fromLocal = await loadStoredBonusWords(data.id);
           if (fromLocal.length) setBonusWordsFound(fromLocal);
         }
@@ -762,7 +793,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, isOnboarding, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t, wallet]);
+  }, [isDaily, isOnboarding, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
 
   const handleNextPuzzle = useCallback(async () => {
     if (isDaily) {
@@ -1045,6 +1076,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       }
       completionShownRef.current = true;
       playSfx('complete');
+      if (puzzle?.id) clearStoredHintLetters(puzzle.id).catch(() => {});
       const startedAt = levelStartedAtRef.current ?? Date.now();
       const finishedAt = Date.now();
       const levelNumber = isDaily
@@ -1070,6 +1102,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     },
     [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, isOnboarding, finishOnboarding, puzzle]
   );
+
+  // Keep credit/hint letter reveals across leave/re-enter for this puzzle.
+  useEffect(() => {
+    if (isOnboarding || !puzzle?.id || !hintsReadyRef.current) return;
+    saveStoredHintLetters(puzzle.id, hintLetters);
+  }, [isOnboarding, puzzle?.id, hintLetters]);
 
   // Crossings / hints can finish a word without a wheel submit — promote those to found.
   useEffect(() => {
@@ -1332,11 +1370,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           setPlaySessionCoins(await spendGuestPuzzleCoins(WORD_WHEEL_HINT_COST));
         }
         setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
-      } else if (wallet.creditBalance >= WORD_WHEEL_HINT_COST) {
-        await wallet.consumeHintCredits({
-          playId: playSession?.id,
-          creditsConsumed: WORD_WHEEL_HINT_COST,
-        });
       } else {
         showNotEnoughCoinsAlert();
         return;
@@ -1397,6 +1430,106 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     measureOnboardingFocus,
   ]);
 
+  const applyRevealedLetters = useCallback((picks) => {
+    if (!picks.length) return;
+    setHintLetters((prev) => {
+      const nextHints = new Map(prev);
+      picks.forEach((pick) => {
+        const letter = String(pick?.letter || '').trim().toUpperCase();
+        if (pick?.key && letter) nextHints.set(pick.key, letter);
+      });
+      return nextHints;
+    });
+    if (picks[0]?.word) setSelectedWord(picks[0].word);
+    triggerCellRevealEffect(
+      picks.map((pick) => pick.key).filter(Boolean),
+      'new'
+    );
+  }, [triggerCellRevealEffect]);
+
+  const handleShowOneLetter = useCallback(async () => {
+    if (isOnboarding || puzzleComplete || letterBusy) return;
+    if ((wallet.creditBalance ?? 0) < 1) {
+      setCreditSheetOpen(true);
+      return;
+    }
+    const pick = hintCandidates[0];
+    if (!pick?.key || !pick?.letter) {
+      Alert.alert(t('play.alert.noHint.title'), t('play.alert.noHint.body'));
+      return;
+    }
+    setLetterBusy(true);
+    try {
+      // Ad grants land on the device wallet; merge first so a signed-in spend works.
+      await CreditApi.mergeGuestCredits().catch(() => null);
+      await consumeOneLetter(playSession?.id, pick.key);
+      // Reveal before wallet refresh — refreshing used to remount the puzzle load effect.
+      applyRevealedLetters([pick]);
+      wallet.refresh({ silent: true }).catch(() => {});
+    } catch (e) {
+      Alert.alert(t('play.letter.failed.title'), e?.message || t('play.letter.failed.body'));
+    } finally {
+      setLetterBusy(false);
+    }
+  }, [
+    isOnboarding,
+    puzzleComplete,
+    letterBusy,
+    wallet,
+    hintCandidates,
+    playSession?.id,
+    applyRevealedLetters,
+    t,
+  ]);
+
+  const handleWatchAd = useCallback(async () => {
+    if (isOnboarding || letterBusy) return;
+    setLetterBusy(true);
+    setCreditSheetOpen(false);
+    try {
+      const before = (await CreditApi.fetchDeviceBalance()).creditBalance;
+      const deviceId = await prepareRewardedAd();
+      if (__DEV__) console.log('[Ad] deviceId', deviceId, 'before', before);
+      const earned = await withAdAudioMuted(() => showRewardedLetterAd(deviceId));
+      if (!earned) return;
+      await waitForAdCredits(before);
+      await CreditApi.mergeGuestCredits().catch(() => null);
+      // Let the chip show the +1 grant before we spend it.
+      await wallet.refresh({ silent: true });
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const picks = findHintLetterCandidates(
+        puzzle?.filledCoordinates,
+        foundWords,
+        wordPositions,
+        hintedCellKeys
+      ).slice(0, AD_REWARD_LETTERS);
+      // Ad grant is 1 credit; still reveal up to 2 letters for that watch.
+      if (picks.length) {
+        await consumeOneLetter(playSession?.id, picks[0].key);
+        playSfx('adReward');
+        applyRevealedLetters(picks);
+      }
+      await wallet.refresh({ silent: true });
+    } catch (e) {
+      if (__DEV__) console.warn('[Ad] reward flow failed', e);
+      Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
+    } finally {
+      setLetterBusy(false);
+    }
+  }, [
+    isOnboarding,
+    letterBusy,
+    wallet,
+    puzzle?.filledCoordinates,
+    foundWords,
+    wordPositions,
+    hintedCellKeys,
+    playSession?.id,
+    playSfx,
+    applyRevealedLetters,
+    t,
+  ]);
+
   const handleBack = () => {
     playSfx('click');
     if (isDaily) {
@@ -1420,6 +1553,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     <View
       ref={onboardingClueWrapRef}
       collapsable={false}
+      style={styles.clueStripWrap}
       onLayout={(e) => {
         const { y, height } = e.nativeEvent.layout;
         onboardingClueContentLayoutRef.current = { y, height };
@@ -1446,6 +1580,22 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         active={false}
         overlay={null}
       />
+      {!isOnboarding && !puzzleComplete && (wallet.creditBalance ?? 0) > 0 ? (
+        <Pressable
+          style={styles.clueLetterIconBtn}
+          onPress={handleShowOneLetter}
+          disabled={letterBusy}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('play.letter.show')}
+        >
+          {letterBusy ? (
+            <ActivityIndicator color="#3F2A1A" size="small" />
+          ) : (
+            <Eye color="#3F2A1A" size={18} strokeWidth={2.4} />
+          )}
+        </Pressable>
+      ) : null}
     </View>
   );
 
@@ -1521,6 +1671,28 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               >
                 <Text style={styles.headerNextText}>{t('complete.next')}</Text>
                 <ChevronRight color="#fff" size={16} strokeWidth={2.6} />
+              </Pressable>
+            ) : null}
+            {!isOnboarding ? (
+              <Pressable
+                style={[
+                  styles.creditChip,
+                  isRandomScene && styles.creditChipOnScene,
+                  isDark && styles.creditChipDark,
+                ]}
+                onPress={() => setCreditSheetOpen(true)}
+                accessibilityLabel={t('play.credit.chip')}
+              >
+                <Sparkles size={15} color={isRandomScene ? '#0b3d36' : isDark ? '#5eead4' : '#7dd3fc'} />
+                <Text
+                  style={[
+                    styles.creditChipText,
+                    isRandomScene && styles.creditChipTextOnScene,
+                    isDark && styles.creditChipTextDark,
+                  ]}
+                >
+                  {wallet.creditBalance ?? 0}
+                </Text>
               </Pressable>
             ) : null}
           </View>
@@ -1689,7 +1861,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         </View>
       </View>
       </View>
-      {!isOnboarding ? (
+      {!isOnboarding && !letterBusy ? (
         <View style={styles.playAdSlot}>
           <AdBanner style={[styles.playAdBanner, { paddingBottom: 0 }]} />
         </View>
@@ -1727,6 +1899,58 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         onClose={() => setStarterGateVisible(false)}
         onShop={handleStarterGateShop}
       />
+
+      <Modal
+        visible={creditSheetOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCreditSheetOpen(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setCreditSheetOpen(false)}>
+          <Pressable
+            style={[
+              styles.sheetCard,
+              {
+                backgroundColor: isDark ? colors.surface : '#ffffff',
+                borderColor: isDark ? colors.primary : 'transparent',
+              },
+            ]}
+            onPress={() => {}}
+          >
+            <Text style={[styles.sheetTitle, { color: isDark ? colors.text : '#0f172a' }]}>
+              {t('play.credit.sheet.title')}
+            </Text>
+            <Text style={[styles.sheetCount, { color: isDark ? colors.textMuted : '#334155' }]}>
+              {t('play.credit.sheet.balance', { n: wallet.creditBalance ?? 0 })}
+            </Text>
+            <ShopOfferButton
+              label={t('play.credit.sheet.buyStarter')}
+              accessibilityLabel={t('play.credit.sheet.buyStarter')}
+              onPress={() => {
+                setCreditSheetOpen(false);
+                playSfx('click');
+                navigate(SCREENS.SHOP, {
+                  backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
+                  mode: routeParams.mode,
+                  date: routeParams.date,
+                });
+              }}
+            />
+            <Pressable
+              style={[
+                styles.sheetSecondary,
+                { borderColor: isDark ? 'rgba(94, 234, 212, 0.45)' : '#cbd5e1' },
+              ]}
+              onPress={handleWatchAd}
+              disabled={letterBusy}
+            >
+              <Text style={[styles.sheetSecondaryText, { color: isDark ? colors.text : '#0f172a' }]}>
+                {t('play.credit.sheet.watchAd')}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Bonus-word discovery popup disabled
       <BonusWordModal
@@ -1819,6 +2043,96 @@ const styles = StyleSheet.create({
   },
   playAdBanner: {
     paddingTop: 2,
+  },
+  clueStripWrap: {
+    position: 'relative',
+    overflow: 'visible',
+    zIndex: 3,
+  },
+  clueLetterIconBtn: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    zIndex: 6,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderWidth: 1.5,
+    borderColor: '#E8943A',
+    shadowColor: '#8B5A2B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  creditChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(8, 20, 30, 0.55)',
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.45)',
+  },
+  creditChipOnScene: {
+    backgroundColor: 'rgba(255,255,255,0.94)',
+    borderColor: 'transparent',
+  },
+  creditChipDark: {
+    backgroundColor: 'rgba(21, 61, 56, 0.92)',
+    borderColor: 'rgba(94, 234, 212, 0.55)',
+  },
+  creditChipText: {
+    color: '#e0f2fe',
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  creditChipTextOnScene: {
+    color: '#0b3d36',
+  },
+  creditChipTextDark: {
+    color: '#ccfbf1',
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  sheetCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 20,
+    gap: 12,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  sheetCount: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  sheetSecondary: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  sheetSecondaryText: {
+    color: '#0f172a',
+    fontWeight: '700',
   },
   scrollView: {
     flex: 1,

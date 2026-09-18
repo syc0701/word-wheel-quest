@@ -17,9 +17,9 @@ Constants (`src/constants/guestAccess.js`):
 | `GUEST_MAX_LEVEL_WITHOUT_STARTER` | **1_000_000** | Journey paywall off — all Season Journey levels treated as free |
 | `GUEST_STARTER_UNLOCK_LEVEL` | max + 1 | Unused while journey is free |
 | `GRANDFATHER_*` | legacy | Unused while journey paywall is off |
-| `FREE_DAILY_PLAYS` | **10** | Daily puzzles playable without starter/credits |
-| `STARTER_PACK_PUZZLE_CREDITS` | **50** | Credits bundled with starter (guest local grant) |
-| `PUZZLE_PLAY_CREDIT_COST` | **1** | Credits spent to **start** one gated **daily** puzzle |
+| `FREE_DAILY_PLAYS` | legacy | Daily is free — no starter/credit gate to start a puzzle |
+| `STARTER_PACK_PUZZLE_CREDITS` | **150** (server) | Starter credits land on the device wallet, not a local 50-credit grant |
+| `PUZZLE_PLAY_CREDIT_COST` | unused for starts | Credits are spent on **letters**, not on starting a puzzle |
 
 Product: **Starter Fun Bundle** (`bundle_starter` / `word_wheel_pack_starter`) in Shop.
 
@@ -33,30 +33,29 @@ Product: **Starter Fun Bundle** (`bundle_starter` / `word_wheel_pack_starter`) i
 
 ### Daily Puzzle
 
-| Rule | Detail |
-| --- | --- |
-| Level gate | **None** — Daily is available from Home |
-| Free quota | **10** daily play starts per device (any calendar date in the archive) |
-| After free quota | Requires **Starter Fun Bundle** **and** **1 puzzle credit** per daily play started |
-| Calendar browse | Full date picker; only **starting** a play is gated |
+Daily puzzles are free to start. There is no starter or credit gate on play.
 
-Each time a daily puzzle **starts** (`WordWheelApi.startPlay`), the client either increments the free-play counter or consumes **1 puzzle credit**.
+### Credits
+
+Credits reveal letters. They are not required to start Journey or Daily.
+
+| Source | Credits |
+| --- | --- |
+| Starter / Classic / Master | Server amounts (150 / 50 / 110) on the **device wallet** (`mo_guest_credits`) |
+| Watch rewarded ad | AdMob SSV grants **1** to the device wallet. The app reveals up to **2** hidden letters after the balance is +1 |
+| Show 1 letter | Spends **1** credit on the selected word’s next hidden letter |
+
+Leftover credits stay on the balance. They are not auto-applied to the next puzzle. After sign-in, guest credits merge onto the account and the app shows that balance.
 
 ### Starter Fun Bundle purchase
 
-| Player | What happens |
-| --- | --- |
-| **Signed in** | Google Play purchase → `CreditApi.verifyIapPurchase` → **server credit balance** increases (amount from backend). Local “starter owned” flag is set. |
-| **Guest** | Purchase stored locally + **50 puzzle credits** on device (`ww.guest_puzzle_credits`). Pending receipt saved for sync on later sign-in. **No sign-in required** to continue playing. |
-
-When a guest later signs in, `verifyPendingIapIfNeeded` attaches the purchase to the account.
+Google Play purchase → `CreditApi.verifyIapPurchase` with the install `deviceId`. Credits go to the device wallet even when signed out. The local 50-credit guest grant is gone. Sign-in is not required to buy.
 
 ### Gate modals
 
 | Situation | User sees |
 | --- | --- |
-| Daily after 10 free plays, no starter | Starter Fun Bundle upsell |
-| Starter owned, **0 puzzle credits** (daily) | Out-of-credits → Shop |
+| 0 credits and Show 1 letter / credit chip | Credit sheet: balance, Buy Starter, Watch ad |
 
 Journey no longer shows the level-51 starter gate.
 
@@ -69,10 +68,10 @@ Implementation: `StarterPackGateModal`, `src/screens/PlayScreen.js`, `src/screen
 | Balance | Purpose | Guest | Signed-in |
 | --- | --- | --- | --- |
 | **Puzzle coins** | Earned per word; spent on **hints** in Play | Session pool on device | Profile `puzzleCoins` |
-| **Credits (account)** | **Hints** (fallback) **and** **paid daily starts** | Local puzzle-credit pool after guest starter purchase | `/home/credit/balance` |
+| **Credits** | Reveal letters (1 credit each, or up to 2 after an ad) | Device wallet, merged to the account after sign-in | `/home/credit/balance?deviceId=` |
 | **Free daily plays** | Daily-only free tier | Device counter (`ww.free_daily_plays_used`) | Same device counter |
 
-**Puzzle credits** (for daily after free quota) and **hint credits** (account `/home/credit/consume`) share the same signed-in **credit balance** on the server. On guest, starter grants a **separate local puzzle-credit pool** used for gated daily starts.
+**Puzzle credits** reveal letters. The lightbulb hint still costs **10 coins** only.
 
 ---
 
@@ -106,7 +105,7 @@ Home → Shop (RevenueCat / Google Play):
 | **Classic / Master bundles** | Coin bundles (signed-in verify) |
 | **300 / 1,000 coins** | Adds puzzle coins to profile |
 
-Non-starter guest purchases still require sign-in to verify; starter pack is the exception.
+Non-starter packs also credit the same device wallet. Sign-in is not required.
 
 ---
 
@@ -116,18 +115,15 @@ Non-starter guest purchases still require sign-in to verify; starter pack is the
 
 | Rule | Value |
 | --- | --- |
-| Cost | **10** coins **or** credits per letter (`WORD_WHEEL_HINT_COST`) |
-| Order | Puzzle coins first, then **account credits** (signed-in only) |
-| Guests | Puzzle coins in session only; no account credit hints unless signed in |
+| Cost | **10 coins** per letter (`WORD_WHEEL_HINT_COST`). Credits are not a fallback. |
 
-### Gated puzzle starts
+### Letter reveals
 
 | Rule | Value |
 | --- | --- |
-| Cost | **1 puzzle credit** per **daily** play after the free 10 (journey is free) |
-| When charged | On successful `startPlay`, via `settlePuzzlePlayCharge` |
-| Signed-in | `CreditApi.consumeCredits` (`featureUsed`: `word_wheel_daily:*`) |
-| Guest | Local `consumeGuestPuzzleCredits` |
+| Show 1 letter | **1 credit** for the selected word’s next hidden letter |
+| Watch ad | Wait until the device balance is **+1**, then reveal up to **2** letters (1st letters by word number, then 2nd, then 3rd). Spends the 1 granted credit for that watch |
+| Completing the puzzle | Shown letters can finish a word; the completion dialog then advances the level |
 
 Low-balance shop prompts (hints): coins &lt; **10** or credits &lt; **10** (`WORD_WHEEL_LOW_HINT_POINTS_BALANCE`, `WORD_WHEEL_LOW_CREDITS_BALANCE`).
 
@@ -138,7 +134,7 @@ Low-balance shop prompts (hints): coins &lt; **10** or credits &lt; **10** (`WOR
 | Content | Free allowance | Then |
 | --- | --- | --- |
 | Season Journey 1–1100 | **All levels** | — (no journey paywall) |
-| Daily Puzzle | **10** play starts | Starter pack + 1 credit/play |
+| Daily Puzzle | Free to start | — |
 | Onboarding / tutorial | Always free | — |
 
 Max journey level: **1100** (`MAX_JOURNEY_LEVEL` in `LevelScreenPolicy`).

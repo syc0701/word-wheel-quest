@@ -1,28 +1,35 @@
 import { APP_STORE } from '../constants/store';
-import { apiGet, apiPost } from './http';
-import { ensurePlayIntegrityPassed } from './playIntegrity';
+import { getDeviceId } from './deviceId';
+import { isLoggedIn } from './auth';
+import { apiGet, apiGetPublic, apiPost } from './http';
 
 function readBalance(payload) {
   const n = Number(payload?.creditBalance);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-async function requirePlayIntegrity(actionLabel) {
-  const gate = await ensurePlayIntegrityPassed();
-  if (gate.ok) return;
-  const detail = gate.reason ? ` (${gate.reason})` : '';
-  throw new Error(
-    `Device integrity check failed for ${actionLabel}${detail}. Try again from an official Play Store install.`
-  );
-}
-
 const CreditApi = {
   fetchBalance: async (appCode = APP_STORE.appSiteId) => {
-    const data = await apiGet('/home/credit/balance', { appCode });
+    const authed = await isLoggedIn();
+    const params = { appCode };
+    if (!authed) {
+      params.deviceId = await getDeviceId();
+    }
+    const data = await apiGet('/home/credit/balance', params);
     if (data?.code === 'FAILURE') {
       throw new Error(data.message || 'Failed to load credit balance');
     }
     return { appCode: data?.appCode || appCode, creditBalance: readBalance(data) };
+  },
+
+  /** Device wallet only. AdMob SSV grants here; poll this after a rewarded ad. */
+  fetchDeviceBalance: async (appCode = APP_STORE.appSiteId) => {
+    const deviceId = await getDeviceId();
+    const data = await apiGetPublic('/home/credit/balance', { appCode, deviceId });
+    if (data?.code === 'FAILURE') {
+      throw new Error(data.message || 'Failed to load device credit balance');
+    }
+    return { appCode: data?.appCode || appCode, creditBalance: readBalance(data), deviceId };
   },
 
   fetchProducts: async () => {
@@ -34,14 +41,16 @@ const CreditApi = {
   },
 
   verifyIapPurchase: async ({ appCode = APP_STORE.appSiteId, productId, transactionId, rawPayload }) => {
-    await requirePlayIntegrity('verifyIapPurchase');
+    const deviceId = await getDeviceId();
     const data = await apiPost('/home/credit/iap/verify', {
       appCode,
       productId,
       transactionId,
+      deviceId,
       rawPayload: {
         ...rawPayload,
         platform: 'google',
+        deviceId,
       },
     });
     if (data?.code === 'FAILURE') {
@@ -51,14 +60,27 @@ const CreditApi = {
   },
 
   consumeCredits: async ({ appCode = APP_STORE.appSiteId, featureUsed, creditsConsumed }) => {
-    await requirePlayIntegrity('consumeCredits');
-    const data = await apiPost('/home/credit/consume', {
-      appCode,
-      featureUsed,
-      creditsConsumed,
-    });
+    const authed = await isLoggedIn();
+    const body = { appCode, featureUsed, creditsConsumed };
+    if (!authed) {
+      body.deviceId = await getDeviceId();
+    }
+    const data = await apiPost('/home/credit/consume', body);
     if (data?.code === 'FAILURE') {
       throw new Error(data.message || 'Failed to spend credits');
+    }
+    return { ...data, creditBalance: readBalance(data) };
+  },
+
+  mergeGuestCredits: async (appCode = APP_STORE.appSiteId) => {
+    const authed = await isLoggedIn();
+    if (!authed) return null;
+    const data = await apiPost('/home/credit/guest/merge', {
+      appCode,
+      deviceId: await getDeviceId(),
+    });
+    if (data?.code === 'FAILURE') {
+      throw new Error(data.message || 'Failed to merge guest credits');
     }
     return { ...data, creditBalance: readBalance(data) };
   },

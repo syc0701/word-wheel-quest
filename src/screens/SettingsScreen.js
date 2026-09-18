@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Star, Trophy } from 'lucide-react-native';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Smartphone, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
@@ -19,6 +19,7 @@ import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
 import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
+import { getDeviceId } from '../lib/deviceId';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEV_INTERMISSION_LINKS = [
@@ -98,6 +99,8 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
   const [scoreStanding, setScoreStanding] = useState(null);
+  const showDeveloperTools = __DEV__ || Boolean(wallet.isDeveloper);
+  const [deviceId, setDeviceId] = useState('');
   const [scoreLoading, setScoreLoading] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -125,6 +128,24 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       refreshScore(v);
     });
   }, []);
+
+  useEffect(() => {
+    if (!showDeveloperTools) {
+      setDeviceId('');
+      return;
+    }
+    let cancelled = false;
+    getDeviceId()
+      .then((id) => {
+        if (!cancelled) setDeviceId(id || '');
+      })
+      .catch(() => {
+        if (!cancelled) setDeviceId('');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showDeveloperTools]);
 
   useEffect(() => {
     if (routeParams.signedIn || routeParams.authTick) {
@@ -428,7 +449,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         {/* Keeps the legal card clear of the system nav even when insets are wrong. */}
         <View style={{ height: Math.max(insets.bottom, 24) }} />
 
-        {__DEV__ ? (
+        {showDeveloperTools ? (
           <>
             <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.developer')}</Text>
             <Text
@@ -449,6 +470,22 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
               {t('settings.dev.hint')}
             </Text>
             <View style={[styles.groupCard, themed.walletCard]}>
+              <MenuRow
+                icon={Smartphone}
+                label={t('settings.dev.deviceId')}
+                subtitle={deviceId || t('settings.dev.deviceId.loading')}
+                onPress={async () => {
+                  if (!deviceId) return;
+                  try {
+                    await Share.share({ message: deviceId });
+                  } catch {
+                    Alert.alert(t('settings.dev.deviceId'), deviceId);
+                  }
+                }}
+                colors={colors}
+                embedded
+              />
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
               {DEV_INTERMISSION_LINKS.map((link, index) => (
                 <View key={link.id}>
                   {index > 0 ? (
@@ -485,7 +522,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
 
       <AppFeedbackSheet visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
-      {__DEV__ ? (
+      {showDeveloperTools ? (
         <WordWheelCompleteDialog
           visible={completePreviewVisible}
           durationLabel="0:42"

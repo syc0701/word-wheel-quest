@@ -181,20 +181,12 @@ export async function canPlayJourneyLevel(journeyLevel, opts) {
  * Whether a daily puzzle can be started.
  * @returns {'free'|'credit'|'starter'|'no_credits'|null} null = blocked unknown
  */
-export async function resolveDailyPlayAccess({ hasStarter, loggedIn, creditBalance = 0 }) {
-  const freeLeft = await getFreeDailyPlaysRemaining();
-  if (freeLeft > 0) return 'free';
-  if (!hasStarter) return 'starter';
-  if (loggedIn) {
-    return creditBalance >= PUZZLE_PLAY_CREDIT_COST ? 'credit' : 'no_credits';
-  }
-  const guestCredits = await getGuestPuzzleCredits();
-  return guestCredits >= PUZZLE_PLAY_CREDIT_COST ? 'credit' : 'no_credits';
+export async function resolveDailyPlayAccess() {
+  return 'free';
 }
 
-export async function canPlayDailyPuzzle({ hasStarter, loggedIn, creditBalance = 0 }) {
-  const access = await resolveDailyPlayAccess({ hasStarter, loggedIn, creditBalance });
-  return access === 'free' || access === 'credit';
+export async function canPlayDailyPuzzle() {
+  return true;
 }
 
 export async function canStartJourneyLevel(level, {
