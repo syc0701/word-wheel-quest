@@ -1,0 +1,9 @@
+What's new in this update:
+
+- Watch a short ad to reveal two hidden letters
+- Use credits to show one letter at a time
+- Revealed letters stay when you leave and return
+- Clearer word numbers on the puzzle grid
+- Fresh play music each time you enter a puzzle
+
+Thanks for playing!
