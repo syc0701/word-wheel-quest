@@ -1,0 +1,38 @@
+diff --git a/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/core/GestureHandler.kt b/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/core/GestureHandler.kt
+index a9082c2..dac7662 100644
+--- a/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/core/GestureHandler.kt
++++ b/node_modules/react-native-gesture-handler/android/src/main/java/com/swmansion/gesturehandler/core/GestureHandler.kt
+@@ -188,13 +188,27 @@ open class GestureHandler<ConcreteGestureHandlerT : GestureHandler<ConcreteGestu
+ 
+   protected open fun onPrepare() {}
+ 
+-  private fun getActivity(context: Context?): Activity? =
+-    when (context) {
+-      is ReactContext -> context.currentActivity
+-      is Activity -> context
+-      is ContextWrapper -> getActivity(context.baseContext)
+-      else -> null
++  private fun getActivity(context: Context?): Activity? {
++    // Iterative on purpose. The old recursive walk ANR'd as
++    // "Input dispatching timed out" when a ContextWrapper chain cycled
++    // (Play blamed GestureHandler.getActivity on the input thread).
++    var current = context
++    var hops = 0
++    while (current != null && hops < 8) {
++      when (current) {
++        is ReactContext -> return current.currentActivity
++        is Activity -> return current
++        is ContextWrapper -> {
++          val next = current.baseContext
++          if (next === current) return null
++          current = next
++        }
++        else -> return null
++      }
++      hops++
+     }
++    return null
++  }
+ 
+   private fun findNextLocalPointerId(): Int {
+     var localPointerId = 0
