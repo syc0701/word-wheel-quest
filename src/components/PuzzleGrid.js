@@ -5,8 +5,11 @@ import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { Lightbulb, Play } from 'lucide-react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
 import { GRID_CREAM, GRID_TRANSITION_MS } from '../lib/gridTheme';
@@ -27,9 +30,12 @@ function GridCell({
   isRevealed,
   isHintRevealed,
   isSelected,
+  showAdHint = false,
+  onAdHintPress,
   onPress,
 }) {
   const selectedProgress = useSharedValue(isSelected ? 1 : 0);
+  const hintScale = useSharedValue(1);
   const numberFontSize =
     size > 0 ? Math.max(13, Math.min(18, Math.round(size * 0.38))) : 15;
   const numberBox = Math.max(
@@ -43,6 +49,20 @@ function GridCell({
       easing: Easing.inOut(Easing.quad),
     });
   }, [isSelected, selectedProgress]);
+
+  useEffect(() => {
+    if (!showAdHint) return undefined;
+    hintScale.value = 0.35;
+    hintScale.value = withSequence(
+      withSpring(1.38, { damping: 5, stiffness: 260 }),
+      withSpring(1, { damping: 7, stiffness: 180 })
+    );
+    return undefined;
+  }, [showAdHint, hintScale]);
+
+  const hintStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: hintScale.value }],
+  }));
 
   const cellStyle = useAnimatedStyle(() => {
     const bg = isHintRevealed
@@ -91,14 +111,14 @@ function GridCell({
   }, [isHintRevealed]);
 
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      style={[
-        styles.cell,
-        size > 0 && { width: size, height: size },
-        cellStyle,
-      ]}
+    <View
+      collapsable={false}
+      style={[styles.cellHost, size > 0 && { width: size, height: size }]}
     >
+      <AnimatedPressable
+        onPress={onPress}
+        style={[styles.cell, StyleSheet.absoluteFill, cellStyle]}
+      >
       {wordNumberLabel ? (
         <View
           pointerEvents="none"
@@ -129,6 +149,21 @@ function GridCell({
         </Animated.Text>
       ) : null}
     </AnimatedPressable>
+      {showAdHint ? (
+        <Animated.View pointerEvents="box-none" style={[styles.adHintBtn, hintStyle]}>
+          <Pressable
+            style={styles.adHintHit}
+            onPress={onAdHintPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Watch an ad to show this letter"
+          >
+            <Lightbulb color="#fff" size={12} strokeWidth={2.4} />
+            <Play color="#fff" size={8} fill="#fff" style={styles.adHintPlay} />
+          </Pressable>
+        </Animated.View>
+      ) : null}
+    </View>
   );
 }
 
@@ -144,7 +179,10 @@ export default function PuzzleGrid({
   celebrateMode = 'new',
   revealBurstId = 0,
   maxBoardSize = 0,
+  fitWidth = false,
   onCellPress,
+  adHintCells = null,
+  onAdHintPress = null,
   onBoardMetrics = null,
   boardHostRef = null,
 }) {
@@ -185,8 +223,9 @@ export default function PuzzleGrid({
     gridWidth > 0
       ? Math.floor((gridWidth - BOARD_INSET * 2 - GAP * (colCount - 1)) / colCount)
       : 0;
-  const cellFromHeight =
-    heightBudget > 0
+  const cellFromHeight = fitWidth
+    ? cellFromWidth
+    : heightBudget > 0
       ? Math.floor((heightBudget - BOARD_INSET * 2 - GAP * (rowCount - 1)) / rowCount)
       : cellFromWidth;
   const cellSize = Math.max(0, Math.min(cellFromWidth, cellFromHeight, MAX_CELL));
@@ -292,6 +331,8 @@ export default function PuzzleGrid({
         isRevealed={isRevealed}
         isHintRevealed={isHintRevealed}
         isSelected={isSelected}
+        showAdHint={Boolean(adHintCells?.has(cellKey))}
+        onAdHintPress={() => onAdHintPress?.(row, col)}
         onPress={() => onCellPress(row, col)}
       />
     );
@@ -315,7 +356,7 @@ export default function PuzzleGrid({
 
   return (
     <View
-      style={styles.gridWrap}
+      style={[styles.gridWrap, fitWidth && styles.gridWrapFitWidth]}
       onLayout={(event) => {
         const { width, height } = event.nativeEvent.layout;
         if (width > 0 && width !== gridWidth) setGridWidth(width);
@@ -352,6 +393,12 @@ const styles = StyleSheet.create({
     minHeight: 160,
     overflow: 'visible',
   },
+  gridWrapFitWidth: {
+    flexGrow: 0,
+    minHeight: 0,
+    marginTop: 12,
+    paddingVertical: 8,
+  },
   grid: {
     position: 'relative',
     overflow: 'visible',
@@ -359,6 +406,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: GAP,
+  },
+  cellHost: {
+    overflow: 'visible',
   },
   cell: {
     alignItems: 'center',
@@ -396,5 +446,28 @@ const styles = StyleSheet.create({
   numberTextCompact: {
     fontSize: 12,
     letterSpacing: -0.3,
+  },
+  adHintBtn: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    zIndex: 7,
+    width: 28,
+    height: 28,
+  },
+  adHintHit: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#C2410C',
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  adHintPlay: {
+    position: 'absolute',
+    right: 2,
+    bottom: 2,
   },
 });

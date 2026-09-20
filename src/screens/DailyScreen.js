@@ -15,11 +15,12 @@ import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
 import { FREE_DAILY_PLAYS, STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
-  buildCellWordNumbers,
   buildDisplayGrid,
+  normalizeWord,
   parseWordPositions,
   puzzleCellKeys,
 } from '../lib/gridReveal';
+import { loadStoredHintLetters } from '../lib/hintLettersStorage';
 import {
   addMontrealCalendarDays,
   clampYmd,
@@ -40,7 +41,13 @@ import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const EMPTY_SET = new Set();
-const EMPTY_HINT_LETTERS = {};
+const EMPTY_MAP = new Map();
+
+function parseFoundWords(data) {
+  const raw = data?.wordsFound ?? data?.foundWords ?? data?.play?.wordsFound ?? '';
+  const list = Array.isArray(raw) ? raw : String(raw).split('\n');
+  return list.map(normalizeWord).filter(Boolean);
+}
 
 export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
@@ -76,6 +83,8 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
+  const [foundWords, setFoundWords] = useState([]);
+  const [hintLetters, setHintLetters] = useState(() => new Map());
   const [freeDailyLeft, setFreeDailyLeft] = useState(FREE_DAILY_PLAYS);
   const [starterGateVisible, setStarterGateVisible] = useState(false);
   const [starterGateContext, setStarterGateContext] = useState('daily');
@@ -107,6 +116,8 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
       setLoading(true);
       setError('');
       setPuzzle(null);
+      setFoundWords([]);
+      setHintLetters(new Map());
       try {
         const data = await WordWheelApi.fetchDaily(selectedDate);
         if (cancelled) return;
@@ -114,6 +125,10 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           setError(t('daily.error.noData'));
           return;
         }
+        const storedHints = data?.id ? await loadStoredHintLetters(data.id) : new Map();
+        if (cancelled) return;
+        setFoundWords(parseFoundWords(data));
+        setHintLetters(storedHints);
         setPuzzle(data);
       } catch (e) {
         if (!cancelled) setError(e?.message || t('daily.error.loadFailed'));
@@ -133,20 +148,19 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   );
   const puzzleCells = useMemo(() => puzzleCellKeys(wordPositions), [wordPositions]);
   const displayGrid = useMemo(
-    () => buildDisplayGrid([], wordPositions, EMPTY_HINT_LETTERS, gridSize),
-    [wordPositions, gridSize]
+    () => buildDisplayGrid(foundWords, wordPositions, hintLetters, gridSize),
+    [foundWords, wordPositions, hintLetters, gridSize]
   );
-  const cellWordNumbers = useMemo(
-    () =>
-      buildCellWordNumbers(
-        puzzle?.filledCoordinates,
-        [],
-        wordPositions,
-        EMPTY_SET,
-        displayGrid
-      ),
-    [puzzle?.filledCoordinates, wordPositions, displayGrid]
-  );
+  const hintOnlyCells = useMemo(() => {
+    const keys = new Set();
+    hintLetters.forEach((_, key) => {
+      const fromFound = foundWords.some((word) => (
+        wordPositions[word]?.some((cell) => `${cell.row},${cell.col}` === key)
+      ));
+      if (!fromFound) keys.add(key);
+    });
+    return keys;
+  }, [hintLetters, foundWords, wordPositions]);
 
   const puzzleCompleted = Boolean(puzzle?.completed);
   const isToday = selectedDate === todayYmd;
@@ -277,12 +291,13 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
               {showGrid ? (
                 <View style={styles.gridPreview}>
                   <PuzzleGrid
+                    fitWidth
                     gridSize={gridSize}
                     displayGrid={displayGrid}
                     puzzleCells={puzzleCells}
-                    cellWordNumbers={cellWordNumbers}
+                    cellWordNumbers={EMPTY_MAP}
                     selectedWordCells={EMPTY_SET}
-                    hintOnlyCells={EMPTY_SET}
+                    hintOnlyCells={hintOnlyCells}
                     celebratingCellKeys={EMPTY_SET}
                     onCellPress={() => {}}
                   />

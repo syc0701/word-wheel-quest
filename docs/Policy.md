@@ -42,14 +42,14 @@ Credits reveal letters. They are not required to start Journey or Daily.
 | Source | Credits |
 | --- | --- |
 | Starter / Classic / Master | Server amounts (150 / 50 / 110) on the **device wallet** (`mo_guest_credits`) |
-| Watch rewarded ad | AdMob SSV grants **1** to the device wallet. The app reveals up to **2** hidden letters after the balance is +1 |
-| Show 1 letter | Spends **1** credit on the selected word’s next hidden letter |
+| Watch rewarded ad | AdMob SSV grants **1** credit. The ad does not reveal a letter. The eye on the clue spends 1 credit on the selected word’s first hidden letter |
+| Show 1 letter | Select a word first. Spends **1** credit on that word’s first still-hidden letter |
 
 Leftover credits stay on the balance. They are not auto-applied to the next puzzle. After sign-in, guest credits merge onto the account and the app shows that balance.
 
 ### Starter Fun Bundle purchase
 
-Google Play purchase → `CreditApi.verifyIapPurchase` with the install `deviceId`. Credits go to the device wallet even when signed out. The local 50-credit guest grant is gone. Sign-in is not required to buy.
+Google Play purchase → `CreditApi.verifyIapPurchase` with the install `deviceId`. Credits go to the device wallet even when signed out. If that wallet is empty, the client records **150** so it matches the Starter grant. Sign-in is not required to buy.
 
 ### Gate modals
 
@@ -95,7 +95,15 @@ Logged-in: server `coinsEarned` includes milestone when present. Guests: client 
 - Real dictionary word **not** on the grid, length ≥ **3**
 - **+1 coin** per unique word per puzzle (`WORD_WHEEL_BONUS_WORD_GIFT = 1`)
 
-### 4. Shop (IAP)
+### 4. Daily gift
+
+One claim per local calendar day. First day, or after a missed day: **2** coins. The next day with no gap: **3** coins. It does not climb past 3.
+
+Guests: added to `ww.guest_puzzle_coins`.
+
+Signed-in: `POST /home/coin/daily-gift` (JWT). Body `appCode`, `coins` (2 or 3), `claimDate` (`YYYY-MM-DD`), `streak`. Adds to `puzzleCoins.word_wheel_quest`. The same user, app, and date does not grant twice.
+
+### 5. Shop (IAP)
 
 Home → Shop (RevenueCat / Google Play):
 
@@ -121,11 +129,23 @@ Non-starter packs also credit the same device wallet. Sign-in is not required.
 
 | Rule | Value |
 | --- | --- |
-| Show 1 letter | **1 credit** for the selected word’s next hidden letter |
-| Watch ad | Wait until the device balance is **+1**, then reveal up to **2** letters (1st letters by word number, then 2nd, then 3rd). Spends the 1 granted credit for that watch |
+| Show 1 letter | **1 credit** for the selected word’s first still-hidden letter |
+| Watch ad | Top-right chip. Wait until the balance is **+1**. Does not reveal a letter. Select a word, then the eye spends 1 credit and shows that word’s first hidden letter |
+| Cell ad | Unit `Rewarded_One_Hidden_Letter` (`6505707281`). One hint-plus-ad icon on the selected word. See the rules below. The ad reveals that cell only. No SSV custom data, so the credit balance does not change |
 | Completing the puzzle | Shown letters can finish a word; the completion dialog then advances the level |
 
 Low-balance shop prompts (hints): coins &lt; **10** or credits &lt; **10** (`WORD_WHEEL_LOW_HINT_POINTS_BALANCE`, `WORD_WHEEL_LOW_CREDITS_BALANCE`).
+
+#### When the hint-plus-ad icon shows
+
+One icon, on one empty cell of the **selected** word. It does not grant or spend a credit.
+
+- After **3** failed tries, and the word still has **2 or more** empty cells, the icon appears on the first empty cell.
+- After **3** more fails, it moves to the next empty cell and pops.
+- If the player watches the ad and that letter appears, the icon hides. The word is still unsolved. After **3** new fails, the icon shows on the next empty cell and pops.
+- **1** empty cell left, or the word is solved: no icon.
+- A try is a wheel submit of 3 or more letters that does not solve the selected word. The count is per word and lasts only for this visit.
+- The tutorial shows the icon on one scripted cell. It does not wait for 3 misses.
 
 ---
 

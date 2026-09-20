@@ -1,0 +1,91 @@
+diff --git a/node_modules/expo-build-properties/build/android.js b/node_modules/expo-build-properties/build/android.js
+index 6a3c673..8dcaad8 100644
+--- a/node_modules/expo-build-properties/build/android.js
++++ b/node_modules/expo-build-properties/build/android.js
+@@ -259,21 +259,24 @@ const withAndroidSettingsGradle = (config, props) => {
+ };
+ exports.withAndroidSettingsGradle = withAndroidSettingsGradle;
+ function updateAndroidSettingsGradle({ contents, buildFromSource, }) {
+-    let newContents = contents;
+-    if (buildFromSource === true) {
+-        const addCodeBlock = [
+-            '', // new line
+-            'includeBuild(expoAutolinking.reactNative) {',
+-            '  dependencySubstitution {',
+-            '    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))',
+-            '    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))',
+-            '    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
+-            '    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
+-            '  }',
+-            '}',
+-            '', // new line
+-        ];
+-        newContents += addCodeBlock.join('\n');
++    if (buildFromSource !== true) {
++        return contents;
+     }
+-    return newContents;
++    // Prebuild runs on every android:studio. Appending again duplicates the block.
++    if (contents.includes('includeBuild(expoAutolinking.reactNative)')) {
++        return contents;
++    }
++    const addCodeBlock = [
++        '', // new line
++        'includeBuild(expoAutolinking.reactNative) {',
++        '  dependencySubstitution {',
++        '    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))',
++        '    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))',
++        '    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
++        '    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
++        '  }',
++        '}',
++        '', // new line
++    ];
++    return contents + addCodeBlock.join('\n');
+ }
+diff --git a/node_modules/expo-build-properties/src/android.ts b/node_modules/expo-build-properties/src/android.ts
+index 80b51d5..4c7e95b 100644
+--- a/node_modules/expo-build-properties/src/android.ts
++++ b/node_modules/expo-build-properties/src/android.ts
+@@ -320,22 +320,24 @@ export function updateAndroidSettingsGradle({
+   contents: string;
+   buildFromSource?: boolean;
+ }) {
+-  let newContents = contents;
+-  if (buildFromSource === true) {
+-    const addCodeBlock = [
+-      '', // new line
+-      'includeBuild(expoAutolinking.reactNative) {',
+-      '  dependencySubstitution {',
+-      '    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))',
+-      '    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))',
+-      '    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
+-      '    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
+-      '  }',
+-      '}',
+-      '', // new line
+-    ];
+-    newContents += addCodeBlock.join('\n');
++  if (buildFromSource !== true) {
++    return contents;
+   }
+-
+-  return newContents;
++  // Prebuild runs on every android:studio. Appending again duplicates the block.
++  if (contents.includes('includeBuild(expoAutolinking.reactNative)')) {
++    return contents;
++  }
++  const addCodeBlock = [
++    '', // new line
++    'includeBuild(expoAutolinking.reactNative) {',
++    '  dependencySubstitution {',
++    '    substitute(module("com.facebook.react:react-android")).using(project(":packages:react-native:ReactAndroid"))',
++    '    substitute(module("com.facebook.react:react-native")).using(project(":packages:react-native:ReactAndroid"))',
++    '    substitute(module("com.facebook.react:hermes-android")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
++    '    substitute(module("com.facebook.react:hermes-engine")).using(project(":packages:react-native:ReactAndroid:hermes-engine"))',
++    '  }',
++    '}',
++    '', // new line
++  ];
++  return contents + addCodeBlock.join('\n');
+ }

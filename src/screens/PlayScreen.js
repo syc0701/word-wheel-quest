@@ -12,10 +12,11 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
-import { ArrowLeft, BookOpen, ChevronRight, Clock, Eye, Lightbulb, Sparkles, Tornado, Volume2, VolumeX } from 'lucide-react-native';
+import { ArrowLeft, BookOpen, ChevronRight, Clock, Eye, Gift, Lightbulb, Sparkles, Tornado, Volume2, VolumeX, X } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import { PiTreasureChest } from '../components/PiTreasureChest';
 import LetterWheel from '../components/LetterWheel';
+import ClueLetterRow from '../components/ClueLetterRow';
 import SwipeableClueStrip from '../components/SwipeableClueStrip';
 import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
@@ -27,12 +28,12 @@ import ShopOfferButton from '../components/intermission/ShopOfferButton';
 import {
   consumeOneLetter,
   prepareRewardedAd,
+  showRewardedCellAd,
   showRewardedLetterAd,
   waitForAdCredits,
   withAdAudioMuted,
 } from '../services/rewardedLetterAd';
 import CreditApi from '../lib/creditApi';
-import { AD_REWARD_LETTERS } from '../constants/ads';
 // import BonusWordModal from '../components/BonusWordModal';
 import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
@@ -71,6 +72,7 @@ import {
   saveGuestPuzzleCoins,
   spendGuestPuzzleCoins,
 } from '../lib/guestCoinsStorage';
+import { describeDailyGift, loadDailyGift } from '../lib/dailyGift';
 import { isLoggedIn } from '../lib/auth';
 import {
   guestNeedsStarterToContinue,
@@ -98,7 +100,7 @@ import { PLAY_MODE, SCREENS } from '../constants/theme';
 import OnboardingOverlay from '../components/OnboardingOverlay';
 import OnboardingSuccessOverlay from '../components/OnboardingSuccessOverlay';
 import OnboardingWelcomeOverlay from '../components/OnboardingWelcomeOverlay';
-import { markOnboardingComplete, ONBOARDING_PUZZLE } from '../lib/onboarding';
+import { markOnboardingComplete, ONBOARDING_PUZZLE, TUTORIAL_STEP } from '../lib/onboarding';
 import { useAppearance } from '../context/AppearanceContext';
 import { useAudio } from '../context/AudioContext';
 import { usePlayTimer } from '../context/PlayTimerContext';
@@ -165,6 +167,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [puzzle, setPuzzle] = useState(null);
   const [foundWords, setFoundWords] = useState([]);
   const [selectedIndices, setSelectedIndices] = useState([]);
+  const [wheelPreview, setWheelPreview] = useState('');
   const [playSession, setPlaySession] = useState(null);
   const [selectedWord, setSelectedWord] = useState(null);
   const [wheelTiles, setWheelTiles] = useState([]);
@@ -173,7 +176,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [hintPending, setHintPending] = useState(false);
   const [letterBusy, setLetterBusy] = useState(false);
   const [creditSheetOpen, setCreditSheetOpen] = useState(false);
+  const [coinsAlertOpen, setCoinsAlertOpen] = useState(false);
   const [playSessionCoins, setPlaySessionCoins] = useState(0);
+  const [todayGiftCoins, setTodayGiftCoins] = useState(0);
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [dictionaryWord, setDictionaryWord] = useState('');
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
@@ -184,6 +189,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [onboardingWelcomeVisible, setOnboardingWelcomeVisible] = useState(() =>
     Boolean(routeParams.isOnboarding)
   );
+  const [tutorialCredits, setTutorialCredits] = useState(0);
+  const [failCount, setFailCount] = useState(0);
+  const failCountRef = useRef(0);
+  // After a letter is shown, keep the hint-plus-ad icon hidden until this many misses.
+  const [adHideUntil, setAdHideUntil] = useState(3);
+  // After a cell ad, the next icon starts on the next empty cell of that word.
+  const [cellAdCursor, setCellAdCursor] = useState({});
   const [onboardingSuccessVisible, setOnboardingSuccessVisible] = useState(false);
   const onboardingSuccessNextStepRef = useRef(1);
   const onboardingOverlayRef = useRef(null);
@@ -196,6 +208,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const onboardingHintRef = useRef(null);
   const onboardingBoardMetricsRef = useRef(null);
   const onboardingGridBoardRef = useRef(null);
+  const onboardingCreditRef = useRef(null);
+  const onboardingEyeRef = useRef(null);
   const finishingOnboardingRef = useRef(false);
   const [bonusWordModal, setBonusWordModal] = useState({
     visible: false,
@@ -204,6 +218,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     pendingGift: 0,
   });
   const coinPulse = useRef(new Animated.Value(1)).current;
+  const [eyeAttention, setEyeAttention] = useState(false);
+  const eyeFlicker = useRef(new Animated.Value(1)).current;
+  const creditFlicker = useRef(new Animated.Value(1)).current;
+  const eyeScale = useRef(new Animated.Value(1)).current;
+  const eyeGlow = useRef(new Animated.Value(0)).current;
+  const eyeAttentionTimer = useRef(null);
   const [coinSparkBurstId, setCoinSparkBurstId] = useState(0);
   const [coinSparkVisible, setCoinSparkVisible] = useState(false);
   const coinSparkClearRef = useRef(null);
@@ -327,6 +347,41 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return new Set(wordPositions[normalizeWord(word)].map((p) => `${p.row},${p.col}`));
   }, [activeClue, selectedNorm, wordPositions]);
 
+  const cellAdKeys = useMemo(() => {
+    if (isOnboarding) {
+      return onboardingStep === TUTORIAL_STEP.CELL_AD ? new Set(['3,4']) : new Set();
+    }
+    if (failCount < adHideUntil) return new Set();
+    const hiddenOf = (word) => (
+      (wordPositions[word] || []).filter((p) => !displayGrid[p.row]?.[p.col])
+    );
+    const selected = normalizeWord(selectedWord || '');
+    const selectedHidden = selected && !foundWords.includes(selected) ? hiddenOf(selected) : [];
+    const tracked = selectedHidden.length >= 2
+      ? selected
+      : (unfoundClues
+        .map((entry) => normalizeWord(entry.word))
+        .find((word) => hiddenOf(word).length >= 2) || '');
+    if (!tracked) return new Set();
+    const startIndex = cellAdCursor[tracked]?.startIndex || 0;
+    const hidden = hiddenOf(tracked);
+    if (hidden.length < 2) return new Set();
+    const hop = startIndex + Math.floor((failCount - adHideUntil) / 3);
+    const cell = hidden[hop % hidden.length];
+    return new Set([`${cell.row},${cell.col}`]);
+  }, [
+    isOnboarding,
+    onboardingStep,
+    failCount,
+    adHideUntil,
+    selectedWord,
+    foundWords,
+    unfoundClues,
+    cellAdCursor,
+    wordPositions,
+    displayGrid,
+  ]);
+
   const goClue = useCallback(
     (delta) => {
       if (unfoundClues.length > 0) {
@@ -380,6 +435,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => clearInterval(id);
   }, [timerEnabled, timerStartedAt, puzzleComplete]);
 
+  useEffect(() => {
+    let cancelled = false;
+    loadDailyGift().then((record) => {
+      if (cancelled) return;
+      const view = describeDailyGift(record);
+      setTodayGiftCoins(view.claimed ? view.coins : 0);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const lifetimeCoinsRemaining = wallet.loggedIn
     ? Math.max(0, wallet.lifetimePoints)
     : Math.max(0, playSessionCoins);
@@ -387,13 +454,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const canUseHint =
     !puzzleComplete
     && !hintPending
-    && (
-      (isOnboarding && onboardingStep === 2)
-      || (
-        hintCandidates.length > 0
-        && totalHintCoinsAvailable >= WORD_WHEEL_HINT_COST
-      )
-    );
+    && !isOnboarding
+    && hintCandidates.length > 0
+    && totalHintCoinsAvailable >= WORD_WHEEL_HINT_COST;
 
   useEffect(() => {
     if (!__DEV__ || loading) return;
@@ -498,6 +561,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setBonusWordModal({ visible: false, word: '', awardedGift: false, pendingGift: 0 });
     setBonusWordsFound([]);
     setTreasureOpen(false);
+    setFailCount(0);
+    failCountRef.current = 0;
+    setAdHideUntil(3);
+    setCellAdCursor({});
   }, []);
 
   /**
@@ -539,6 +606,95 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       coinSparkClearRef.current = null;
     }, 900);
   }, [coinPulse]);
+
+  const startEyeAttention = useCallback(() => {
+    setEyeAttention(true);
+    if (eyeAttentionTimer.current) clearTimeout(eyeAttentionTimer.current);
+    eyeAttentionTimer.current = setTimeout(() => {
+      setEyeAttention(false);
+      eyeAttentionTimer.current = null;
+    }, 4800);
+  }, []);
+
+  useEffect(() => {
+    if (!eyeAttention) {
+      eyeFlicker.setValue(1);
+      eyeScale.setValue(1);
+      eyeGlow.setValue(0);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(eyeFlicker, {
+            toValue: 0.28,
+            duration: 220,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(eyeScale, {
+            toValue: 1.22,
+            duration: 220,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(eyeGlow, {
+            toValue: 1,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(eyeFlicker, {
+            toValue: 1,
+            duration: 220,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(eyeScale, {
+            toValue: 1,
+            duration: 220,
+            easing: Easing.inOut(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(eyeGlow, {
+            toValue: 0.2,
+            duration: 220,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    );
+    loop.start();
+    playSfx('adReward');
+    return () => loop.stop();
+  }, [eyeAttention, eyeFlicker, eyeScale, eyeGlow, playSfx]);
+
+  useEffect(() => {
+    if (!isOnboarding || onboardingStep !== TUTORIAL_STEP.EYE) {
+      creditFlicker.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(creditFlicker, {
+          toValue: 0.25,
+          duration: 280,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(creditFlicker, {
+          toValue: 1,
+          duration: 280,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    playSfx('adReward');
+    return () => loop.stop();
+  }, [isOnboarding, onboardingStep, creditFlicker, playSfx]);
 
   const applyBonusWordGift = useCallback(
     (amount) => {
@@ -900,7 +1056,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     if (!overlayNode || typeof overlayNode.measureInWindow !== 'function') return;
 
     const next = {};
-    let pending = 4;
+    let pending = 7;
     const done = () => {
       pending -= 1;
       if (pending <= 0) {
@@ -986,10 +1142,42 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       }
     };
 
+    const measureCellAd = () => {
+      const board = onboardingBoardMetricsRef.current;
+      const boardNode = onboardingGridBoardRef.current;
+      if (!board || !(board.cellSize > 0)) {
+        done();
+        return;
+      }
+      const row = 3;
+      const col = 4;
+      const minRow = board.minRow ?? 0;
+      const minCol = board.minCol ?? 0;
+      const apply = (bx, by) => {
+        overlayNode.measureInWindow((ox, oy) => {
+          next.cellAd = {
+            x: bx - ox + (col - minCol) * (board.cellSize + board.gap),
+            y: by - oy + (row - minRow) * (board.cellSize + board.gap),
+            width: board.cellSize,
+            height: board.cellSize,
+          };
+          done();
+        });
+      };
+      if (boardNode && typeof boardNode.measureInWindow === 'function') {
+        boardNode.measureInWindow((bx, by) => apply(bx, by));
+      } else {
+        apply(board.x, board.y);
+      }
+    };
+
     measureClueBand();
     captureOutsideScroll('wheel', onboardingWheelRef);
     captureOutsideScroll('hint', onboardingHintRef);
+    captureOutsideScroll('credit', onboardingCreditRef);
+    captureOutsideScroll('eye', onboardingEyeRef);
     measureLetterCell();
+    measureCellAd();
   }, [isOnboarding]);
 
   useEffect(() => {
@@ -1071,7 +1259,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (!completeNow || completionShownRef.current) return;
       if (isOnboarding) {
         completionShownRef.current = true;
-        finishOnboarding();
         return;
       }
       completionShownRef.current = true;
@@ -1100,7 +1287,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
-    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, isOnboarding, finishOnboarding, puzzle]
+    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, isOnboarding, puzzle]
   );
 
   // Keep credit/hint letter reveals across leave/re-enter for this puzzle.
@@ -1138,6 +1325,15 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     triggerWordRevealEffect,
   ]);
 
+  const noteWordMiss = useCallback(() => {
+    if (isOnboarding) return;
+    setFailCount((count) => count + 1);
+  }, [isOnboarding]);
+
+  useEffect(() => {
+    failCountRef.current = failCount;
+  }, [failCount]);
+
   const submitWord = useCallback(
     async (wordRaw) => {
       const word = normalizeWord(wordRaw);
@@ -1148,9 +1344,16 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           playSfx('wrong');
           return false;
         }
-        if (bonusWordLookupRef.current) return false;
         // Same bonus word again — no second gift.
         if (bonusWordsFound.includes(word)) {
+          noteWordMiss();
+          playSfx('wrong');
+          return false;
+        }
+        // Count now. A later bonus hit undoes this one try.
+        // Tries that arrive while a lookup is in flight still count.
+        noteWordMiss();
+        if (bonusWordLookupRef.current) {
           playSfx('wrong');
           return false;
         }
@@ -1162,6 +1365,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             playSfx('wrong');
             return false;
           }
+          setFailCount((count) => Math.max(0, count - 1));
 
           setBonusWordsFound((prev) => {
             const next = prev.includes(word) ? prev : [...prev, word];
@@ -1210,7 +1414,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       // Step 2: first correct wheel word → congrats, then hint step.
       if (isOnboarding && onboardingStep === 1 && !onboardingSuccessVisible) {
         playSfx('complete');
-        onboardingSuccessNextStepRef.current = 2;
+        onboardingSuccessNextStepRef.current = TUTORIAL_STEP.CELL_AD;
         setOnboardingSuccessVisible(true);
       }
 
@@ -1235,6 +1439,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       isOnboarding,
       onboardingStep,
       onboardingSuccessVisible,
+      noteWordMiss,
     ]
   );
 
@@ -1257,9 +1462,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const handleDragEnd = useCallback(
     (word) => {
       if (word.length >= 3) submitWord(word);
-      else if (word.length > 0) playSfx('wrong');
+      else if (word.length > 0) {
+        noteWordMiss();
+        playSfx('wrong');
+      }
     },
-    [submitWord, playSfx]
+    [submitWord, playSfx, noteWordMiss]
   );
 
   const handleCellPress = useCallback(
@@ -1296,58 +1504,25 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     );
   }, [baseWheelLetters, puzzle?.id]);
 
+  const openCoinShop = useCallback(() => {
+    setCoinsAlertOpen(false);
+    playSfx('click');
+    navigate(SCREENS.SHOP, {
+      backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
+      mode: routeParams.mode,
+      date: routeParams.date,
+    });
+  }, [playSfx, navigate, isDaily, routeParams.mode, routeParams.date]);
+
   const showNotEnoughCoinsAlert = useCallback(() => {
-    Alert.alert(
-      t('play.alert.notEnoughCoins.title'),
-      t('play.alert.notEnoughCoins.body', { n: WORD_WHEEL_HINT_COST }),
-      [
-        { text: t('play.alert.notEnoughCoins.ok'), style: 'cancel' },
-        {
-          text: t('play.alert.notEnoughCoins.charge'),
-          onPress: () =>
-            navigate(SCREENS.SHOP, {
-              backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
-              mode: routeParams.mode,
-              date: routeParams.date,
-            }),
-        },
-      ]
-    );
-  }, [t, navigate, isDaily, routeParams.mode, routeParams.date]);
+    setCoinsAlertOpen(true);
+  }, []);
 
   const handleHint = useCallback(async () => {
     if (puzzleComplete) return;
     if (hintPending) return;
 
-    // Tutorial step 3: spend demo coins, reveal L, keep spotlight until Next.
-    if (isOnboarding && onboardingStep === 2) {
-      const pick = { key: '3,2', letter: 'L', word: 'LOG' };
-      if (hintLetters.has(pick.key)) {
-        setOnboardingStep(3);
-        setTimeout(measureOnboardingFocus, 40);
-        setTimeout(measureOnboardingFocus, 200);
-        return;
-      }
-      setHintPending(true);
-      try {
-        playSfx('bonus');
-        // Local tutorial balance only — don't touch persisted guest coins.
-        setPlaySessionCoins(0);
-        setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
-        const nextHints = new Map(hintLetters);
-        nextHints.set(pick.key, pick.letter);
-        setHintLetters(nextHints);
-        setSelectedWord(pick.word);
-        triggerCellRevealEffect([pick.key], 'new');
-        setOnboardingStep(3);
-        setTimeout(measureOnboardingFocus, 80);
-        setTimeout(measureOnboardingFocus, 220);
-        setTimeout(measureOnboardingFocus, 500);
-      } finally {
-        setHintPending(false);
-      }
-      return;
-    }
+    if (isOnboarding) return;
 
     if (totalHintCoinsAvailable < WORD_WHEEL_HINT_COST) {
       showNotEnoughCoinsAlert();
@@ -1441,6 +1616,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       return nextHints;
     });
     if (picks[0]?.word) setSelectedWord(picks[0].word);
+    // A shown letter is not a miss. Keep the icon down until three new tries.
+    setAdHideUntil(failCountRef.current + 3);
     triggerCellRevealEffect(
       picks.map((pick) => pick.key).filter(Boolean),
       'new'
@@ -1448,12 +1625,39 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, [triggerCellRevealEffect]);
 
   const handleShowOneLetter = useCallback(async () => {
-    if (isOnboarding || puzzleComplete || letterBusy) return;
+    if (puzzleComplete || letterBusy) return;
+    if (eyeAttentionTimer.current) {
+      clearTimeout(eyeAttentionTimer.current);
+      eyeAttentionTimer.current = null;
+    }
+    setEyeAttention(false);
+    if (isOnboarding) {
+      if (onboardingStep !== TUTORIAL_STEP.EYE || tutorialCredits < 1) return;
+      setLetterBusy(true);
+      try {
+        setTutorialCredits(0);
+        setHintLetters((prev) => {
+          const next = new Map(prev);
+          next.set('3,2', 'L');
+          return next;
+        });
+        setSelectedWord('LOG');
+        triggerCellRevealEffect(['3,2'], 'new');
+        playSfx('bonus');
+        setOnboardingStep(TUTORIAL_STEP.DONE);
+        setTimeout(measureOnboardingFocus, 80);
+      } finally {
+        setLetterBusy(false);
+      }
+      return;
+    }
     if ((wallet.creditBalance ?? 0) < 1) {
       setCreditSheetOpen(true);
       return;
     }
-    const pick = hintCandidates[0];
+    const word = normalizeWord(selectedWord);
+    const pick = (word && hintCandidates.find((candidate) => candidate.word === word))
+      || hintCandidates[0];
     if (!pick?.key || !pick?.letter) {
       Alert.alert(t('play.alert.noHint.title'), t('play.alert.noHint.body'));
       return;
@@ -1473,17 +1677,23 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     }
   }, [
     isOnboarding,
+    onboardingStep,
+    tutorialCredits,
     puzzleComplete,
     letterBusy,
     wallet,
     hintCandidates,
+    selectedWord,
     playSession?.id,
     applyRevealedLetters,
+    triggerCellRevealEffect,
+    measureOnboardingFocus,
+    playSfx,
     t,
   ]);
 
   const handleWatchAd = useCallback(async () => {
-    if (isOnboarding || letterBusy) return;
+    if (letterBusy || isOnboarding) return;
     setLetterBusy(true);
     setCreditSheetOpen(false);
     try {
@@ -1494,22 +1704,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (!earned) return;
       await waitForAdCredits(before);
       await CreditApi.mergeGuestCredits().catch(() => null);
-      // Let the chip show the +1 grant before we spend it.
+      // Credit only. The eye on the clue spends it on the selected word.
       await wallet.refresh({ silent: true });
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const picks = findHintLetterCandidates(
-        puzzle?.filledCoordinates,
-        foundWords,
-        wordPositions,
-        hintedCellKeys
-      ).slice(0, AD_REWARD_LETTERS);
-      // Ad grant is 1 credit; still reveal up to 2 letters for that watch.
-      if (picks.length) {
-        await consumeOneLetter(playSession?.id, picks[0].key);
-        playSfx('adReward');
-        applyRevealedLetters(picks);
-      }
-      await wallet.refresh({ silent: true });
+      startEyeAttention();
     } catch (e) {
       if (__DEV__) console.warn('[Ad] reward flow failed', e);
       Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
@@ -1520,15 +1717,76 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     isOnboarding,
     letterBusy,
     wallet,
-    puzzle?.filledCoordinates,
-    foundWords,
+    startEyeAttention,
+    t,
+  ]);
+
+  const handleCellAd = useCallback(async (row, col) => {
+    if (letterBusy || isOnboarding) return;
+    const key = `${row},${col}`;
+    if (!cellAdKeys.has(key)) return;
+    let pick = null;
+    Object.entries(wordPositions || {}).some(([word, positions]) => {
+      const hit = (positions || []).find((p) => p.row === row && p.col === col && p.letter);
+      if (!hit) return false;
+      pick = { key, letter: hit.letter, word };
+      return true;
+    });
+    if (!pick?.letter) return;
+    setLetterBusy(true);
+    try {
+      const earned = await withAdAudioMuted(() => showRewardedCellAd());
+      if (!earned) return;
+      playSfx('adReward');
+      applyRevealedLetters([pick]);
+      const word = normalizeWord(pick.word);
+      const positions = wordPositions[word] || [];
+      const order = positions.map((p) => `${p.row},${p.col}`);
+      const at = order.indexOf(pick.key);
+      const stillHidden = positions.filter((p) => {
+        const key = `${p.row},${p.col}`;
+        if (key === pick.key) return false;
+        return !displayGrid[p.row]?.[p.col];
+      });
+      let nextKey = null;
+      for (let i = 1; i < order.length; i += 1) {
+        const key = order[(at + i) % order.length];
+        if (stillHidden.some((p) => `${p.row},${p.col}` === key)) {
+          nextKey = key;
+          break;
+        }
+      }
+      const startIndex = Math.max(
+        0,
+        stillHidden.findIndex((p) => `${p.row},${p.col}` === nextKey)
+      );
+      setCellAdCursor((prev) => ({
+        ...prev,
+        [word]: { startIndex },
+      }));
+      setAdHideUntil(failCount + 3);
+    } catch (e) {
+      if (__DEV__) console.warn('[Ad] cell reveal failed', e);
+      Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
+    } finally {
+      setLetterBusy(false);
+    }
+  }, [
+    letterBusy,
+    isOnboarding,
+    cellAdKeys,
     wordPositions,
-    hintedCellKeys,
-    playSession?.id,
+    displayGrid,
+    failCount,
     playSfx,
     applyRevealedLetters,
     t,
   ]);
+
+  useEffect(() => {
+    if (!isOnboarding || onboardingStep !== TUTORIAL_STEP.CELL_AD) return;
+    setSelectedWord('LOG');
+  }, [isOnboarding, onboardingStep]);
 
   const handleBack = () => {
     playSfx('click');
@@ -1577,24 +1835,48 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         }
         prevA11y={t('play.clue.prev')}
         nextA11y={t('play.clue.next')}
-        active={false}
-        overlay={null}
+        active={Boolean(wheelPreview)}
+        overlay={
+          wheelPreview ? (
+            <View style={styles.wordOverlay}>
+              <ClueLetterRow word={wheelPreview} />
+            </View>
+          ) : null
+        }
       />
-      {!isOnboarding && !puzzleComplete && (wallet.creditBalance ?? 0) > 0 ? (
-        <Pressable
-          style={styles.clueLetterIconBtn}
-          onPress={handleShowOneLetter}
-          disabled={letterBusy}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('play.letter.show')}
+      {!puzzleComplete && (
+        (isOnboarding && onboardingStep === TUTORIAL_STEP.EYE && tutorialCredits > 0)
+        || (!isOnboarding && (wallet.creditBalance ?? 0) > 0)
+      ) ? (
+        <Animated.View
+          pointerEvents="box-none"
+          style={[
+            styles.clueLetterIconBtn,
+            {
+              opacity: eyeFlicker,
+              transform: [{ scale: eyeScale }],
+            },
+          ]}
         >
-          {letterBusy ? (
-            <ActivityIndicator color="#3F2A1A" size="small" />
-          ) : (
-            <Eye color="#3F2A1A" size={18} strokeWidth={2.4} />
-          )}
-        </Pressable>
+          {eyeAttention ? (
+            <Animated.View pointerEvents="none" style={[styles.eyeAttentionRing, { opacity: eyeGlow }]} />
+          ) : null}
+          <Pressable
+            ref={isOnboarding ? onboardingEyeRef : undefined}
+            style={styles.eyeHit}
+            onPress={handleShowOneLetter}
+            disabled={letterBusy}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('play.letter.show')}
+          >
+            {letterBusy ? (
+              <ActivityIndicator color="#3F2A1A" size="small" />
+            ) : (
+              <Eye color={eyeAttention ? '#C2410C' : '#3F2A1A'} size={18} strokeWidth={2.4} />
+            )}
+          </Pressable>
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -1673,14 +1955,23 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 <ChevronRight color="#fff" size={16} strokeWidth={2.6} />
               </Pressable>
             ) : null}
-            {!isOnboarding ? (
+            {(!isOnboarding || onboardingStep >= TUTORIAL_STEP.CREDIT) ? (
+              <Animated.View
+                style={{
+                  opacity: isOnboarding && onboardingStep === TUTORIAL_STEP.EYE ? creditFlicker : 1,
+                }}
+              >
               <Pressable
+                ref={isOnboarding ? onboardingCreditRef : undefined}
                 style={[
                   styles.creditChip,
                   isRandomScene && styles.creditChipOnScene,
                   isDark && styles.creditChipDark,
                 ]}
-                onPress={() => setCreditSheetOpen(true)}
+                onPress={() => {
+                  if (isOnboarding) return;
+                  setCreditSheetOpen(true);
+                }}
                 accessibilityLabel={t('play.credit.chip')}
               >
                 <Sparkles size={15} color={isRandomScene ? '#0b3d36' : isDark ? '#5eead4' : '#7dd3fc'} />
@@ -1691,9 +1982,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                     isDark && styles.creditChipTextDark,
                   ]}
                 >
-                  {wallet.creditBalance ?? 0}
+                  {isOnboarding ? tutorialCredits : (wallet.creditBalance ?? 0)}
                 </Text>
               </Pressable>
+              </Animated.View>
             ) : null}
           </View>
         </View>
@@ -1713,6 +2005,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           revealBurstId={revealBurstId}
           maxBoardSize={gridMaxSize}
           onCellPress={handleCellPress}
+          adHintCells={cellAdKeys}
+          onAdHintPress={handleCellAd}
           onBoardMetrics={
             isOnboarding
               ? (metrics) => {
@@ -1758,6 +2052,15 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                   {lifetimeCoinsRemaining}
                 </Text>
               </Animated.View>
+              {todayGiftCoins > 0 ? (
+                <View
+                  style={styles.giftTodayRow}
+                  accessibilityLabel={t('play.gift.today', { n: todayGiftCoins })}
+                >
+                  <Gift size={11} color="#fde68a" />
+                  <Text style={styles.giftTodayLabel}>+{todayGiftCoins}</Text>
+                </View>
+              ) : null}
             </View>
             <View
               ref={onboardingHintRef}
@@ -1809,6 +2112,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               selectedIndices={selectedIndices}
               onSelectionChange={setSelectedIndices}
               onDragEnd={handleDragEnd}
+              onPreviewChange={setWheelPreview}
               onShuffle={applyWheelShuffle}
               shuffleSignal={shuffleSignal}
               wheelSize={wheelSize}
@@ -1917,12 +2221,28 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             ]}
             onPress={() => {}}
           >
-            <Text style={[styles.sheetTitle, { color: isDark ? colors.text : '#0f172a' }]}>
-              {t('play.credit.sheet.title')}
-            </Text>
-            <Text style={[styles.sheetCount, { color: isDark ? colors.textMuted : '#334155' }]}>
-              {t('play.credit.sheet.balance', { n: wallet.creditBalance ?? 0 })}
-            </Text>
+            <View style={styles.sheetHeader}>
+              <Text style={[styles.sheetTitle, { color: isDark ? colors.text : '#0f172a' }]}>
+                {t('play.credit.sheet.title')}
+              </Text>
+              <Pressable
+                style={styles.sheetClose}
+                onPress={() => setCreditSheetOpen(false)}
+                hitSlop={8}
+                accessibilityLabel={t('play.credit.sheet.close')}
+              >
+                <X size={20} color={isDark ? colors.text : '#0f172a'} />
+              </Pressable>
+            </View>
+            <View style={styles.sheetBalanceRow}>
+              <Sparkles size={18} color="#f59e0b" />
+              <Text style={[styles.sheetCount, { color: isDark ? colors.textMuted : '#334155' }]}>
+                {t('play.credit.sheet.balance', { n: wallet.creditBalance ?? 0 })}
+              </Text>
+            </View>
+            <View style={styles.bestValueChip}>
+              <Text style={styles.bestValueText}>{t('play.credit.sheet.bestValue')}</Text>
+            </View>
             <ShopOfferButton
               label={t('play.credit.sheet.buyStarter')}
               accessibilityLabel={t('play.credit.sheet.buyStarter')}
@@ -1946,6 +2266,49 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             >
               <Text style={[styles.sheetSecondaryText, { color: isDark ? colors.text : '#0f172a' }]}>
                 {t('play.credit.sheet.watchAd')}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={coinsAlertOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCoinsAlertOpen(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setCoinsAlertOpen(false)}>
+          <Pressable
+            style={[
+              styles.sheetCard,
+              styles.coinsAlertCard,
+              {
+                backgroundColor: isDark ? colors.surface : '#FFF8EE',
+                borderColor: isDark ? colors.primary : '#F5C542',
+              },
+            ]}
+            onPress={() => {}}
+          >
+            <View style={styles.coinsAlertIcon}>
+              <GiTwoCoins size={36} color="#B45309" />
+            </View>
+            <Text style={[styles.sheetTitle, { color: isDark ? colors.text : '#3A2A1A' }]}>
+              {t('play.alert.notEnoughCoins.title')}
+            </Text>
+            <Text style={[styles.coinsAlertBody, { color: isDark ? colors.textMuted : '#6B5344' }]}>
+              {t('play.alert.notEnoughCoins.body', { n: WORD_WHEEL_HINT_COST })}
+            </Text>
+            <Pressable style={styles.coinsAlertCta} onPress={openCoinShop}>
+              <Text style={styles.coinsAlertCtaText}>{t('play.alert.notEnoughCoins.charge')}</Text>
+            </Pressable>
+            <Pressable
+              style={styles.coinsAlertDismiss}
+              onPress={() => setCoinsAlertOpen(false)}
+              hitSlop={8}
+            >
+              <Text style={[styles.coinsAlertDismissText, { color: isDark ? colors.textMuted : '#6B5344' }]}>
+                {t('play.alert.notEnoughCoins.ok')}
               </Text>
             </Pressable>
           </Pressable>
@@ -1984,8 +2347,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           t={t}
           onNext={() => {
             playSfx('click');
-            if (onboardingStep >= 3) finishOnboarding();
-            else setOnboardingStep((s) => s + 1);
+            if (onboardingStep >= TUTORIAL_STEP.DONE) {
+              finishOnboarding();
+              return;
+            }
+            if (onboardingStep === TUTORIAL_STEP.CREDIT) setTutorialCredits(1);
+            setOnboardingStep((s) => s + 1);
           }}
           onSkip={() => {
             playSfx('click');
@@ -2049,11 +2416,21 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     zIndex: 3,
   },
+  wordOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.72)',
+  },
   clueLetterIconBtn: {
     position: 'absolute',
     top: -2,
     right: -2,
     zIndex: 6,
+    width: 32,
+    height: 32,
+  },
+  eyeHit: {
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -2067,6 +2444,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 3,
     elevation: 5,
+  },
+  eyeAttentionRing: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: '#F5C542',
+    backgroundColor: 'rgba(245, 197, 66, 0.28)',
   },
   creditChip: {
     flexDirection: 'row',
@@ -2108,20 +2496,54 @@ const styles = StyleSheet.create({
   sheetCard: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 20,
+    paddingHorizontal: 22,
+    paddingTop: 20,
+    paddingBottom: 22,
     gap: 12,
   },
+  sheetHeader: {
+    minHeight: 28,
+    justifyContent: 'center',
+  },
+  sheetClose: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sheetTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  sheetBalanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   sheetCount: {
     fontSize: 16,
     textAlign: 'center',
-    marginBottom: 4,
+  },
+  bestValueChip: {
+    alignSelf: 'center',
+    backgroundColor: '#F5C542',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginBottom: -4,
+  },
+  bestValueText: {
+    color: '#3A2A1A',
+    fontSize: 11,
+    fontWeight: '800',
   },
   sheetSecondary: {
     borderRadius: 12,
@@ -2132,6 +2554,44 @@ const styles = StyleSheet.create({
   },
   sheetSecondaryText: {
     color: '#0f172a',
+    fontWeight: '700',
+  },
+  coinsAlertCard: {
+    alignItems: 'center',
+    borderWidth: 1.5,
+    paddingTop: 28,
+  },
+  coinsAlertIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5C542',
+    marginBottom: 4,
+  },
+  coinsAlertBody: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  coinsAlertCta: {
+    alignSelf: 'stretch',
+    backgroundColor: '#F5C542',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  coinsAlertCtaText: {
+    color: '#3A2A1A',
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  coinsAlertDismiss: {
+    paddingVertical: 4,
+  },
+  coinsAlertDismissText: {
+    fontSize: 14,
     fontWeight: '700',
   },
   scrollView: {
@@ -2288,6 +2748,18 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.45)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  giftTodayRow: {
+    marginTop: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  giftTodayLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#fde68a',
   },
   coinLabelGold: {
     color: '#facc15',

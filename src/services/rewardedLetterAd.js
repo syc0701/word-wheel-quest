@@ -1,5 +1,5 @@
 import { AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
-import { AD_REWARD_CREDITS, getRewardedAdUnitId } from '../constants/ads';
+import { AD_REWARD_CREDITS, getCellRewardedAdUnitId, getRewardedAdUnitId } from '../constants/ads';
 import CreditApi from '../lib/creditApi';
 import { getDeviceId } from '../lib/deviceId';
 import { soundManager } from '../lib/soundManager';
@@ -8,18 +8,37 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+let rewardedInFlight = false;
+
 /** Google SSV needs the install device id in customData so Lambda can credit the wallet. */
-export function showRewardedLetterAd(deviceId) {
+export function showRewardedLetterAd(deviceId, { verify = true } = {}) {
+  return showRewardedAd(getRewardedAdUnitId(), verify ? deviceId : null);
+}
+
+/** Rewarded_One_Hidden_Letter. No customData, so this watch does not grant a credit. */
+export function showRewardedCellAd() {
+  return showRewardedAd(getCellRewardedAdUnitId(), null);
+}
+
+function showRewardedAd(unitId, deviceId) {
+  if (rewardedInFlight) {
+    if (__DEV__) console.log('[Ad] ignored, a rewarded ad is already open');
+    return Promise.resolve(false);
+  }
+  rewardedInFlight = true;
   return new Promise((resolve, reject) => {
-    const ad = RewardedAd.createForAdRequest(getRewardedAdUnitId(), {
-      serverSideVerificationOptions: { customData: String(deviceId) },
-    });
+    const requestOptions = deviceId
+      ? { serverSideVerificationOptions: { customData: String(deviceId) } }
+      : undefined;
+    const ad = RewardedAd.createForAdRequest(unitId, requestOptions);
     let earned = false;
     let settled = false;
+    let shown = false;
     const unsubs = [];
     const finish = (ok, error) => {
       if (settled) return;
       settled = true;
+      rewardedInFlight = false;
       unsubs.forEach((fn) => {
         try {
           fn();
@@ -31,8 +50,10 @@ export function showRewardedLetterAd(deviceId) {
       else resolve(ok);
     };
     unsubs.push(ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      if (shown) return;
+      shown = true;
       if (__DEV__) console.log('[Ad] rewarded loaded, showing');
-      ad.show();
+      ad.show().catch((err) => finish(false, err));
     }));
     unsubs.push(
       ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {

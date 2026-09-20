@@ -1,9 +1,9 @@
 What's new in this update:
 
-- Watch a short ad to reveal two hidden letters
-- Use credits to show one letter at a time
+- Need a Hint? One credit shows one letter
+- Watch an ad and get 1 credit
+- Daily gift: 2 coins, or 3 if you come back the next day
+- Daily gift button on the home screen
 - Revealed letters stay when you leave and return
-- Clearer word numbers on the puzzle grid
-- Fresh play music each time you enter a puzzle
 
 Thanks for playing!

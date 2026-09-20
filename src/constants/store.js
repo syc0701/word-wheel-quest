@@ -48,6 +48,7 @@ export const IAP_PACKAGES = [
     description: 'Jumpstart your journey with extra coins!',
     priceUsd: '$3.99',
     icon: 'starterChest',
+    // Server grants 150 letter credits (PACK_LETTER_CREDITS.starter).
   },
   {
     packageId: 'bundle_classic',
@@ -58,6 +59,7 @@ export const IAP_PACKAGES = [
     description: 'Fuel your brain and conquer tough levels.',
     priceUsd: '$1.99',
     icon: 'classicSwords',
+    // Server grants 50 letter credits (PACK_LETTER_CREDITS.classic).
   },
   {
     packageId: 'bundle_master',
@@ -68,6 +70,7 @@ export const IAP_PACKAGES = [
     description: 'The ultimate stash for serious word smiths.',
     priceUsd: '$2.99',
     icon: 'masterScroll',
+    // Server grants 110 letter credits (PACK_LETTER_CREDITS.master).
   },
   {
     packageId: 'coins_small',

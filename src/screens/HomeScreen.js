@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Animated,
+  Easing,
   Image,
   Pressable,
   ScrollView,
@@ -12,16 +15,21 @@ import {
   Calendar,
   ChevronRight,
   Cloud,
+  Gift,
   Play,
   Search,
   Settings,
   ShoppingCart,
 } from 'lucide-react-native';
 import AdBanner from '../components/AdBanner';
+import DailyGiftModal from '../components/DailyGiftModal';
 import StarterPackGateModal from '../components/StarterPackGateModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
+import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
+import { claimDailyGift, describeDailyGift, loadDailyGift, localDateKey, markGiftIconShown } from '../lib/dailyGift';
+import { grantDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
@@ -184,6 +192,14 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const [guest, setGuest] = useState(true);
   const [starterGateVisible, setStarterGateVisible] = useState(false);
   const [starterGateContext, setStarterGateContext] = useState('level');
+  const [giftVisible, setGiftVisible] = useState(false);
+  const [giftMode, setGiftMode] = useState('claim');
+  const [giftView, setGiftView] = useState(null);
+  const [giftBusy, setGiftBusy] = useState(false);
+  const [giftChecked, setGiftChecked] = useState(false);
+  const [showGiftIcon, setShowGiftIcon] = useState(false);
+  const giftFlicker = useRef(new Animated.Value(1)).current;
+  const giftUnclaimed = Boolean(giftView && !giftView.claimed && !giftChecked);
 
   useEffect(() => {
     let cancelled = false;
@@ -239,6 +255,97 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadDailyGift().then(async (record) => {
+      if (cancelled) return;
+      const view = describeDailyGift(record);
+      setGiftView(view);
+      const today = localDateKey();
+      if (view.claimed || record.iconShownDate === today) {
+        setShowGiftIcon(false);
+        return;
+      }
+      setShowGiftIcon(true);
+      await markGiftIconShown(today);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!giftUnclaimed) {
+      giftFlicker.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(giftFlicker, {
+          toValue: 0.25,
+          duration: 420,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(giftFlicker, {
+          toValue: 1,
+          duration: 420,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [giftUnclaimed, giftFlicker]);
+
+  const openGift = useCallback(() => {
+    if (!giftView) return;
+    setGiftChecked(true);
+    setGiftMode(giftView.claimed ? 'info' : 'claim');
+    setGiftVisible(true);
+  }, [giftView]);
+
+  const handleClaimGift = useCallback(async () => {
+    if (giftBusy) return;
+    setGiftBusy(true);
+    try {
+      const record = await loadDailyGift();
+      const preview = describeDailyGift(record);
+      if (preview.claimed) {
+        setGiftView(preview);
+        setGiftVisible(false);
+        return;
+      }
+      const loggedIn = await isLoggedIn();
+      if (loggedIn) {
+        await grantDailyGift({
+          coins: preview.coins,
+          claimDate: localDateKey(),
+          streak: preview.streak,
+        });
+      }
+      const result = await claimDailyGift();
+      if (!loggedIn && !result.already) {
+        await addGuestPuzzleCoins(result.coins);
+      }
+      if (loggedIn) {
+        wallet.refresh({ silent: true }).catch(() => {});
+      }
+      setGiftView({
+        claimed: true,
+        coins: result.coins,
+        streak: result.streak,
+        lifetime: result.lifetime,
+      });
+      setGiftVisible(false);
+    } catch (e) {
+      Alert.alert(t('gift.claim.failed.title'), e?.message || t('gift.claim.failed.body'));
+    } finally {
+      setGiftBusy(false);
+    }
+  }, [giftBusy, t, wallet]);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
   const starterUnlockLevel = useMemo(
@@ -340,7 +447,8 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           </View>
 
           <View style={styles.middleBlock}>
-            <View style={[styles.continueCard, palette.continueCard]}>
+            <View style={styles.levelBoxWrap}>
+              <View style={[styles.continueCard, palette.continueCard]}>
               {loading ? (
                 <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
               ) : error ? (
@@ -407,6 +515,19 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
                   </Pressable>
                 </>
               )}
+              </View>
+              {showGiftIcon ? (
+                <Animated.View style={[styles.giftEdge, { opacity: giftFlicker }]}>
+                  <Pressable
+                    style={styles.giftIconBtn}
+                    onPress={openGift}
+                    accessibilityLabel={t('home.gift.label')}
+                    hitSlop={8}
+                  >
+                    <Gift color="#B45309" size={20} strokeWidth={2.2} />
+                  </Pressable>
+                </Animated.View>
+              ) : null}
             </View>
 
             <Pressable
@@ -492,6 +613,19 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         onClose={() => setStarterGateVisible(false)}
         onShop={handleStarterGateShop}
       />
+      <DailyGiftModal
+        visible={giftVisible}
+        mode={giftMode}
+        coins={giftView?.coins ?? 0}
+        streak={giftView?.streak ?? 0}
+        streakDays={giftView?.streak ?? 0}
+        isStreak={(giftView?.streak ?? 0) >= 2}
+        lifetime={giftView?.lifetime ?? 0}
+        claimed={Boolean(giftView?.claimed)}
+        busy={giftBusy}
+        onClaim={handleClaimGift}
+        onClose={() => setGiftVisible(false)}
+      />
     </GradientBackground>
   );
 }
@@ -529,13 +663,16 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   middleBlock: {
-    // Grows to centre the card when there is room, but keeps its natural height
-    // on short screens instead of collapsing and spilling over the neighbours.
     flexGrow: 1,
     flexShrink: 0,
     flexBasis: 'auto',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingTop: 18,
+    paddingBottom: 8,
+  },
+  levelBoxWrap: {
+    position: 'relative',
+    overflow: 'visible',
   },
   bottomBlock: {
     gap: 12,
@@ -650,6 +787,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 10,
+  },
+  giftEdge: {
+    position: 'absolute',
+    top: -16,
+    right: -6,
+    zIndex: 5,
+  },
+  giftIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F5C542',
   },
   tile: {
     flex: 1,

@@ -27,8 +27,19 @@ export const STARTER_PACK_PRODUCT_ID =
 /** Daily puzzles playable without starter pack or credits. */
 export const FREE_DAILY_PLAYS = 10;
 
-/** Credits granted with starter pack (guest local balance; signed-in via IAP verify). */
-export const STARTER_PACK_PUZZLE_CREDITS = 50;
+/**
+ * Letter credits granted by the shop packs. The server writes these.
+ * One credit shows one hidden letter. Not coins.
+ * Starter 150, Classic 50, Master 110.
+ */
+export const PACK_LETTER_CREDITS = {
+  starter: 150,
+  classic: 50,
+  master: 110,
+};
+
+/** Starter Fun Bundle letter credits. Same number the server grants. */
+export const STARTER_PACK_PUZZLE_CREDITS = PACK_LETTER_CREDITS.starter;
 
 /** Credits spent to start one gated daily puzzle (after free quota). */
 export const PUZZLE_PLAY_CREDIT_COST = 1;

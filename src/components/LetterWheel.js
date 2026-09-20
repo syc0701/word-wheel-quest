@@ -120,6 +120,7 @@ export default function LetterWheel({
   selectedIndices,
   onSelectionChange,
   onDragEnd,
+  onPreviewChange,
   onShuffle,
   shuffleSignal = 0,
   wheelSize = 280,
@@ -146,6 +147,7 @@ export default function LetterWheel({
   const submittedRef = useRef(false);
   const onShuffleRef = useRef(onShuffle);
   const onDragEndRef = useRef(onDragEnd);
+  const onPreviewChangeRef = useRef(onPreviewChange);
   const onSelectionChangeRef = useRef(onSelectionChange);
   const tilesRef = useRef(tiles);
   const nodesRef = useRef(nodes);
@@ -158,6 +160,7 @@ export default function LetterWheel({
 
   onShuffleRef.current = onShuffle;
   onDragEndRef.current = onDragEnd;
+  onPreviewChangeRef.current = onPreviewChange;
   onSelectionChangeRef.current = onSelectionChange;
   tilesRef.current = tiles;
   nodesRef.current = nodes;
@@ -175,6 +178,11 @@ export default function LetterWheel({
     }
   }, []);
 
+  const publishPreview = useCallback((path) => {
+    const word = (path || []).map((i) => tilesRef.current[i]?.letter || '').join('');
+    onPreviewChangeRef.current?.(word);
+  }, []);
+
   const clearWheelSelection = useCallback(() => {
     clearDragWatchdog();
     pathRef.current = [];
@@ -182,7 +190,8 @@ export default function LetterWheel({
     fingerVisible.value = 0;
     setPhaseBoth('idle');
     onSelectionChangeRef.current([]);
-  }, [setPhaseBoth, fingerVisible, clearDragWatchdog]);
+    publishPreview([]);
+  }, [setPhaseBoth, fingerVisible, clearDragWatchdog, publishPreview]);
 
   const tilesIdentity = useMemo(
     () =>
@@ -267,7 +276,8 @@ export default function LetterWheel({
   const syncPathLocal = useCallback((nextPath) => {
     pathRef.current = nextPath;
     setDisplayIndices(nextPath);
-  }, []);
+    publishPreview(nextPath);
+  }, [publishPreview]);
 
   useEffect(() => {
     // Parent cleared selection — drop a stuck drag line.

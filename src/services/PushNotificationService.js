@@ -2,12 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { isLoggedIn } from '../lib/auth';
+import { getDeviceId } from '../lib/deviceId';
 import { apiDelete, apiGet, apiPost, apiPut } from '../lib/http';
 import { APP_STORE } from '../constants/store';
 import { SCREENS } from '../constants/theme';
 
 const APP_CODE = APP_STORE.appSiteId || 'word_wheel_quest';
 const STORED_TOKEN_KEY = 'word-wheel-push-device-token-v1';
+/** Guest and signed-in toggle. Guests do not need an account. */
+const LOCAL_PREF_KEY = 'ww.push.enabled.v1';
 /** Must match backend FCM `android_channel_id` (MobilePushDeliveryService). */
 export const ANDROID_PUSH_CHANNEL_ID = 'word_wheel_default';
 
@@ -76,11 +79,31 @@ async function getStoredToken() {
   }
 }
 
+async function readLocalPreference() {
+  try {
+    const raw = await AsyncStorage.getItem(LOCAL_PREF_KEY);
+    if (raw == null) return null;
+    return raw === '1';
+  } catch {
+    return null;
+  }
+}
+
+async function writeLocalPreference(enabled) {
+  try {
+    await AsyncStorage.setItem(LOCAL_PREF_KEY, enabled ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
 async function registerTokenWithBackend(deviceToken) {
+  const deviceId = await getDeviceId();
   const response = await apiPost('/home/push/device-token', {
     appCode: APP_CODE,
     platform: pushPlatform(),
     deviceToken,
+    deviceId,
   });
   if (response?.code === 'FAILURE') {
     throw new Error(response?.message || 'Failed to register push token');
@@ -97,9 +120,11 @@ async function unregisterTokenFromBackend(deviceToken) {
     return;
   }
   try {
+    const deviceId = await getDeviceId();
     await apiDelete('/home/push/device-token', {
       appCode: APP_CODE,
       deviceToken,
+      deviceId,
     });
   } catch (e) {
     if (__DEV__) {
@@ -156,31 +181,38 @@ async function consumeLastNotificationResponse() {
 }
 
 async function getAppNotificationPreference() {
+  const authed = await isLoggedIn();
+  if (!authed) {
+    return (await readLocalPreference()) === true;
+  }
   const response = await apiGet('/home/push/preference', { appCode: APP_CODE });
   if (response?.code === 'FAILURE') {
     throw new Error(response?.message || 'Failed to load notification preference');
   }
-  if (typeof response?.enabled === 'boolean') {
-    return response.enabled;
-  }
-  return true;
+  const enabled = typeof response?.enabled === 'boolean' ? response.enabled : true;
+  await writeLocalPreference(enabled);
+  return enabled;
 }
 
 async function setAppNotificationPreference(enabled) {
+  const on = Boolean(enabled);
+  await writeLocalPreference(on);
+  if (!(await isLoggedIn())) {
+    return on;
+  }
   const response = await apiPut('/home/push/preference', {
     appCode: APP_CODE,
-    enabled: Boolean(enabled),
+    enabled: on,
   });
   if (response?.code === 'FAILURE') {
     throw new Error(response?.message || 'Failed to save notification preference');
   }
-  return typeof response?.enabled === 'boolean' ? response.enabled : Boolean(enabled);
+  return typeof response?.enabled === 'boolean' ? response.enabled : on;
 }
 
 async function userWantsNotifications() {
-  const authed = await isLoggedIn();
-  if (!authed) {
-    return false;
+  if (!(await isLoggedIn())) {
+    return (await readLocalPreference()) === true;
   }
   try {
     return await getAppNotificationPreference();
@@ -188,7 +220,7 @@ async function userWantsNotifications() {
     if (__DEV__) {
       console.warn('[Push] preference read failed', e?.message || e);
     }
-    return false;
+    return (await readLocalPreference()) === true;
   }
 }
 
@@ -216,15 +248,6 @@ const PushNotificationService = {
     await ensureAndroidChannel();
     attachListeners();
     await consumeLastNotificationResponse();
-
-    const authed = await isLoggedIn();
-    if (!authed) {
-      const stored = await getStoredToken();
-      if (stored) {
-        await unregisterTokenFromBackend(stored);
-      }
-      return;
-    }
 
     if (!(await userWantsNotifications())) {
       const stored = await getStoredToken();

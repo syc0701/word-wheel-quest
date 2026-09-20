@@ -2,6 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const HAS_COMPLETED_ONBOARDING_KEY = 'hasCompletedOnboarding';
 
+/** PlayScreen onboarding overlay indexes. Keep in this order. */
+export const TUTORIAL_STEP = {
+  CLUE: 0,
+  WHEEL: 1,
+  CELL_AD: 2,
+  CREDIT: 3,
+  EYE: 4,
+  DONE: 5,
+};
+
 /** Tiny first-run puzzle: DOG down, LOG across, sharing O. Wheel letters D/O/G/L. */
 export const ONBOARDING_PUZZLE = {
   id: 'onboarding-dog-log',
