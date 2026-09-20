@@ -1,7 +1,7 @@
 import { APP_STORE } from '../constants/store';
 import { getDeviceId } from './deviceId';
 import { isLoggedIn } from './auth';
-import { apiGet, apiGetPublic, apiPost } from './http';
+import { apiGet, apiGetPublic, apiPost, apiPostPublic } from './http';
 
 function readBalance(payload) {
   const n = Number(payload?.creditBalance);
@@ -66,6 +66,20 @@ const CreditApi = {
       body.deviceId = await getDeviceId();
     }
     const data = await apiPost('/home/credit/consume', body);
+    if (data?.code === 'FAILURE') {
+      throw new Error(data.message || 'Failed to spend credits');
+    }
+    return { ...data, creditBalance: readBalance(data) };
+  },
+
+  /** Spend credits on the device wallet, even when a sign-in token is stored. */
+  consumeDeviceCredits: async ({ appCode = APP_STORE.appSiteId, featureUsed, creditsConsumed }) => {
+    const data = await apiPostPublic('/home/credit/consume', {
+      appCode,
+      featureUsed,
+      creditsConsumed,
+      deviceId: await getDeviceId(),
+    });
     if (data?.code === 'FAILURE') {
       throw new Error(data.message || 'Failed to spend credits');
     }

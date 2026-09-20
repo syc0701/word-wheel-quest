@@ -9,6 +9,7 @@ function sleep(ms) {
 }
 
 let rewardedInFlight = false;
+let rewardedCooldownUntil = 0;
 
 /** Google SSV needs the install device id in customData so Lambda can credit the wallet. */
 export function showRewardedLetterAd(deviceId, { verify = true } = {}) {
@@ -21,7 +22,7 @@ export function showRewardedCellAd() {
 }
 
 function showRewardedAd(unitId, deviceId) {
-  if (rewardedInFlight) {
+  if (rewardedInFlight || Date.now() < rewardedCooldownUntil) {
     if (__DEV__) console.log('[Ad] ignored, a rewarded ad is already open');
     return Promise.resolve(false);
   }
@@ -39,6 +40,8 @@ function showRewardedAd(unitId, deviceId) {
       if (settled) return;
       settled = true;
       rewardedInFlight = false;
+      // The tap that closes the video must not start another one.
+      rewardedCooldownUntil = Date.now() + 1500;
       unsubs.forEach((fn) => {
         try {
           fn();
@@ -93,6 +96,21 @@ export async function waitForAdCredits(previousBalance, credits = AD_REWARD_CRED
     await sleep(2000);
   }
   throw new Error(`timeout waiting for +${credits} (was ${previousBalance}, last ${last})`);
+}
+
+/** One video is one credit. Drop any extra the callback added on the device wallet. */
+export async function trimExtraAdCredits(before, after, credits = AD_REWARD_CREDITS) {
+  const surplus = Math.max(0, Number(after) - (Number(before) + credits));
+  let balance = after;
+  for (let i = 0; i < surplus; i += 1) {
+    const stamp = `${Date.now().toString(36)}${i}`;
+    const result = await CreditApi.consumeDeviceCredits({
+      featureUsed: `wwad-extra:${stamp}`.slice(0, 64),
+      creditsConsumed: 1,
+    });
+    balance = result.creditBalance;
+  }
+  return balance;
 }
 
 export async function consumeOneLetter(playId, cellKey) {

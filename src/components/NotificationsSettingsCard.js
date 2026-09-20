@@ -52,6 +52,11 @@ export default function NotificationsSettingsCard({ authTick = 0 }) {
               t('settings.notifications.deniedTitle'),
               t('settings.notifications.deniedBody')
             );
+          } else if (result.reason === 'register_failed') {
+            Alert.alert(
+              t('settings.notifications.saveFailedTitle'),
+              t('settings.notifications.saveFailedBody')
+            );
           }
         }
       } else {

@@ -71,6 +71,18 @@ export async function apiGetPublic(path, params) {
 
 export async function apiPost(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
+  return postJson(path, data, headers);
+}
+
+/** Device-wallet writes. No JWT, so a signed-in session cannot spend the account instead. */
+export async function apiPostPublic(path, data) {
+  return postJson(path, data, {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  });
+}
+
+async function postJson(path, data, headers) {
   let body;
   const url = buildUrl(path);
   if (shouldEncryptHomeBody(url) && data) {
@@ -99,6 +111,18 @@ export async function apiPut(path, data) {
 
 export async function apiDelete(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
+  return deleteJson(path, data, headers);
+}
+
+/** Guest device-token unregister. No JWT. */
+export async function apiDeletePublic(path, data) {
+  return deleteJson(path, data, {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  });
+}
+
+async function deleteJson(path, data, headers) {
   let body;
   const url = buildUrl(path);
   if (shouldEncryptHomeBody(url) && data) {

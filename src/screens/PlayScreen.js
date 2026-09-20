@@ -30,6 +30,7 @@ import {
   prepareRewardedAd,
   showRewardedCellAd,
   showRewardedLetterAd,
+  trimExtraAdCredits,
   waitForAdCredits,
   withAdAudioMuted,
 } from '../services/rewardedLetterAd';
@@ -175,6 +176,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [hintCoinsSpent, setHintCoinsSpent] = useState(0);
   const [hintPending, setHintPending] = useState(false);
   const [letterBusy, setLetterBusy] = useState(false);
+  const [cellAdBusy, setCellAdBusy] = useState(false);
+  const letterBusyRef = useRef(false);
+  const adGuardUntilRef = useRef(0);
   const [creditSheetOpen, setCreditSheetOpen] = useState(false);
   const [coinsAlertOpen, setCoinsAlertOpen] = useState(false);
   const [playSessionCoins, setPlaySessionCoins] = useState(0);
@@ -398,12 +402,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     },
     [unfoundClues, clueIndex, isOnboarding, onboardingStep, onboardingSuccessVisible, playSfx]
   );
-  const clueStripText = selectedNorm
-    ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${selectedClue || t('play.clue.missing')}`
-    : activeClue
-      ? `${activeClue.number != null ? `${activeClue.number}. ` : ''}${activeClue.clue || t('play.clue.missing')}`
-      : t('play.clue.placeholder');
-  const clueStripPlaceholder = !selectedNorm && !activeClue;
+  const clueWord = selectedNorm || activeClue?.word || unfoundClues[0]?.word || targetWords[0] || '';
+  const clueBody = selectedClue || activeClue?.clue || clueWord;
+  const clueStripText = clueWord
+    ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${clueBody}`
+    : '';
+  const clueStripPlaceholder = !clueWord;
 
   const hintOnlyCells = useMemo(() => {
     const keys = new Set();
@@ -1625,12 +1629,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, [triggerCellRevealEffect]);
 
   const handleShowOneLetter = useCallback(async () => {
-    if (puzzleComplete || letterBusy) return;
+    if (puzzleComplete || letterBusyRef.current) return;
     if (eyeAttentionTimer.current) {
       clearTimeout(eyeAttentionTimer.current);
       eyeAttentionTimer.current = null;
     }
     setEyeAttention(false);
+    if (Date.now() < adGuardUntilRef.current) return;
     if (isOnboarding) {
       if (onboardingStep !== TUTORIAL_STEP.EYE || tutorialCredits < 1) return;
       setLetterBusy(true);
@@ -1662,17 +1667,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       Alert.alert(t('play.alert.noHint.title'), t('play.alert.noHint.body'));
       return;
     }
+    letterBusyRef.current = true;
     setLetterBusy(true);
     try {
       // Ad grants land on the device wallet; merge first so a signed-in spend works.
       await CreditApi.mergeGuestCredits().catch(() => null);
-      await consumeOneLetter(playSession?.id, pick.key);
+      const spent = await consumeOneLetter(playSession?.id, pick.key);
+      wallet.noteCreditBalance?.(spent?.creditBalance ?? Math.max(0, (wallet.creditBalance ?? 0) - 1));
       // Reveal before wallet refresh — refreshing used to remount the puzzle load effect.
       applyRevealedLetters([pick]);
       wallet.refresh({ silent: true }).catch(() => {});
     } catch (e) {
       Alert.alert(t('play.letter.failed.title'), e?.message || t('play.letter.failed.body'));
     } finally {
+      letterBusyRef.current = false;
       setLetterBusy(false);
     }
   }, [
@@ -1680,7 +1688,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     onboardingStep,
     tutorialCredits,
     puzzleComplete,
-    letterBusy,
     wallet,
     hintCandidates,
     selectedWord,
@@ -1693,7 +1700,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   ]);
 
   const handleWatchAd = useCallback(async () => {
-    if (letterBusy || isOnboarding) return;
+    if (letterBusyRef.current || isOnboarding || Date.now() < adGuardUntilRef.current) return;
+    letterBusyRef.current = true;
     setLetterBusy(true);
     setCreditSheetOpen(false);
     try {
@@ -1701,8 +1709,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       const deviceId = await prepareRewardedAd();
       if (__DEV__) console.log('[Ad] deviceId', deviceId, 'before', before);
       const earned = await withAdAudioMuted(() => showRewardedLetterAd(deviceId));
+      adGuardUntilRef.current = Date.now() + 1600;
       if (!earned) return;
-      await waitForAdCredits(before);
+      const after = await waitForAdCredits(before);
+      const trimmed = await trimExtraAdCredits(before, after);
+      wallet.noteCreditBalance?.(trimmed);
       await CreditApi.mergeGuestCredits().catch(() => null);
       // Credit only. The eye on the clue spends it on the selected word.
       await wallet.refresh({ silent: true });
@@ -1711,20 +1722,20 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (__DEV__) console.warn('[Ad] reward flow failed', e);
       Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
     } finally {
+      letterBusyRef.current = false;
       setLetterBusy(false);
     }
   }, [
     isOnboarding,
-    letterBusy,
     wallet,
     startEyeAttention,
     t,
   ]);
 
   const handleCellAd = useCallback(async (row, col) => {
-    if (letterBusy || isOnboarding) return;
+    if (letterBusyRef.current || isOnboarding || Date.now() < adGuardUntilRef.current) return false;
     const key = `${row},${col}`;
-    if (!cellAdKeys.has(key)) return;
+    if (!cellAdKeys.has(key)) return false;
     let pick = null;
     Object.entries(wordPositions || {}).some(([word, positions]) => {
       const hit = (positions || []).find((p) => p.row === row && p.col === col && p.letter);
@@ -1732,10 +1743,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       pick = { key, letter: hit.letter, word };
       return true;
     });
-    if (!pick?.letter) return;
+    if (!pick?.letter) return false;
+    letterBusyRef.current = true;
     setLetterBusy(true);
+    setCellAdBusy(true);
     try {
       const earned = await withAdAudioMuted(() => showRewardedCellAd());
+      adGuardUntilRef.current = Date.now() + 1600;
       if (!earned) return;
       playSfx('adReward');
       applyRevealedLetters([pick]);
@@ -1769,10 +1783,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (__DEV__) console.warn('[Ad] cell reveal failed', e);
       Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
     } finally {
+      letterBusyRef.current = false;
       setLetterBusy(false);
+      setCellAdBusy(false);
     }
   }, [
-    letterBusy,
     isOnboarding,
     cellAdKeys,
     wordPositions,
@@ -2006,6 +2021,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           maxBoardSize={gridMaxSize}
           onCellPress={handleCellPress}
           adHintCells={cellAdKeys}
+          adHintBusy={cellAdBusy}
           onAdHintPress={handleCellAd}
           onBoardMetrics={
             isOnboarding

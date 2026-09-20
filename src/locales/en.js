@@ -101,6 +101,7 @@ export default {
   'play.ad.failed.body': 'The credits did not arrive. Nothing was revealed.',
   'play.clue.prev': 'Previous clue',
   'play.clue.next': 'Next clue',
+  'play.clue.placeholder': 'Tap a numbered cell to see the clue',
   'play.wordUnlocked.label': 'Unlocked',
   'play.wordUnlocked.a11y': 'Unlocked {word}',
   'play.error.noDaily': 'No daily puzzle available.',

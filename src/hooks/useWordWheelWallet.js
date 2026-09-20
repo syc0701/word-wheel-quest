@@ -102,6 +102,13 @@ export default function useWordWheelWallet() {
     setLifetimePoints((prev) => Math.max(0, prev - n));
   }, []);
 
+  /** Show a known credit balance immediately, before the next wallet refresh. */
+  const noteCreditBalance = useCallback((amount) => {
+    const n = Number(amount);
+    if (!Number.isFinite(n) || n < 0) return;
+    setCreditBalance(n);
+  }, []);
+
   /** Add puzzle coins locally (e.g. bonus-word gift). */
   const addLifetimePoints = useCallback((amount) => {
     const n = Math.max(0, Number(amount) || 0);
@@ -128,6 +135,7 @@ export default function useWordWheelWallet() {
       consumeHintCredits,
       spendLifetimePoints,
       addLifetimePoints,
+      noteCreditBalance,
     }),
     [
       loggedIn,
@@ -144,6 +152,7 @@ export default function useWordWheelWallet() {
       consumeHintCredits,
       spendLifetimePoints,
       addLifetimePoints,
+      noteCreditBalance,
     ]
   );
 }

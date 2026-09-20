@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { isLoggedIn } from '../lib/auth';
 import { getDeviceId } from '../lib/deviceId';
-import { apiDelete, apiGet, apiPost, apiPut } from '../lib/http';
+import { apiDelete, apiDeletePublic, apiGet, apiPost, apiPostPublic, apiPut } from '../lib/http';
 import { APP_STORE } from '../constants/store';
 import { SCREENS } from '../constants/theme';
 
@@ -99,12 +99,16 @@ async function writeLocalPreference(enabled) {
 
 async function registerTokenWithBackend(deviceToken) {
   const deviceId = await getDeviceId();
-  const response = await apiPost('/home/push/device-token', {
+  const body = {
     appCode: APP_CODE,
     platform: pushPlatform(),
     deviceToken,
     deviceId,
-  });
+  };
+  const authed = await isLoggedIn();
+  const response = authed
+    ? await apiPost('/home/push/device-token', body)
+    : await apiPostPublic('/home/push/device-token', body);
   if (response?.code === 'FAILURE') {
     throw new Error(response?.message || 'Failed to register push token');
   }
@@ -121,11 +125,17 @@ async function unregisterTokenFromBackend(deviceToken) {
   }
   try {
     const deviceId = await getDeviceId();
-    await apiDelete('/home/push/device-token', {
+    const body = {
       appCode: APP_CODE,
       deviceToken,
       deviceId,
-    });
+    };
+    const authed = await isLoggedIn();
+    if (authed) {
+      await apiDelete('/home/push/device-token', body);
+    } else {
+      await apiDeletePublic('/home/push/device-token', body);
+    }
   } catch (e) {
     if (__DEV__) {
       console.warn('[Push] unregister failed', e?.message || e);

@@ -22,6 +22,50 @@ const MAX_CELL = 96;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+function AdHintBadge({ onPress, busy = false }) {
+  const hintScale = useSharedValue(0.35);
+  const [clicked, setClicked] = useState(false);
+  const wasBusy = useRef(false);
+
+  useEffect(() => {
+    hintScale.value = withSequence(
+      withSpring(1.38, { damping: 5, stiffness: 260 }),
+      withSpring(1, { damping: 7, stiffness: 180 })
+    );
+  }, [hintScale]);
+
+  useEffect(() => {
+    if (wasBusy.current && !busy) setClicked(false);
+    wasBusy.current = busy;
+  }, [busy]);
+
+  const hintStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: hintScale.value }],
+  }));
+  const showPressed = clicked || busy;
+
+  return (
+    <Animated.View pointerEvents="box-none" style={[styles.adHintBtn, hintStyle]}>
+      <Pressable
+        style={[styles.adHintHit, showPressed && styles.adHintHitPressed]}
+        onPress={() => {
+          setClicked(true);
+          Promise.resolve(onPress?.()).then((ok) => {
+            if (ok === false) setClicked(false);
+          });
+        }}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityState={{ selected: showPressed }}
+        accessibilityLabel="Watch an ad to show this letter"
+      >
+        <Lightbulb color={showPressed ? '#FDE68A' : '#fff'} size={12} strokeWidth={2.4} />
+        <Play color={showPressed ? '#FDE68A' : '#fff'} size={8} fill={showPressed ? '#FDE68A' : '#fff'} style={styles.adHintPlay} />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 function GridCell({
   size,
   letter,
@@ -30,12 +74,9 @@ function GridCell({
   isRevealed,
   isHintRevealed,
   isSelected,
-  showAdHint = false,
-  onAdHintPress,
   onPress,
 }) {
   const selectedProgress = useSharedValue(isSelected ? 1 : 0);
-  const hintScale = useSharedValue(1);
   const numberFontSize =
     size > 0 ? Math.max(13, Math.min(18, Math.round(size * 0.38))) : 15;
   const numberBox = Math.max(
@@ -49,20 +90,6 @@ function GridCell({
       easing: Easing.inOut(Easing.quad),
     });
   }, [isSelected, selectedProgress]);
-
-  useEffect(() => {
-    if (!showAdHint) return undefined;
-    hintScale.value = 0.35;
-    hintScale.value = withSequence(
-      withSpring(1.38, { damping: 5, stiffness: 260 }),
-      withSpring(1, { damping: 7, stiffness: 180 })
-    );
-    return undefined;
-  }, [showAdHint, hintScale]);
-
-  const hintStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: hintScale.value }],
-  }));
 
   const cellStyle = useAnimatedStyle(() => {
     const bg = isHintRevealed
@@ -149,20 +176,6 @@ function GridCell({
         </Animated.Text>
       ) : null}
     </AnimatedPressable>
-      {showAdHint ? (
-        <Animated.View pointerEvents="box-none" style={[styles.adHintBtn, hintStyle]}>
-          <Pressable
-            style={styles.adHintHit}
-            onPress={onAdHintPress}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Watch an ad to show this letter"
-          >
-            <Lightbulb color="#fff" size={12} strokeWidth={2.4} />
-            <Play color="#fff" size={8} fill="#fff" style={styles.adHintPlay} />
-          </Pressable>
-        </Animated.View>
-      ) : null}
     </View>
   );
 }
@@ -182,6 +195,7 @@ export default function PuzzleGrid({
   fitWidth = false,
   onCellPress,
   adHintCells = null,
+  adHintBusy = false,
   onAdHintPress = null,
   onBoardMetrics = null,
   boardHostRef = null,
@@ -331,8 +345,6 @@ export default function PuzzleGrid({
         isRevealed={isRevealed}
         isHintRevealed={isHintRevealed}
         isSelected={isSelected}
-        showAdHint={Boolean(adHintCells?.has(cellKey))}
-        onAdHintPress={() => onAdHintPress?.(row, col)}
         onPress={() => onCellPress(row, col)}
       />
     );
@@ -376,6 +388,36 @@ export default function PuzzleGrid({
         {celebrateMode === 'new' ? (
           <WordRevealBurst origins={burstOrigins} burstId={revealBurstId} />
         ) : null}
+        {cellSize > 0 && adHintCells
+          ? [...adHintCells].map((cellKey) => {
+              const [row, col] = cellKey.split(',').map(Number);
+              if (
+                !Number.isFinite(row)
+                || !Number.isFinite(col)
+                || row < bounds.minRow
+                || row > bounds.maxRow
+                || col < bounds.minCol
+                || col > bounds.maxCol
+              ) {
+                return null;
+              }
+              return (
+                <View
+                  key={`ad-hint-${cellKey}`}
+                  pointerEvents="box-none"
+                  style={[
+                    styles.adHintOverlay,
+                    {
+                      left: (col - bounds.minCol) * (cellSize + GAP) + cellSize - 20,
+                      top: (row - bounds.minRow) * (cellSize + GAP) - 8,
+                    },
+                  ]}
+                >
+                  <AdHintBadge busy={adHintBusy} onPress={() => onAdHintPress?.(row, col)} />
+                </View>
+              );
+            })
+          : null}
       </View>
     </View>
   );
@@ -447,11 +489,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: -0.3,
   },
-  adHintBtn: {
+  adHintOverlay: {
     position: 'absolute',
-    top: -8,
-    right: -8,
-    zIndex: 7,
+    zIndex: 30,
+    elevation: 30,
+    width: 28,
+    height: 28,
+    overflow: 'visible',
+  },
+  adHintBtn: {
     width: 28,
     height: 28,
   },
@@ -464,6 +510,11 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  adHintHitPressed: {
+    backgroundColor: '#9A3412',
+    borderColor: '#FDE68A',
+    transform: [{ scale: 0.88 }],
   },
   adHintPlay: {
     position: 'absolute',
