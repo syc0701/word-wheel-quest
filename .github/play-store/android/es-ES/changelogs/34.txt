@@ -1,0 +1,9 @@
+Novedades de esta actualización:
+
+- Un crédito muestra una letra. Mira un anuncio y toca el ojo
+- Botón de pista en una casilla vacía: mira un anuncio para revelar esa letra
+- Regalo diario: 2 monedas, o 3 si vuelves al día siguiente
+- Avisos de puzle nuevo sin iniciar sesión
+- El puzle diario conserva las letras que ya descubriste
+
+¡Gracias por jugar!

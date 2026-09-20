@@ -1,0 +1,9 @@
+Neu in diesem Update:
+
+- Ein Credit zeigt einen Buchstaben. Werbung ansehen, dann das Auge tippen
+- Hinweisknopf auf einem leeren Feld: Werbung ansehen und den Buchstaben aufdecken
+- Tägliches Geschenk: 2 Münzen, oder 3 wenn du am nächsten Tag wiederkommst
+- Hinweise auf neue Rätsel ohne Anmeldung
+- Das Tagesrätsel behält Buchstaben, die du schon aufgedeckt hast
+
+Danke fürs Spielen!

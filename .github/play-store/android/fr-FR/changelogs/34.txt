@@ -1,0 +1,9 @@
+Nouveautés de cette mise à jour :
+
+- Un crédit révèle une lettre. Regardez une pub, puis touchez l’œil
+- Bouton d’indice sur une case vide : une pub révèle cette lettre
+- Cadeau du jour : 2 pièces, ou 3 si vous revenez le lendemain
+- Alertes de nouveau puzzle sans compte
+- Le puzzle du jour garde les lettres déjà révélées
+
+Merci de jouer !

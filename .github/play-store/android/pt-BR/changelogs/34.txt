@@ -1,0 +1,9 @@
+Novidades desta atualização:
+
+- Um crédito mostra uma letra. Assista a um anúncio e toque no olho
+- Botão de dica em uma célula vazia: assista a um anúncio para revelar a letra
+- Presente diário: 2 moedas, ou 3 se você voltar no dia seguinte
+- Alertas de novo quebra-cabeça sem entrar na conta
+- O quebra-cabeça diário guarda as letras que você já revelou
+
+Obrigado por jogar!

@@ -1,0 +1,9 @@
+What's new in this update:
+
+- One credit shows one letter. Watch an ad, then tap the eye
+- Hint button on an empty cell: watch an ad to reveal that letter
+- Daily gift: 2 coins, or 3 when you come back the next day
+- New-puzzle alerts without signing in
+- Daily puzzle keeps the letters you already found
+
+Thanks for playing!
