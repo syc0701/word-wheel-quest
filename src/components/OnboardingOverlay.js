@@ -7,7 +7,27 @@ import { Info } from 'lucide-react-native';
 const STEPS = [
   { key: 'clue', textKey: 'onboarding.step.clue', focus: 'clue', fullWidth: true },
   { key: 'wheel', textKey: 'onboarding.step.wheel', focus: 'wheel', circular: true, circleBoost: 6 },
-  { key: 'hint', textKey: 'onboarding.step.hint', focus: 'hint', circular: true, circleBoost: 22 },
+  {
+    key: 'cellAd',
+    textKey: 'onboarding.step.cellAd',
+    focus: 'cellAd',
+    circular: true,
+    circleBoost: 18,
+  },
+  {
+    key: 'credit',
+    textKey: 'onboarding.step.credit',
+    focus: 'credit',
+    circular: true,
+    circleBoost: 10,
+  },
+  {
+    key: 'eye',
+    textKey: 'onboarding.step.eye',
+    focus: 'credit',
+    circular: true,
+    circleBoost: 12,
+  },
   {
     key: 'letter',
     textKey: 'onboarding.step.letter',
@@ -15,7 +35,7 @@ const STEPS = [
     circular: true,
     circleBoost: 28,
     delayedFinish: true,
-    finishDelayMs: 3000,
+    finishDelayMs: 0,
   },
 ];
 
@@ -256,11 +276,14 @@ export default function OnboardingOverlay({
 
   const tooltipStyle = useMemo(() => {
     if (showLetterSpotlight || showCenteredFinish) return null;
-    if (current.focus === 'clue') {
+    if (current.focus === 'clue' || current.focus === 'eye') {
       const bottom = hole
         ? Math.max(120 + bottomInset, (overlaySize.height || windowH) - hole.y + 28)
         : 200 + bottomInset;
       return { bottom };
+    }
+    if (current.focus === 'credit' && hole) {
+      return { top: hole.y + hole.height + 16 };
     }
     if (current.focus === 'hint') {
       const bottom = hole
@@ -336,7 +359,13 @@ export default function OnboardingOverlay({
 
       {!showCenteredFinish ? (
         <Pressable
-          style={[styles.skipBtn, { top: Math.max(topInset, 12) + 6 }]}
+          style={[
+            styles.skipBtn,
+            {
+              top: Math.max(topInset, 12) + 6,
+              ...(current.focus === 'credit' ? { left: 16 } : { right: 16 }),
+            },
+          ]}
           onPress={onSkip}
           accessibilityRole="button"
           accessibilityLabel={t('onboarding.skip')}
@@ -352,6 +381,7 @@ export default function OnboardingOverlay({
               {t('onboarding.stepLabel', { n: safeStep + 1 })}
             </Text>
             <Text style={styles.tooltipText}>{t(current.textKey)}</Text>
+            {current.hideNext ? null : (
             <Pressable
               style={styles.nextBtn}
               onPress={onNext}
@@ -362,6 +392,7 @@ export default function OnboardingOverlay({
                 {t(isLast ? 'onboarding.done' : 'onboarding.next')}
               </Text>
             </Pressable>
+            )}
           </View>
         </View>
       ) : null}
@@ -397,7 +428,6 @@ const styles = StyleSheet.create({
   },
   skipBtn: {
     position: 'absolute',
-    right: 16,
     zIndex: 2,
     paddingHorizontal: 16,
     paddingVertical: 10,

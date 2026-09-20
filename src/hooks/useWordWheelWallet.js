@@ -19,6 +19,7 @@ export default function useWordWheelWallet() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [lifetimePoints, setLifetimePoints] = useState(0);
   const [accountLabel, setAccountLabel] = useState('');
+  const [isDeveloper, setIsDeveloper] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -33,11 +34,15 @@ export default function useWordWheelWallet() {
       setLoggedIn(authed);
 
       if (!authed) {
-        setCreditBalance(0);
+        const balanceResult = await CreditApi.fetchBalance().catch(() => ({ creditBalance: 0 }));
+        setCreditBalance(balanceResult.creditBalance);
         setLifetimePoints(0);
         setAccountLabel('');
+        setIsDeveloper(false);
         return;
       }
+
+      await CreditApi.mergeGuestCredits().catch(() => null);
 
       const claims = await getAuthTokenClaims().catch(() => null);
       let userInfo = await fetchUserInfo().catch(() => null);
@@ -54,17 +59,22 @@ export default function useWordWheelWallet() {
       const label = resolveAccountLabel(cloudUser, claims);
       const coins = resolveWordWheelQuestCoins(cloudUser);
       const balanceResult = await CreditApi.fetchBalance().catch(() => ({ creditBalance: 0 }));
+      const developerFlag = Boolean(
+        cloudUser?.isDeveloper ?? cloudUser?.developer ?? false
+      );
 
       if (__DEV__) {
         console.log('[Wallet] user identity', summarizeUserIdentity(cloudUser, claims));
         console.log('[Wallet] raw JWT claims', claims);
         console.log('[Wallet] /home/user payload', userInfo);
         console.log('[Wallet] puzzle coins', coins, cloudUser?.puzzleCoins);
+        console.log('[Wallet] isDeveloper', developerFlag);
       }
 
       setCreditBalance(balanceResult.creditBalance);
       setLifetimePoints(coins);
       setAccountLabel(label);
+      setIsDeveloper(developerFlag);
     } catch (err) {
       setError(err?.message || t('wallet.error.loadFailed'));
     } finally {
@@ -92,6 +102,13 @@ export default function useWordWheelWallet() {
     setLifetimePoints((prev) => Math.max(0, prev - n));
   }, []);
 
+  /** Show a known credit balance immediately, before the next wallet refresh. */
+  const noteCreditBalance = useCallback((amount) => {
+    const n = Number(amount);
+    if (!Number.isFinite(n) || n < 0) return;
+    setCreditBalance(n);
+  }, []);
+
   /** Add puzzle coins locally (e.g. bonus-word gift). */
   const addLifetimePoints = useCallback((amount) => {
     const n = Math.max(0, Number(amount) || 0);
@@ -108,6 +125,7 @@ export default function useWordWheelWallet() {
       creditBalance,
       lifetimePoints,
       accountLabel,
+      isDeveloper,
       loading,
       refreshing,
       error,
@@ -117,12 +135,14 @@ export default function useWordWheelWallet() {
       consumeHintCredits,
       spendLifetimePoints,
       addLifetimePoints,
+      noteCreditBalance,
     }),
     [
       loggedIn,
       creditBalance,
       lifetimePoints,
       accountLabel,
+      isDeveloper,
       loading,
       refreshing,
       error,
@@ -132,6 +152,7 @@ export default function useWordWheelWallet() {
       consumeHintCredits,
       spendLifetimePoints,
       addLifetimePoints,
+      noteCreditBalance,
     ]
   );
 }

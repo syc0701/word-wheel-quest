@@ -60,6 +60,15 @@ export async function apiGet(path, params) {
   return parseResponse(result);
 }
 
+/** Guest/device wallet reads — no JWT. */
+export async function apiGetPublic(path, params) {
+  const result = await fetchWithTimeout(buildUrl(path, params), {
+    method: 'GET',
+    headers: { Accept: 'application/json' },
+  });
+  return parseResponse(result);
+}
+
 export async function apiPost(path, data, options = {}) {
   const headers = await buildAuthHeaders(
     options.noBody ? { Accept: 'application/json' } : { 'Content-Type': 'application/json' }
@@ -82,6 +91,21 @@ export async function apiPost(path, data, options = {}) {
   return parseResponse(result);
 }
 
+/** Device-wallet writes. No JWT. */
+export async function apiPostPublic(path, data) {
+  const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
+  const url = buildUrl(path);
+  let body;
+  if (shouldEncryptHomeBody(url) && data) {
+    const encrypted = encryptText(JSON.stringify(data));
+    body = encrypted ? JSON.stringify({ encrypted }) : JSON.stringify(data);
+  } else {
+    body = JSON.stringify(data ?? {});
+  }
+  const result = await fetchWithTimeout(url, { method: 'POST', headers, body });
+  return parseResponse(result);
+}
+
 export async function apiPut(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
   let body;
@@ -98,6 +122,21 @@ export async function apiPut(path, data) {
 
 export async function apiDelete(path, data) {
   const headers = await buildAuthHeaders({ 'Content-Type': 'application/json' });
+  let body;
+  const url = buildUrl(path);
+  if (shouldEncryptHomeBody(url) && data) {
+    const encrypted = encryptText(JSON.stringify(data));
+    body = encrypted ? JSON.stringify({ encrypted }) : JSON.stringify(data);
+  } else {
+    body = data != null ? JSON.stringify(data) : undefined;
+  }
+  const result = await fetchWithTimeout(url, { method: 'DELETE', headers, body });
+  return parseResponse(result);
+}
+
+/** Guest device-token unregister. No JWT. */
+export async function apiDeletePublic(path, data) {
+  const headers = { Accept: 'application/json', 'Content-Type': 'application/json' };
   let body;
   const url = buildUrl(path);
   if (shouldEncryptHomeBody(url) && data) {

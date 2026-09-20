@@ -4,7 +4,7 @@ import { isAdsEnabled } from '../constants/ads';
 let initPromise = null;
 
 /**
- * Initialize the Google Mobile Ads SDK once at launch (Android only for now).
+ * Initialize the Google Mobile Ads SDK once at launch.
  * Safe to call multiple times; subsequent calls reuse the same promise.
  */
 export function initializeMobileAds() {
@@ -18,9 +18,7 @@ export function initializeMobileAds() {
     })
     .then(() => mobileAds().initialize())
     .catch((error) => {
-      if (__DEV__) {
-        console.warn('[Ads] initialize failed', error?.message || error);
-      }
+      console.warn('[Ads] initialize failed', error?.message || error);
       return null;
     });
   return initPromise;

@@ -2,10 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Scene backgrounds for Image appearance (WebP for Play bitmap guidance).
- * Order matters: band 0 is the first journey scene (popcorn).
+ * Order matters: band 0 is the home scene (wellness corner).
  */
 export const BG_IMAGE_CATALOG = {
-  circus_popcorn: require('../assets/bg_image/260820-circus-popcorn-and-juggling-pins.webp'),
+  wellness_corner: require('../assets/bg_image/260919-wellness-corner-with-aloe-and-water.jpeg'),
   morning_espresso: require('../assets/bg_image/260820-morning-espresso-and-lavender-view.webp'),
   vermont_autumn: require('../assets/bg_image/260820-vermont-autumn-farmland-at-dusk.webp'),
   soccer_stadium: require('../assets/bg_image/260820-soccer-ball-on-stadium-turf.webp'),
@@ -18,11 +18,11 @@ export const BG_IMAGE_CATALOG = {
   tropical_island: require('../assets/bg_image/tropical_island.webp'),
 };
 
-/** Explicit order — do not alphabetize (popcorn must stay first). */
+/** Explicit order — do not alphabetize (wellness corner must stay first). */
 export const BG_IMAGE_IDS = Object.keys(BG_IMAGE_CATALOG);
 
-/** First-launch / splash background (circus popcorn). */
-export const SPLASH_BG_SOURCE = BG_IMAGE_CATALOG.circus_popcorn;
+/** First-launch / splash background (same photo as the home screen). */
+export const SPLASH_BG_SOURCE = BG_IMAGE_CATALOG.wellness_corner;
 
 /** Scene changes at levels 5, 10, 15, 20, 25, … */
 export const LEVELS_PER_SCENE = 5;
@@ -53,23 +53,23 @@ export function resolveSceneBackground(level = 0) {
   };
 }
 
-/** Home / main hub always uses the circus popcorn scene. */
+/** Home / main hub always uses the wellness-corner scene. */
 export function resolveHomeBackground(level = 0) {
   return {
-    id: 'circus_popcorn',
-    source: BG_IMAGE_CATALOG.circus_popcorn,
+    id: 'wellness_corner',
+    source: BG_IMAGE_CATALOG.wellness_corner,
     band: getSceneBandForLevel(level),
     level: Number(level) || 0,
   };
 }
 
 /**
- * Play uses a different image than home — cycles the catalog excluding popcorn
- * so the board never shares the main-page photo.
+ * Play uses a different image than home — cycles the catalog excluding the
+ * wellness corner so the board never shares the main-page photo.
  */
 export function resolvePlayBackground(level = 0) {
   const band = getSceneBandForLevel(level);
-  const playIds = BG_IMAGE_IDS.filter((id) => id !== 'circus_popcorn');
+  const playIds = BG_IMAGE_IDS.filter((id) => id !== 'wellness_corner');
   const list = playIds.length ? playIds : BG_IMAGE_IDS;
   const id = list[band % list.length] || list[0];
   return {

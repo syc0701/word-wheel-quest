@@ -2,22 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
-import { isLoggedIn } from '../lib/auth';
 import PushNotificationService from '../services/PushNotificationService';
 
 /**
  * Settings toggle for per-app push notifications.
- * Always visible when push is supported; guests are prompted to sign in
- * because preference + device-token APIs require a Cognito JWT.
+ * Guests and signed-in players can turn it on. The device id is sent with the token.
  */
-export default function NotificationsSettingsCard({
-  authTick = 0,
-  onRequireSignIn,
-}) {
+export default function NotificationsSettingsCard({ authTick = 0 }) {
   const { colors } = useAppearance();
   const t = useT();
-  const [authed, setAuthed] = useState(false);
-  const [enabled, setEnabled] = useState(true);
+  const [enabled, setEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -26,16 +20,10 @@ export default function NotificationsSettingsCard({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const loggedIn = await isLoggedIn();
-      setAuthed(loggedIn);
-      if (!loggedIn) {
-        setEnabled(false);
-        return;
-      }
       try {
         setEnabled(await PushNotificationService.getAppNotificationPreference());
       } catch {
-        setEnabled(true);
+        setEnabled(false);
       }
     } finally {
       setLoading(false);
@@ -46,27 +34,8 @@ export default function NotificationsSettingsCard({
     load();
   }, [load, authTick]);
 
-  const promptSignIn = () => {
-    Alert.alert(
-      t('settings.notifications.signInTitle'),
-      t('settings.notifications.signInBody'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('settings.account.signIn'),
-          onPress: () => onRequireSignIn?.(),
-        },
-      ]
-    );
-  };
-
   const onToggle = async (next) => {
     if (saving || loading) return;
-
-    if (!authed) {
-      promptSignIn();
-      return;
-    }
 
     const previous = enabled;
     setEnabled(next);
@@ -82,6 +51,11 @@ export default function NotificationsSettingsCard({
             Alert.alert(
               t('settings.notifications.deniedTitle'),
               t('settings.notifications.deniedBody')
+            );
+          } else if (result.reason === 'register_failed') {
+            Alert.alert(
+              t('settings.notifications.saveFailedTitle'),
+              t('settings.notifications.saveFailedBody')
             );
           }
         }
@@ -110,9 +84,7 @@ export default function NotificationsSettingsCard({
           {t('settings.notifications.label')}
         </Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          {authed
-            ? t('settings.notifications.subtitle')
-            : t('settings.notifications.signInSubtitle')}
+          {t('settings.notifications.subtitle')}
         </Text>
       </View>
       <Switch

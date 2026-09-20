@@ -454,7 +454,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
               <View style={[styles.preferenceDivider, { backgroundColor: colors.surfaceLight }]} />
               <NotificationsSettingsCard
                 authTick={routeParams.authTick || routeParams.signedIn ? 1 : 0}
-                onRequireSignIn={handleSignIn}
               />
             </>
           ) : null}

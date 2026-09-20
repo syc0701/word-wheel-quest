@@ -2,8 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   FREE_DAILY_PLAYS,
   GUEST_MAX_LEVEL_WITHOUT_STARTER,
-  GRANDFATHER_EXCEPTION_MIN_LEVEL,
-  GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER,
   PUZZLE_PLAY_CREDIT_COST,
   STARTER_PACK_PACKAGE_ID,
   STARTER_PACK_PRODUCT_ID,
@@ -120,12 +118,8 @@ export function normalizeJourneyLevel(level) {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
 }
 
-/** Last journey level playable without starter (50 default; 59 if already at level 56+). */
-export function resolveMaxLevelWithoutStarter(playerJourneyLevel) {
-  const current = normalizeJourneyLevel(playerJourneyLevel);
-  if (current != null && current >= GRANDFATHER_EXCEPTION_MIN_LEVEL) {
-    return GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER;
-  }
+/** Last journey level playable without starter (all levels free while paywall is off). */
+export function resolveMaxLevelWithoutStarter(_playerJourneyLevel) {
   return GUEST_MAX_LEVEL_WITHOUT_STARTER;
 }
 
@@ -187,20 +181,12 @@ export async function canPlayJourneyLevel(journeyLevel, opts) {
  * Whether a daily puzzle can be started.
  * @returns {'free'|'credit'|'starter'|'no_credits'|null} null = blocked unknown
  */
-export async function resolveDailyPlayAccess({ hasStarter, loggedIn, creditBalance = 0 }) {
-  const freeLeft = await getFreeDailyPlaysRemaining();
-  if (freeLeft > 0) return 'free';
-  if (!hasStarter) return 'starter';
-  if (loggedIn) {
-    return creditBalance >= PUZZLE_PLAY_CREDIT_COST ? 'credit' : 'no_credits';
-  }
-  const guestCredits = await getGuestPuzzleCredits();
-  return guestCredits >= PUZZLE_PLAY_CREDIT_COST ? 'credit' : 'no_credits';
+export async function resolveDailyPlayAccess() {
+  return 'free';
 }
 
-export async function canPlayDailyPuzzle({ hasStarter, loggedIn, creditBalance = 0 }) {
-  const access = await resolveDailyPlayAccess({ hasStarter, loggedIn, creditBalance });
-  return access === 'free' || access === 'credit';
+export async function canPlayDailyPuzzle() {
+  return true;
 }
 
 export async function canStartJourneyLevel(level, {
