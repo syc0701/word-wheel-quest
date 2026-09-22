@@ -6,7 +6,7 @@ import { GiTwoCoins } from '../components/GiTwoCoins';
 import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
-import { PLAY_MODE, SCREENS } from '../constants/theme';
+import { SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
 import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import {
@@ -164,47 +164,23 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           rawPayload: storePayload,
         });
         if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-          await markStarterPackPurchased({ grantGuestCredits: false });
+          await markStarterPackPurchased();
         }
         const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-          Alert.alert(
-            t('shop.alert.starterUnlocked.title'),
-            t('shop.alert.starterUnlocked.body'),
-            [{ text: t('common.continue') }]
-          );
-        } else {
-          Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
-        }
+        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
         if (verify?.creditBalance != null && __DEV__) {
           console.log('[Shop] credits after verify', verify.creditBalance);
         }
       } else if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-        await markStarterPackPurchased({ grantGuestCredits: true });
+        await markStarterPackPurchased();
         await savePendingIap({
           productId,
           transactionId,
           packageKey: meta.packageId,
           ...rcIdentity,
         });
-        const { packageId: _pkg, ...backParams } = routeParams;
-        Alert.alert(
-          t('shop.alert.starterUnlocked.title'),
-          t('shop.alert.starterUnlocked.body'),
-          [
-            {
-              text: t('common.continue'),
-              onPress: () =>
-                navigate(backScreen, {
-                  ...backParams,
-                  mode: backParams.mode ?? PLAY_MODE.JOURNEY,
-                  starterUnlockTick: Date.now(),
-                  t: Date.now(),
-                }),
-            },
-          ],
-          { cancelable: false }
-        );
+        const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
+        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
       } else {
         await savePendingIap({
           productId,

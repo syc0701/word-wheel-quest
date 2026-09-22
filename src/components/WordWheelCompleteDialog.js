@@ -6,13 +6,11 @@ import {
   LevelScreenPolicy,
   MILESTONE_BONUS_COINS,
 } from '../lib/LevelScreenPolicy';
-import { isPurchasesConfigured } from '../services/purchases';
 import IntermissionCardShell from './intermission/IntermissionCardShell';
 import WordMasterCard from './intermission/WordMasterCard';
 import LevelCompleteCard from './intermission/LevelCompleteCard';
 import StreaksSparksCard from './intermission/StreaksSparksCard';
 import BrainPowerCard from './intermission/BrainPowerCard';
-import ShopOfferButton from './intermission/ShopOfferButton';
 import { INTERMISSION } from './intermission/intermissionTheme';
 
 
@@ -43,21 +41,15 @@ export default function WordWheelCompleteDialog({
   visible,
   onClose,
   onNext,
-  onShop,
   durationLabel: _durationLabel,
   scoreCoins = 0,
   hintCoinsSpent = 0,
   levelNumber,
   forceScreenType,
-  unlockedFeature = null,
-  showStarterOffer = false,
 }) {
   const t = useT();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
   const autoTimerRef = useRef(null);
-
-  const guestUpsell =
-    showStarterOffer && isPurchasesConfigured() && typeof onShop === 'function';
 
   const screenType = useMemo(() => {
     if (
@@ -94,14 +86,9 @@ export default function WordWheelCompleteDialog({
     onClose?.();
   }, [clearAutoTimer, onClose]);
 
-  const handleShop = useCallback(() => {
-    clearAutoTimer();
-    onShop?.();
-  }, [clearAutoTimer, onShop]);
-
   useEffect(() => {
     clearAutoTimer();
-    if (!visible || guestUpsell) return undefined;
+    if (!visible) return undefined;
     const advance = onNext || onClose;
     if (!advance) return undefined;
     autoTimerRef.current = setTimeout(() => {
@@ -109,7 +96,7 @@ export default function WordWheelCompleteDialog({
       advance();
     }, COMPLETE_DIALOG_AUTO_MS);
     return clearAutoTimer;
-  }, [visible, onNext, onClose, clearAutoTimer, guestUpsell]);
+  }, [visible, onNext, onClose, clearAutoTimer]);
 
   const level = Number(levelNumber) || 0;
   const streakBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.STREAK_SPARKS];
@@ -156,18 +143,7 @@ export default function WordWheelCompleteDialog({
     );
   }
 
-  const footer = guestUpsell ? (
-    <View style={styles.linkFooter}>
-      <Pressable
-        onPress={handleContinue}
-        accessibilityRole="link"
-        accessibilityLabel={t('complete.next')}
-        hitSlop={8}
-      >
-        <Text style={styles.actionLink}>{t('complete.next')}</Text>
-      </Pressable>
-    </View>
-  ) : undefined;
+  const footer = undefined;
 
   const continueLabel =
     screenType === LEVEL_SCREEN_TYPES.LEVEL_COMPLETE
@@ -197,19 +173,6 @@ export default function WordWheelCompleteDialog({
             }
           >
             {body}
-            {guestUpsell ? (
-              <ShopOfferButton
-                label={t('complete.guest.starterLink')}
-                onPress={handleShop}
-                accessibilityLabel={t('complete.guest.starterLink')}
-              />
-            ) : null}
-            {unlockedFeature === 'dailyPuzzle' ? (
-              <View style={styles.unlockBox}>
-                <Text style={styles.unlockTitle}>{t('complete.unlock.dailyPuzzle')}</Text>
-                <Text style={styles.unlockBody}>{t('complete.unlock.dailyPuzzle.body')}</Text>
-              </View>
-            ) : null}
           </IntermissionCardShell>
         </View>
       </View>

@@ -23,7 +23,6 @@ import {
 } from 'lucide-react-native';
 import AdBanner from '../components/AdBanner';
 import DailyGiftModal from '../components/DailyGiftModal';
-import StarterPackGateModal from '../components/StarterPackGateModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
@@ -33,12 +32,6 @@ import { grantDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
-import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
-import {
-  hasStarterPackAccess,
-  resolveJourneyPlayAccess,
-  resolveStarterUnlockLevel,
-} from '../lib/guestStarterPack';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
@@ -190,8 +183,6 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
   const [guest, setGuest] = useState(true);
-  const [starterGateVisible, setStarterGateVisible] = useState(false);
-  const [starterGateContext, setStarterGateContext] = useState('level');
   const [giftVisible, setGiftVisible] = useState(false);
   const [giftMode, setGiftMode] = useState('claim');
   const [giftView, setGiftView] = useState(null);
@@ -237,13 +228,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [t, routeParams.starterUnlockTick]);
-
-  useEffect(() => {
-    if (routeParams.starterUnlockTick) {
-      wallet.refresh({ silent: true }).catch(() => {});
-    }
-  }, [routeParams.starterUnlockTick, wallet]);
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -348,10 +333,6 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   }, [giftBusy, t, wallet]);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
-  const starterUnlockLevel = useMemo(
-    () => resolveStarterUnlockLevel(journeyLevel),
-    [journeyLevel]
-  );
   const wordCount = useMemo(
     () => (puzzle?.id ? resolvePuzzleWordCount(puzzle) : 0),
     [puzzle]
@@ -363,40 +344,13 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 
   const handleContinue = useCallback(async () => {
     if (!canPlay) return;
-    const level = journeyLevel;
-    const authed = await isLoggedIn();
-    const hasStarter = await hasStarterPackAccess();
-    const access = await resolveJourneyPlayAccess(level, {
-      hasStarter,
-      loggedIn: authed,
-      creditBalance: wallet.creditBalance,
-      playerJourneyLevel: level,
-    });
-    if (access === 'starter') {
-      setStarterGateContext('level');
-      setStarterGateVisible(true);
-      return;
-    }
-    if (access === 'no_credits') {
-      setStarterGateContext('credits');
-      setStarterGateVisible(true);
-      return;
-    }
     const completed = await hasCompletedOnboarding();
     navigate(SCREENS.PLAY, {
       mode: PLAY_MODE.JOURNEY,
       puzzle,
       isOnboarding: !completed,
     });
-  }, [canPlay, journeyLevel, navigate, puzzle, wallet.creditBalance]);
-
-  const handleStarterGateShop = useCallback(() => {
-    setStarterGateVisible(false);
-    navigate(SCREENS.SHOP, {
-      backScreen: SCREENS.HOME,
-      packageId: STARTER_PACK_PACKAGE_ID,
-    });
-  }, [navigate]);
+  }, [canPlay, navigate, puzzle]);
 
   const handleTutorial = useCallback(() => {
     navigate(SCREENS.PLAY, {
@@ -606,13 +560,6 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         <AdBanner />
       </View>
 
-      <StarterPackGateModal
-        visible={starterGateVisible}
-        context={starterGateContext}
-        unlockLevel={starterUnlockLevel}
-        onClose={() => setStarterGateVisible(false)}
-        onShop={handleStarterGateShop}
-      />
       <DailyGiftModal
         visible={giftVisible}
         mode={giftMode}

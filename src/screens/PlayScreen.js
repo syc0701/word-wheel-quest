@@ -22,7 +22,6 @@ import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
 import AdBanner from '../components/AdBanner';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
-import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 import ShopOfferButton from '../components/intermission/ShopOfferButton';
 import {
@@ -76,14 +75,6 @@ import {
 import { describeDailyGift, loadDailyGift } from '../lib/dailyGift';
 import { isLoggedIn } from '../lib/auth';
 import {
-  guestNeedsStarterToContinue,
-  hasStarterPackAccess,
-  resolveDailyPlayAccess,
-  resolveJourneyPlayAccess,
-  resolveStarterUnlockLevel,
-  settlePuzzlePlayCharge,
-} from '../lib/guestStarterPack';
-import {
   formatWordWheelPlayDuration,
   parseWordWheelCatalog,
   readCoinsEarned,
@@ -96,7 +87,6 @@ import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
-import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
 import OnboardingOverlay from '../components/OnboardingOverlay';
 import OnboardingSuccessOverlay from '../components/OnboardingSuccessOverlay';
@@ -235,9 +225,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [treasureOpen, setTreasureOpen] = useState(false);
   const [shuffleSignal, setShuffleSignal] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
-  const [hasStarterAccess, setHasStarterAccess] = useState(true);
-  const [starterGateVisible, setStarterGateVisible] = useState(false);
-  const [starterGateContext, setStarterGateContext] = useState('level');
   const [coinsCatalog, setCoinsCatalog] = useState([]);
   const [celebratingCellKeys, setCelebratingCellKeys] = useState(() => new Set());
   const [celebrateOrder, setCelebrateOrder] = useState([]);
@@ -524,21 +511,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const access = await hasStarterPackAccess();
-      if (cancelled) return;
-      setHasStarterAccess(access);
-      if (routeParams.starterUnlockTick && access && !isDaily && !isOnboarding) {
-        setReloadKey((k) => k + 1);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [routeParams.starterUnlockTick, isDaily, isOnboarding]);
-
   const resetPlayState = useCallback(() => {
     setFoundWords([]);
     setSelectedIndices([]);
@@ -807,53 +779,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         if (cancelled) return;
 
         const authed = await isLoggedIn();
-        const starterAccess = await hasStarterPackAccess();
-
-        if (isDaily) {
-          const dailyAccess = await resolveDailyPlayAccess({
-            hasStarter: starterAccess,
-            loggedIn: authed,
-            creditBalance: walletRef.current.creditBalance,
-          });
-          if (dailyAccess === 'starter') {
-            setPuzzle(null);
-            setError(t('play.error.starterRequired'));
-            setStarterGateContext('daily');
-            setStarterGateVisible(true);
-            return;
-          }
-          if (dailyAccess === 'no_credits') {
-            setPuzzle(null);
-            setError(t('play.error.noCredits'));
-            setStarterGateContext('credits');
-            setStarterGateVisible(true);
-            return;
-          }
-        } else if (!isOnboarding) {
-          const level = resolveJourneyLevel(data) ?? Number(data?.puzzleLevel);
-          const playerJourneyLevel = level;
-          const journeyAccess = await resolveJourneyPlayAccess(level, {
-            hasStarter: starterAccess,
-            loggedIn: authed,
-            creditBalance: walletRef.current.creditBalance,
-            playerJourneyLevel,
-          });
-          if (journeyAccess === 'starter') {
-            setPuzzle(null);
-            setError(t('play.error.starterRequired'));
-            setStarterGateContext('level');
-            setStarterGateVisible(true);
-            return;
-          }
-          if (journeyAccess === 'no_credits') {
-            setPuzzle(null);
-            setError(t('play.error.noCredits'));
-            setStarterGateContext('credits');
-            setStarterGateVisible(true);
-            return;
-          }
-        }
-        setHasStarterAccess(starterAccess);
 
         completedPuzzleIdRef.current = null;
         completedLevelRef.current = null;
@@ -866,30 +791,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         const play = await WordWheelApi.startPlay(data.id);
         if (!cancelled && play && !play.code) {
-          const journeyLevel =
-            resolveJourneyLevel(data) ?? Number(data?.puzzleLevel) ?? null;
-          const charge = await settlePuzzlePlayCharge({
-            isDaily,
-            journeyLevel,
-            puzzleId: data.id,
-            loggedIn: authed,
-            creditBalance: walletRef.current.creditBalance,
-            playerJourneyLevel: journeyLevel,
-          });
-          if (!charge.ok) {
-            setPuzzle(null);
-            setError(
-              charge.access === 'no_credits'
-                ? t('play.error.noCredits')
-                : t('play.error.starterRequired')
-            );
-            setStarterGateContext(charge.access === 'no_credits' ? 'credits' : isDaily ? 'daily' : 'level');
-            setStarterGateVisible(true);
-            return;
-          }
-          if (charge.creditBalance != null) {
-            walletRef.current.refresh({ silent: true }).catch(() => {});
-          }
           setPlaySession(play);
           const startedAt = Date.now();
           levelStartedAtRef.current = startedAt;
@@ -963,83 +864,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       return;
     }
     const completedLevel = resolveJourneyLevel(puzzle) ?? Number(puzzle?.puzzleLevel) ?? null;
-    const starterAccess = await hasStarterPackAccess();
-    const authed = await isLoggedIn();
-    const nextLevel = (completedLevel ?? 0) + 1;
-    const access = await resolveJourneyPlayAccess(nextLevel, {
-      hasStarter: starterAccess,
-      loggedIn: authed,
-      creditBalance: wallet.creditBalance,
-      playerJourneyLevel: completedLevel,
-    });
-    if (access === 'starter') {
-      setCompletionDialogOpen(false);
-      setShowHeaderNext(false);
-      setStarterGateContext('level');
-      setStarterGateVisible(true);
-      return;
-    }
-    if (access === 'no_credits') {
-      setCompletionDialogOpen(false);
-      setShowHeaderNext(false);
-      setStarterGateContext('credits');
-      setStarterGateVisible(true);
-      return;
-    }
-    setHasStarterAccess(starterAccess);
     completedPuzzleIdRef.current = puzzle?.id || null;
     completedLevelRef.current = completedLevel;
     completedSeasonRef.current = puzzle?.season || DEFAULT_SEASON;
     setCompletionDialogOpen(false);
     setShowHeaderNext(false);
     setReloadKey((k) => k + 1);
-  }, [isDaily, dailyDate, navigate, puzzle, wallet.creditBalance]);
+  }, [isDaily, dailyDate, navigate, puzzle]);
 
   const handleCloseCompletionDialog = useCallback(() => {
     setCompletionDialogOpen(false);
     setShowHeaderNext(true);
   }, []);
-
-  const handleCompletionShop = useCallback(() => {
-    setCompletionDialogOpen(false);
-    setShowHeaderNext(false);
-    navigate(SCREENS.SHOP, {
-      backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
-      mode: routeParams.mode,
-      date: routeParams.date,
-      packageId: STARTER_PACK_PACKAGE_ID,
-    });
-  }, [isDaily, navigate, routeParams.mode, routeParams.date]);
-
-  const handleStarterGateShop = useCallback(() => {
-    setStarterGateVisible(false);
-    navigate(SCREENS.SHOP, {
-      backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
-      mode: routeParams.mode,
-      date: routeParams.date,
-      packageId: STARTER_PACK_PACKAGE_ID,
-    });
-  }, [isDaily, navigate, routeParams.mode, routeParams.date]);
-
-  const showStarterOffer = useMemo(
-    () =>
-      !isOnboarding
-      && !isDaily
-      && !hasStarterAccess
-      && guestNeedsStarterToContinue(
-        completionStats?.levelNumber,
-        false,
-        completionStats?.levelNumber
-      ),
-    [isOnboarding, isDaily, hasStarterAccess, completionStats?.levelNumber]
-  );
-
-  const starterUnlockLevel = useMemo(
-    () => resolveStarterUnlockLevel(
-      resolveJourneyLevel(puzzle) ?? completionStats?.levelNumber ?? null
-    ),
-    [puzzle, completionStats?.levelNumber]
-  );
 
   const finishOnboarding = useCallback(async () => {
     if (finishingOnboardingRef.current) return;
@@ -2207,21 +2043,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         visible={completionDialogOpen}
         onClose={handleCloseCompletionDialog}
         onNext={handleNextPuzzle}
-        onShop={handleCompletionShop}
         durationLabel={completionStats?.durationLabel}
         scoreCoins={completionStats?.scoreCoins ?? 0}
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}
         levelNumber={completionStats?.levelNumber}
         forceScreenType={completionStats?.screenType}
-        showStarterOffer={showStarterOffer}
-      />
-
-      <StarterPackGateModal
-        visible={starterGateVisible}
-        context={starterGateContext}
-        unlockLevel={starterUnlockLevel}
-        onClose={() => setStarterGateVisible(false)}
-        onShop={handleStarterGateShop}
       />
 
       <Modal

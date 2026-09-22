@@ -91,9 +91,9 @@ Hints used are tracked as `hintCoinsSpent` on the completion dialog (display onl
 
 ---
 
-## Related unlock (not currency)
+## Puzzle access
 
-**Daily Puzzle** unlocks at Season Journey **level 50** (`WORD_WHEEL_DAILY_UNLOCK_LEVEL`). It is a separate play mode, not a coin grant by itself.
+Season Journey and Daily Puzzle are free to play. Shop credits and coins are for letter hints only — they do not unlock puzzles.
 
 ---
 
