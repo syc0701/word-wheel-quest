@@ -25,15 +25,20 @@ import SignInScreen from './screens/SignInScreen';
 import DevIntermissionScreen from './screens/DevIntermissionScreen';
 
 /**
- * Android Fabric + Reanimated entering/exiting can race and crash in
- * SurfaceMountingManager.getViewState. Keep Android transitions soft (enter-only)
- * and skip exiting animations that remount while native delete is in flight.
+ * Android Fabric + Reanimated layout animations (entering/exiting) race with
+ * ShadowNode remove and can SIGSEGV in libreanimated / ANR in NodesManager.
+ * Keep Android screen shells as plain Views — no layout animations.
  */
-const SCREEN_ENTER =
-  Platform.OS === 'android' ? FadeIn.duration(220) : SlideInRight.duration(350).springify();
-const SCREEN_EXIT = Platform.OS === 'android' ? undefined : SlideOutLeft.duration(250);
-const HOME_ENTER = FadeIn.duration(Platform.OS === 'android' ? 220 : 400);
-const HOME_EXIT = Platform.OS === 'android' ? undefined : FadeOut.duration(200);
+const USE_SCREEN_LAYOUT_ANIM = Platform.OS !== 'android';
+const ScreenShell = USE_SCREEN_LAYOUT_ANIM ? Animated.View : View;
+const SCREEN_ENTER = USE_SCREEN_LAYOUT_ANIM
+  ? SlideInRight.duration(350).springify()
+  : undefined;
+const SCREEN_EXIT = USE_SCREEN_LAYOUT_ANIM ? SlideOutLeft.duration(250) : undefined;
+const HOME_ENTER = USE_SCREEN_LAYOUT_ANIM ? FadeIn.duration(400) : undefined;
+const HOME_EXIT = USE_SCREEN_LAYOUT_ANIM ? FadeOut.duration(200) : undefined;
+const layoutAnimProps = (entering, exiting) =>
+  (USE_SCREEN_LAYOUT_ANIM ? { entering, exiting } : {});
 
 function AppShell() {
   const [route, setRoute] = useState({ screen: SCREENS.HOME, params: {} });
@@ -104,65 +109,59 @@ function AppShell() {
       case SCREENS.PLAY:
       case SCREENS.DAILY_PLAY:
         return (
-          <Animated.View
+          <ScreenShell
             key={`play-${params.mode}-${params.date ?? 'journey'}-${params.isOnboarding ? 'onb' : 'std'}-${params.t ?? 0}`}
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <PlayScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.DAILY:
         return (
-          <Animated.View
+          <ScreenShell
             key="daily"
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <DailyScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.SETTINGS:
         return (
-          <Animated.View
+          <ScreenShell
             key="settings"
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={[opaqueScreenStyle, styles.screenOverflowVisible]}
           >
             <SettingsScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.SHOP:
         return (
-          <Animated.View
+          <ScreenShell
             key="shop"
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <ShopScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.SIGN_IN:
         return (
-          <Animated.View
+          <ScreenShell
             key="sign-in"
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <SignInScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.WEBVIEW:
         return (
-          <Animated.View
+          <ScreenShell
             key={`webview-${params?.url ?? 'page'}`}
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <WebViewScreen
@@ -170,31 +169,29 @@ function AppShell() {
               routeParams={params}
               backScreen={params?.backScreen ?? SCREENS.SETTINGS}
             />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.DEV_INTERMISSION:
         if (!__DEV__) break;
         return (
-          <Animated.View
+          <ScreenShell
             key={`dev-intermission-${params?.previewType ?? 'default'}`}
-            entering={SCREEN_ENTER}
-            exiting={SCREEN_EXIT}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <DevIntermissionScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.HOME:
       default:
         return (
-          <Animated.View
+          <ScreenShell
             key="home"
-            entering={HOME_ENTER}
-            exiting={HOME_EXIT}
+            {...layoutAnimProps(HOME_ENTER, HOME_EXIT)}
             style={styles.screen}
           >
             <HomeScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
     }
   };

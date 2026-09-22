@@ -1,0 +1,13 @@
+## Production issues (Play Console) — 2026-09-21 / version 34 (2.0.1)
+
+### 1–2. ANR: Input dispatching timed out (No focused window)
+- Stacks: `NodesManager.onAnimationFrame`, native/JNI method
+- Happens when a rewarded ad (or other Activity) sits on top: our window has no focus, while Reanimated keeps driving infinite ambient loops (bubbles / smog) on the Choreographer.
+
+### 3. SIGSEGV in `libreanimated.so` ShadowNode hash remove
+- Fabric layout animations (`entering` / `exiting` on screen shells) remount or tear down shadow nodes while Reanimated still holds them.
+
+### Fixes shipped in this tree
+1. Android screen shells are plain `View` — no Reanimated layout animations.
+2. Ambient bubbles and smog cancel their loops when `AppState` is not `active` (ads / background).
+3. Hint-plus-ad badge pop uses RN `Animated` instead of Reanimated springs on a frequently remounted overlay.

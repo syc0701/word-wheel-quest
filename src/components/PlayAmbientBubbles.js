@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { AppState, Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -56,11 +56,15 @@ function makeHomeBubbles(count = 10) {
   });
 }
 
-function FloatingBubble({ size, left, startY, travel, duration, delay, drift, opacity, soft }) {
+function FloatingBubble({ size, left, startY, travel, duration, delay, drift, opacity, soft, active }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
     cancelAnimation(progress);
+    if (!active) {
+      progress.value = 0;
+      return undefined;
+    }
     progress.value = 0;
     progress.value = withDelay(
       delay,
@@ -75,7 +79,7 @@ function FloatingBubble({ size, left, startY, travel, duration, delay, drift, op
       )
     );
     return () => cancelAnimation(progress);
-  }, [progress, duration, delay]);
+  }, [progress, duration, delay, active]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(progress.value, [0, 0.08, 0.65, 1], [0, opacity, opacity * 0.85, 0]),
@@ -117,11 +121,19 @@ export default function PlayAmbientBubbles({ variant = 'play' }) {
     () => (isHome ? makeHomeBubbles(10) : makePlayBubbles(12)),
     [isHome]
   );
+  const [active, setActive] = useState(AppState.currentState === 'active');
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      setActive(next === 'active');
+    });
+    return () => sub.remove();
+  }, []);
 
   return (
     <View style={styles.layer} pointerEvents="none">
       {bubbles.map((bubble) => (
-        <FloatingBubble key={bubble.id} {...bubble} soft={isHome} />
+        <FloatingBubble key={bubble.id} {...bubble} soft={isHome} active={active} />
       ))}
     </View>
   );

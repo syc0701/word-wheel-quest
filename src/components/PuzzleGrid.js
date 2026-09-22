@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated as RnAnimated, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { Lightbulb, Play } from 'lucide-react-native';
@@ -23,15 +21,26 @@ const MAX_CELL = 96;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function AdHintBadge({ onPress, busy = false }) {
-  const hintScale = useSharedValue(0.35);
+  const hintScale = useRef(new RnAnimated.Value(0.35)).current;
   const [clicked, setClicked] = useState(false);
   const wasBusy = useRef(false);
 
   useEffect(() => {
-    hintScale.value = withSequence(
-      withSpring(1.38, { damping: 5, stiffness: 260 }),
-      withSpring(1, { damping: 7, stiffness: 180 })
-    );
+    hintScale.setValue(0.35);
+    RnAnimated.sequence([
+      RnAnimated.spring(hintScale, {
+        toValue: 1.38,
+        friction: 4,
+        tension: 160,
+        useNativeDriver: true,
+      }),
+      RnAnimated.spring(hintScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [hintScale]);
 
   useEffect(() => {
@@ -39,13 +48,13 @@ function AdHintBadge({ onPress, busy = false }) {
     wasBusy.current = busy;
   }, [busy]);
 
-  const hintStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: hintScale.value }],
-  }));
   const showPressed = clicked || busy;
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.adHintBtn, hintStyle]}>
+    <RnAnimated.View
+      pointerEvents="box-none"
+      style={[styles.adHintBtn, { transform: [{ scale: hintScale }] }]}
+    >
       <Pressable
         style={[styles.adHintHit, showPressed && styles.adHintHitPressed]}
         onPress={() => {
@@ -62,7 +71,7 @@ function AdHintBadge({ onPress, busy = false }) {
         <Lightbulb color={showPressed ? '#FDE68A' : '#fff'} size={12} strokeWidth={2.4} />
         <Play color={showPressed ? '#FDE68A' : '#fff'} size={8} fill={showPressed ? '#FDE68A' : '#fff'} style={styles.adHintPlay} />
       </Pressable>
-    </Animated.View>
+    </RnAnimated.View>
   );
 }
 

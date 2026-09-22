@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { AppState, Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   ReduceMotion,
   interpolate,
@@ -48,10 +49,15 @@ function makeSmogBanks(count = 14) {
   });
 }
 
-function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
+function SmogBank({ size, top, duration, delay, goingRight, opacity, color, active }) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
+    cancelAnimation(progress);
+    if (!active) {
+      progress.value = 0;
+      return undefined;
+    }
     progress.value = 0;
     progress.value = withDelay(
       delay,
@@ -65,7 +71,8 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
         false
       )
     );
-  }, [progress, duration, delay]);
+    return () => cancelAnimation(progress);
+  }, [progress, duration, delay, active]);
 
   const startX = goingRight ? -size * 0.7 : SCREEN_W - size * 0.3;
   const endX = goingRight ? SCREEN_W - size * 0.3 : -size * 0.7;
@@ -114,6 +121,14 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color }) {
 export default function HomeSmogEffect() {
   const { mode } = useAppearance();
   const banks = useMemo(() => makeSmogBanks(14), []);
+  const [active, setActive] = useState(AppState.currentState === 'active');
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      setActive(next === 'active');
+    });
+    return () => sub.remove();
+  }, []);
 
   // Light mint UI needs stronger/cooler mist or white fog disappears into the bg.
   const color =
@@ -126,7 +141,7 @@ export default function HomeSmogEffect() {
   return (
     <View style={styles.layer} pointerEvents="none">
       {banks.map((bank) => (
-        <SmogBank key={bank.id} {...bank} color={color} />
+        <SmogBank key={bank.id} {...bank} color={color} active={active} />
       ))}
     </View>
   );
