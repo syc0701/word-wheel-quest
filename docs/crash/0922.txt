@@ -1,0 +1,17 @@
+# Serious issue — ANR rate (Play Console) 2026-09-22
+
+## Status
+- User-perceived ANR rate **0.81%** (threshold **0.47%**, peers ~**0.03%**)
+- Spike from ~Sep 12 → peak ~**2.8%** around Sep 19 (matches rewarded-ad / Reanimated feature releases)
+- Stacks from 0921: `NodesManager.onAnimationFrame`, “No focused window”, `libreanimated` SIGSEGV
+
+## Cause
+Rewarded ads take the focused window while Reanimated keeps driving infinite loops on the play/home UI thread (bubbles, smog, radar sweep). Android then ANRs: input cannot dispatch + animation frame work piles up.
+
+## Fixes in tree (ship as a new versionCode)
+1. **Pause ambient while rewarded ads run** — bubbles, mist, and wheel radar stop when an ad opens and restart when it closes (`adAmbientPause` + `rewardedLetterAd`).
+2. Also pause when the app is backgrounded / inactive.
+3. Earlier (0921): plain `View` screen shells; hint badge uses RN `Animated`; no splash layout enter on Android.
+
+## Next
+Upload a new AAB (versionCode 37+) and watch ANR for 3–7 days after rollout.

@@ -88,6 +88,7 @@ import {
   parseWordWheelCatalog,
   readCoinsEarned,
   sumWordWheelCoinsForWords,
+  WORD_WHEEL_JOURNEY_CLEAR_COINS,
   WORD_WHEEL_HINT_COST,
   WORD_WHEEL_BONUS_WORD_GIFT,
 } from '../lib/points';
@@ -1276,10 +1277,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       const screenType = LevelScreenPolicy.determineScreenType({ levelNumber });
       const milestoneBonus = LevelScreenPolicy.resolveBonusCoins(levelNumber);
       const fromServer = readCoinsEarned(updatedSession);
-      const localBase = sumWordWheelCoinsForWords(words, coinsCatalog);
-      // Server award already includes milestone bonus; local/guest path adds it here.
-      const scoreCoins =
-        fromServer > 0 ? fromServer : localBase + milestoneBonus;
+      const localBase = isDaily
+        ? sumWordWheelCoinsForWords(words, coinsCatalog)
+        : WORD_WHEEL_JOURNEY_CLEAR_COINS;
+      // Journey clears are a flat 2 coins. The server total already includes a
+      // milestone bonus; the guest path adds that bonus here.
+      const scoreCoins = isDaily
+        ? (fromServer > 0 ? fromServer : localBase)
+        : WORD_WHEEL_JOURNEY_CLEAR_COINS + milestoneBonus;
       setCompletionStats({
         durationLabel: formatWordWheelPlayDuration(startedAt, finishedAt),
         hintCoinsSpent,

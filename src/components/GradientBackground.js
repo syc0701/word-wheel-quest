@@ -10,6 +10,7 @@ const DEEP_WATER = ['#7dd3fc', '#38bdf8', '#0284c7', '#0c4a6e', '#082f49', '#020
 /**
  * Screen shell over the shared AppBackground.
  * Layer order: backdrop → ambient (bubbles on home; mist+bubbles on play) → UI.
+ * Ambient loops pause while a rewarded ad is open (see adAmbientPause).
  */
 export default function GradientBackground({ children, variant = 'home' }) {
   const { mode, ww } = useAppearance();

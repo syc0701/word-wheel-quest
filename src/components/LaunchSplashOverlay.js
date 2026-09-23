@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import {
   ImageBackground,
   InteractionManager,
+  Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
@@ -118,12 +120,16 @@ export default function LaunchSplashOverlay({ onDone }) {
         <View style={styles.scrim} />
 
         <View style={styles.hero}>
-          <Animated.Text
-            entering={FadeInDown.delay(160).duration(420)}
-            style={styles.title}
-          >
-            Word Wheel Quest
-          </Animated.Text>
+          {Platform.OS === 'android' ? (
+            <Text style={styles.title}>Word Wheel Quest</Text>
+          ) : (
+            <Animated.Text
+              entering={FadeInDown.delay(160).duration(420)}
+              style={styles.title}
+            >
+              Word Wheel Quest
+            </Animated.Text>
+          )}
         </View>
 
         <View style={styles.footer}>

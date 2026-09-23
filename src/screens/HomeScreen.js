@@ -28,7 +28,7 @@ import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
 import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
-import { claimDailyGift, describeDailyGift, loadDailyGift, localDateKey, markGiftIconShown } from '../lib/dailyGift';
+import { claimDailyGift, describeDailyGift, loadDailyGift, localDateKey } from '../lib/dailyGift';
 import { grantDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
@@ -193,13 +193,11 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const [starterGateVisible, setStarterGateVisible] = useState(false);
   const [starterGateContext, setStarterGateContext] = useState('level');
   const [giftVisible, setGiftVisible] = useState(false);
-  const [giftMode, setGiftMode] = useState('claim');
   const [giftView, setGiftView] = useState(null);
   const [giftBusy, setGiftBusy] = useState(false);
-  const [giftChecked, setGiftChecked] = useState(false);
   const [showGiftIcon, setShowGiftIcon] = useState(false);
   const giftFlicker = useRef(new Animated.Value(1)).current;
-  const giftUnclaimed = Boolean(giftView && !giftView.claimed && !giftChecked);
+  const giftUnclaimed = Boolean(giftView && !giftView.claimed && showGiftIcon);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,17 +256,11 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 
   useEffect(() => {
     let cancelled = false;
-    loadDailyGift().then(async (record) => {
+    loadDailyGift().then((record) => {
       if (cancelled) return;
       const view = describeDailyGift(record);
       setGiftView(view);
-      const today = localDateKey();
-      if (view.claimed || record.iconShownDate === today) {
-        setShowGiftIcon(false);
-        return;
-      }
-      setShowGiftIcon(true);
-      await markGiftIconShown(today);
+      setShowGiftIcon(!view.claimed);
     });
     return () => {
       cancelled = true;
@@ -300,22 +292,15 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     return () => loop.stop();
   }, [giftUnclaimed, giftFlicker]);
 
-  const openGift = useCallback(() => {
-    if (!giftView) return;
-    setGiftChecked(true);
-    setGiftMode(giftView.claimed ? 'info' : 'claim');
-    setGiftVisible(true);
-  }, [giftView]);
-
-  const handleClaimGift = useCallback(async () => {
-    if (giftBusy) return;
+  const openGift = useCallback(async () => {
+    if (giftBusy || !giftView || giftView.claimed) return;
     setGiftBusy(true);
     try {
       const record = await loadDailyGift();
       const preview = describeDailyGift(record);
       if (preview.claimed) {
         setGiftView(preview);
-        setGiftVisible(false);
+        setShowGiftIcon(false);
         return;
       }
       const loggedIn = await isLoggedIn();
@@ -339,13 +324,14 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         streak: result.streak,
         lifetime: result.lifetime,
       });
-      setGiftVisible(false);
+      setShowGiftIcon(false);
+      setGiftVisible(true);
     } catch (e) {
       Alert.alert(t('gift.claim.failed.title'), e?.message || t('gift.claim.failed.body'));
     } finally {
       setGiftBusy(false);
     }
-  }, [giftBusy, t, wallet]);
+  }, [giftBusy, giftView, t, wallet]);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
   const starterUnlockLevel = useMemo(
@@ -521,6 +507,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
                   <Pressable
                     style={styles.giftIconBtn}
                     onPress={openGift}
+                    disabled={giftBusy}
                     accessibilityLabel={t('home.gift.label')}
                     hitSlop={8}
                   >
@@ -615,15 +602,15 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       />
       <DailyGiftModal
         visible={giftVisible}
-        mode={giftMode}
+        mode="info"
         coins={giftView?.coins ?? 0}
         streak={giftView?.streak ?? 0}
         streakDays={giftView?.streak ?? 0}
         isStreak={(giftView?.streak ?? 0) >= 2}
         lifetime={giftView?.lifetime ?? 0}
-        claimed={Boolean(giftView?.claimed)}
-        busy={giftBusy}
-        onClaim={handleClaimGift}
+        claimed
+        busy={false}
+        onClaim={() => {}}
         onClose={() => setGiftVisible(false)}
       />
     </GradientBackground>

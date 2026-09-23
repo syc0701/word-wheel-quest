@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AppState, Dimensions, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -11,6 +11,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { useAmbientActive } from '../lib/adAmbientPause';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -121,14 +122,7 @@ export default function PlayAmbientBubbles({ variant = 'play' }) {
     () => (isHome ? makeHomeBubbles(10) : makePlayBubbles(12)),
     [isHome]
   );
-  const [active, setActive] = useState(AppState.currentState === 'active');
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (next) => {
-      setActive(next === 'active');
-    });
-    return () => sub.remove();
-  }, []);
+  const active = useAmbientActive();
 
   return (
     <View style={styles.layer} pointerEvents="none">

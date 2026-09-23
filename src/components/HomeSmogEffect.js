@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AppState, Dimensions, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -12,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { APPEARANCE_DARK, APPEARANCE_RANDOM } from '../lib/appearance';
+import { useAmbientActive } from '../lib/adAmbientPause';
 import { useAppearance } from '../context/AppearanceContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -121,14 +122,7 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color, acti
 export default function HomeSmogEffect() {
   const { mode } = useAppearance();
   const banks = useMemo(() => makeSmogBanks(14), []);
-  const [active, setActive] = useState(AppState.currentState === 'active');
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (next) => {
-      setActive(next === 'active');
-    });
-    return () => sub.remove();
-  }, []);
+  const active = useAmbientActive();
 
   // Light mint UI needs stronger/cooler mist or white fog disappears into the bg.
   const color =

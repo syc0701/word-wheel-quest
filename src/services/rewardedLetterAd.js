@@ -1,6 +1,7 @@
 import { AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
 import { AD_REWARD_CREDITS, getCellRewardedAdUnitId, getRewardedAdUnitId } from '../constants/ads';
 import CreditApi from '../lib/creditApi';
+import { pauseAmbientForAd, resumeAmbientAfterAd } from '../lib/adAmbientPause';
 import { getDeviceId } from '../lib/deviceId';
 import { soundManager } from '../lib/soundManager';
 
@@ -27,6 +28,7 @@ function showRewardedAd(unitId, deviceId) {
     return Promise.resolve(false);
   }
   rewardedInFlight = true;
+  pauseAmbientForAd();
   return new Promise((resolve, reject) => {
     const requestOptions = deviceId
       ? { serverSideVerificationOptions: { customData: String(deviceId) } }
@@ -40,6 +42,7 @@ function showRewardedAd(unitId, deviceId) {
       if (settled) return;
       settled = true;
       rewardedInFlight = false;
+      resumeAmbientAfterAd();
       // The tap that closes the video must not start another one.
       rewardedCooldownUntil = Date.now() + 1500;
       unsubs.forEach((fn) => {
@@ -131,9 +134,11 @@ export async function prepareRewardedAd() {
 /** Mute BGM/SFX for the video, then restore. Prefer wrapping the whole ad + poll. */
 export async function withAdAudioMuted(work) {
   soundManager.muteForAd();
+  pauseAmbientForAd();
   try {
     return await work();
   } finally {
+    resumeAmbientAfterAd();
     soundManager.unmuteAfterAd();
   }
 }

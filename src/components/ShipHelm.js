@@ -20,6 +20,7 @@ import Svg, {
   RadialGradient,
   Stop,
 } from 'react-native-svg';
+import { useAmbientActive } from '../lib/adAmbientPause';
 import { useAppearance } from '../context/AppearanceContext';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -36,24 +37,31 @@ const SWEEP_SPAN = Math.PI * 0.62;
  * Radar-style backdrop for the letter wheel.
  * Sweep is an animated SVG path clipped to the disk (no rotating View —
  * Android does not reliably clip overflow + borderRadius).
+ * Stops while a rewarded ad is open / app is backgrounded.
  */
 export default function ShipHelm({ size, inset = 0 }) {
   const { ww } = useAppearance();
   const rotation = useSharedValue(0);
+  const active = useAmbientActive();
 
   useEffect(() => {
+    cancelAnimation(rotation);
+    if (!active) {
+      rotation.value = 0;
+      return undefined;
+    }
     rotation.value = 0;
     rotation.value = withRepeat(
       withTiming(360, {
         duration: SWEEP_MS,
         easing: Easing.linear,
-        reduceMotion: ReduceMotion.Never,
+        reduceMotion: ReduceMotion.System,
       }),
       -1,
       false
     );
     return () => cancelAnimation(rotation);
-  }, [rotation]);
+  }, [rotation, active]);
 
   const geometry = useMemo(() => {
     const c = size / 2;
