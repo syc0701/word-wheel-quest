@@ -44,6 +44,9 @@ export function formatWordWheelPlayDuration(startedAt, finishedAt) {
 /** Coins (or credits) charged to reveal one empty letter. */
 export const WORD_WHEEL_HINT_COST = 10;
 
+/** Flat coins for clearing one Season Journey puzzle, before a milestone bonus. */
+export const WORD_WHEEL_JOURNEY_CLEAR_COINS = 2;
+
 /** One-time gift for finding a real dictionary word that is not on the puzzle grid. */
 export const WORD_WHEEL_BONUS_WORD_GIFT = 1;
 
