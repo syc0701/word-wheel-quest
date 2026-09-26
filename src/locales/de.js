@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': 'Käufe konnten nicht wiederhergestellt werden.',
   'shop.offeringHint': 'Angebot `{id}` · App Store-Preise.',
   'shop.restore': 'Käufe wiederherstellen',
-  'shop.restore.subtitleIos': 'Bereits mit dieser Apple-ID gekauft? Hier wiederherstellen.',
+  'shop.restore.subtitleIos': 'Münzen und Credits sind einmalig. Melde dich an, um sie aus deinem Konto zu laden.',
   'shop.restore.subtitleAndroid': 'Bereits gekauft? Hier wiederherstellen.',
   'webview.titleFallback': 'Seite',
   'devIntermission.title.wordMaster': 'Wortmeister',

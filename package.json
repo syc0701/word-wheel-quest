@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "patch-package",
-    "start": "npx expo start",
-    "run:metro": "npx expo start --clear",
+    "start": "expo start",
+    "run:metro": "expo start --clear",
     "ios": "npm run ios:run",
     "ios:run": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && expo run:ios",
     "ios:run:quiet": "export LANG=en_US.UTF-8 && export LC_ALL=en_US.UTF-8 && SIMCTL_CHILD_OS_ACTIVITY_MODE=disable expo run:ios 2>&1 | grep --line-buffered -Ev 'MediaToolbox|FigFilePlayer|FigFileAnalyzer|libFontParser'",
@@ -46,6 +46,7 @@
     "expo-notifications": "~0.31.4",
     "expo-splash-screen": "^0.30.10",
     "expo-status-bar": "~2.2.3",
+    "expo-tracking-transparency": "~5.2.4",
     "lucide-react-native": "1.22.0",
     "play-integrity": "file:./modules/play-integrity",
     "react": "19.0.0",

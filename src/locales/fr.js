@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': 'Impossible de restaurer les achats.',
   'shop.offeringHint': 'Offre `{id}` · Prix App Store.',
   'shop.restore': 'Restaurer les achats',
-  'shop.restore.subtitleIos': 'Déjà acheté avec cet identifiant Apple ? Restaurez ici.',
+  'shop.restore.subtitleIos': 'Les pièces et crédits sont à usage unique. Connectez-vous pour les charger depuis votre compte.',
   'shop.restore.subtitleAndroid': 'Déjà acheté ? Restaurez ici.',
   'webview.titleFallback': 'Page',
   'devIntermission.title.wordMaster': 'Maître des mots',

@@ -147,6 +147,9 @@ export function readPurchaseTransactionId(purchaseResult) {
 }
 
 export async function restorePurchases() {
+  if (Platform.OS === 'ios') {
+    throw new Error('Consumable purchases cannot be restored with Apple ID.');
+  }
   if (Platform.OS === 'android') {
     assertStoreReady();
   } else if (!isPurchasesConfigured()) {

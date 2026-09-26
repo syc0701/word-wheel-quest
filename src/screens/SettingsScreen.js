@@ -19,6 +19,7 @@ import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
 import { requestAccountDeletion } from '../lib/userApi';
 import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
+import { verifyPendingIapIfNeeded } from '../lib/pendingIap';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -224,6 +225,31 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   };
 
   const handleRestorePurchases = async () => {
+    // Consumables cannot be restored through StoreKit / Apple ID (App Review 3.1.1).
+    if (Platform.OS === 'ios') {
+      if (!authed) {
+        Alert.alert(t('shop.alert.syncSignIn.title'), t('shop.alert.syncSignIn.body'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('settings.account.signIn'), onPress: handleSignIn },
+        ]);
+        return;
+      }
+      setRestoringPurchases(true);
+      try {
+        await verifyPendingIapIfNeeded();
+        await wallet.refresh({ silent: true });
+        Alert.alert(t('shop.alert.synced.title'), t('shop.alert.synced.body'));
+      } catch (error) {
+        Alert.alert(
+          t('shop.alert.syncFailed.title'),
+          error.message ?? t('shop.alert.syncFailed.body')
+        );
+      } finally {
+        setRestoringPurchases(false);
+      }
+      return;
+    }
+
     setRestoringPurchases(true);
     try {
       await restorePurchases();
@@ -430,7 +456,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
           <MenuRow
             icon={RotateCcw}
-            label={t('shop.restore')}
+            label={t(Platform.OS === 'ios' ? 'shop.restore.ios' : 'shop.restore')}
             subtitle={t(Platform.OS === 'ios' ? 'shop.restore.subtitleIos' : 'shop.restore.subtitleAndroid')}
             onPress={handleRestorePurchases}
             colors={colors}

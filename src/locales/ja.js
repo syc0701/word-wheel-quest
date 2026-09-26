@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': '購入内容を復元できませんでした。',
   'shop.offeringHint': 'オファリング `{id}` · App Storeの価格。',
   'shop.restore': '購入を復元',
-  'shop.restore.subtitleIos': 'このApple IDで購入済みですか？ここで復元。',
+  'shop.restore.subtitleIos': 'コインとクレジットは使い切りです。ログインしてアカウントから読み込みます。',
   'shop.restore.subtitleAndroid': '購入済みですか？ここで復元。',
   'webview.titleFallback': 'ページ',
   'devIntermission.title.wordMaster': 'ワードマスター',

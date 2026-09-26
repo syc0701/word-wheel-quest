@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': '구매를 복원할 수 없습니다.',
   'shop.offeringHint': '오퍼링 `{id}` · App Store 가격.',
   'shop.restore': '구매 복원',
-  'shop.restore.subtitleIos': '이 Apple ID로 구매하셨나요? 여기서 복원하세요.',
+  'shop.restore.subtitleIos': '코인과 크레딧은 일회성입니다. 로그인하면 계정에서 불러옵니다.',
   'shop.restore.subtitleAndroid': '이미 구매하셨나요? 여기서 복원하세요.',
   'webview.titleFallback': '페이지',
   'devIntermission.title.wordMaster': '워드 마스터',

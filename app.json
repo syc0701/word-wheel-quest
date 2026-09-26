@@ -16,12 +16,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.puzint.wordwheel.app",
-      "buildNumber": "22",
+      "buildNumber": "25",
       "infoPlist": {
         "UIBackgroundModes": [
           "remote-notification"
         ],
-        "NSUserTrackingUsageDescription": "This identifier is used to deliver personalized ads to you."
+        "NSUserTrackingUsageDescription": "This identifier is used to deliver personalized ads to you.",
+        "GADDelayAppMeasurementInit": true
       },
       "usesAppleSignIn": true,
       "appleTeamId": "54J44H4BZ7"
@@ -81,6 +82,7 @@
       ],
       "./plugins/withEnableEdgeToEdge",
       "./plugins/withAdsSdkPin",
+      "./plugins/withIosAppTracking",
       "expo-asset",
       "expo-apple-authentication",
       [
@@ -100,7 +102,14 @@
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-1539854949018984~3656372616",
-          "iosAppId": "ca-app-pub-1539854949018984~6049126882"
+          "iosAppId": "ca-app-pub-1539854949018984~6049126882",
+          "delayAppMeasurementInit": true
+        }
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "This identifier is used to deliver personalized ads to you."
         }
       ],
       "@react-native-google-signin/google-signin"
@@ -108,6 +117,7 @@
   },
   "react-native-google-mobile-ads": {
     "android_app_id": "ca-app-pub-1539854949018984~3656372616",
-    "ios_app_id": "ca-app-pub-1539854949018984~6049126882"
+    "ios_app_id": "ca-app-pub-1539854949018984~6049126882",
+    "delay_app_measurement_init": true
   }
 }

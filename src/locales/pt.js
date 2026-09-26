@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': 'Não foi possível restaurar as compras.',
   'shop.offeringHint': 'Oferta `{id}` · Preços da App Store.',
   'shop.restore': 'Restaurar compras',
-  'shop.restore.subtitleIos': 'Já comprou com este Apple ID? Restaure aqui.',
+  'shop.restore.subtitleIos': 'Moedas e créditos são de uso único. Entre para carregá-los da sua conta.',
   'shop.restore.subtitleAndroid': 'Já comprou? Restaure aqui.',
   'webview.titleFallback': 'Página',
   'devIntermission.title.wordMaster': 'Mestre das palavras',

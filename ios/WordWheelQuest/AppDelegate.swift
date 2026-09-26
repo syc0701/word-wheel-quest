@@ -1,3 +1,4 @@
+import AppTrackingTransparency
 import Expo
 import React
 import ReactAppDependencyProvider
@@ -8,6 +9,7 @@ public class AppDelegate: ExpoAppDelegate {
 
   var reactNativeDelegate: ExpoReactNativeFactoryDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
+  private var didRequestAppTracking = false
 
   public override func application(
     _ application: UIApplication,
@@ -29,7 +31,27 @@ public class AppDelegate: ExpoAppDelegate {
       launchOptions: launchOptions)
 #endif
 
+#if os(iOS)
+    NotificationCenter.default.addObserver(
+      forName: UIApplication.didBecomeActiveNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      self?.requestAppTrackingIfNeeded()
+    }
+#endif
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  private func requestAppTrackingIfNeeded() {
+    guard !didRequestAppTracking else { return }
+    guard #available(iOS 14, *) else { return }
+    didRequestAppTracking = true
+    // iOS 17+/27: request only after the app is active or the prompt is suppressed.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+      ATTrackingManager.requestTrackingAuthorization { _ in }
+    }
   }
 
   // Linking API

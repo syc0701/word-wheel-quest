@@ -1,0 +1,12 @@
+Reply for App Review (2.0.2 build 25+)
+
+3.1.1 Restore purchases
+All In-App Purchases are consumable (coins and letter credits). The previous “Restore purchases” control called StoreKit / Apple ID restore, which cannot restore consumables. That control no longer calls StoreKit. Signed-in users sync coins and credits from their app account; signed-out users are asked to sign in. There is no Apple Account password prompt for restore.
+
+2.1 App Tracking Transparency
+The app shows the system ATT prompt on first launch after the app is active, before Google Mobile Ads starts. App measurement is delayed until after that prompt. Please see the physical-device screen recording in App Review Information: cold launch → ATT dialog → Home.
+
+How to record for Notes
+1. Settings → Privacy & Security → Tracking → reset for Word Wheel Quest (or delete the app).
+2. Install the new build on a physical iPhone or iPad (simulator does not show ATT).
+3. Launch, wait for “Allow [app] to track…” → Allow or Ask App Not to Track → Home.

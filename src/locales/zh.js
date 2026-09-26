@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': '无法恢复购买。',
   'shop.offeringHint': '商品 `{id}` · App Store 价格。',
   'shop.restore': '恢复购买',
-  'shop.restore.subtitleIos': '已在此 Apple ID 上购买？在此恢复。',
+  'shop.restore.subtitleIos': '金币和点数为消耗品。登录后即可从账户加载到此设备。',
   'shop.restore.subtitleAndroid': '已购买？在此恢复。',
   'webview.titleFallback': '页面',
   'devIntermission.title.wordMaster': '单词大师',

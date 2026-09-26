@@ -1,0 +1,47 @@
+
+Review Environment
+Submission ID: 6b56f967-4150-4a5b-80e0-27a6cf1da83b
+Review date: September 23, 2026
+Review Device: iPad Air 11-inch (M3)
+Version reviewed: 2.0.2 (24)ß
+
+Guideline 3.1.1 - Business - Payments - In-App Purchase
+ß
+Issue Description
+
+We found that the app includes a feature to restore previously purchased In-App Purchase products by entering the user's Apple Account and password. However, consumable In-App Purchases cannot be restored in this manner.
+
+To resolve this issue, please revise your binary to implement your own restore mechanism, if you would like users to be able to restore consumable In-App Purchase products.
+
+More information on In-App Purchase product types is available in App Store Connect Help.
+
+Resources
+
+Learn more about In-App Purchase requirements in guideline 3.1.1.
+Guideline 2.1 - Information Needed
+
+The app uses the AppTrackingTransp∫arency framework, but we are unable to locate the App Tracking Transparency permission request when reviewed on iPadOS 27.0 and iOS 27.0.
+
+Next Steps
+
+If App Tracking Transparency is implemented but the permission request is not appearing on devices running the latest operating system, review the available documentation and confirm it has been correctly implemented. The request should appear before any data is collected that could be used to track the user.
+
+Once the permission request is appearing as expected, or if it is already in place, reply to this message with a screen recording captured on a physical device that demonstrates:
+
+- Launching the app from a fresh install or after resetting tracking permissions
+- The App Tracking Transparency permission request appearing before any tracking data is collected
+- The user flow that follows the permission request
+
+Include the recording in the Notes field of the App Review Information section in App Store Connect for future submissions.
+
+If your app does not track users, update your app privacy information in App Store Connect to not declare tracking. You must have the Account Holder or Admin role to update app privacy information.
+
+Resources
+
+- Tracking is linking data collected from the app with third-party data for advertising purposes, or sharing the collected data with a data broker. Learn more about tracking.
+- See Frequently Asked Questions about the requirements for apps that track users.
+- Review developer documentation for App Tracking Transparency.
+Support
+- Reply to this message in your preferred language if you need assistance. If you need additional support, use the Contact Us module.
+- Consult with fellow developers and Apple engineers on the Apple Developer Forums.
+- Provide feedback on this message and your review experience by completing a short survey.

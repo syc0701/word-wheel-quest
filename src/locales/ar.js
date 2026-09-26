@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': 'تعذّر استعادة المشتريات.',
   'shop.offeringHint': 'العرض `{id}` · أسعار App Store.',
   'shop.restore': 'استعادة المشتريات',
-  'shop.restore.subtitleIos': 'اشتريت مسبقًا بهذا Apple ID؟ استعد هنا.',
+  'shop.restore.subtitleIos': 'العملات والرصيد استهلاكيان. سجّل الدخول لتحميلهما من حسابك.',
   'shop.restore.subtitleAndroid': 'اشتريت مسبقًا؟ استعد هنا.',
   'webview.titleFallback': 'صفحة',
   'devIntermission.title.wordMaster': 'سيد الكلمات',

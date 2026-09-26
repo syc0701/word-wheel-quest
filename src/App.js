@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { PlayTimerProvider } from './context/PlayTimerContext';
 import AppBackground from './components/AppBackground';
 import LaunchSplashOverlay from './components/LaunchSplashOverlay';
 import { initializeMobileAds } from './lib/ads';
+import { requestTrackingPermissionIfNeeded } from './lib/appTracking';
 import { soundManager } from './lib/soundManager';
 import { configurePurchases } from './services/purchases';
 import PushNotificationService from './services/PushNotificationService';
@@ -30,6 +31,7 @@ function AppShell() {
   const { setBgmScene, ready: audioReady } = useAudio();
 
   useEffect(() => {
+    let cancelled = false;
     // Defer native SDK work slightly so first paint / splash can settle on cold start.
     const t = setTimeout(() => {
       try {
@@ -37,17 +39,26 @@ function AppShell() {
       } catch {
         /* ignore */
       }
-      initializeMobileAds();
-      // Ads can steal Android audio focus on init — nudge BGM back.
-      setTimeout(() => {
-        try {
-          soundManager.resumeBgm();
-        } catch {
-          /* ignore */
+      void (async () => {
+        // Guideline 2.1: ATT must appear before AdMob / IDFA use.
+        if (Platform.OS === 'ios') {
+          await requestTrackingPermissionIfNeeded();
         }
-      }, 600);
+        if (cancelled) return;
+        initializeMobileAds();
+        setTimeout(() => {
+          try {
+            soundManager.resumeBgm();
+          } catch {
+            /* ignore */
+          }
+        }, 600);
+      })();
     }, 400);
-    return () => clearTimeout(t);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
   }, []);
 
   useEffect(() => {

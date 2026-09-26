@@ -88,6 +88,8 @@ PODS:
     - Yoga
   - ExpoSplashScreen (0.30.10):
     - ExpoModulesCore
+  - ExpoTrackingTransparency (5.2.4):
+    - ExpoModulesCore
   - fast_float (6.1.4)
   - FBLazyVector (0.79.6)
   - fmt (11.0.2)
@@ -2164,6 +2166,7 @@ DEPENDENCIES:
   - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
+  - ExpoTrackingTransparency (from `../node_modules/expo-tracking-transparency/ios`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
@@ -2290,6 +2293,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoSplashScreen:
     :path: "../node_modules/expo-splash-screen/ios"
+  ExpoTrackingTransparency:
+    :path: "../node_modules/expo-tracking-transparency/ios"
   fast_float:
     :podspec: "../node_modules/react-native/third-party-podspecs/fast_float.podspec"
   FBLazyVector:
@@ -2466,6 +2471,7 @@ SPEC CHECKSUMS:
   ExpoLinearGradient: 7734c8059972fcf691fb4330bcdf3390960a152d
   ExpoModulesCore: 00a1b5c73248465bd0b93f59f8538c4573dac579
   ExpoSplashScreen: 0ad5acac1b5d2953c6e00d4319f16d616f70d4dd
+  ExpoTrackingTransparency: b78875f39a0c37b39ac275466314b606497831b1
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 07309209b7b914451b8f822544a18e2a0a85afff
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd

@@ -185,7 +185,7 @@ export default {
   'shop.alert.restoreFailed.body': 'खरीदारियाँ पुनर्स्थापित नहीं हो सकीं।',
   'shop.offeringHint': 'ऑफ़र `{id}` · App Store कीमतें।',
   'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
-  'shop.restore.subtitleIos': 'इस Apple ID पर पहले खरीदा? यहाँ पुनर्स्थापित करें।',
+  'shop.restore.subtitleIos': 'सिक्के और क्रेडिट एक बार के हैं। खाते से लोड करने के लिए साइन इन करें।',
   'shop.restore.subtitleAndroid': 'पहले खरीदा? यहाँ पुनर्स्थापित करें।',
   'webview.titleFallback': 'पेज',
   'devIntermission.title.wordMaster': 'वर्ड मास्टर',
