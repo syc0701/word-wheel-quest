@@ -32,6 +32,8 @@ import { grantDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
+import { WORD_WHEEL_PACKS } from '../constants/packs';
+import { loadOwnedPackCodes, loadPackLevel, serverOwnsPack } from '../lib/packEntitlements';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
@@ -358,6 +360,25 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     navigate(SCREENS.DAILY);
   }, [navigate]);
 
+  const [ownedPackCodes, setOwnedPackCodes] = useState([]);
+  useEffect(() => {
+    loadOwnedPackCodes().then(setOwnedPackCodes);
+  }, []);
+
+  const openPack = useCallback(async (pack) => {
+    const owned = ownedPackCodes.includes(pack.code) || await serverOwnsPack(pack.code);
+    if (!owned) {
+      navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME, packageId: pack.packageId });
+      return;
+    }
+    const level = await loadPackLevel(pack.code);
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      packCode: pack.code,
+      packLevel: level,
+    });
+  }, [navigate, ownedPackCodes]);
+
   return (
     <GradientBackground variant="home">
       <View style={styles.container}>
@@ -516,6 +537,26 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
                   {t('home.shop.subtitle')}
                 </Text>
               </Pressable>
+            </View>
+
+            <View style={styles.packList}>
+              {WORD_WHEEL_PACKS.map((pack) => {
+                const owned = ownedPackCodes.includes(pack.code);
+                return (
+                  <Pressable
+                    key={pack.code}
+                    style={[styles.tile, palette.tile]}
+                    onPress={() => openPack(pack)}
+                  >
+                    <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
+                      {t(pack.nameKey)}
+                    </Text>
+                    <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={1}>
+                      {owned ? t(pack.detailKey) : t('pack.locked')}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
 
             {guest ? (
@@ -716,6 +757,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     textDecorationLine: 'underline',
+  },
+  packList: {
+    marginTop: 10,
+    gap: 8,
   },
   tileRow: {
     flexDirection: 'row',

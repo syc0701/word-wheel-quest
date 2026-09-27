@@ -22,6 +22,7 @@ import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 import { savePendingIap } from '../lib/pendingIap';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
+import { grantPackEntitlement } from '../lib/packEntitlements';
 
 const GOLD = '#facc15';
 
@@ -156,6 +157,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         packageKey: meta.packageId,
         ...rcIdentity,
       };
+      await grantPackEntitlement(productId);
       if (authed) {
         const verify = await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
@@ -163,7 +165,8 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           transactionId,
           rawPayload: storePayload,
         });
-        if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+        await grantPackEntitlement(productId);
+        if (meta.grants?.classic && meta.grants?.daily) {
           await markStarterPackPurchased();
         }
         const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;

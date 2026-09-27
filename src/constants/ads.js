@@ -48,12 +48,28 @@ export const ADMOB_IOS_REWARDED_UNIT_ID = 'ca-app-pub-1539854949018984/842255965
 /** Rewarded_GetOne_ShowEmptyCell. Reveals one empty grid cell. Does not grant a credit. */
 export const ADMOB_IOS_CELL_REWARDED_UNIT_ID = 'ca-app-pub-1539854949018984/7053637665';
 
+/** Interstitial every 5 cleared journey levels. */
+export const ADMOB_IOS_LEVEL_INTERSTITIAL_UNIT_ID = 'ca-app-pub-1539854949018984/4126788089';
+
 /** Live unit even in dev so AdMob's callback can grant credits on a device test. */
 export function getRewardedAdUnitId() {
   if (!isAdsEnabled()) return TestIds.REWARDED;
   if (Platform.OS === 'ios') return ADMOB_IOS_REWARDED_UNIT_ID;
   if (Platform.OS === 'android') return ADMOB_ANDROID_REWARDED_UNIT_ID;
   return TestIds.REWARDED;
+}
+
+/** Dev uses Google's test interstitial. Production uses the iOS unit. */
+export function getLevelInterstitialAdUnitId() {
+  if (!isAdsEnabled()) return null;
+  if (__DEV__) return TestIds.INTERSTITIAL;
+  if (Platform.OS === 'ios') return ADMOB_IOS_LEVEL_INTERSTITIAL_UNIT_ID;
+  return null;
+}
+
+export function isLevelClearAdLevel(levelNumber) {
+  const level = Number(levelNumber);
+  return Number.isFinite(level) && level > 0 && level % 5 === 0;
 }
 
 /** Live cell unit even in dev. This placement does not send SSV custom data. */

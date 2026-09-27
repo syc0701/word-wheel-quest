@@ -39,6 +39,10 @@ import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
+import { packByCode } from '../constants/packs';
+import { isLevelClearAdLevel } from '../constants/ads';
+import { hasRemoveAds, savePackLevel } from '../lib/packEntitlements';
+import { showLevelClearAd } from '../services/levelClearAd';
 import { validateBonusWord } from '../lib/dictionary';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
@@ -143,6 +147,8 @@ function usePlayMetrics(insets, timerEnabled) {
 export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
   const dailyDate = routeParams.date;
+  const packCode = routeParams.packCode || '';
+  const packLevelRef = useRef(Number(routeParams.packLevel) || 1);
   const seededPuzzle = routeParams.puzzle;
   const isOnboarding = Boolean(routeParams.isOnboarding);
   const wallet = useWordWheelWallet();
@@ -728,11 +734,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
-          : (reloadKey === 0 && seededPuzzle?.id
-            ? seededPuzzle
-            : await WordWheelApi.fetchNext());
+          : packCode
+            ? await WordWheelApi.fetchJourneyLevel(packLevelRef.current, packCode)
+            : (reloadKey === 0 && seededPuzzle?.id
+              ? seededPuzzle
+              : await WordWheelApi.fetchNext());
 
-        if (!isDaily) {
+        if (!isDaily && !packCode) {
           const completedId = completedPuzzleIdRef.current;
           const needsFallback =
             !data?.id
@@ -767,6 +775,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           if (!cancelled) {
             setPuzzle(null);
             setError(isDaily ? t('play.error.noDaily') : t('play.error.noPuzzle'));
+          }
+          return;
+        }
+        if (packCode && data?.code === 'FAILURE' && data?.message === 'Pack not owned') {
+          if (!cancelled) {
+            const pack = packByCode(packCode);
+            navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME, packageId: pack?.packageId });
           }
           return;
         }
@@ -855,9 +870,25 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, isOnboarding, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
+  }, [isDaily, isOnboarding, dailyDate, packCode, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
 
   const handleNextPuzzle = useCallback(async () => {
+    if (packCode) {
+      const current = resolveJourneyLevel(puzzle) ?? packLevelRef.current;
+      const next = current + 1;
+      const max = packByCode(packCode)?.maxLevel || next;
+      await savePackLevel(packCode, Math.min(next, max));
+      setCompletionDialogOpen(false);
+      setShowHeaderNext(false);
+      if (next > max) {
+        navigate(SCREENS.HOME);
+        return;
+      }
+      packLevelRef.current = next;
+      completedPuzzleIdRef.current = puzzle?.id || null;
+      setReloadKey((k) => k + 1);
+      return;
+    }
     if (isDaily) {
       setCompletionDialogOpen(false);
       setShowHeaderNext(false);
@@ -871,7 +902,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCompletionDialogOpen(false);
     setShowHeaderNext(false);
     setReloadKey((k) => k + 1);
-  }, [isDaily, dailyDate, navigate, puzzle]);
+  }, [isDaily, packCode, dailyDate, navigate, puzzle]);
 
   const handleCloseCompletionDialog = useCallback(() => {
     setCompletionDialogOpen(false);
@@ -1128,10 +1159,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         screenType,
         milestoneBonus,
       });
+      const adsRemoved = await hasRemoveAds();
+      if (!isDaily && !packCode && isLevelClearAdLevel(levelNumber) && !adsRemoved) {
+        await showLevelClearAd();
+      }
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
-    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, isOnboarding, puzzle]
+    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, packCode, isOnboarding, puzzle]
   );
 
   // Keep credit/hint letter reveals across leave/re-enter for this puzzle.
