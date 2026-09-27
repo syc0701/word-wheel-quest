@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
@@ -404,19 +405,213 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     navigate(SCREENS.DAILY);
   }, [navigate]);
 
+  const { width, height } = useWindowDimensions();
+  const isWideHome = width > height;
+
+  const topPad = Math.max(insets.top, 12) + 8;
+  const wideAdWidth = Math.max(1, Math.floor(width / 3 - 48));
+
+  const settingsButton = (
+    <Pressable
+      style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
+      onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
+      accessibilityLabel={t('home.a11y.settings')}
+      hitSlop={8}
+    >
+      <Settings color={palette.settingsIcon} size={20} strokeWidth={1.9} />
+    </Pressable>
+  );
+
+  const titleBlock = (
+    <View style={styles.headerBlock}>
+      <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
+      <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
+        {t('home.title.line2')}
+      </Text>
+      <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
+    </View>
+  );
+
+  const levelBox = (
+    <View style={styles.levelBoxWrap}>
+      <View style={[styles.continueCard, palette.continueCard]}>
+        {loading ? (
+          <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
+        ) : error ? (
+          <Text style={styles.cardError}>{error}</Text>
+        ) : (
+          <>
+            <View style={styles.continueTop}>
+              <Image source={WHEEL_ART} style={styles.wheelArt} />
+              <View style={styles.continueMeta}>
+                <View style={[styles.levelBadge, { backgroundColor: palette.levelBadgeBg }]}>
+                  <Text style={[styles.levelBadgeText, { color: palette.levelBadgeText }]}>
+                    {t('home.continue.badge')}
+                  </Text>
+                </View>
+                <Text style={[styles.levelTitle, { color: palette.continueText }]}>
+                  {journeyLevel != null
+                    ? t('common.level', { n: journeyLevel })
+                    : t('common.levelFallback')}
+                </Text>
+                <View style={[styles.progressTrack, { backgroundColor: palette.progressTrack }]}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        backgroundColor: palette.progressFill,
+                        width: `${Math.round(progress * 100)}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.wordsRow}>
+                  <Search color={palette.continueMuted} size={14} strokeWidth={2.2} />
+                  <Text style={[styles.wordsText, { color: palette.continueMuted }]}>
+                    {t('home.continue.wordsFound', {
+                      found: Math.min(foundCount, wordCount || 0),
+                      total: wordCount || 0,
+                    })}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <Pressable
+              style={[styles.continueBtn, palette.continueCta, !canPlay && styles.btnDisabled]}
+              disabled={!canPlay}
+              onPress={handleContinue}
+              accessibilityLabel={t('home.continue.cta')}
+            >
+              <Play
+                color={palette.continueCtaText}
+                size={17}
+                strokeWidth={2.4}
+                fill={palette.continueCtaText}
+              />
+              <Text style={[styles.continueBtnText, { color: palette.continueCtaText }]}>
+                {t('home.continue.cta')}
+              </Text>
+            </Pressable>
+          </>
+        )}
+      </View>
+      {showGiftIcon ? (
+        <Animated.View style={[styles.giftEdge, { opacity: giftFlicker }]}>
+          <Pressable
+            style={styles.giftIconBtn}
+            onPress={openGift}
+            disabled={giftBusy}
+            accessibilityLabel={t('home.gift.label')}
+            hitSlop={8}
+          >
+            <Gift color="#B45309" size={20} strokeWidth={2.2} />
+          </Pressable>
+        </Animated.View>
+      ) : null}
+    </View>
+  );
+
+  const tutorialLink = (
+    <Pressable
+      style={styles.tutorialLink}
+      onPress={handleTutorial}
+      accessibilityLabel={t('home.a11y.tutorial')}
+      hitSlop={10}
+    >
+      <Text style={[styles.tutorialLinkText, palette.tutorialLink]}>{t('home.tutorial.link')}</Text>
+    </Pressable>
+  );
+
+  const hubBlock = (
+    <View style={styles.bottomBlock}>
+      <View style={styles.tileRow}>
+        <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
+          <View style={styles.tileHeader}>
+            <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
+              <Calendar color={colors.primaryGlow} size={18} strokeWidth={1.9} />
+            </View>
+            <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
+              {t('home.dailyPuzzle.label')}
+            </Text>
+          </View>
+          <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
+            {t('home.dailyPuzzle.subtitle')}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.tile, palette.tile]}
+          onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
+        >
+          <View style={styles.tileHeader}>
+            <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
+              <ShoppingCart color={colors.text} size={18} strokeWidth={1.9} />
+            </View>
+            <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
+              {t('home.shop.label')}
+            </Text>
+            <ChevronRight color={colors.textMuted} size={16} />
+          </View>
+          <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
+            {t('home.shop.subtitle')}
+          </Text>
+        </Pressable>
+      </View>
+
+      {guest ? (
+        <View style={[styles.guestCard, palette.tile]}>
+          <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
+            <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
+          </View>
+          <View style={styles.guestBody}>
+            <Text style={[styles.guestTitle, { color: colors.text }]}>{t('home.guest.title')}</Text>
+            <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
+              {t('home.guest.body')}
+            </Text>
+          </View>
+          <Pressable
+            style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
+            onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
+          >
+            <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
+              {t('home.guest.signIn')}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+
   return (
     <GradientBackground variant="home">
       <View style={styles.container}>
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}>
+        {isWideHome ? (
+          <View style={[styles.wideRow, { paddingTop: topPad }]}>
+            <View style={styles.wideCol}>
+              <View style={styles.wideLeft}>{titleBlock}</View>
+            </View>
+            <View style={styles.wideCol}>
+              <ScrollView
+                style={styles.wideRightScroll}
+                contentContainerStyle={styles.wideMiddleContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {levelBox}
+                {tutorialLink}
+                {hubBlock}
+                <AdBanner width={wideAdWidth} style={styles.wideAd} />
+              </ScrollView>
+            </View>
+            <View style={styles.wideCol}>
+              <View style={styles.wideSettingsRow}>{settingsButton}</View>
+            </View>
+          </View>
+        ) : (
+          <>
+        <View style={[styles.topBar, { paddingTop: topPad }]}>
           <View style={styles.topBarSpacer} />
-          <Pressable
-            style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
-            onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
-            accessibilityLabel={t('home.a11y.settings')}
-            hitSlop={8}
-          >
-            <Settings color={palette.settingsIcon} size={20} strokeWidth={1.9} />
-          </Pressable>
+          {settingsButton}
         </View>
 
         <ScrollView
@@ -424,173 +619,19 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           contentContainerStyle={[styles.bodyContent, { paddingBottom: 16 }]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerBlock}>
-            <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
-            <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
-              {t('home.title.line2')}
-            </Text>
-            <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
-          </View>
+          {titleBlock}
 
           <View style={styles.middleBlock}>
-            <View style={styles.levelBoxWrap}>
-              <View style={[styles.continueCard, palette.continueCard]}>
-              {loading ? (
-                <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
-              ) : error ? (
-                <Text style={styles.cardError}>{error}</Text>
-              ) : (
-                <>
-                  <View style={styles.continueTop}>
-                    <Image source={WHEEL_ART} style={styles.wheelArt} />
-                    <View style={styles.continueMeta}>
-                      <View style={[styles.levelBadge, { backgroundColor: palette.levelBadgeBg }]}>
-                        <Text style={[styles.levelBadgeText, { color: palette.levelBadgeText }]}>
-                          {t('home.continue.badge')}
-                        </Text>
-                      </View>
-                      <Text style={[styles.levelTitle, { color: palette.continueText }]}>
-                        {journeyLevel != null
-                          ? t('common.level', { n: journeyLevel })
-                          : t('common.levelFallback')}
-                      </Text>
-                      <View
-                        style={[styles.progressTrack, { backgroundColor: palette.progressTrack }]}
-                      >
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              backgroundColor: palette.progressFill,
-                              width: `${Math.round(progress * 100)}%`,
-                            },
-                          ]}
-                        />
-                      </View>
-                      <View style={styles.wordsRow}>
-                        <Search color={palette.continueMuted} size={14} strokeWidth={2.2} />
-                        <Text style={[styles.wordsText, { color: palette.continueMuted }]}>
-                          {t('home.continue.wordsFound', {
-                            found: Math.min(foundCount, wordCount || 0),
-                            total: wordCount || 0,
-                          })}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <Pressable
-                    style={[
-                      styles.continueBtn,
-                      palette.continueCta,
-                      !canPlay && styles.btnDisabled,
-                    ]}
-                    disabled={!canPlay}
-                    onPress={handleContinue}
-                    accessibilityLabel={t('home.continue.cta')}
-                  >
-                    <Play
-                      color={palette.continueCtaText}
-                      size={17}
-                      strokeWidth={2.4}
-                      fill={palette.continueCtaText}
-                    />
-                    <Text style={[styles.continueBtnText, { color: palette.continueCtaText }]}>
-                      {t('home.continue.cta')}
-                    </Text>
-                  </Pressable>
-                </>
-              )}
-              </View>
-              {showGiftIcon ? (
-                <Animated.View style={[styles.giftEdge, { opacity: giftFlicker }]}>
-                  <Pressable
-                    style={styles.giftIconBtn}
-                    onPress={openGift}
-                    disabled={giftBusy}
-                    accessibilityLabel={t('home.gift.label')}
-                    hitSlop={8}
-                  >
-                    <Gift color="#B45309" size={20} strokeWidth={2.2} />
-                  </Pressable>
-                </Animated.View>
-              ) : null}
-            </View>
-
-            <Pressable
-              style={styles.tutorialLink}
-              onPress={handleTutorial}
-              accessibilityLabel={t('home.a11y.tutorial')}
-              hitSlop={10}
-            >
-              <Text style={[styles.tutorialLinkText, palette.tutorialLink]}>
-                {t('home.tutorial.link')}
-              </Text>
-            </Pressable>
+            {levelBox}
+            {tutorialLink}
           </View>
 
-          <View style={styles.bottomBlock}>
-            <View style={styles.tileRow}>
-              <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
-                <View style={styles.tileHeader}>
-                  <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
-                    <Calendar color={colors.primaryGlow} size={18} strokeWidth={1.9} />
-                  </View>
-                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
-                    {t('home.dailyPuzzle.label')}
-                  </Text>
-                </View>
-                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-                  {t('home.dailyPuzzle.subtitle')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.tile, palette.tile]}
-                onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
-              >
-                <View style={styles.tileHeader}>
-                  <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
-                    <ShoppingCart color={colors.text} size={18} strokeWidth={1.9} />
-                  </View>
-                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
-                    {t('home.shop.label')}
-                  </Text>
-                  <ChevronRight color={colors.textMuted} size={16} />
-                </View>
-                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-                  {t('home.shop.subtitle')}
-                </Text>
-              </Pressable>
-            </View>
-
-            {guest ? (
-              <View style={[styles.guestCard, palette.tile]}>
-                <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
-                  <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
-                </View>
-                <View style={styles.guestBody}>
-                  <Text style={[styles.guestTitle, { color: colors.text }]}>
-                    {t('home.guest.title')}
-                  </Text>
-                  <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
-                    {t('home.guest.body')}
-                  </Text>
-                </View>
-                <Pressable
-                  style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
-                  onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
-                >
-                  <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
-                    {t('home.guest.signIn')}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
+          {hubBlock}
         </ScrollView>
 
         <AdBanner />
+          </>
+        )}
       </View>
 
       <StarterPackGateModal
@@ -621,6 +662,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  wideRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  wideCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  wideLeft: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingBottom: 12,
+  },
+  wideLeftLevel: {
+    marginTop: 28,
+  },
+  wideSettingsRow: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+  wideRightScroll: {
+    flex: 1,
+  },
+  wideRightContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 8,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  wideMiddleContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    gap: 14,
+  },
+  wideAd: {
+    paddingHorizontal: 8,
   },
   topBar: {
     flexDirection: 'row',

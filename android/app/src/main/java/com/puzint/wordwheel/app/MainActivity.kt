@@ -38,6 +38,22 @@ class MainActivity : ReactActivity() {
 
     title = ""
     supportActionBar?.hide()
+    window.decorView.post { expandWindowedDesktop() }
+  }
+
+  /**
+   * Play Games and the desktop emulator otherwise keep a phone-sized window
+   * in the middle of the display. Stretch to the available display when the
+   * current window is smaller than that display.
+   */
+  private fun expandWindowedDesktop() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+    val current = windowManager.currentWindowMetrics.bounds
+    val available = windowManager.maximumWindowMetrics.bounds
+    val windowed = available.width() > current.width() * 1.25f
+        || available.height() > current.height() * 1.25f
+    if (!windowed) return
+    window.setLayout(available.width(), available.height())
   }
 
   /**

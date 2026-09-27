@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
 import { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { ShoppingBag } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
@@ -83,6 +83,8 @@ function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors, 
 export default function ShopScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
   const { colors, isRandomScene } = useAppearance();
+  const { width, height } = useWindowDimensions();
+  const isWide = width > height;
   const t = useT();
   const { playSfx } = useAudio();
   const [rcPackages, setRcPackages] = useState([]);
@@ -190,7 +192,13 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     <View style={styles.container}>
       <ScreenHeader title={t('shop.title')} onBack={() => navigate(backScreen, routeParams)} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <View style={isWide ? styles.wideRow : styles.body}>
+      {isWide ? <View style={styles.wideCol} /> : null}
+      <ScrollView
+        style={isWide ? styles.wideCol : styles.body}
+        contentContainerStyle={[styles.scrollContent, isWide && styles.wideMiddle]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={[styles.headline, { color: colors.text }, sceneText]}>
           {t('shop.headline')}
         </Text>
@@ -228,6 +236,8 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         )}
 
       </ScrollView>
+      {isWide ? <View style={styles.wideCol} /> : null}
+      </View>
     </View>
   );
 }
@@ -237,9 +247,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  body: {
+    flex: 1,
+  },
+  wideRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  wideCol: {
+    flex: 1,
+    minWidth: 0,
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 32,
+  },
+  wideMiddle: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   headline: {
     fontSize: 26,

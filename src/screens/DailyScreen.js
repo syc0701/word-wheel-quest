@@ -5,9 +5,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
+import AdBanner from '../components/AdBanner';
 import PuzzleGrid from '../components/PuzzleGrid';
 import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelApi from '../lib/api';
@@ -53,7 +55,11 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isWide = width > height;
   const wallet = useWordWheelWallet();
+  const wideAdWidth = Math.max(1, Math.floor(width / 3 - 40));
+  const gridMax = Math.max(160, Math.floor(height - Math.max(insets.top, 12) - 300));
 
   const sceneText = useMemo(
     () =>
@@ -225,18 +231,27 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
         <View style={styles.topBarSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={isWide ? styles.wideScroll : undefined}
+        contentContainerStyle={isWide ? styles.wideRow : styles.scroll}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!isWide}
+      >
+        <View style={isWide ? styles.wideCol : undefined}>
         <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>{t('daily.kicker')}</Text>
         <Text style={[styles.title, { color: colors.text }, sceneText]}>{t('daily.title')}</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText]}>
+        <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText, isWide && styles.subtitleWide]}>
           {freeDailyLeft > 0
             ? t('daily.subtitleFreePlays', { left: freeDailyLeft, total: FREE_DAILY_PLAYS })
             : t('daily.subtitleCredits')}
         </Text>
+        </View>
 
+        <View style={isWide ? styles.wideMiddle : undefined}>
         <View
           style={[
             styles.card,
+            isWide && styles.cardWide,
             { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
           ]}
         >
@@ -289,9 +304,11 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                 </View>
               ) : null}
               {showGrid ? (
-                <View style={styles.gridPreview}>
+                <View style={isWide ? styles.gridPreviewWide : styles.gridPreview}>
                   <PuzzleGrid
-                    fitWidth
+                    fitWidth={!isWide}
+                    bounded={isWide}
+                    maxBoardSize={isWide ? gridMax : 0}
                     gridSize={gridSize}
                     displayGrid={displayGrid}
                     puzzleCells={puzzleCells}
@@ -323,6 +340,13 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
           <Text style={styles.primaryBtnText}>{puzzleCompleted ? t('daily.replay') : t('common.play')}</Text>
         </Pressable>
+        </View>
+
+        {isWide ? (
+          <View style={styles.wideCol}>
+            <AdBanner width={wideAdWidth} style={styles.wideAd} />
+          </View>
+        ) : null}
       </ScrollView>
 
       <StarterPackGateModal
@@ -359,6 +383,43 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  wideScroll: {
+    flex: 1,
+  },
+  wideRow: {
+    flexGrow: 1,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+    gap: 16,
+  },
+  wideCol: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  wideMiddle: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
+  },
+  cardWide: {
+    flex: 1,
+    minHeight: 0,
+  },
+  gridPreviewWide: {
+    flex: 1,
+    minHeight: 0,
+    width: '100%',
+  },
+  subtitleWide: {
+    marginBottom: 0,
+  },
+  wideAd: {
+    paddingHorizontal: 0,
   },
   kicker: {
     fontSize: 12,

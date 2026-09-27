@@ -1,10 +1,9 @@
 import { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
   ReduceMotion,
-  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -15,42 +14,58 @@ import { APPEARANCE_DARK, APPEARANCE_RANDOM } from '../lib/appearance';
 import { useAmbientActive } from '../lib/adAmbientPause';
 import { useAppearance } from '../context/AppearanceContext';
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const MAX_BANK = 36;
 
-/**
- * Scaling mist off the width blows the banks up on wide screens: a tablet at
- * 960dp produced circles nearly 290dp across. The short edge keeps the mist
- * proportionate (and identical in both orientations), and the cap keeps it
- * subtle on large displays.
- */
-const BANK_BASE = Math.min(SCREEN_W, SCREEN_H);
-const MAX_BANK = 120;
+/** Stable 0..1 value so each puff keeps its own path across reloads. */
+function hash(n) {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
 
-function makeSmogBanks(count = 14) {
+function makeSmogBanks(width, height, count = 18) {
   return Array.from({ length: count }, (_, i) => {
-    const size = Math.min(BANK_BASE * (0.12 + (i % 5) * 0.045), MAX_BANK);
-    const goingRight = i % 2 === 0;
-    // Spread across the full screen so mist shows through transparent grid gaps.
-    const band = i % 3;
-    const top =
-      band === 0
-        ? SCREEN_H * (0.02 + ((i * 7) % 18) / 100) - size * 0.1
-        : band === 1
-          ? SCREEN_H * (0.28 + ((i * 9) % 28) / 100) - size * 0.15
-          : SCREEN_H * (0.58 + ((i * 11) % 32) / 100) - size * 0.2;
+    const r = (k) => hash(i * 19 + k * 7);
+    const size = 14 + r(1) * (MAX_BANK - 14);
     return {
       id: i,
       size,
-      top,
-      duration: 18000 + (i % 5) * 4000,
-      delay: (i % 6) * 800,
-      goingRight,
-      opacity: 0.34 + (i % 5) * 0.06,
+      homeX: r(2) * Math.max(0, width - size),
+      homeY: r(3) * Math.max(0, height - size),
+      duration: 16000 + Math.floor(r(4) * 26000),
+      delay: Math.floor(r(5) * 9000),
+      ampX: 12 + r(6) * 72,
+      ampY: 10 + r(7) * 56,
+      ampX2: 6 + r(8) * 22,
+      ampY2: 5 + r(9) * 18,
+      freqX: 1 + Math.floor(r(10) * 2),
+      freqY: 1 + Math.floor(r(11) * 3),
+      phaseX: r(12) * Math.PI * 2,
+      phaseY: r(13) * Math.PI * 2,
+      phaseS: r(14) * Math.PI * 2,
+      opacity: 0.18 + r(15) * 0.36,
     };
   });
 }
 
-function SmogBank({ size, top, duration, delay, goingRight, opacity, color, active }) {
+function SmogBank({
+  size,
+  homeX,
+  homeY,
+  duration,
+  delay,
+  ampX,
+  ampY,
+  ampX2,
+  ampY2,
+  freqX,
+  freqY,
+  phaseX,
+  phaseY,
+  phaseS,
+  opacity,
+  color,
+  active,
+}) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -75,26 +90,21 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color, acti
     return () => cancelAnimation(progress);
   }, [progress, duration, delay, active]);
 
-  const startX = goingRight ? -size * 0.7 : SCREEN_W - size * 0.3;
-  const endX = goingRight ? SCREEN_W - size * 0.3 : -size * 0.7;
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      progress.value,
-      [0, 0.12, 0.5, 0.88, 1],
-      [0, opacity, opacity, opacity * 0.85, 0]
-    ),
-    transform: [
-      { translateX: interpolate(progress.value, [0, 1], [startX, endX]) },
-      {
-        translateY: interpolate(
-          progress.value,
-          [0, 0.5, 1],
-          [0, goingRight ? -10 : 10, 0]
-        ),
-      },
-    ],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const turn = progress.value * Math.PI * 2;
+    const driftX =
+      Math.sin(turn * freqX + phaseX) * ampX +
+      Math.sin(turn * (freqX + 1) + phaseY) * ampX2;
+    const driftY =
+      Math.sin(turn * freqY + phaseY) * ampY +
+      Math.cos(turn * freqX + phaseX) * ampY2;
+    const breathe = 0.86 + 0.22 * (0.5 + 0.5 * Math.sin(turn + phaseS));
+    const fade = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(turn * freqY + phaseS));
+    return {
+      opacity: opacity * fade,
+      transform: [{ translateX: driftX }, { translateY: driftY }, { scale: breathe }],
+    };
+  });
 
   return (
     <Animated.View
@@ -105,8 +115,8 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color, acti
           width: size,
           height: size,
           borderRadius: size / 2,
-          top,
-          left: 0,
+          top: homeY,
+          left: homeX,
           backgroundColor: color,
         },
         animatedStyle,
@@ -118,10 +128,13 @@ function SmogBank({ size, top, duration, delay, goingRight, opacity, color, acti
 /**
  * Soft drifting mist — rendered between background and UI chrome.
  * Visibility is controlled by the parent (GradientBackground).
+ * Each puff hangs in its own spot and wanders on a private loop, so the
+ * layer does not split into two marching lines.
  */
 export default function HomeSmogEffect() {
+  const { width, height } = useWindowDimensions();
   const { mode } = useAppearance();
-  const banks = useMemo(() => makeSmogBanks(14), []);
+  const banks = useMemo(() => makeSmogBanks(width, height), [width, height]);
   const active = useAmbientActive();
 
   // Light mint UI needs stronger/cooler mist or white fog disappears into the bg.

@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Eye, EyeOff, Settings } from 'lucide-react-native';
@@ -55,6 +56,8 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isWide = width > height;
   const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
   const requireSignIn = Boolean(routeParams.requireSignIn);
 
@@ -191,8 +194,11 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <View style={isWide ? styles.wideRow : styles.flex}>
+        {isWide ? <View style={styles.wideCol} /> : null}
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          style={isWide ? styles.wideCol : undefined}
+          contentContainerStyle={[styles.scroll, isWide && styles.wideMiddle]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -312,6 +318,8 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
             )}
           </Pressable>
         </ScrollView>
+        {isWide ? <View style={styles.wideCol} /> : null}
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -325,6 +333,18 @@ function createStyles(colors, insets) {
     },
     flex: {
       flex: 1,
+    },
+    wideRow: {
+      flex: 1,
+      flexDirection: 'row',
+    },
+    wideCol: {
+      flex: 1,
+      minWidth: 0,
+    },
+    wideMiddle: {
+      flexGrow: 1,
+      justifyContent: 'center',
     },
     settingsBtn: {
       position: 'absolute',

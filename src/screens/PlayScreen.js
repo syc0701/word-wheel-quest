@@ -130,24 +130,36 @@ const WHEEL_DOCK_H = 40;
  * board ScrollView shrinks first. The ad may clip off the bottom on short
  * screens — that is intentional.
  */
+/** Wide play screens (Play Games, desktop emulator): grid | wheel+clue+ad. */
+const WIDE_LEFT = 7;
+const WIDE_RIGHT = 5;
+
 function usePlayMetrics(insets, timerEnabled) {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  const rightWidth = isLandscape ? (width * WIDE_RIGHT) / (WIDE_LEFT + WIDE_RIGHT) : width;
+  const leftWidth = isLandscape ? width - rightWidth : width;
 
+  const landscapeWheel = Math.min(rightWidth - 132, height - insets.top - CLUE_STACK_H - 140);
   const wheelSize = isLandscape
-    ? Math.min(260, Math.max(170, height - 220), width * 0.42)
+    ? Math.max(160, Math.round((landscapeWheel * 2) / 3))
     : Math.min(width - 120, Math.max(200, height * 0.28), 260);
 
   // Do not reserve banner height — ad is allowed to clip under the fold.
+  // In landscape the clue sits on the wheel column, so the grid can use that height.
   const verticalChrome =
-    insets.top + CHROME_H + CLUE_STACK_H + (timerEnabled ? TIMER_ROW_H : 0);
+    insets.top + CHROME_H + (isLandscape ? 0 : CLUE_STACK_H) + (timerEnabled ? TIMER_ROW_H : 0);
   // In landscape the wheel sits beside the board, so it costs no height.
   const gridMaxSize = Math.max(
     150,
-    height - verticalChrome - (isLandscape ? 0 : wheelSize + WHEEL_DOCK_H)
+    Math.min(
+      leftWidth - 32,
+      height - verticalChrome - (isLandscape ? 0 : wheelSize + WHEEL_DOCK_H)
+    )
   );
+  const adWidth = Math.max(1, Math.floor(rightWidth - 28));
 
-  return { isLandscape, wheelSize, gridMaxSize };
+  return { isLandscape, wheelSize, gridMaxSize, adWidth, leftWidth, rightWidth };
 }
 
 export default function PlayScreen({ navigate, routeParams = {} }) {
@@ -163,7 +175,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const { timerEnabled } = usePlayTimer();
   const t = useT();
   const insets = useSafeAreaInsets();
-  const { isLandscape, wheelSize, gridMaxSize } = usePlayMetrics(insets, timerEnabled);
+  const { isLandscape, wheelSize, gridMaxSize, adWidth, leftWidth, rightWidth } = usePlayMetrics(
+    insets,
+    timerEnabled
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
@@ -1920,9 +1935,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       <View style={[styles.playBody, isLandscape && styles.playBodyLandscape]}>
       <ScrollView
         ref={onboardingScrollRef}
-        style={styles.scrollView}
+        style={[
+          styles.scrollView,
+          isLandscape && styles.scrollViewWide,
+          isLandscape && { width: leftWidth, maxWidth: leftWidth, flex: 0 },
+        ]}
         contentContainerStyle={[
           styles.scroll,
+          isLandscape && styles.scrollLandscape,
           { paddingTop: Math.max(insets.top, 12) + 8 },
         ]}
         showsVerticalScrollIndicator={false}
@@ -2012,6 +2032,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
+        <View style={isLandscape ? styles.widePlayStage : undefined}>
         <PuzzleGrid
           gridSize={gridSize}
           displayGrid={displayGrid}
@@ -2039,8 +2060,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           boardHostRef={isOnboarding ? onboardingGridBoardRef : null}
         />
 
-        {clueStrip}
+        {isLandscape ? null : clueStrip}
         {timerRow}
+        </View>
       </ScrollView>
 
       {/* Wheel stays outside ScrollView so pan gestures are never stolen mid-drag. */}
@@ -2048,16 +2070,24 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         style={[
           styles.wheelDock,
           isLandscape && styles.wheelDockLandscape,
+          isLandscape && {
+            width: rightWidth,
+            maxWidth: rightWidth,
+            flex: 0,
+            overflow: 'hidden',
+          },
           {
             paddingBottom: isLandscape
-              ? 12
+              ? Math.max(insets.bottom, 8)
               : isOnboarding
                 ? Math.max(insets.bottom, 8)
                 : 4,
           },
         ]}
       >
-        <View style={styles.wheelRow}>
+        <View style={isLandscape ? styles.wheelStack : undefined}>
+        {isLandscape ? clueStrip : null}
+        <View style={[styles.wheelRow, isLandscape && styles.wheelRowLandscape]}>
           <View style={styles.sideTools}>
             <View style={styles.coinBurstWrap}>
               <CoinSparkBurst burstId={coinSparkBurstId} visible={coinSparkVisible} />
@@ -2184,9 +2214,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
         </View>
+        </View>
+        {isLandscape && !isOnboarding && !letterBusy ? (
+          <View style={styles.playAdSlot}>
+            <AdBanner
+              width={adWidth}
+              style={[styles.playAdBanner, { paddingBottom: 0 }]}
+            />
+          </View>
+        ) : null}
       </View>
       </View>
-      {!isOnboarding && !letterBusy ? (
+      {!isLandscape && !isOnboarding && !letterBusy ? (
         <View style={styles.playAdSlot}>
           <AdBanner style={[styles.playAdBanner, { paddingBottom: 0 }]} />
         </View>
@@ -2421,7 +2460,24 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   playBodyLandscape: {
+    flex: 1,
     flexDirection: 'row',
+    alignItems: 'stretch',
+    width: '100%',
+    minHeight: 0,
+  },
+  scrollViewWide: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+  },
+  scrollLandscape: {
+    flexGrow: 1,
+  },
+  widePlayStage: {
+    flexGrow: 1,
+    width: '100%',
+    justifyContent: 'center',
   },
   playAdSlot: {
     flexGrow: 0,
@@ -2631,8 +2687,20 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   wheelDockLandscape: {
+    flexGrow: 0,
+    flexShrink: 0,
+    justifyContent: 'space-between',
+    paddingLeft: 8,
+    minHeight: 0,
+  },
+  wheelStack: {
+    flex: 1,
     justifyContent: 'center',
-    paddingLeft: 0,
+    minHeight: 0,
+    gap: 12,
+  },
+  wheelRowLandscape: {
+    justifyContent: 'center',
   },
   centered: {
     flex: 1,

@@ -14,7 +14,7 @@ const FRAME_BORDER = 1;
  * Hidden until loaded so layout does not reserve empty space on failure.
  * Framed to match home tile / card borders without clipping the ad.
  */
-export default function AdBanner({ style }) {
+export default function AdBanner({ style, width: widthOverride = null }) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const { colors, isDark, isRandomScene } = useAppearance();
@@ -23,7 +23,11 @@ export default function AdBanner({ style }) {
   const unitId = getBannerAdUnitId();
   const adWidth = Math.max(
     1,
-    Math.floor(windowWidth - SIDE_INSET * 2 - FRAME_BORDER * 2)
+    Math.floor(
+      widthOverride != null
+        ? widthOverride
+        : windowWidth - SIDE_INSET * 2 - FRAME_BORDER * 2
+    )
   );
 
   useEffect(() => {

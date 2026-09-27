@@ -202,6 +202,7 @@ export default function PuzzleGrid({
   revealBurstId = 0,
   maxBoardSize = 0,
   fitWidth = false,
+  bounded = false,
   onCellPress,
   adHintCells = null,
   adHintBusy = false,
@@ -377,7 +378,11 @@ export default function PuzzleGrid({
 
   return (
     <View
-      style={[styles.gridWrap, fitWidth && styles.gridWrapFitWidth]}
+      style={[
+        styles.gridWrap,
+        fitWidth && styles.gridWrapFitWidth,
+        bounded && styles.gridWrapBounded,
+      ]}
       onLayout={(event) => {
         const { width, height } = event.nativeEvent.layout;
         if (width > 0 && width !== gridWidth) setGridWidth(width);
@@ -449,6 +454,12 @@ const styles = StyleSheet.create({
     minHeight: 0,
     marginTop: 12,
     paddingVertical: 8,
+  },
+  gridWrapBounded: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+    marginTop: 8,
   },
   grid: {
     position: 'relative',
