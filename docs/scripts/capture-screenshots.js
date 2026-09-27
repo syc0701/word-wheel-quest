@@ -2,13 +2,13 @@
 /**
  * Capture Play Store screenshots from word-wheel prototype scenes.
  *
- * Default: scenes 01–08 × all 10 locales × phone + 7-inch + 10-inch tablet
- * → fastlane/metadata/android/<locale>/images/{phone,sevenInch,tenInch}Screenshots/
+ * Default: scenes 01–08 × all 10 locales × phone + 7-inch + 10-inch + PC
+ * → fastlane/metadata/android/<locale>/images/{phone,sevenInch,tenInch,pc}Screenshots/
  * (Play Store allows max 8 screenshots per device type per language.)
  *
  * Env:
  *   SNAPSHOT_LANGUAGES=all|en-US,fr-FR   — Play locale folders (default: all 10)
- *   SCREENSHOT_DEVICES=all|phone,sevenInch,tenInch — device types (default: all)
+ *   SCREENSHOT_DEVICES=all|phone,sevenInch,tenInch,pc — device types (default: all)
  *   SCREENSHOT_START / SCREENSHOT_END — scene range (default 1–8)
  *   CLEAR_SCREENSHOTS=1              — wipe PNG outputs before capture
  *   SCREENSHOT_BASE_URL              — override base URL
@@ -74,14 +74,20 @@ async function capture() {
       });
 
       for (const slug of slugs) {
-        const url = buildSceneUrl(slug, lang);
+        const url = buildSceneUrl(slug, lang, device);
         const outFile = path.join(outDir, `${slug}.png`);
         const page = await context.newPage();
 
         try {
           await page.goto(url, { waitUntil: 'networkidle', timeout: 90_000 });
           await page.waitForTimeout(2000);
-          await page.screenshot({ path: outFile, type: 'png', fullPage: false });
+          if (device.frameSelector) {
+            const frame = page.locator(device.frameSelector);
+            await frame.waitFor({ state: 'visible', timeout: 30_000 });
+            await frame.screenshot({ path: outFile, type: 'png' });
+          } else {
+            await page.screenshot({ path: outFile, type: 'png', fullPage: false });
+          }
           captured += 1;
           console.log(`    ✓ ${slug} → ${path.relative(process.cwd(), outFile)}`);
         } catch (error) {

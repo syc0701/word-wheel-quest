@@ -1,7 +1,7 @@
 /**
  * Play Store screenshot config for Word Wheel Quest.
  * Captures https://www.puzzleinteract.com/prototype/mobile/word-wheel/screenshot/01 … /08
- * into fastlane/metadata/android/<locale>/images/{phone,sevenInch}Screenshots/
+ * into fastlane/metadata/android/<locale>/images/{phone,sevenInch,tenInch,pc}Screenshots/
  */
 
 const path = require('path');
@@ -47,6 +47,15 @@ const DEVICES = {
     viewport: { width: 1080, height: 1728 },
     deviceScaleFactor: 1,
   },
+  pc: {
+    name: 'pc',
+    playFolder: 'pcScreenshots',
+    // Play PC screenshots must be 1920×1080. Capture the window, not the
+    // 1965×940 prototype frame, so the PNG is exactly that size.
+    viewport: { width: 1920, height: 1080 },
+    deviceScaleFactor: 1,
+    deviceQuery: 'pc',
+  },
 };
 
 const SCENE_START = Number(process.env.SCREENSHOT_START ?? 1);
@@ -64,8 +73,10 @@ function sceneSlugs() {
   return slugs;
 }
 
-function buildSceneUrl(slug, lang) {
-  return `${BASE_URL}/${slug}?lang=${lang}`;
+function buildSceneUrl(slug, lang, device) {
+  const params = new URLSearchParams({ lang });
+  if (device?.deviceQuery) params.set('device', device.deviceQuery);
+  return `${BASE_URL}/${slug}?${params}`;
 }
 
 function parseLocaleFilter() {
