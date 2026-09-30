@@ -1,4 +1,5 @@
 import { getOrCreateWordWheelSession, getWordWheelSession, clearWordWheelSession } from './session';
+import { getDeviceId } from './deviceId';
 import { reconcileGuestCoinsWithAccount } from './guestCoinsMigration';
 import { isLoggedIn } from './auth';
 import { apiGet, apiPost, apiPut } from './http';
@@ -82,6 +83,8 @@ const WordWheelApi = {
   fetchJourneyLevel: async (level, season) => {
     const param = { level: String(level) };
     if (season) param.season = season;
+    const paid = season === 'classic' || season === 'hard_quest' || season === 'master';
+    if (paid) param.deviceId = await getDeviceId();
     return apiGet('/v1/puzzle/wordwheel/journey', param);
   },
 

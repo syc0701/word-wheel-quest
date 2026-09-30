@@ -20,6 +20,10 @@ export const GRANDFATHER_STARTER_UNLOCK_LEVEL = GRANDFATHER_MAX_LEVEL_WITHOUT_ST
 
 export const STARTER_PACK_PACKAGE_ID = 'bundle_starter';
 
+export const DAILY_BUNDLE_PACKAGE_ID = 'word_wheel_daily';
+
+export const REMOVE_ADS_PACKAGE_ID = 'word_wheel_remove_ads';
+
 export const STARTER_PACK_PRODUCT_ID =
   IAP_PACKAGES.find((p) => p.packageId === STARTER_PACK_PACKAGE_ID)?.productId
   ?? 'word_wheel_pack_starter';

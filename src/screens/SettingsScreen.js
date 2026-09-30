@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Smartphone, Star, Trophy } from 'lucide-react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Shield, Smartphone, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
@@ -9,6 +9,7 @@ import PushNotificationService from '../services/PushNotificationService';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
+import PackCompletionModal from '../components/PackCompletionModal';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
@@ -40,6 +41,30 @@ const DEV_INTERMISSION_LINKS = [
     icon: Crown,
     labelKey: 'settings.dev.brainPower',
     subtitleKey: 'settings.dev.brainPower.subtitle',
+  },
+];
+
+const PACK_ENDING_PREVIEWS = [
+  {
+    packType: 'CLASSIC',
+    icon: Trophy,
+    labelKey: 'settings.dev.packEnding.classic',
+    subtitleKey: 'settings.dev.packEnding.classic.subtitle',
+    stats: { totalPuzzles: 200, totalWords: 860 },
+  },
+  {
+    packType: 'HARD_QUEST',
+    icon: Shield,
+    labelKey: 'settings.dev.packEnding.hard',
+    subtitleKey: 'settings.dev.packEnding.hard.subtitle',
+    stats: { hintsUsed: 12, accuracy: '94%' },
+  },
+  {
+    packType: 'MASTER',
+    icon: Crown,
+    labelKey: 'settings.dev.packEnding.master',
+    subtitleKey: 'settings.dev.packEnding.master.subtitle',
+    stats: { completionTime: '6h 12m', totalWords: 2400 },
   },
 ];
 
@@ -102,6 +127,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const wideColWidth = Math.floor((width - 40 - settingsGap * 2) / 3);
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
+  const [packEndingPreview, setPackEndingPreview] = useState(null);
   const [scoreStanding, setScoreStanding] = useState(null);
   const showDeveloperTools = __DEV__ || Boolean(wallet.isDeveloper);
   const [deviceId, setDeviceId] = useState('');
@@ -502,6 +528,19 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
                 embedded
               />
+              {PACK_ENDING_PREVIEWS.map((preview) => (
+                <View key={preview.packType}>
+                  <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+                  <MenuRow
+                    icon={preview.icon}
+                    label={t(preview.labelKey)}
+                    subtitle={t(preview.subtitleKey)}
+                    onPress={() => setPackEndingPreview(preview)}
+                    colors={colors}
+                    embedded
+                  />
+                </View>
+              ))}
             </View>
           </View>
   ) : null;
@@ -569,6 +608,16 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           hintCoinsSpent={2}
           onClose={() => setCompletePreviewVisible(false)}
           onNext={() => setCompletePreviewVisible(false)}
+        />
+      ) : null}
+      {showDeveloperTools ? (
+        <PackCompletionModal
+          visible={!!packEndingPreview}
+          packType={packEndingPreview?.packType || 'CLASSIC'}
+          stats={packEndingPreview?.stats || {}}
+          onClaimBonus={() => {}}
+          onNextPack={() => setPackEndingPreview(null)}
+          onClose={() => setPackEndingPreview(null)}
         />
       ) : null}
     </View>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated as RNAnimated, Easing as RNEasing, Platform, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -12,6 +12,63 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react-native';
+
+const CLUE_LINE_HEIGHT = 24;
+const CLUE_WINDOW = CLUE_LINE_HEIGHT * 2 + 4;
+
+function RollingClueText({ text, textStyle }) {
+  const [fullHeight, setFullHeight] = useState(0);
+  const [width, setWidth] = useState(0);
+  const offset = useRef(new RNAnimated.Value(0)).current;
+  const overflows = fullHeight > CLUE_WINDOW + 6;
+
+  useEffect(() => {
+    offset.stopAnimation();
+    offset.setValue(0);
+    if (!overflows) return undefined;
+    const distance = fullHeight - CLUE_WINDOW;
+    const duration = Math.min(9000, Math.max(1600, Math.round(distance * 32)));
+    const anim = RNAnimated.loop(
+      RNAnimated.sequence([
+        RNAnimated.delay(800),
+        RNAnimated.timing(offset, {
+          toValue: -distance,
+          duration,
+          easing: RNEasing.inOut(RNEasing.quad),
+          useNativeDriver: true,
+        }),
+        RNAnimated.delay(800),
+        RNAnimated.timing(offset, {
+          toValue: 0,
+          duration,
+          easing: RNEasing.inOut(RNEasing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [fullHeight, offset, overflows, text]);
+
+  return (
+    <View
+      style={styles.rollWindow}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+    >
+      {width > 0 ? (
+        <Text
+          style={[textStyle, styles.measureText, { width }]}
+          onLayout={(e) => setFullHeight(e.nativeEvent.layout.height)}
+        >
+          {text}
+        </Text>
+      ) : null}
+      <RNAnimated.Text style={[textStyle, { transform: [{ translateY: offset }] }]}>
+        {text}
+      </RNAnimated.Text>
+    </View>
+  );
+}
 
 const SWIPE_THRESHOLD = 56;
 const EXIT_MS = 220;
@@ -225,15 +282,13 @@ export default function SwipeableClueStrip({
                 <View style={styles.iconBadge}>
                   <Search color="#fff" size={18} strokeWidth={2.6} />
                 </View>
-                <Text
-                  style={[
+                <RollingClueText
+                  text={text}
+                  textStyle={[
                     styles.clueText,
                     placeholder ? styles.cluePlaceholder : null,
                   ]}
-                  numberOfLines={3}
-                >
-                  {text}
-                </Text>
+                />
               </View>
             )}
           </Animated.View>
@@ -337,8 +392,18 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  clueText: {
+  rollWindow: {
     flex: 1,
+    height: CLUE_WINDOW,
+    overflow: 'hidden',
+  },
+  measureText: {
+    position: 'absolute',
+    opacity: 0,
+    left: 0,
+    top: 0,
+  },
+  clueText: {
     fontSize: 17,
     fontWeight: '800',
     lineHeight: 24,

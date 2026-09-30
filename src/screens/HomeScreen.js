@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Cloud,
   Gift,
+  Lock,
   Play,
   Search,
   Settings,
@@ -35,6 +36,10 @@ import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
 import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
+import { WORD_WHEEL_PACKS, PACK_THEMES, packMarkColor } from '../constants/packs';
+import { IAP_PACKAGES } from '../constants/store';
+import PackPurchaseModal from '../components/PackPurchaseModal';
+import { loadOwnedPackCodes, loadPackLevel, loadPackProgress, serverOwnsPack } from '../lib/packEntitlements';
 import {
   hasStarterPackAccess,
   resolveJourneyPlayAccess,
@@ -46,6 +51,12 @@ import { APPEARANCE_DARK } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const PACK_ICONS = {
+  classic: require('../assets/icons/classic-swords.webp'),
+  hard_quest: require('../assets/icons/hard-quest-peak.png'),
+  master: require('../assets/icons/master-scroll.webp'),
+};
 
 const WHEEL_ART = require('../assets/home-wheel-art.webp');
 
@@ -182,7 +193,7 @@ function useHomePalette() {
 
 export default function HomeScreen({ navigate, routeParams = {} }) {
   const palette = useHomePalette();
-  const { colors } = palette;
+  const { colors, isDark } = palette;
   const { setSceneLevel } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
@@ -405,6 +416,30 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     navigate(SCREENS.DAILY);
   }, [navigate]);
 
+  const [ownedPackCodes, setOwnedPackCodes] = useState([]);
+  const [packProgress, setPackProgress] = useState({});
+  const [purchasePack, setPurchasePack] = useState(null);
+  useEffect(() => {
+    loadOwnedPackCodes().then(setOwnedPackCodes);
+    Promise.all(WORD_WHEEL_PACKS.map(async (pack) => [pack.code, await loadPackProgress(pack.code)]))
+      .then((rows) => setPackProgress(Object.fromEntries(rows)));
+  }, []);
+
+  const openPack = useCallback(async (pack) => {
+    const owned = ownedPackCodes.includes(pack.code) || await serverOwnsPack(pack.code);
+    if (!owned) {
+      const meta = IAP_PACKAGES.find((item) => item.packageId === pack.packageId);
+      setPurchasePack(meta ? { ...meta, code: pack.code } : null);
+      return;
+    }
+    const level = await loadPackLevel(pack.code);
+    navigate(SCREENS.PLAY, {
+      mode: PLAY_MODE.JOURNEY,
+      packCode: pack.code,
+      packLevel: level,
+    });
+  }, [navigate, ownedPackCodes]);
+
   const { width, height } = useWindowDimensions();
   const isWideHome = width > height;
 
@@ -424,9 +459,13 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 
   const titleBlock = (
     <View style={styles.headerBlock}>
-      <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
-      <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
-        {t('home.title.line2')}
+      <Text
+        style={[styles.titleLine, palette.title]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+      >
+        {t('home.title')}
       </Text>
       <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
     </View>
@@ -559,6 +598,53 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         </Pressable>
       </View>
 
+      <View style={styles.packRow}>
+        {WORD_WHEEL_PACKS.map((pack) => {
+          const owned = ownedPackCodes.includes(pack.code);
+          const progress = packProgress[pack.code] || { cleared: 0, max: pack.maxLevel };
+          const ratio = progress.max > 0 ? progress.cleared / progress.max : 0;
+          const theme = PACK_THEMES[pack.code];
+          const mark = packMarkColor(pack.code, isDark);
+          return (
+            <Pressable
+              key={pack.code}
+              style={[styles.packBtn, palette.tile, { borderColor: theme.glow }]}
+              onPress={() => openPack(pack)}
+              accessibilityLabel={t(pack.nameKey)}
+            >
+              <Image
+                source={PACK_ICONS[pack.code]}
+                style={[styles.packIcon, { tintColor: mark }]}
+                resizeMode="contain"
+              />
+              <Text style={[styles.packName, { color: mark }]} numberOfLines={2}>
+                {t(pack.nameKey)}
+              </Text>
+              {owned ? (
+                <>
+                  <View style={[styles.packTrack, { backgroundColor: colors.border || 'rgba(13,148,136,0.18)' }]}>
+                    <View
+                      style={[
+                        styles.packFill,
+                        { width: `${Math.round(ratio * 100)}%`, backgroundColor: mark },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.packCount, { color: colors.textMuted }]}>
+                    {progress.cleared} / {progress.max}
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.packLockRow}>
+                  <Lock color={mark} size={12} strokeWidth={2.4} />
+                  <Text style={[styles.packLimit, { color: mark }]}>{pack.maxLevel}</Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+
       {guest ? (
         <View style={[styles.guestCard, palette.tile]}>
           <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
@@ -640,6 +726,17 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         unlockLevel={starterUnlockLevel}
         onClose={() => setStarterGateVisible(false)}
         onShop={handleStarterGateShop}
+      />
+      <PackPurchaseModal
+        visible={!!purchasePack}
+        pack={purchasePack}
+        icon={purchasePack ? PACK_ICONS[purchasePack.code] : null}
+        onClose={() => setPurchasePack(null)}
+        onPurchased={(bought) => {
+          setOwnedPackCodes((codes) => (
+            codes.includes(bought.code) ? codes : [...codes, bought.code]
+          ));
+        }}
       />
       <DailyGiftModal
         visible={giftVisible}
@@ -857,6 +954,58 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 10,
+  },
+  packRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: 8,
+  },
+  packBtn: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  packIcon: {
+    width: 40,
+    height: 40,
+  },
+  packName: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  packLockRow: {
+    marginTop: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  packLimit: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  packTrack: {
+    marginTop: 8,
+    alignSelf: 'stretch',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  packFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  packCount: {
+    marginTop: 4,
+    fontSize: 11,
+    fontWeight: '700',
   },
   giftEdge: {
     position: 'absolute',

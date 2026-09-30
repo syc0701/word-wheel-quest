@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBannerAdUnitId } from '../constants/ads';
 import { useAppearance } from '../context/AppearanceContext';
 import { initializeMobileAds } from '../lib/ads';
+import { hasRemoveAds } from '../lib/packEntitlements';
 
 const SIDE_INSET = 18;
 const FRAME_BORDER = 1;
@@ -20,6 +21,7 @@ export default function AdBanner({ style, width: widthOverride = null }) {
   const { colors, isDark, isRandomScene } = useAppearance();
   const [ready, setReady] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [removed, setRemoved] = useState(false);
   const unitId = getBannerAdUnitId();
   const adWidth = Math.max(
     1,
@@ -32,6 +34,9 @@ export default function AdBanner({ style, width: widthOverride = null }) {
 
   useEffect(() => {
     let cancelled = false;
+    hasRemoveAds().then((owned) => {
+      if (!cancelled) setRemoved(owned);
+    });
     initializeMobileAds().then(() => {
       if (!cancelled) setReady(true);
     });
@@ -40,7 +45,7 @@ export default function AdBanner({ style, width: widthOverride = null }) {
     };
   }, []);
 
-  if (!ready || !unitId) return null;
+  if (removed || !ready || !unitId) return null;
 
   const borderColor = isRandomScene
     ? 'rgba(255,255,255,0.55)'

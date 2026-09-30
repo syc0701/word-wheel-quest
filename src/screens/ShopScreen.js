@@ -8,6 +8,7 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
+import { PACK_ICON_TINT, packMarkColor } from '../constants/packs';
 import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import {
   getDefaultOffering,
@@ -20,6 +21,7 @@ import {
 } from '../services/purchases';
 import CreditApi from '../lib/creditApi';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
+import { grantPackEntitlement } from '../lib/packEntitlements';
 import { useAudio } from '../context/AudioContext';
 
 const GOLD = '#facc15';
@@ -27,16 +29,25 @@ const GOLD = '#facc15';
 const PACKAGE_ICONS = {
   starterChest: require('../assets/icons/starter-chest.webp'),
   classicSwords: require('../assets/icons/classic-swords.webp'),
+  hardQuestPeak: require('../assets/icons/hard-quest-peak.png'),
   masterScroll: require('../assets/icons/master-scroll.webp'),
 };
 
 function ProductIcon({ icon, colors }) {
+  const { isDark } = useAppearance();
   if (icon === 'goldCoins') {
     return <GiTwoCoins size={28} color={GOLD} />;
   }
   const source = PACKAGE_ICONS[icon];
   if (source) {
-    return <Image source={source} style={styles.packageIconImage} resizeMode="contain" />;
+    const tint = packMarkColor(icon, isDark) || PACK_ICON_TINT[icon];
+    return (
+      <Image
+        source={source}
+        style={[styles.packageIconImage, tint ? { tintColor: tint } : null]}
+        resizeMode="contain"
+      />
+    );
   }
   return <ShoppingBag color={colors.primaryGlow} size={22} strokeWidth={1.8} />;
 }
@@ -163,7 +174,8 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         transactionId,
         rawPayload: storePayload,
       });
-      if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+      await grantPackEntitlement(productId);
+      if (meta.grants?.classic && meta.grants?.daily) {
         await markStarterPackPurchased({ grantGuestCredits: false });
       }
       const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
@@ -217,7 +229,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
             )}
           </Text>
         ) : (
-          IAP_PACKAGES.map((meta) => {
+          IAP_PACKAGES.filter((meta) => !meta.shopHidden).map((meta) => {
             const rcPackage = findRcPackage(meta.packageId);
             const priceLabel = rcPackage?.product?.priceString ?? meta.priceUsd;
             return (

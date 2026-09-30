@@ -6,12 +6,12 @@ import { useAppearance } from '../context/AppearanceContext';
  * `surface`: 'home' → popcorn; 'play' → a different journey scene.
  */
 export default function AppBackground({ children, surface = 'home', scrim, style }) {
-  const { colors, isRandomScene, weeklyBg, homeBg, playBg } = useAppearance();
+  const { colors, isRandomScene, weeklyBg, homeBg, playBg, packPlayBg } = useAppearance();
   const scene =
     surface === 'play'
-      ? playBg || weeklyBg
+      ? packPlayBg || playBg || weeklyBg
       : homeBg || weeklyBg;
-  const showScene = isRandomScene && scene?.source;
+  const showScene = Boolean(scene?.source) && (isRandomScene || (surface === 'play' && packPlayBg));
   const resolvedScrim = scrim ?? (showScene ? 0.42 : 0.12);
 
   return (

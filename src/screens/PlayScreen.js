@@ -22,6 +22,7 @@ import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
 import AdBanner from '../components/AdBanner';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
+import PackCompletionModal, { packCompletionType } from '../components/PackCompletionModal';
 import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 import ShopOfferButton from '../components/intermission/ShopOfferButton';
@@ -75,6 +76,11 @@ import {
 } from '../lib/guestCoinsStorage';
 import { describeDailyGift, loadDailyGift } from '../lib/dailyGift';
 import { isLoggedIn } from '../lib/auth';
+import { isLevelClearAdLevel } from '../constants/ads';
+import { packByCode } from '../constants/packs';
+import { REMOVE_ADS_PACKAGE_ID, STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
+import { hasRemoveAds, savePackLevel } from '../lib/packEntitlements';
+import { showLevelClearAd } from '../services/levelClearAd';
 import {
   guestNeedsStarterToContinue,
   hasStarterPackAccess,
@@ -93,11 +99,11 @@ import {
   WORD_WHEEL_BONUS_WORD_GIFT,
 } from '../lib/points';
 import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/wheelLetters';
+import { resolvePackPlayBackground } from '../lib/bgAssets';
 import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
-import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
 import OnboardingOverlay from '../components/OnboardingOverlay';
 import OnboardingSuccessOverlay from '../components/OnboardingSuccessOverlay';
@@ -165,12 +171,14 @@ function usePlayMetrics(insets, timerEnabled) {
 export default function PlayScreen({ navigate, routeParams = {} }) {
   const isDaily = routeParams.mode === PLAY_MODE.DAILY;
   const dailyDate = routeParams.date;
+  const packCode = routeParams.packCode || '';
+  const packLevelRef = useRef(Number(routeParams.packLevel) || 1);
   const seededPuzzle = routeParams.puzzle;
   const isOnboarding = Boolean(routeParams.isOnboarding);
   const wallet = useWordWheelWallet();
   const walletRef = useRef(wallet);
   walletRef.current = wallet;
-  const { ww, colors, isDark, isRandomScene, setSceneLevel } = useAppearance();
+  const { ww, colors, isDark, isRandomScene, setSceneLevel, setPackPlayBackground } = useAppearance();
   const { playSfx, soundEnabled, setSoundEnabled } = useAudio();
   const { timerEnabled } = usePlayTimer();
   const t = useT();
@@ -202,6 +210,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [dictionaryWord, setDictionaryWord] = useState('');
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [packEnding, setPackEnding] = useState(null);
+  const [removeAdsOwned, setRemoveAdsOwned] = useState(false);
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
@@ -512,8 +522,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
 
   useEffect(() => {
+    if (packCode) return;
     if (!isDaily && journeyLevel != null) setSceneLevel(journeyLevel);
-  }, [isDaily, journeyLevel, setSceneLevel]);
+  }, [isDaily, packCode, journeyLevel, setSceneLevel]);
+
+  useEffect(() => {
+    if (!packCode) {
+      setPackPlayBackground(null);
+      return undefined;
+    }
+    setPackPlayBackground(resolvePackPlayBackground(packCode, journeyLevel || packLevelRef.current));
+    return () => setPackPlayBackground(null);
+  }, [packCode, journeyLevel, setPackPlayBackground]);
   const dailyLabel = useMemo(() => {
     if (!isDaily) return '';
     return formatShortDisplayDate(dailyDate || puzzle?.dailyPlayDate) || t('toast.dailyFallback');
@@ -771,11 +791,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
-          : (reloadKey === 0 && seededPuzzle?.id
-            ? seededPuzzle
-            : await WordWheelApi.fetchNext());
+          : packCode
+            ? await WordWheelApi.fetchJourneyLevel(packLevelRef.current, packCode)
+            : (reloadKey === 0 && seededPuzzle?.id
+              ? seededPuzzle
+              : await WordWheelApi.fetchNext());
 
-        if (!isDaily) {
+        if (!isDaily && !packCode) {
           const completedId = completedPuzzleIdRef.current;
           const needsFallback =
             !data?.id
@@ -810,6 +832,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           if (!cancelled) {
             setPuzzle(null);
             setError(isDaily ? t('play.error.noDaily') : t('play.error.noPuzzle'));
+          }
+          return;
+        }
+        if (packCode && data?.code === 'FAILURE' && data?.message === 'Pack not owned') {
+          if (!cancelled) {
+            const pack = packByCode(packCode);
+            navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME, packageId: pack?.packageId });
           }
           return;
         }
@@ -969,9 +998,28 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, isOnboarding, dailyDate, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
+  }, [isDaily, isOnboarding, dailyDate, packCode, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
 
   const handleNextPuzzle = useCallback(async () => {
+    if (packCode) {
+      const current = resolveJourneyLevel(puzzle) ?? packLevelRef.current;
+      const next = current + 1;
+      const max = packByCode(packCode)?.maxLevel || next;
+      await savePackLevel(packCode, next);
+      setCompletionDialogOpen(false);
+      setShowHeaderNext(false);
+      if (next > max) {
+        setPackEnding({
+          packType: packCompletionType(packCode),
+          totalPuzzles: max,
+        });
+        return;
+      }
+      packLevelRef.current = next;
+      completedPuzzleIdRef.current = puzzle?.id || null;
+      setReloadKey((k) => k + 1);
+      return;
+    }
     if (isDaily) {
       setCompletionDialogOpen(false);
       setShowHeaderNext(false);
@@ -1009,12 +1057,25 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setCompletionDialogOpen(false);
     setShowHeaderNext(false);
     setReloadKey((k) => k + 1);
-  }, [isDaily, dailyDate, navigate, puzzle, wallet.creditBalance]);
+  }, [isDaily, packCode, dailyDate, navigate, puzzle, wallet.creditBalance]);
 
   const handleCloseCompletionDialog = useCallback(() => {
     setCompletionDialogOpen(false);
     setShowHeaderNext(true);
   }, []);
+
+  const handleRemoveAdsShop = useCallback(() => {
+    setCompletionDialogOpen(false);
+    setShowHeaderNext(false);
+    navigate(SCREENS.SHOP, {
+      backScreen: SCREENS.PLAY,
+      mode: routeParams.mode,
+      date: routeParams.date,
+      packCode,
+      packLevel: packLevelRef.current,
+      packageId: REMOVE_ADS_PACKAGE_ID,
+    });
+  }, [navigate, packCode, routeParams.mode, routeParams.date]);
 
   const handleCompletionShop = useCallback(() => {
     setCompletionDialogOpen(false);
@@ -1308,10 +1369,15 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         screenType,
         milestoneBonus,
       });
+      const adsRemoved = await hasRemoveAds();
+      setRemoveAdsOwned(adsRemoved);
+      if (!isDaily && !packCode && isLevelClearAdLevel(levelNumber) && !adsRemoved) {
+        await showLevelClearAd();
+      }
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
-    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, isOnboarding, puzzle]
+    [targetWords.length, hintCoinsSpent, wallet, playSfx, coinsCatalog, isDaily, packCode, isOnboarding, puzzle]
   );
 
   // Keep credit/hint letter reveals across leave/re-enter for this puzzle.
@@ -2243,11 +2309,32 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         language={puzzle?.language || 'english'}
       />
 
+      <PackCompletionModal
+        visible={!!packEnding}
+        packType={packEnding?.packType || 'CLASSIC'}
+        stats={{ totalPuzzles: packEnding?.totalPuzzles }}
+        onClaimBonus={() => {}}
+        onNextPack={() => {
+          setPackEnding(null);
+          navigate(SCREENS.HOME);
+        }}
+        onClose={() => {
+          setPackEnding(null);
+          navigate(SCREENS.HOME);
+        }}
+      />
       <WordWheelCompleteDialog
         visible={completionDialogOpen}
         onClose={handleCloseCompletionDialog}
         onNext={handleNextPuzzle}
         onShop={handleCompletionShop}
+        onRemoveAds={handleRemoveAdsShop}
+        showRemoveAdsOffer={
+          !isDaily
+          && !packCode
+          && !removeAdsOwned
+          && isLevelClearAdLevel(completionStats?.levelNumber)
+        }
         durationLabel={completionStats?.durationLabel}
         scoreCoins={completionStats?.scoreCoins ?? 0}
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}

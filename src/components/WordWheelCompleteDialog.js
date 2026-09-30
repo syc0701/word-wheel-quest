@@ -51,6 +51,8 @@ export default function WordWheelCompleteDialog({
   forceScreenType,
   unlockedFeature = null,
   showStarterOffer = false,
+  showRemoveAdsOffer = false,
+  onRemoveAds,
 }) {
   const t = useT();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
@@ -197,6 +199,13 @@ export default function WordWheelCompleteDialog({
             }
           >
             {body}
+            {showRemoveAdsOffer && typeof onRemoveAds === 'function' ? (
+              <ShopOfferButton
+                label={t('complete.removeAds')}
+                onPress={onRemoveAds}
+                accessibilityLabel={t('complete.removeAds')}
+              />
+            ) : null}
             {guestUpsell ? (
               <ShopOfferButton
                 label={t('complete.guest.starterLink')}

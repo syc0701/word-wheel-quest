@@ -13,6 +13,9 @@ export const ADMOB_REWARDED_UNIT_ID = 'ca-app-pub-1539854949018984/1893448351';
 /** Rewarded_One_Hidden_Letter. Reveals one cell. No credit grant. */
 export const ADMOB_CELL_REWARDED_UNIT_ID = 'ca-app-pub-1539854949018984/6505707281';
 
+/** Interstitial every 5 cleared journey levels. */
+export const ADMOB_LEVEL_INTERSTITIAL_UNIT_ID = 'ca-app-pub-1539854949018984/3473939554';
+
 /** Credits granted by AdMob SSV for one rewarded watch. */
 export const AD_REWARD_CREDITS = 1;
 
@@ -43,4 +46,15 @@ export function getRewardedAdUnitId() {
 export function getCellRewardedAdUnitId() {
   if (Platform.OS !== 'android') return TestIds.REWARDED;
   return ADMOB_CELL_REWARDED_UNIT_ID;
+}
+
+/** Dev uses Google's test interstitial. Production waits for a real unit id. */
+export function getLevelInterstitialAdUnitId() {
+  if (__DEV__ || Platform.OS !== 'android') return TestIds.INTERSTITIAL;
+  return ADMOB_LEVEL_INTERSTITIAL_UNIT_ID || null;
+}
+
+export function isLevelClearAdLevel(levelNumber) {
+  const level = Number(levelNumber);
+  return Number.isFinite(level) && level > 0 && level % 5 === 0;
 }

@@ -27,6 +27,30 @@ export const SPLASH_BG_SOURCE = BG_IMAGE_CATALOG.wellness_corner;
 /** Scene changes at levels 5, 10, 15, 20, 25, … */
 export const LEVELS_PER_SCENE = 5;
 
+/** Pack play photos. Master alternates the two images every 5 levels. */
+const PACK_PLAY_IMAGES = {
+  classic: [
+    require('../assets/pack_image/260929-sailboat-sand-mold-in-sunny-sandbox.jpeg'),
+  ],
+  master: [
+    require('../assets/pack_image/260929-jade-and-echeveria-morning-light.jpeg'),
+    require('../assets/pack_image/260929-moonstone-and-bloodstone-chess-match.jpeg'),
+  ],
+};
+
+/** Backdrop for a paid pack, or null for the free journey and Hard Quest. */
+export function resolvePackPlayBackground(packCode, level = 1) {
+  const list = PACK_PLAY_IMAGES[packCode];
+  if (!list?.length) return null;
+  const band = getSceneBandForLevel(level);
+  return {
+    id: packCode,
+    source: list[band % list.length],
+    band,
+    level: Number(level) || 0,
+  };
+}
+
 const SCENE_LEVEL_KEY = 'ww.sceneJourneyLevel.v1';
 
 /**

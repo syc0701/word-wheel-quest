@@ -10,6 +10,7 @@ import {
 import { loadPendingIap } from './pendingIap';
 import CreditApi from './creditApi';
 import { APP_STORE } from '../constants/store';
+import { hasUnlimitedDaily } from './packEntitlements';
 
 const STARTER_PACK_KEY = 'ww.starter_pack';
 const FREE_DAILY_PLAYS_KEY = 'ww.free_daily_plays_used';
@@ -179,14 +180,18 @@ export async function canPlayJourneyLevel(journeyLevel, opts) {
 
 /**
  * Whether a daily puzzle can be started.
- * @returns {'free'|'credit'|'starter'|'no_credits'|null} null = blocked unknown
+ * First 10 are free. Starter or Daily Bundle then opens unlimited daily.
+ * @returns {'free'|'unlocked'|'daily'}
  */
 export async function resolveDailyPlayAccess() {
-  return 'free';
+  if (await hasUnlimitedDaily() || await hasStarterPackLocal()) return 'unlocked';
+  const left = await getFreeDailyPlaysRemaining();
+  return left > 0 ? 'free' : 'daily';
 }
 
 export async function canPlayDailyPuzzle() {
-  return true;
+  const access = await resolveDailyPlayAccess();
+  return access === 'free' || access === 'unlocked';
 }
 
 export async function canStartJourneyLevel(level, {
@@ -212,22 +217,13 @@ export async function settlePuzzlePlayCharge({
 }) {
   const hasStarter = await hasStarterPackLocal();
   if (isDaily) {
-    const access = await resolveDailyPlayAccess({ hasStarter, loggedIn, creditBalance });
+    const access = await resolveDailyPlayAccess();
     if (access === 'free') {
       await incrementFreeDailyPlaysUsed();
       return { ok: true };
     }
-    if (access !== 'credit') return { ok: false, access };
-    if (loggedIn) {
-      const result = await CreditApi.consumeCredits({
-        appCode: APP_STORE.appSiteId,
-        featureUsed: `word_wheel_daily:${puzzleId}`,
-        creditsConsumed: PUZZLE_PLAY_CREDIT_COST,
-      });
-      return { ok: true, creditBalance: result.creditBalance };
-    }
-    const spent = await consumeGuestPuzzleCredits();
-    return spent.ok ? { ok: true } : { ok: false, access: 'no_credits' };
+    if (access === 'unlocked') return { ok: true };
+    return { ok: false, access };
   }
   if (!journeyLevelNeedsCredit(journeyLevel, playerJourneyLevel)) return { ok: true };
   if (!hasStarter) return { ok: false, access: 'starter' };
