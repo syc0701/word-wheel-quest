@@ -187,6 +187,7 @@ export default {
   'shop.restore': 'Käufe wiederherstellen',
   'shop.restore.subtitleIos': 'Münzen und Credits sind einmalig. Melde dich an, um sie aus deinem Konto zu laden.',
   'shop.restore.subtitleAndroid': 'Bereits gekauft? Hier wiederherstellen.',
+  'guest.starter.notNow': 'Nicht jetzt',
   'webview.titleFallback': 'Seite',
   'devIntermission.title.wordMaster': 'Wortmeister',
   'devIntermission.title.streaksSparks': 'Serien & Funken',

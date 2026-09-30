@@ -1,0 +1,9 @@
+What's new in version 2.0.3:
+
+- Daily Puzzle unlocks with the Daily Bundle
+- Remove Ads hides the home banner and between-level ads
+- Restore Daily Bundle and Remove Ads in Settings
+- Buy Shop items without creating an account
+- Stability and bug fixes
+
+Thanks for playing!

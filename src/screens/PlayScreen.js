@@ -22,6 +22,7 @@ import PuzzleGrid from '../components/PuzzleGrid';
 import GradientBackground from '../components/GradientBackground';
 import AdBanner from '../components/AdBanner';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
+import PackCompletionModal, { packCompletionType } from '../components/PackCompletionModal';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 import ShopOfferButton from '../components/intermission/ShopOfferButton';
 import {
@@ -41,7 +42,7 @@ import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
 import { packByCode } from '../constants/packs';
 import { isLevelClearAdLevel } from '../constants/ads';
-import { hasRemoveAds, savePackLevel } from '../lib/packEntitlements';
+import { hasRemoveAds, hasUnlimitedDaily, savePackLevel } from '../lib/packEntitlements';
 import { showLevelClearAd } from '../services/levelClearAd';
 import { validateBonusWord } from '../lib/dictionary';
 import { resolveWordWheelGridSize } from '../lib/constants';
@@ -88,6 +89,7 @@ import {
   WORD_WHEEL_BONUS_WORD_GIFT,
 } from '../lib/points';
 import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/wheelLetters';
+import { resolvePackPlayBackground } from '../lib/bgAssets';
 import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
@@ -154,7 +156,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const wallet = useWordWheelWallet();
   const walletRef = useRef(wallet);
   walletRef.current = wallet;
-  const { ww, colors, isDark, isRandomScene, setSceneLevel } = useAppearance();
+  const { ww, colors, isDark, isRandomScene, setSceneLevel, setPackPlayBackground } = useAppearance();
   const { playSfx, soundEnabled, setSoundEnabled } = useAudio();
   const { timerEnabled } = usePlayTimer();
   const t = useT();
@@ -183,6 +185,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [dictionaryWord, setDictionaryWord] = useState('');
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [packEnding, setPackEnding] = useState(null);
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
@@ -490,8 +493,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
 
   useEffect(() => {
+    if (packCode) return;
     if (!isDaily && journeyLevel != null) setSceneLevel(journeyLevel);
-  }, [isDaily, journeyLevel, setSceneLevel]);
+  }, [isDaily, packCode, journeyLevel, setSceneLevel]);
+
+  useEffect(() => {
+    if (!packCode) {
+      setPackPlayBackground(null);
+      return undefined;
+    }
+    setPackPlayBackground(resolvePackPlayBackground(packCode, journeyLevel || packLevelRef.current));
+    return () => setPackPlayBackground(null);
+  }, [packCode, journeyLevel, setPackPlayBackground]);
   const dailyLabel = useMemo(() => {
     if (!isDaily) return '';
     return formatShortDisplayDate(dailyDate || puzzle?.dailyPlayDate) || t('toast.dailyFallback');
@@ -732,6 +745,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           }
           return;
         }
+        if (isDaily && !(await hasUnlimitedDaily())) {
+          if (!cancelled) {
+            setError(t('daily.locked.body'));
+            setLoading(false);
+          }
+          return;
+        }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
           : packCode
@@ -877,11 +897,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       const current = resolveJourneyLevel(puzzle) ?? packLevelRef.current;
       const next = current + 1;
       const max = packByCode(packCode)?.maxLevel || next;
-      await savePackLevel(packCode, Math.min(next, max));
+      await savePackLevel(packCode, next);
       setCompletionDialogOpen(false);
       setShowHeaderNext(false);
       if (next > max) {
-        navigate(SCREENS.HOME);
+        setPackEnding({
+          packType: packCompletionType(packCode),
+          totalPuzzles: max,
+        });
         return;
       }
       packLevelRef.current = next;
@@ -1800,6 +1823,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           { paddingTop: Math.max(insets.top, 12) + 8 },
         ]}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={isLandscape || isOnboarding}
         keyboardShouldPersistTaps="handled"
         scrollEventThrottle={16}
         onScroll={(e) => {
@@ -1886,7 +1910,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
+        <View style={styles.playStage}>
         <PuzzleGrid
+          fill={!isLandscape}
           gridSize={gridSize}
           displayGrid={displayGrid}
           puzzleCells={puzzleCells}
@@ -1915,6 +1941,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         {clueStrip}
         {timerRow}
+        </View>
       </ScrollView>
 
       {/* Wheel stays outside ScrollView so pan gestures are never stolen mid-drag. */}
@@ -2078,6 +2105,19 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         language={puzzle?.language || 'english'}
       />
 
+      <PackCompletionModal
+        visible={!!packEnding}
+        packType={packEnding?.packType || 'CLASSIC'}
+        stats={{ totalPuzzles: packEnding?.totalPuzzles }}
+        onNextPack={() => {
+          setPackEnding(null);
+          navigate(SCREENS.HOME);
+        }}
+        onClose={() => {
+          setPackEnding(null);
+          navigate(SCREENS.HOME);
+        }}
+      />
       <WordWheelCompleteDialog
         visible={completionDialogOpen}
         onClose={handleCloseCompletionDialog}
@@ -2487,6 +2527,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingBottom: 8,
+  },
+  playStage: {
+    flexGrow: 1,
+    width: '100%',
+    minHeight: 0,
   },
   wheelDock: {
     paddingHorizontal: 16,

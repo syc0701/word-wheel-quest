@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Animated as RNAnimated, Easing as RNEasing, Platform, StyleSheet, Text, View } from 'react-native';
+import { Animated as RNAnimated, Easing as RNEasing, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Easing,
@@ -12,6 +12,31 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react-native';
+
+const CLUE_LINE_HEIGHT = 24;
+const CLUE_WINDOW = CLUE_LINE_HEIGHT * 2 + 4;
+
+function ClueTextScroll({ text, textStyle }) {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [text]);
+
+  return (
+    <ScrollView
+      ref={scrollRef}
+      style={styles.rollWindow}
+      contentContainerStyle={styles.clueScrollContent}
+      showsVerticalScrollIndicator={false}
+      nestedScrollEnabled
+      bounces={false}
+      overScrollMode="never"
+    >
+      <Text style={textStyle}>{text}</Text>
+    </ScrollView>
+  );
+}
 
 const SWIPE_THRESHOLD = 56;
 const EXIT_MS = 220;
@@ -135,6 +160,7 @@ export default function SwipeableClueStrip({
     [animating, cardWidth, onSwipe, opacity, translateX]
   );
 
+  const nativeScroll = Gesture.Native();
   const panGesture = Gesture.Pan()
     .enabled(!!canSwipe)
     .activeOffsetX([-14, 14])
@@ -211,7 +237,7 @@ export default function SwipeableClueStrip({
         style={styles.clueBox}
         onLayout={onCardLayout}
       >
-        <GestureDetector gesture={panGesture}>
+        <GestureDetector gesture={Gesture.Simultaneous(panGesture, nativeScroll)}>
           <Animated.View style={[styles.card, cardStyle]} pointerEvents={active ? 'none' : 'auto'}>
             {active ? (
               <View style={styles.clueRowPlaceholder} />
@@ -225,15 +251,13 @@ export default function SwipeableClueStrip({
                 <View style={styles.iconBadge}>
                   <Search color="#fff" size={18} strokeWidth={2.6} />
                 </View>
-                <Text
-                  style={[
+                <ClueTextScroll
+                  text={text}
+                  textStyle={[
                     styles.clueText,
                     placeholder ? styles.cluePlaceholder : null,
                   ]}
-                  numberOfLines={3}
-                >
-                  {text}
-                </Text>
+                />
               </View>
             )}
           </Animated.View>
@@ -337,8 +361,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  clueText: {
+  rollWindow: {
     flex: 1,
+    height: CLUE_WINDOW,
+  },
+  clueScrollContent: {
+    flexGrow: 1,
+  },
+  clueText: {
     fontSize: 17,
     fontWeight: '800',
     lineHeight: 24,

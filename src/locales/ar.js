@@ -187,6 +187,7 @@ export default {
   'shop.restore': 'استعادة المشتريات',
   'shop.restore.subtitleIos': 'العملات والرصيد استهلاكيان. سجّل الدخول لتحميلهما من حسابك.',
   'shop.restore.subtitleAndroid': 'اشتريت مسبقًا؟ استعد هنا.',
+  'guest.starter.notNow': 'ليس الآن',
   'webview.titleFallback': 'صفحة',
   'devIntermission.title.wordMaster': 'سيد الكلمات',
   'devIntermission.title.streaksSparks': 'السلاسل والشرارات',

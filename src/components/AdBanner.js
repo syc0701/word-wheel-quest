@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getBannerAdUnitId, isAdsEnabled } from '../constants/ads';
 import { useAppearance } from '../context/AppearanceContext';
 import { initializeMobileAds } from '../lib/ads';
+import { hasRemoveAds } from '../lib/packEntitlements';
 
 const SIDE_INSET = 18;
 const FRAME_BORDER = 1;
@@ -20,6 +21,7 @@ export default function AdBanner({ style }) {
   const { colors, isDark, isRandomScene } = useAppearance();
   const [ready, setReady] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [adsRemoved, setAdsRemoved] = useState(false);
   const adsEnabled = isAdsEnabled();
   const unitId = adsEnabled ? getBannerAdUnitId() : null;
   const adWidth = Math.max(
@@ -28,7 +30,24 @@ export default function AdBanner({ style }) {
   );
 
   useEffect(() => {
-    if (!adsEnabled) return undefined;
+    let cancelled = false;
+    const refresh = () => {
+      hasRemoveAds().then((owned) => {
+        if (!cancelled) setAdsRemoved(owned);
+      });
+    };
+    refresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!adsEnabled || adsRemoved) return undefined;
     let cancelled = false;
     initializeMobileAds().then(() => {
       if (!cancelled) setReady(true);
@@ -36,9 +55,9 @@ export default function AdBanner({ style }) {
     return () => {
       cancelled = true;
     };
-  }, [adsEnabled]);
+  }, [adsEnabled, adsRemoved]);
 
-  if (!adsEnabled || !ready || !unitId) return null;
+  if (adsRemoved || !adsEnabled || !ready || !unitId) return null;
 
   const borderColor = isRandomScene
     ? 'rgba(255,255,255,0.55)'

@@ -187,6 +187,7 @@ export default {
   'shop.restore': '購入を復元',
   'shop.restore.subtitleIos': 'コインとクレジットは使い切りです。ログインしてアカウントから読み込みます。',
   'shop.restore.subtitleAndroid': '購入済みですか？ここで復元。',
+  'guest.starter.notNow': '後で',
   'webview.titleFallback': 'ページ',
   'devIntermission.title.wordMaster': 'ワードマスター',
   'devIntermission.title.streaksSparks': 'ストリーク＆スパーク',

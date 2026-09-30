@@ -193,6 +193,7 @@ export default function PuzzleGrid({
   revealBurstId = 0,
   maxBoardSize = 0,
   fitWidth = false,
+  fill = false,
   onCellPress,
   adHintCells = null,
   adHintBusy = false,
@@ -229,10 +230,15 @@ export default function PuzzleGrid({
   const colCount = Math.max(1, bounds.maxCol - bounds.minCol + 1);
 
   // Prefer the real flex host size so the board fills leftover space between
-  // header and clue without shrinking the wheel (estimated maxBoardSize often
-  // under-counts and leaves large empty margins).
-  const heightBudget =
-    gridHostHeight > 0 ? gridHostHeight : maxBoardSize > 0 ? maxBoardSize : 0;
+  // header and clue. A ScrollView host can collapse to the board itself, so
+  // `fill` also honors the space PlayScreen reserved.
+  const heightBudget = fill
+    ? Math.max(gridHostHeight > 0 ? gridHostHeight : 0, maxBoardSize > 0 ? maxBoardSize : 0)
+    : gridHostHeight > 0
+      ? gridHostHeight
+      : maxBoardSize > 0
+        ? maxBoardSize
+        : 0;
   const cellFromWidth =
     gridWidth > 0
       ? Math.floor((gridWidth - BOARD_INSET * 2 - GAP * (colCount - 1)) / colCount)
@@ -368,7 +374,12 @@ export default function PuzzleGrid({
 
   return (
     <View
-      style={[styles.gridWrap, fitWidth && styles.gridWrapFitWidth]}
+      style={[
+        styles.gridWrap,
+        fitWidth && styles.gridWrapFitWidth,
+        fill && styles.gridWrapFill,
+        fill && maxBoardSize > 0 && { minHeight: maxBoardSize },
+      ]}
       onLayout={(event) => {
         const { width, height } = event.nativeEvent.layout;
         if (width > 0 && width !== gridWidth) setGridWidth(width);
@@ -440,6 +451,12 @@ const styles = StyleSheet.create({
     minHeight: 0,
     marginTop: 12,
     paddingVertical: 8,
+  },
+  gridWrapFill: {
+    flex: 1,
+    alignSelf: 'stretch',
+    minHeight: 0,
+    marginTop: 4,
   },
   grid: {
     position: 'relative',

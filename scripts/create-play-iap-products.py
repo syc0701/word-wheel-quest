@@ -25,19 +25,37 @@ PRODUCTS = [
     {
         "productId": "word_wheel_pack_starter",
         "title": "Starter Fun Bundle",
-        "description": "Jumpstart your journey with extra coins!",
+        "description": "Classic Challenge (200 puzzles) and unlimited daily puzzles.",
         "usd": (3, 990_000_000),
+    },
+    {
+        "productId": "word_wheel_daily",
+        "title": "Daily Bundle",
+        "description": "Unlimited daily puzzles.",
+        "usd": (1, 990_000_000),
     },
     {
         "productId": "word_wheel_pack_medium",
         "title": "Classic Challenge",
-        "description": "Fuel your brain and conquer tough levels.",
+        "description": "200 puzzles.",
         "usd": (1, 990_000_000),
+    },
+    {
+        "productId": "word_wheel_pack_hard_quest",
+        "title": "Hard Quest",
+        "description": "400 puzzles. Words are 4–8 letters.",
+        "usd": (2, 990_000_000),
     },
     {
         "productId": "word_wheel_pack_hard",
         "title": "Master Quest",
-        "description": "The ultimate stash for serious word smiths.",
+        "description": "500 puzzles. Most words are 3–8 letters.",
+        "usd": (2, 990_000_000),
+    },
+    {
+        "productId": "word_wheel_remove_ads",
+        "title": "Remove Ads",
+        "description": "No banner ads and no ad every 5 levels.",
         "usd": (2, 990_000_000),
     },
     {

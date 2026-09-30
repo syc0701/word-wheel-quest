@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.000478">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="01: app_store_connect_api_key" time="0.00344">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="02: app_store_connect_api_key" time="0.003066">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="03: app_store_connect_api_key" time="0.003382">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="04: app_store_connect_api_key" time="0.00209">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="05: app_store_connect_api_key" time="0.002904">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="06: app_store_connect_api_key" time="0.002828">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="07: app_store_connect_api_key" time="0.00336">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="08: app_store_connect_api_key" time="0.007503">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="09: app_store_connect_api_key" time="0.001237">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="10: app_store_connect_api_key" time="0.002811">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="11: app_store_connect_api_key" time="0.002862">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="12: app_store_connect_api_key" time="0.002316">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="13: app_store_connect_api_key" time="0.002441">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="14: deliver" time="0.957141">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>

@@ -187,6 +187,7 @@ export default {
   'shop.restore': 'खरीदारियाँ पुनर्स्थापित करें',
   'shop.restore.subtitleIos': 'सिक्के और क्रेडिट एक बार के हैं। खाते से लोड करने के लिए साइन इन करें।',
   'shop.restore.subtitleAndroid': 'पहले खरीदा? यहाँ पुनर्स्थापित करें।',
+  'guest.starter.notNow': 'अभी नहीं',
   'webview.titleFallback': 'पेज',
   'devIntermission.title.wordMaster': 'वर्ड मास्टर',
   'devIntermission.title.streaksSparks': 'स्ट्रीक और स्पार्क्स',

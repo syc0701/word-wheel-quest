@@ -26,6 +26,7 @@ export function AppearanceProvider({ children }) {
   const [weeklyBg, setWeeklyBg] = useState(null);
   const [homeBg, setHomeBg] = useState(null);
   const [playBg, setPlayBg] = useState(null);
+  const [packPlayBg, setPackPlayBg] = useState(null);
   const [sceneLevel, setSceneLevelState] = useState(0);
   const sceneLevelRef = useRef(0);
 
@@ -72,6 +73,10 @@ export function AppearanceProvider({ children }) {
     return normalized;
   }, [applySceneBackgrounds]);
 
+  const setPackPlayBackground = useCallback((scene) => {
+    setPackPlayBg(scene?.source ? scene : null);
+  }, []);
+
   /** Keep Image theme scene + play BGM in sync with journey level (every 5 levels). */
   const setSceneLevel = useCallback((level) => {
     const n = Number(level);
@@ -99,12 +104,14 @@ export function AppearanceProvider({ children }) {
       weeklyBg,
       homeBg,
       playBg,
+      packPlayBg,
+      setPackPlayBackground,
       sceneLevel,
       setSceneLevel,
       ww: getWW(mode),
       colors: getColors(mode),
     }),
-    [mode, setMode, ready, weeklyBg, homeBg, playBg, sceneLevel, setSceneLevel]
+    [mode, setMode, ready, weeklyBg, homeBg, playBg, packPlayBg, setPackPlayBackground, sceneLevel, setSceneLevel]
   );
 
   return (
@@ -127,6 +134,8 @@ export function useAppearance() {
       weeklyBg: null,
       homeBg: null,
       playBg: null,
+      packPlayBg: null,
+      setPackPlayBackground: () => {},
       sceneLevel: 0,
       setSceneLevel: () => {},
       ww: getWW(APPEARANCE_RANDOM),

@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Cloud,
   Gift,
+  Lock,
   Play,
   Search,
   Settings,
@@ -32,14 +33,30 @@ import { grantDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
-import { WORD_WHEEL_PACKS } from '../constants/packs';
-import { loadOwnedPackCodes, loadPackLevel, serverOwnsPack } from '../lib/packEntitlements';
+import { WORD_WHEEL_PACKS, PACK_THEMES, packMarkColor } from '../constants/packs';
+import { IAP_PACKAGES } from '../constants/store';
+import PackPurchaseModal from '../components/PackPurchaseModal';
+import {
+  hasRemoveAds,
+  hasUnlimitedDaily,
+  loadOwnedPackCodes,
+  loadPackLevel,
+  loadPackProgress,
+  locallyOwnsPack,
+  serverOwnsPack,
+} from '../lib/packEntitlements';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const PACK_ICONS = {
+  classic: require('../assets/icons/classic-swords.webp'),
+  hard_quest: require('../assets/icons/hard-quest-peak.png'),
+  master: require('../assets/icons/master-scroll.webp'),
+};
 
 const WHEEL_ART = require('../assets/home-wheel-art.webp');
 
@@ -176,7 +193,7 @@ function useHomePalette() {
 
 export default function HomeScreen({ navigate, routeParams = {} }) {
   const palette = useHomePalette();
-  const { colors } = palette;
+  const { colors, isDark } = palette;
   const { setSceneLevel } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
@@ -356,19 +373,36 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
 
-  const openDaily = useCallback(() => {
-    navigate(SCREENS.DAILY);
-  }, [navigate]);
-
   const [ownedPackCodes, setOwnedPackCodes] = useState([]);
+  const [packProgress, setPackProgress] = useState({});
+  const [purchasePack, setPurchasePack] = useState(null);
+  const [dailyOwned, setDailyOwned] = useState(false);
+  const [adsRemoved, setAdsRemoved] = useState(false);
   useEffect(() => {
     loadOwnedPackCodes().then(setOwnedPackCodes);
+    hasUnlimitedDaily().then(setDailyOwned);
+    hasRemoveAds().then(setAdsRemoved);
+    Promise.all(WORD_WHEEL_PACKS.map(async (pack) => [pack.code, await loadPackProgress(pack.code)]))
+      .then((rows) => setPackProgress(Object.fromEntries(rows)));
   }, []);
 
+  const openDaily = useCallback(async () => {
+    if (dailyOwned || await hasUnlimitedDaily()) {
+      setDailyOwned(true);
+      navigate(SCREENS.DAILY);
+      return;
+    }
+    const meta = IAP_PACKAGES.find((item) => item.packageId === 'word_wheel_daily');
+    setPurchasePack(meta ? { ...meta, code: 'daily' } : null);
+  }, [dailyOwned, navigate]);
+
   const openPack = useCallback(async (pack) => {
-    const owned = ownedPackCodes.includes(pack.code) || await serverOwnsPack(pack.code);
+    const owned = ownedPackCodes.includes(pack.code)
+      || await locallyOwnsPack(pack.code)
+      || await serverOwnsPack(pack.code);
     if (!owned) {
-      navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME, packageId: pack.packageId });
+      const meta = IAP_PACKAGES.find((item) => item.packageId === pack.packageId);
+      setPurchasePack(meta ? { ...meta, code: pack.code } : null);
       return;
     }
     const level = await loadPackLevel(pack.code);
@@ -400,9 +434,13 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerBlock}>
-            <Text style={[styles.titleLine, palette.title]}>{t('home.title.line1')}</Text>
-            <Text style={[styles.titleLine, styles.titleLine2, palette.title]}>
-              {t('home.title.line2')}
+            <Text
+              style={[styles.titleLine, palette.title]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
+            >
+              {t('home.title')}
             </Text>
             <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
           </View>
@@ -514,9 +552,10 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
                   <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
                     {t('home.dailyPuzzle.label')}
                   </Text>
+                  {dailyOwned ? null : <Lock color={colors.textMuted} size={14} strokeWidth={2.2} />}
                 </View>
                 <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-                  {t('home.dailyPuzzle.subtitle')}
+                  {t(dailyOwned ? 'home.dailyPuzzle.subtitle' : 'home.dailyPuzzle.lockedSubtitle')}
                 </Text>
               </Pressable>
 
@@ -539,21 +578,48 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
               </Pressable>
             </View>
 
-            <View style={styles.packList}>
+            <View style={styles.packRow}>
               {WORD_WHEEL_PACKS.map((pack) => {
                 const owned = ownedPackCodes.includes(pack.code);
+                const progress = packProgress[pack.code] || { cleared: 0, max: pack.maxLevel };
+                const ratio = progress.max > 0 ? progress.cleared / progress.max : 0;
+                const theme = PACK_THEMES[pack.code];
+                const mark = packMarkColor(pack.code, isDark);
                 return (
                   <Pressable
                     key={pack.code}
-                    style={[styles.tile, palette.tile]}
+                    style={[styles.packBtn, palette.tile, { borderColor: theme.glow }]}
                     onPress={() => openPack(pack)}
+                    accessibilityLabel={t(pack.nameKey)}
                   >
-                    <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
+                    <Image
+                      source={PACK_ICONS[pack.code]}
+                      style={[styles.packIcon, { tintColor: mark }]}
+                      resizeMode="contain"
+                    />
+                    <Text style={[styles.packName, { color: mark }]} numberOfLines={2}>
                       {t(pack.nameKey)}
                     </Text>
-                    <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={1}>
-                      {owned ? t(pack.detailKey) : t('pack.locked')}
-                    </Text>
+                    {owned ? (
+                      <>
+                        <View style={[styles.packTrack, { backgroundColor: colors.border || 'rgba(13,148,136,0.18)' }]}>
+                          <View
+                            style={[
+                              styles.packFill,
+                              { width: `${Math.round(ratio * 100)}%`, backgroundColor: mark },
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.packCount, { color: colors.textMuted }]}>
+                          {progress.cleared} / {progress.max}
+                        </Text>
+                      </>
+                    ) : (
+                      <View style={styles.packLockRow}>
+                        <Lock color={mark} size={12} strokeWidth={2.4} />
+                        <Text style={[styles.packLimit, { color: mark }]}>{pack.maxLevel}</Text>
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
@@ -585,9 +651,30 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           </View>
         </ScrollView>
 
-        <AdBanner />
+        {adsRemoved ? null : <AdBanner />}
       </View>
 
+      <PackPurchaseModal
+        visible={!!purchasePack}
+        pack={purchasePack}
+        icon={
+          purchasePack?.code && PACK_ICONS[purchasePack.code]
+            ? PACK_ICONS[purchasePack.code]
+            : require('../assets/icons/starter-chest.webp')
+        }
+        onClose={() => setPurchasePack(null)}
+        onPurchased={(bought) => {
+          if (bought.grants?.daily) setDailyOwned(true);
+          if (bought.grants?.removeAds) setAdsRemoved(true);
+          if (bought.code && bought.code !== 'daily') {
+            setOwnedPackCodes((codes) => (
+              codes.includes(bought.code) ? codes : [...codes, bought.code]
+            ));
+          }
+          if (bought.grants?.daily) navigate(SCREENS.DAILY);
+        }}
+        onSignIn={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME, requireSignIn: true })}
+      />
       <DailyGiftModal
         visible={giftVisible}
         mode="info"
@@ -758,9 +845,57 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
-  packList: {
+  packRow: {
     marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'stretch',
     gap: 8,
+  },
+  packBtn: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  packIcon: {
+    width: 40,
+    height: 40,
+  },
+  packName: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  packLockRow: {
+    marginTop: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  packLimit: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  packTrack: {
+    marginTop: 8,
+    alignSelf: 'stretch',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  packFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  packCount: {
+    marginTop: 4,
+    fontSize: 11,
+    fontWeight: '700',
   },
   tileRow: {
     flexDirection: 'row',

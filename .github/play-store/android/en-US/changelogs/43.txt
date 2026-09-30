@@ -1,0 +1,7 @@
+What's new in this update:
+
+- Larger puzzle grid
+- Long clues stay still — scroll them yourself
+- Classic, Hard Quest, and Master on the home screen, with progress
+
+Thanks for playing!

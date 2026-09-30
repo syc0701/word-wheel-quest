@@ -31,7 +31,7 @@ public class AppDelegate: ExpoAppDelegate {
       launchOptions: launchOptions)
 #endif
 
-#if os(iOS)
+    #if os(iOS)
     NotificationCenter.default.addObserver(
       forName: UIApplication.didBecomeActiveNotification,
       object: nil,
@@ -48,7 +48,6 @@ public class AppDelegate: ExpoAppDelegate {
     guard !didRequestAppTracking else { return }
     guard #available(iOS 14, *) else { return }
     didRequestAppTracking = true
-    // iOS 17+/27: request only after the app is active or the prompt is suppressed.
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
       ATTrackingManager.requestTrackingAuthorization { _ in }
     }

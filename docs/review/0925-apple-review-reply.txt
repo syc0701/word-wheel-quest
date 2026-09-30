@@ -1,7 +1,7 @@
-Reply for App Review (2.0.2 build 25+)
+Reply for App Review (2.0.3 build 26)
 
 3.1.1 Restore purchases
-All In-App Purchases are consumable (coins and letter credits). The previous “Restore purchases” control called StoreKit / Apple ID restore, which cannot restore consumables. That control no longer calls StoreKit. Signed-in users sync coins and credits from their app account; signed-out users are asked to sign in. There is no Apple Account password prompt for restore.
+Daily Bundle and Remove Ads are Non-Consumable. Settings → Restore purchases calls StoreKit / RevenueCat restore and applies those unlocks on this device. Coin packs are consumable and are not restored through Apple ID; signed-in users can still sync coins and credits from their account.
 
 2.1 App Tracking Transparency
 The app shows the system ATT prompt on first launch after the app is active, before Google Mobile Ads starts. App measurement is delayed until after that prompt. Please see the physical-device screen recording in App Review Information: cold launch → ATT dialog → Home.

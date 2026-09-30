@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Star, Trash2, Trophy } from 'lucide-react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Shield, Star, Trash2, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
@@ -9,6 +9,7 @@ import PushNotificationService from '../services/PushNotificationService';
 // import LanguagePicker from '../components/LanguagePicker';
 import ScreenHeader from '../components/ScreenHeader';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
+import PackCompletionModal from '../components/PackCompletionModal';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
@@ -41,6 +42,30 @@ const DEV_INTERMISSION_LINKS = [
     icon: Crown,
     labelKey: 'settings.dev.brainPower',
     subtitleKey: 'settings.dev.brainPower.subtitle',
+  },
+];
+
+const PACK_ENDING_PREVIEWS = [
+  {
+    packType: 'CLASSIC',
+    icon: Trophy,
+    labelKey: 'settings.dev.packEnding.classic',
+    subtitleKey: 'settings.dev.packEnding.classic.subtitle',
+    stats: { totalPuzzles: 200 },
+  },
+  {
+    packType: 'HARD_QUEST',
+    icon: Shield,
+    labelKey: 'settings.dev.packEnding.hard',
+    subtitleKey: 'settings.dev.packEnding.hard.subtitle',
+    stats: { totalPuzzles: 400 },
+  },
+  {
+    packType: 'MASTER',
+    icon: Crown,
+    labelKey: 'settings.dev.packEnding.master',
+    subtitleKey: 'settings.dev.packEnding.master.subtitle',
+    stats: { totalPuzzles: 500 },
   },
 ];
 
@@ -99,6 +124,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const insets = useSafeAreaInsets();
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
+  const [packEndingPreview, setPackEndingPreview] = useState(null);
   const [scoreStanding, setScoreStanding] = useState(null);
   const [scoreLoading, setScoreLoading] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
@@ -225,34 +251,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   };
 
   const handleRestorePurchases = async () => {
-    // Consumables cannot be restored through StoreKit / Apple ID (App Review 3.1.1).
-    if (Platform.OS === 'ios') {
-      if (!authed) {
-        Alert.alert(t('shop.alert.syncSignIn.title'), t('shop.alert.syncSignIn.body'), [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('settings.account.signIn'), onPress: handleSignIn },
-        ]);
-        return;
-      }
-      setRestoringPurchases(true);
-      try {
-        await verifyPendingIapIfNeeded();
-        await wallet.refresh({ silent: true });
-        Alert.alert(t('shop.alert.synced.title'), t('shop.alert.synced.body'));
-      } catch (error) {
-        Alert.alert(
-          t('shop.alert.syncFailed.title'),
-          error.message ?? t('shop.alert.syncFailed.body')
-        );
-      } finally {
-        setRestoringPurchases(false);
-      }
-      return;
-    }
-
     setRestoringPurchases(true);
     try {
       await restorePurchases();
+      if (authed) {
+        await verifyPendingIapIfNeeded();
+        await wallet.refresh({ silent: true });
+      }
       Alert.alert(t('shop.alert.restored.title'), t('shop.alert.restored.body'));
     } catch (error) {
       Alert.alert(
@@ -456,7 +461,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
           <MenuRow
             icon={RotateCcw}
-            label={t(Platform.OS === 'ios' ? 'shop.restore.ios' : 'shop.restore')}
+            label={t('shop.restore')}
             subtitle={t(Platform.OS === 'ios' ? 'shop.restore.subtitleIos' : 'shop.restore.subtitleAndroid')}
             onPress={handleRestorePurchases}
             colors={colors}
@@ -582,6 +587,19 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
                 embedded
               />
+              {PACK_ENDING_PREVIEWS.map((preview) => (
+                <View key={preview.packType}>
+                  <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+                  <MenuRow
+                    icon={preview.icon}
+                    label={t(preview.labelKey)}
+                    subtitle={t(preview.subtitleKey)}
+                    onPress={() => setPackEndingPreview(preview)}
+                    colors={colors}
+                    embedded
+                  />
+                </View>
+              ))}
             </View>
           </>
         ) : null}
@@ -597,6 +615,15 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           hintCoinsSpent={2}
           onClose={() => setCompletePreviewVisible(false)}
           onNext={() => setCompletePreviewVisible(false)}
+        />
+      ) : null}
+      {__DEV__ ? (
+        <PackCompletionModal
+          visible={!!packEndingPreview}
+          packType={packEndingPreview?.packType || 'CLASSIC'}
+          stats={packEndingPreview?.stats || {}}
+          onNextPack={() => setPackEndingPreview(null)}
+          onClose={() => setPackEndingPreview(null)}
         />
       ) : null}
     </View>

@@ -8,7 +8,7 @@ import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
-import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
+import { PACK_ICON_TINT, packMarkColor } from '../constants/packs';
 import {
   getDefaultOffering,
   getRevenueCatIdentity,
@@ -22,6 +22,7 @@ import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 import { savePendingIap } from '../lib/pendingIap';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
+import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
 import { grantPackEntitlement } from '../lib/packEntitlements';
 
 const GOLD = '#facc15';
@@ -29,16 +30,25 @@ const GOLD = '#facc15';
 const PACKAGE_ICONS = {
   starterChest: require('../assets/icons/starter-chest.webp'),
   classicSwords: require('../assets/icons/classic-swords.webp'),
+  hardQuestPeak: require('../assets/icons/hard-quest-peak.png'),
   masterScroll: require('../assets/icons/master-scroll.webp'),
 };
 
 function ProductIcon({ icon, colors }) {
+  const { isDark } = useAppearance();
   if (icon === 'goldCoins') {
     return <GiTwoCoins size={28} color={GOLD} />;
   }
   const source = PACKAGE_ICONS[icon];
   if (source) {
-    return <Image source={source} style={styles.packageIconImage} resizeMode="contain" />;
+    const tint = packMarkColor(icon, isDark) || PACK_ICON_TINT[icon];
+    return (
+      <Image
+        source={source}
+        style={[styles.packageIconImage, tint ? { tintColor: tint } : null]}
+        resizeMode="contain"
+      />
+    );
   }
   return <ShoppingBag color={colors.primaryGlow} size={22} strokeWidth={1.8} />;
 }
@@ -158,6 +168,9 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         ...rcIdentity,
       };
       await grantPackEntitlement(productId);
+      if (meta.grants?.classic && meta.grants?.daily) {
+        await markStarterPackPurchased();
+      }
       if (authed) {
         const verify = await CreditApi.verifyIapPurchase({
           appCode: APP_STORE.appSiteId,
@@ -166,24 +179,9 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           rawPayload: storePayload,
         });
         await grantPackEntitlement(productId);
-        if (meta.grants?.classic && meta.grants?.daily) {
-          await markStarterPackPurchased();
-        }
-        const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
         if (verify?.creditBalance != null && __DEV__) {
           console.log('[Shop] credits after verify', verify.creditBalance);
         }
-      } else if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
-        await markStarterPackPurchased();
-        await savePendingIap({
-          productId,
-          transactionId,
-          packageKey: meta.packageId,
-          ...rcIdentity,
-        });
-        const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
       } else {
         await savePendingIap({
           productId,
@@ -191,23 +189,12 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           packageKey: meta.packageId,
           ...rcIdentity,
         });
-        Alert.alert(
-          t('shop.alert.signInRequired.title'),
-          t('shop.alert.signInRequired.body'),
-          [
-            {
-              text: t('shop.alert.signInRequired.action'),
-              onPress: () =>
-                navigate(SCREENS.SIGN_IN, {
-                  backScreen: SCREENS.SHOP,
-                  returnBackScreen: backScreen,
-                  requireSignIn: true,
-                }),
-            },
-          ],
-          { cancelable: false }
-        );
+        if (meta.coinsGrant) {
+          await addGuestPuzzleCoins(meta.coinsGrant).catch(() => {});
+        }
       }
+      const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
+      Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));
@@ -239,7 +226,7 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
             )}
           </Text>
         ) : (
-          IAP_PACKAGES.map((meta) => {
+          IAP_PACKAGES.filter((meta) => !meta.shopHidden).map((meta) => {
             const rcPackage = findRcPackage(meta.packageId);
             const priceLabel = rcPackage?.product?.priceString ?? meta.priceUsd;
             return (

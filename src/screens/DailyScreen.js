@@ -26,6 +26,9 @@ import {
   montrealYmdFromDate,
 } from '../lib/montrealCalendar';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
+import { IAP_PACKAGES } from '../constants/store';
+import PackPurchaseModal from '../components/PackPurchaseModal';
+import { hasUnlimitedDaily } from '../lib/packEntitlements';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -74,6 +77,12 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [puzzle, setPuzzle] = useState(null);
   const [foundWords, setFoundWords] = useState([]);
   const [hintLetters, setHintLetters] = useState(() => new Map());
+  const [dailyOwned, setDailyOwned] = useState(false);
+  const [buyDaily, setBuyDaily] = useState(false);
+
+  useEffect(() => {
+    hasUnlimitedDaily().then(setDailyOwned);
+  }, []);
 
   const setDate = useCallback(
     (ymd) => {
@@ -90,6 +99,12 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      if (!dailyOwned) {
+        setLoading(false);
+        setPuzzle(null);
+        setError('');
+        return;
+      }
       setLoading(true);
       setError('');
       setPuzzle(null);
@@ -116,7 +131,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, t]);
+  }, [dailyOwned, selectedDate, t]);
 
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
   const wordPositions = useMemo(
@@ -143,12 +158,17 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const isToday = selectedDate === todayYmd;
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
-  const canPlay = Boolean(puzzle?.id) && !loading;
+  const canPlay = dailyOwned && Boolean(puzzle?.id) && !loading;
+  const dailyProduct = IAP_PACKAGES.find((item) => item.packageId === 'word_wheel_daily');
 
   const handlePlayDaily = useCallback(() => {
+    if (!dailyOwned) {
+      setBuyDaily(true);
+      return;
+    }
     if (!canPlay) return;
     navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate });
-  }, [canPlay, navigate, selectedDate]);
+  }, [canPlay, dailyOwned, navigate, selectedDate]);
 
   const showGrid = Boolean(puzzle?.id) && gridSize > 0 && puzzleCells.size > 0;
 
@@ -216,7 +236,11 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
 
-          {loading ? (
+          {!dailyOwned ? (
+            <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
+              {t('daily.locked.body')}
+            </Text>
+          ) : loading ? (
             <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
           ) : puzzle?.id ? (
             <>
@@ -256,15 +280,30 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           style={[
             styles.primaryBtn,
             { backgroundColor: colors.primary },
-            !canPlay && styles.primaryBtnDisabled,
+            dailyOwned && !canPlay && styles.primaryBtnDisabled,
           ]}
-          disabled={!canPlay}
+          disabled={dailyOwned && !canPlay}
           onPress={handlePlayDaily}
         >
           <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
-          <Text style={styles.primaryBtnText}>{puzzleCompleted ? t('daily.replay') : t('common.play')}</Text>
+          <Text style={styles.primaryBtnText}>
+            {dailyOwned
+              ? (puzzleCompleted ? t('daily.replay') : t('common.play'))
+              : t('daily.locked.buy')}
+          </Text>
         </Pressable>
       </ScrollView>
+      <PackPurchaseModal
+        visible={buyDaily && !!dailyProduct}
+        pack={dailyProduct ? { ...dailyProduct, code: 'daily' } : null}
+        icon={require('../assets/icons/starter-chest.webp')}
+        onClose={() => setBuyDaily(false)}
+        onPurchased={() => {
+          setDailyOwned(true);
+          setBuyDaily(false);
+        }}
+        onSignIn={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.DAILY, requireSignIn: true })}
+      />
     </View>
   );
 }

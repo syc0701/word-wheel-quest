@@ -187,6 +187,7 @@ export default {
   'shop.restore': '구매 복원',
   'shop.restore.subtitleIos': '코인과 크레딧은 일회성입니다. 로그인하면 계정에서 불러옵니다.',
   'shop.restore.subtitleAndroid': '이미 구매하셨나요? 여기서 복원하세요.',
+  'guest.starter.notNow': '나중에',
   'webview.titleFallback': '페이지',
   'devIntermission.title.wordMaster': '워드 마스터',
   'devIntermission.title.streaksSparks': '연속 & 스파크',

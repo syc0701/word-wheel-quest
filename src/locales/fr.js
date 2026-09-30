@@ -187,6 +187,7 @@ export default {
   'shop.restore': 'Restaurer les achats',
   'shop.restore.subtitleIos': 'Les pièces et crédits sont à usage unique. Connectez-vous pour les charger depuis votre compte.',
   'shop.restore.subtitleAndroid': 'Déjà acheté ? Restaurez ici.',
+  'guest.starter.notNow': 'Pas maintenant',
   'webview.titleFallback': 'Page',
   'devIntermission.title.wordMaster': 'Maître des mots',
   'devIntermission.title.streaksSparks': 'Séries et étincelles',

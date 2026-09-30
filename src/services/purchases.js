@@ -2,6 +2,11 @@ import { Platform } from 'react-native';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { REVENUECAT_API_KEY, REVENUECAT_OFFERING } from '../constants/store';
 
+async function applyRestoredEntitlements(info) {
+  const { applyStoreEntitlements } = require('../lib/packEntitlements');
+  await applyStoreEntitlements(info);
+}
+
 let configured = false;
 /** Android emulators / devices without Play billing — skip further store calls. */
 let storeUnavailable = false;
@@ -76,6 +81,12 @@ export async function configurePurchases() {
       return;
     }
     configured = true;
+    try {
+      const info = await Purchases.getCustomerInfo();
+      await applyRestoredEntitlements(info);
+    } catch {
+      /* restore button still applies non-consumables */
+    }
   } catch (error) {
     if (__DEV__) console.warn(`[Purchases] configure failed: ${error?.message}`);
     return;
@@ -147,15 +158,14 @@ export function readPurchaseTransactionId(purchaseResult) {
 }
 
 export async function restorePurchases() {
-  if (Platform.OS === 'ios') {
-    throw new Error('Consumable purchases cannot be restored with Apple ID.');
-  }
   if (Platform.OS === 'android') {
     assertStoreReady();
   } else if (!isPurchasesConfigured()) {
     throw new Error('Purchases are not configured yet.');
   }
-  return Purchases.restorePurchases();
+  const info = await Purchases.restorePurchases();
+  await applyRestoredEntitlements(info);
+  return info;
 }
 
 const EMPTY_IDENTITY = { revenueCatAppUserId: '', revenueCatOriginalAppUserId: '' };
