@@ -2012,6 +2012,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           { paddingTop: Math.max(insets.top, 12) + 8 },
         ]}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={isLandscape || isOnboarding}
         keyboardShouldPersistTaps="handled"
         scrollEventThrottle={16}
         onScroll={(e) => {
@@ -2098,8 +2099,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <View style={isLandscape ? styles.widePlayStage : undefined}>
+        <View style={isLandscape ? styles.widePlayStage : styles.playStage}>
         <PuzzleGrid
+          fill={!isLandscape}
           gridSize={gridSize}
           displayGrid={displayGrid}
           puzzleCells={puzzleCells}
@@ -2560,6 +2562,11 @@ const styles = StyleSheet.create({
   },
   scrollLandscape: {
     flexGrow: 1,
+  },
+  playStage: {
+    flexGrow: 1,
+    width: '100%',
+    minHeight: 0,
   },
   widePlayStage: {
     flexGrow: 1,
