@@ -14,4 +14,12 @@ Word Wheel Quest はクロスワードのヒントと文字ホイールを組み
 • スマホ、大画面、PC向けのレイアウト
 • シーズンレベルとデイリーパズル
 
+パック
+• 無料のシーズンはこれまでどおり無料
+• Classic Challenge: パズル200問
+• Hard Quest: パズル400問、単語は4〜8文字
+• Master Quest: パズル500問
+• Daily Bundle: デイリーパズルが無制限
+• Remove Ads: バナー広告と5レベルごとの広告をなくす
+
 Word Wheel Quest をダウンロード——ヒントひとつ、スワイプひとつ。
