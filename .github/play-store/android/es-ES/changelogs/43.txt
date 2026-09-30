@@ -1,0 +1,7 @@
+Novedades de esta actualización:
+
+- Cuadrícula del puzzle más grande
+- Las pistas largas se quedan quietas: desplázalas tú
+- Classic, Hard Quest y Master en la pantalla de inicio, con progreso
+
+¡Gracias por jugar!

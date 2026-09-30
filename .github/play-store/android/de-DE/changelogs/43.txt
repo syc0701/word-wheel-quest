@@ -1,0 +1,7 @@
+Neu in diesem Update:
+
+- Größeres Rätselgitter
+- Lange Hinweise bleiben stehen — selbst scrollen
+- Classic, Hard Quest und Master auf dem Startbildschirm, mit Fortschritt
+
+Danke fürs Spielen!
