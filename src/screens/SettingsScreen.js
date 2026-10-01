@@ -50,21 +50,21 @@ const PACK_ENDING_PREVIEWS = [
     icon: Trophy,
     labelKey: 'settings.dev.packEnding.classic',
     subtitleKey: 'settings.dev.packEnding.classic.subtitle',
-    stats: { totalPuzzles: 200, totalWords: 860 },
+    stats: { totalPuzzles: 200 },
   },
   {
     packType: 'HARD_QUEST',
     icon: Shield,
     labelKey: 'settings.dev.packEnding.hard',
     subtitleKey: 'settings.dev.packEnding.hard.subtitle',
-    stats: { hintsUsed: 12, accuracy: '94%' },
+    stats: { totalPuzzles: 400 },
   },
   {
     packType: 'MASTER',
     icon: Crown,
     labelKey: 'settings.dev.packEnding.master',
     subtitleKey: 'settings.dev.packEnding.master.subtitle',
-    stats: { completionTime: '6h 12m', totalWords: 2400 },
+    stats: { totalPuzzles: 500 },
   },
 ];
 
@@ -615,7 +615,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           visible={!!packEndingPreview}
           packType={packEndingPreview?.packType || 'CLASSIC'}
           stats={packEndingPreview?.stats || {}}
-          onClaimBonus={() => {}}
           onNextPack={() => setPackEndingPreview(null)}
           onClose={() => setPackEndingPreview(null)}
         />

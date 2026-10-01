@@ -2315,7 +2315,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         visible={!!packEnding}
         packType={packEnding?.packType || 'CLASSIC'}
         stats={{ totalPuzzles: packEnding?.totalPuzzles }}
-        onClaimBonus={() => {}}
         onNextPack={() => {
           setPackEnding(null);
           navigate(SCREENS.HOME);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Animated,
   Easing,
@@ -9,7 +9,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Crown, Shield, Trophy } from 'lucide-react-native';
 import { useT } from '../context/LanguageContext';
 
@@ -24,7 +23,6 @@ const THEMES = {
     ink: '#78350F',
     muted: '#92400E',
     accent: '#D97706',
-    gradient: ['#FDE68A', '#D97706'],
     glow: 'rgba(245, 158, 11, 0.45)',
     particle: '#F59E0B',
   },
@@ -38,7 +36,6 @@ const THEMES = {
     ink: '#FAFAF9',
     muted: '#D6D3D1',
     accent: '#E7C27A',
-    gradient: ['#78716C', '#44403C'],
     glow: 'rgba(231, 194, 122, 0.4)',
     particle: '#F97316',
   },
@@ -52,7 +49,6 @@ const THEMES = {
     ink: '#FAF5FF',
     muted: '#E9D5FF',
     accent: '#F5D061',
-    gradient: ['#C4B5FD', '#6D28D9'],
     glow: 'rgba(167, 139, 250, 0.55)',
     particle: '#F5D061',
   },
@@ -64,24 +60,9 @@ export function packCompletionType(code) {
   return 'CLASSIC';
 }
 
-function statRows(packType, stats) {
-  const rows = [];
-  const push = (key, value) => {
-    if (value == null || value === '') return;
-    rows.push({ key, value: String(value) });
-  };
-  if (packType === 'HARD_QUEST') {
-    push('hints', stats.hintsUsed);
-    push('accuracy', stats.accuracy);
-  } else if (packType === 'MASTER') {
-    push('time', stats.completionTime);
-    push('words', stats.totalWords);
-  } else {
-    push('puzzles', stats.totalPuzzles);
-    push('words', stats.totalWords);
-  }
-  if (!rows.length) push('puzzles', stats.totalPuzzles);
-  return rows;
+function statRows(stats) {
+  if (stats?.totalPuzzles == null || stats.totalPuzzles === '') return [];
+  return [{ key: 'puzzles', value: String(stats.totalPuzzles) }];
 }
 
 function DriftBits({ theme, kind }) {
@@ -149,7 +130,6 @@ export default function PackCompletionModal({
   visible,
   packType = 'CLASSIC',
   stats = {},
-  onClaimBonus,
   onNextPack,
   onClose,
 }) {
@@ -159,14 +139,9 @@ export default function PackCompletionModal({
   const fade = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(0.88)).current;
   const aura = useRef(new Animated.Value(0.45)).current;
-  const shimmer = useRef(new Animated.Value(0)).current;
-  const [claimed, setClaimed] = useState(false);
 
   useEffect(() => {
-    if (!visible) {
-      setClaimed(false);
-      return undefined;
-    }
+    if (!visible) return undefined;
     fade.setValue(0);
     scale.setValue(0.88);
     const enter = Animated.parallel([
@@ -199,34 +174,14 @@ export default function PackCompletionModal({
         }),
       ])
     );
-    const shine = Animated.loop(
-      Animated.timing(shimmer, {
-        toValue: 1,
-        duration: 1400,
-        easing: Easing.inOut(Easing.quad),
-        useNativeDriver: true,
-      })
-    );
     auraLoop.start();
-    shine.start();
     return () => {
       enter.stop();
       auraLoop.stop();
-      shine.stop();
     };
-  }, [aura, fade, scale, shimmer, visible]);
+  }, [aura, fade, scale, visible]);
 
-  const rows = statRows(packType, stats);
-  const shineX = shimmer.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-160, 260],
-  });
-
-  const claim = () => {
-    if (claimed) return;
-    setClaimed(true);
-    onClaimBonus?.();
-  };
+  const rows = statRows(stats);
 
   const share = async () => {
     try {
@@ -272,27 +227,6 @@ export default function PackCompletionModal({
                 </View>
               ))}
             </View>
-            <Pressable
-              style={[styles.claim, claimed && styles.claimDone]}
-              onPress={claim}
-              disabled={claimed}
-            >
-              <LinearGradient
-                colors={theme.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFill}
-              />
-              {!claimed ? (
-                <Animated.View
-                  pointerEvents="none"
-                  style={[styles.shimmer, { transform: [{ translateX: shineX }] }]}
-                />
-              ) : null}
-              <Text style={styles.claimText}>
-                {t(claimed ? 'pack.complete.claimed' : 'pack.complete.claim')}
-              </Text>
-            </Pressable>
             <Pressable style={[styles.primary, { backgroundColor: theme.accent }]} onPress={onNextPack}>
               <Text style={[styles.primaryText, { color: theme.background }]}>
                 {t(theme.primaryKey)}
@@ -379,32 +313,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  claim: {
-    marginTop: 18,
-    alignSelf: 'stretch',
-    minHeight: 48,
-    borderRadius: 14,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  claimDone: {
-    opacity: 0.85,
-  },
-  shimmer: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: 70,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-  },
-  claimText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '800',
-  },
   primary: {
-    marginTop: 10,
+    marginTop: 18,
     alignSelf: 'stretch',
     minHeight: 46,
     borderRadius: 14,
