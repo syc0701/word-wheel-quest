@@ -8,7 +8,9 @@ import { useT } from '../context/LanguageContext';
 import { APP_STORE } from '../constants/store';
 import { PACK_THEMES, packByCode, packMarkColor } from '../constants/packs';
 import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
+import { isLoggedIn } from '../lib/auth';
 import CreditApi from '../lib/creditApi';
+import { grantLocalPackBonus } from '../lib/packBonusCoins';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
 import { grantPackEntitlement } from '../lib/packEntitlements';
 import {
@@ -120,6 +122,9 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
           ...rcIdentity,
         },
       });
+      if (!(await isLoggedIn()) && pack.bonusCoins) {
+        await grantLocalPackBonus(transactionId, pack.bonusCoins);
+      }
       await grantPackEntitlement(productId);
       if (pack.grants?.classic && pack.grants?.daily) {
         await markStarterPackPurchased({ grantGuestCredits: false });
@@ -145,6 +150,7 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
   const name = pack?.nameKey ? t(pack.nameKey) : pack?.name;
   const promoTitle = catalog?.promoTitleKey ? t(catalog.promoTitleKey) : '';
   const promoBody = catalog?.promoBodyKey ? t(catalog.promoBodyKey) : '';
+  const bonusCoins = Math.max(0, Math.floor(Number(pack?.bonusCoins) || 0));
   const theme = PACK_THEMES[pack?.code] || PACK_THEMES.classic;
   const mark = packMarkColor(pack?.code, isDark) || theme.icon;
 
@@ -166,6 +172,11 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
           ) : null}
           {promoBody ? (
             <Text style={[styles.body, { color: colors.textMuted }]}>{promoBody}</Text>
+          ) : null}
+          {bonusCoins > 0 ? (
+            <Text style={[styles.bonus, { color: mark }]}>
+              {t('pack.bonusCoins', { n: bonusCoins })}
+            </Text>
           ) : null}
           <View style={styles.ctaWrap}>
             <Animated.View
@@ -233,6 +244,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 15,
     lineHeight: 20,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  bonus: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '800',
     textAlign: 'center',
   },

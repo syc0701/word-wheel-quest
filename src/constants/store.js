@@ -48,6 +48,7 @@ export const IAP_PACKAGES = [
     description: '200 journey puzzles.',
     priceUsd: '$1.99',
     icon: 'classicSwords',
+    bonusCoins: 100,
     grants: { classic: true },
   },
   {
@@ -59,6 +60,7 @@ export const IAP_PACKAGES = [
     description: '400 hard puzzles. Words are 4–8 letters.',
     priceUsd: '$2.99',
     icon: 'hardQuestPeak',
+    bonusCoins: 200,
     grants: { hard: true },
   },
   {
@@ -70,6 +72,7 @@ export const IAP_PACKAGES = [
     description: '500 master journey puzzles. Most words are 3–8 letters.',
     priceUsd: '$2.99',
     icon: 'masterScroll',
+    bonusCoins: 300,
     grants: { master: true },
   },
   {
@@ -93,6 +96,7 @@ export const IAP_PACKAGES = [
     priceUsd: '$3.99',
     icon: 'starterChest',
     shopHidden: true,
+    bonusCoins: 100,
     grants: { classic: true, daily: true },
   },
   {

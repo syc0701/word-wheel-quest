@@ -19,7 +19,9 @@ import {
   readPurchaseTransactionId,
   rememberRevenueCatIdentityFromPurchase,
 } from '../services/purchases';
+import { isLoggedIn } from '../lib/auth';
 import CreditApi from '../lib/creditApi';
+import { grantLocalPackBonus } from '../lib/packBonusCoins';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
 import { grantPackEntitlement } from '../lib/packEntitlements';
 import { useAudio } from '../context/AudioContext';
@@ -174,6 +176,9 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         transactionId,
         rawPayload: storePayload,
       });
+      if (!(await isLoggedIn()) && meta.bonusCoins) {
+        await grantLocalPackBonus(transactionId, meta.bonusCoins);
+      }
       await grantPackEntitlement(productId);
       if (meta.grants?.classic && meta.grants?.daily) {
         await markStarterPackPurchased({ grantGuestCredits: false });

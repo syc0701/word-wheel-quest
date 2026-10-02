@@ -736,6 +736,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           setOwnedPackCodes((codes) => (
             codes.includes(bought.code) ? codes : [...codes, bought.code]
           ));
+          wallet.refresh({ silent: true }).catch(() => {});
         }}
       />
       <DailyGiftModal

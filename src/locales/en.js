@@ -287,6 +287,7 @@ export default {
   'shop.pack.removeAds.description': 'No banner ads and no ad every 5 levels.',
   'pack.classic.name': 'Classic',
   'pack.classic.detail': '200 puzzles',
+  'pack.bonusCoins': '+{n} bonus coins',
   'pack.classic.promoTitle': 'Easy to Start, Relaxing to Play',
   'pack.classic.promoBody': 'Simple words make solving a breeze. Enjoy a smooth, relaxing pace and reach the finish line quickly!',
   'pack.hard.name': 'Hard Quest',
