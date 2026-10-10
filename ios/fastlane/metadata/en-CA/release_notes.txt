@@ -1,0 +1,7 @@
+What's new in version 2.0.4:
+
+- Leaderboard with top scores and your rank
+- Sign in to save your name and score
+- Daily Puzzle plays after a short video
+
+Thanks for playing!

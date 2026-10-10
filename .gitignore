@@ -36,7 +36,6 @@ yarn-error.*
 client_secret*.json
 
 # Fastlane secrets & generated screenshots (iOS)
-ios/fastlane/asc_api_key.env
 ios/fastlane/asc_review_contact.env
 ios/fastlane/screenshots/**/*.png
 ios/fastlane/screenshots/**/*.html
