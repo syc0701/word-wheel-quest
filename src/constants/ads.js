@@ -72,6 +72,14 @@ export function isLevelClearAdLevel(levelNumber) {
   return Number.isFinite(level) && level > 0 && level % 5 === 0;
 }
 
+/** Daily entry video. Debug uses Google's test video so a fill always shows. */
+export function getDailyPlayAdUnitId() {
+  if (!isAdsEnabled() || __DEV__) return TestIds.REWARDED;
+  if (Platform.OS === 'ios') return ADMOB_IOS_CELL_REWARDED_UNIT_ID;
+  if (Platform.OS === 'android') return ADMOB_ANDROID_CELL_REWARDED_UNIT_ID;
+  return TestIds.REWARDED;
+}
+
 /** Live cell unit even in dev. This placement does not send SSV custom data. */
 export function getCellRewardedAdUnitId() {
   if (!isAdsEnabled()) return TestIds.REWARDED;

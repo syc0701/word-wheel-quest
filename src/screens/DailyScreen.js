@@ -1,16 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Animated,
+  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
-import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowLeft, ChevronLeft, ChevronRight, Gift, Play } from 'lucide-react-native';
+import AdBanner from '../components/AdBanner';
+import { purchaseIapPack } from '../components/PackPurchaseModal';
+import { useAudio } from '../context/AudioContext';
 import PuzzleGrid from '../components/PuzzleGrid';
 import WordWheelApi from '../lib/api';
 import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
+import { DAILY_BUNDLE_PACKAGE_ID } from '../constants/guestAccess';
+import { IAP_PACKAGES } from '../constants/store';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
   buildDisplayGrid,
@@ -26,15 +36,77 @@ import {
   montrealYmdFromDate,
 } from '../lib/montrealCalendar';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
-import { IAP_PACKAGES } from '../constants/store';
-import PackPurchaseModal from '../components/PackPurchaseModal';
-import { hasUnlimitedDaily } from '../lib/packEntitlements';
+import { resolveDailyPlayAccess } from '../lib/guestStarterPack';
+import { showDailyPlayAd } from '../services/rewardedLetterAd';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
+import { hasUnlimitedDaily } from '../lib/packEntitlements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const EMPTY_SET = new Set();
 const EMPTY_MAP = new Map();
+const DAILY_BUNDLE = IAP_PACKAGES.find((pack) => pack.packageId === DAILY_BUNDLE_PACKAGE_ID) || null;
+
+function isDailyBundleRequired(data) {
+  return data?.code === 'FAILURE' && data?.message === 'Pack not owned';
+}
+
+function DailyBundleButton({ label, onPress, busy }) {
+  const shine = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shine, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shine, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(700),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shine]);
+
+  const shineX = shine.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-180, 320],
+  });
+
+  return (
+    <Pressable
+      style={[styles.bundleBtn, busy && styles.primaryBtnDisabled]}
+      onPress={onPress}
+      disabled={busy}
+      accessibilityLabel={label}
+    >
+      <LinearGradient
+        colors={['#F59E0B', '#D97706', '#92400E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.bundleBtnFill}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.bundleShine, { transform: [{ translateX: shineX }, { skewX: '-18deg' }] }]}
+        />
+        {busy ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Gift color="#fff" size={18} strokeWidth={2.4} />
+        )}
+        <Text style={styles.bundleBtnText}>{label}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
 
 function parseFoundWords(data) {
   const raw = data?.wordsFound ?? data?.foundWords ?? data?.play?.wordsFound ?? '';
@@ -45,7 +117,12 @@ function parseFoundWords(data) {
 export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const { playSfx } = useAudio();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isWide = width > height;
+  const wideAdWidth = Math.max(1, Math.floor(width / 3 - 40));
+  const gridMax = Math.max(160, Math.floor(height - Math.max(insets.top, 12) - 300));
 
   const sceneText = useMemo(
     () =>
@@ -77,12 +154,19 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [puzzle, setPuzzle] = useState(null);
   const [foundWords, setFoundWords] = useState([]);
   const [hintLetters, setHintLetters] = useState(() => new Map());
-  const [dailyOwned, setDailyOwned] = useState(false);
-  const [buyDaily, setBuyDaily] = useState(false);
+  const [unlimitedDaily, setUnlimitedDaily] = useState(false);
+  const [adBusy, setAdBusy] = useState(false);
+  const [needsDailyBundle, setNeedsDailyBundle] = useState(false);
+  const [bundleBusy, setBundleBusy] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const refreshDailyAccess = useCallback(async () => {
+    setUnlimitedDaily(await hasUnlimitedDaily());
+  }, []);
 
   useEffect(() => {
-    hasUnlimitedDaily().then(setDailyOwned);
-  }, []);
+    refreshDailyAccess();
+  }, [refreshDailyAccess, routeParams.starterUnlockTick]);
 
   const setDate = useCallback(
     (ymd) => {
@@ -99,22 +183,26 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!dailyOwned) {
-        setLoading(false);
-        setPuzzle(null);
-        setError('');
-        return;
-      }
       setLoading(true);
       setError('');
       setPuzzle(null);
       setFoundWords([]);
       setHintLetters(new Map());
+      setNeedsDailyBundle(false);
       try {
         const data = await WordWheelApi.fetchDaily(selectedDate);
         if (cancelled) return;
+        if (isDailyBundleRequired(data)) {
+          setNeedsDailyBundle(true);
+          setError(t('daily.bundleRequired'));
+          return;
+        }
         if (data?.code === 'NO_DATA') {
           setError(t('daily.error.noData'));
+          return;
+        }
+        if (data?.code === 'FAILURE' || !data?.id) {
+          setError(data?.message || t('daily.error.loadFailed'));
           return;
         }
         const storedHints = data?.id ? await loadStoredHintLetters(data.id) : new Map();
@@ -131,7 +219,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [dailyOwned, selectedDate, t]);
+  }, [reloadKey, selectedDate, t]);
 
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
   const wordPositions = useMemo(
@@ -158,17 +246,64 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const isToday = selectedDate === todayYmd;
   const canGoPrev = selectedDate > minYmd;
   const canGoNext = selectedDate < todayYmd;
-  const canPlay = dailyOwned && Boolean(puzzle?.id) && !loading;
-  const dailyProduct = IAP_PACKAGES.find((item) => item.packageId === 'word_wheel_daily');
+  const canPlay = Boolean(puzzle?.id) && !loading;
 
-  const handlePlayDaily = useCallback(() => {
-    if (!dailyOwned) {
-      setBuyDaily(true);
-      return;
+  const handlePlayDaily = useCallback(async () => {
+    if (!canPlay || adBusy) return;
+    const access = await resolveDailyPlayAccess();
+    const alreadyWatched = Boolean(routeParams.adWatched);
+    if (access !== 'unlocked' && !alreadyWatched) {
+      setAdBusy(true);
+      try {
+        const earned = await showDailyPlayAd();
+        if (!earned) {
+          Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+          return;
+        }
+      } catch {
+        Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+        return;
+      } finally {
+        setAdBusy(false);
+      }
     }
-    if (!canPlay) return;
-    navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate });
-  }, [canPlay, dailyOwned, navigate, selectedDate]);
+    navigate(SCREENS.DAILY_PLAY, {
+      mode: PLAY_MODE.DAILY,
+      date: selectedDate,
+      adWatched: true,
+    });
+  }, [adBusy, canPlay, navigate, routeParams.adWatched, selectedDate, t]);
+
+  const handleBuyDailyBundle = useCallback(async () => {
+    if (bundleBusy || !DAILY_BUNDLE) return;
+    setBundleBusy(true);
+    try {
+      const result = await purchaseIapPack(DAILY_BUNDLE);
+      if (result.reason === 'unavailable') {
+        Alert.alert(t('shop.alert.productUnavailable.title'), t('shop.alert.productUnavailable.body'));
+        return;
+      }
+      if (!result.ok) {
+        if (result.reason !== 'cancelled') {
+          Alert.alert(
+            t('shop.alert.purchaseFailed.title'),
+            result.message ?? t('shop.alert.purchaseFailed.body')
+          );
+        }
+        return;
+      }
+      playSfx('purchaseWin');
+      Alert.alert(
+        t('shop.alert.success.title'),
+        t('shop.alert.success.body', { name: t('shop.pack.daily.name') })
+      );
+      setUnlimitedDaily(true);
+      setNeedsDailyBundle(false);
+      setReloadKey((key) => key + 1);
+    } finally {
+      setBundleBusy(false);
+    }
+  }, [bundleBusy, playSfx, t]);
 
   const showGrid = Boolean(puzzle?.id) && gridSize > 0 && puzzleCells.size > 0;
 
@@ -188,16 +323,25 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
         <View style={styles.topBarSpacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={isWide ? styles.wideScroll : undefined}
+        contentContainerStyle={isWide ? styles.wideRow : styles.scroll}
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!isWide}
+      >
+        <View style={isWide ? styles.wideCol : undefined}>
         <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>{t('daily.kicker')}</Text>
         <Text style={[styles.title, { color: colors.text }, sceneText]}>{t('daily.title')}</Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText]}>
-          {t('daily.subtitle')}
+        <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText, isWide && styles.subtitleWide]}>
+          {unlimitedDaily ? t('daily.subtitle') : t('daily.subtitleWatchAd')}
         </Text>
+        </View>
 
+        <View style={isWide ? styles.wideMiddle : undefined}>
         <View
           style={[
             styles.card,
+            isWide && styles.cardWide,
             { backgroundColor: colors.surface, borderColor: colors.surfaceLight },
           ]}
         >
@@ -236,11 +380,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
 
-          {!dailyOwned ? (
-            <Text style={[styles.puzzleMeta, { color: colors.textMuted }]}>
-              {t('daily.locked.body')}
-            </Text>
-          ) : loading ? (
+          {loading ? (
             <ActivityIndicator color={colors.primaryGlow} style={styles.loader} />
           ) : puzzle?.id ? (
             <>
@@ -254,9 +394,11 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
                 </View>
               ) : null}
               {showGrid ? (
-                <View style={styles.gridPreview}>
+                <View style={isWide ? styles.gridPreviewWide : styles.gridPreview}>
                   <PuzzleGrid
-                    fitWidth
+                    fitWidth={!isWide}
+                    bounded={isWide}
+                    maxBoardSize={isWide ? gridMax : 0}
                     gridSize={gridSize}
                     displayGrid={displayGrid}
                     puzzleCells={puzzleCells}
@@ -276,34 +418,42 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           )}
         </View>
 
-        <Pressable
-          style={[
-            styles.primaryBtn,
-            { backgroundColor: colors.primary },
-            dailyOwned && !canPlay && styles.primaryBtnDisabled,
-          ]}
-          disabled={dailyOwned && !canPlay}
-          onPress={handlePlayDaily}
-        >
-          <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
-          <Text style={styles.primaryBtnText}>
-            {dailyOwned
-              ? (puzzleCompleted ? t('daily.replay') : t('common.play'))
-              : t('daily.locked.buy')}
-          </Text>
-        </Pressable>
+        {needsDailyBundle ? (
+          <DailyBundleButton
+            label={t('daily.getBundle')}
+            busy={bundleBusy}
+            onPress={handleBuyDailyBundle}
+          />
+        ) : (
+          <Pressable
+            style={[
+              styles.primaryBtn,
+              { backgroundColor: colors.primary },
+              (!canPlay || adBusy) && styles.primaryBtnDisabled,
+            ]}
+            disabled={!canPlay || adBusy}
+            onPress={handlePlayDaily}
+          >
+            {adBusy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
+            )}
+            <Text style={styles.primaryBtnText}>
+              {unlimitedDaily || routeParams.adWatched
+                ? (puzzleCompleted ? t('daily.replay') : t('common.play'))
+                : t('daily.watchAd')}
+            </Text>
+          </Pressable>
+        )}
+        </View>
+
+        {isWide ? (
+          <View style={styles.wideCol}>
+            <AdBanner width={wideAdWidth} style={styles.wideAd} />
+          </View>
+        ) : null}
       </ScrollView>
-      <PackPurchaseModal
-        visible={buyDaily && !!dailyProduct}
-        pack={dailyProduct ? { ...dailyProduct, code: 'daily' } : null}
-        icon={require('../assets/icons/starter-chest.webp')}
-        onClose={() => setBuyDaily(false)}
-        onPurchased={() => {
-          setDailyOwned(true);
-          setBuyDaily(false);
-        }}
-        onSignIn={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.DAILY, requireSignIn: true })}
-      />
     </View>
   );
 }
@@ -332,6 +482,43 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  wideScroll: {
+    flex: 1,
+  },
+  wideRow: {
+    flexGrow: 1,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    paddingHorizontal: 18,
+    paddingBottom: 16,
+    gap: 16,
+  },
+  wideCol: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  wideMiddle: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 0,
+  },
+  cardWide: {
+    flex: 1,
+    minHeight: 0,
+  },
+  gridPreviewWide: {
+    flex: 1,
+    minHeight: 0,
+    width: '100%',
+  },
+  subtitleWide: {
+    marginBottom: 0,
+  },
+  wideAd: {
+    paddingHorizontal: 0,
   },
   kicker: {
     fontSize: 12,
@@ -421,6 +608,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
+  },
+  bundleBtn: {
+    marginTop: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  bundleBtnFill: {
+    minHeight: 52,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    overflow: 'hidden',
+  },
+  bundleShine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  bundleBtnText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '800',
   },
   primaryBtn: {
     marginTop: 4,

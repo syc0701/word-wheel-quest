@@ -9,11 +9,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import {
   Calendar,
-  ChevronRight,
   Cloud,
   Gift,
   Lock,
@@ -21,9 +21,12 @@ import {
   Search,
   Settings,
   ShoppingCart,
+  Trophy,
 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AdBanner from '../components/AdBanner';
 import DailyGiftModal from '../components/DailyGiftModal';
+import StarterPackGateModal from '../components/StarterPackGateModal';
 import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
@@ -33,18 +36,18 @@ import { grantDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
+import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { WORD_WHEEL_PACKS, PACK_THEMES, packMarkColor } from '../constants/packs';
 import { IAP_PACKAGES } from '../constants/store';
 import PackPurchaseModal from '../components/PackPurchaseModal';
+import { loadOwnedPackCodes, loadPackLevel, loadPackProgress, serverOwnsPack } from '../lib/packEntitlements';
 import {
-  hasRemoveAds,
-  hasUnlimitedDaily,
-  loadOwnedPackCodes,
-  loadPackLevel,
-  loadPackProgress,
-  locallyOwnsPack,
-  serverOwnsPack,
-} from '../lib/packEntitlements';
+  hasStarterPackAccess,
+  resolveDailyPlayAccess,
+  resolveJourneyPlayAccess,
+  resolveStarterUnlockLevel,
+} from '../lib/guestStarterPack';
+import { showDailyPlayAd } from '../services/rewardedLetterAd';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
@@ -118,32 +121,30 @@ function useHomePalette() {
         }
       : { color: colors.textMuted };
 
-    // Level card: warm gold / cream (matches home mock).
+    // Level card: deep teal into sea-glass, light text on top.
     const LEVEL_CARD = {
-      cardBg: '#E3C17D',
-      cardBorder: '#CDB069',
-      text: '#3A2A1A',
-      muted: 'rgba(58, 42, 26, 0.72)',
-      badgeBg: 'rgba(58, 42, 26, 0.12)',
-      badgeText: '#3A2A1A',
-      progressTrack: 'rgba(58, 42, 26, 0.18)',
-      progressFill: '#8B6914',
-      ctaBg: '#F8EED8',
+      gradient: ['#0F3D38', '#1A7A6D', '#5EEAD4'],
+      cardBorder: 'rgba(255, 255, 255, 0.28)',
+      text: '#F8FFFC',
+      muted: 'rgba(248, 255, 252, 0.78)',
+      badgeBg: 'rgba(255, 255, 255, 0.16)',
+      badgeText: '#F8FFFC',
+      progressTrack: 'rgba(255, 255, 255, 0.22)',
+      progressFill: '#F8EED8',
       ctaText: '#3A2A1A',
     };
 
     const continueCard = {
-      backgroundColor: LEVEL_CARD.cardBg,
       borderColor: LEVEL_CARD.cardBorder,
-      shadowColor: '#6B4E1F',
-      shadowOpacity: 0.18,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
+      shadowColor: '#042F2C',
+      shadowOpacity: 0.28,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 6,
     };
     const continueText = LEVEL_CARD.text;
     const continueMuted = LEVEL_CARD.muted;
-    const continueCta = { backgroundColor: LEVEL_CARD.ctaBg };
+    const continueGradient = LEVEL_CARD.gradient;
     const continueCtaText = LEVEL_CARD.ctaText;
     const progressTrack = LEVEL_CARD.progressTrack;
     const progressFill = LEVEL_CARD.progressFill;
@@ -171,9 +172,9 @@ function useHomePalette() {
       title,
       comment,
       continueCard,
+      continueGradient,
       continueText,
       continueMuted,
-      continueCta,
       continueCtaText,
       progressTrack,
       progressFill,
@@ -191,6 +192,59 @@ function useHomePalette() {
   }, [colors, isDark, isRandomScene]);
 }
 
+function HomeContinueButton({ label, disabled, onPress, accessibilityLabel, textColor }) {
+  const shine = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shine, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shine, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(700),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shine]);
+
+  const shineX = shine.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-180, 320],
+  });
+
+  return (
+    <Pressable
+      style={[styles.continueBtn, disabled && styles.btnDisabled]}
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <LinearGradient
+        colors={['#FFF8EC', '#F6D78A', '#E8B15A']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.continueBtnFill}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.continueShine, { transform: [{ translateX: shineX }, { skewX: '-18deg' }] }]}
+        />
+        <Play color={textColor} size={17} strokeWidth={2.4} fill={textColor} />
+        <Text style={[styles.continueBtnText, { color: textColor }]}>{label}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
+
 export default function HomeScreen({ navigate, routeParams = {} }) {
   const palette = useHomePalette();
   const { colors, isDark } = palette;
@@ -202,6 +256,8 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
   const [guest, setGuest] = useState(true);
+  const [starterGateVisible, setStarterGateVisible] = useState(false);
+  const [starterGateContext, setStarterGateContext] = useState('level');
   const [giftVisible, setGiftVisible] = useState(false);
   const [giftView, setGiftView] = useState(null);
   const [giftBusy, setGiftBusy] = useState(false);
@@ -245,7 +301,13 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [t, routeParams.starterUnlockTick]);
+
+  useEffect(() => {
+    if (routeParams.starterUnlockTick) {
+      wallet.refresh({ silent: true }).catch(() => {});
+    }
+  }, [routeParams.starterUnlockTick, wallet]);
 
   useEffect(() => {
     let cancelled = false;
@@ -338,6 +400,10 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   }, [giftBusy, giftView, t, wallet]);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
+  const starterUnlockLevel = useMemo(
+    () => resolveStarterUnlockLevel(journeyLevel),
+    [journeyLevel]
+  );
   const wordCount = useMemo(
     () => (puzzle?.id ? resolvePuzzleWordCount(puzzle) : 0),
     [puzzle]
@@ -349,13 +415,40 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 
   const handleContinue = useCallback(async () => {
     if (!canPlay) return;
+    const level = journeyLevel;
+    const authed = await isLoggedIn();
+    const hasStarter = await hasStarterPackAccess();
+    const access = await resolveJourneyPlayAccess(level, {
+      hasStarter,
+      loggedIn: authed,
+      creditBalance: wallet.creditBalance,
+      playerJourneyLevel: level,
+    });
+    if (access === 'starter') {
+      setStarterGateContext('level');
+      setStarterGateVisible(true);
+      return;
+    }
+    if (access === 'no_credits') {
+      setStarterGateContext('credits');
+      setStarterGateVisible(true);
+      return;
+    }
     const completed = await hasCompletedOnboarding();
     navigate(SCREENS.PLAY, {
       mode: PLAY_MODE.JOURNEY,
       puzzle,
       isOnboarding: !completed,
     });
-  }, [canPlay, navigate, puzzle]);
+  }, [canPlay, journeyLevel, navigate, puzzle, wallet.creditBalance]);
+
+  const handleStarterGateShop = useCallback(() => {
+    setStarterGateVisible(false);
+    navigate(SCREENS.SHOP, {
+      backScreen: SCREENS.HOME,
+      packageId: STARTER_PACK_PACKAGE_ID,
+    });
+  }, [navigate]);
 
   const handleTutorial = useCallback(() => {
     navigate(SCREENS.PLAY, {
@@ -373,33 +466,40 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
 
+  const [dailyAdBusy, setDailyAdBusy] = useState(false);
+
+  const openDaily = useCallback(async () => {
+    if (dailyAdBusy) return;
+    const access = await resolveDailyPlayAccess();
+    if (access !== 'unlocked') {
+      setDailyAdBusy(true);
+      try {
+        const earned = await showDailyPlayAd();
+        if (!earned) {
+          Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+          return;
+        }
+      } catch {
+        Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+        return;
+      } finally {
+        setDailyAdBusy(false);
+      }
+    }
+    navigate(SCREENS.DAILY, { adWatched: true });
+  }, [dailyAdBusy, navigate, t]);
+
   const [ownedPackCodes, setOwnedPackCodes] = useState([]);
   const [packProgress, setPackProgress] = useState({});
   const [purchasePack, setPurchasePack] = useState(null);
-  const [dailyOwned, setDailyOwned] = useState(false);
-  const [adsRemoved, setAdsRemoved] = useState(false);
   useEffect(() => {
     loadOwnedPackCodes().then(setOwnedPackCodes);
-    hasUnlimitedDaily().then(setDailyOwned);
-    hasRemoveAds().then(setAdsRemoved);
     Promise.all(WORD_WHEEL_PACKS.map(async (pack) => [pack.code, await loadPackProgress(pack.code)]))
       .then((rows) => setPackProgress(Object.fromEntries(rows)));
   }, []);
 
-  const openDaily = useCallback(async () => {
-    if (dailyOwned || await hasUnlimitedDaily()) {
-      setDailyOwned(true);
-      navigate(SCREENS.DAILY);
-      return;
-    }
-    const meta = IAP_PACKAGES.find((item) => item.packageId === 'word_wheel_daily');
-    setPurchasePack(meta ? { ...meta, code: 'daily' } : null);
-  }, [dailyOwned, navigate]);
-
   const openPack = useCallback(async (pack) => {
-    const owned = ownedPackCodes.includes(pack.code)
-      || await locallyOwnsPack(pack.code)
-      || await serverOwnsPack(pack.code);
+    const owned = ownedPackCodes.includes(pack.code) || await serverOwnsPack(pack.code);
     if (!owned) {
       const meta = IAP_PACKAGES.find((item) => item.packageId === pack.packageId);
       setPurchasePack(meta ? { ...meta, code: pack.code } : null);
@@ -413,19 +513,280 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     });
   }, [navigate, ownedPackCodes]);
 
+  const { width, height } = useWindowDimensions();
+  const isWideHome = width > height;
+
+  const topPad = Math.max(insets.top, 12) + 8;
+  const wideAdWidth = Math.max(1, Math.floor(width / 3 - 48));
+
+  const settingsButton = (
+    <Pressable
+      style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
+      onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
+      accessibilityLabel={t('home.a11y.settings')}
+      hitSlop={8}
+    >
+      <Settings color={palette.settingsIcon} size={20} strokeWidth={1.9} />
+    </Pressable>
+  );
+
+  const titleBlock = (
+    <View style={styles.headerBlock}>
+      <Text
+        style={[styles.titleLine, palette.title]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+      >
+        {t('home.title')}
+      </Text>
+      <View style={styles.commentRow}>
+        <Text style={[styles.comment, palette.comment, styles.commentInRow]} numberOfLines={1}>
+          {t('home.comment')}
+        </Text>
+        <Pressable
+          onPress={() => navigate(SCREENS.LEADERBOARD)}
+          accessibilityLabel={t('home.a11y.leaderboard')}
+          style={styles.leaderChip}
+        >
+          <LinearGradient
+            colors={['#FDE68A', '#F59E0B', '#B45309']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.leaderChipFill}
+          >
+            <Trophy color="#fff" size={14} strokeWidth={2.4} />
+            <Text style={styles.leaderChipText}>{t('home.leaderboard')}</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+    </View>
+  );
+
+  const levelBox = (
+    <View style={styles.levelBoxWrap}>
+      <LinearGradient
+        colors={palette.continueGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.continueCard, palette.continueCard]}
+      >
+        {loading ? (
+          <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
+        ) : error ? (
+          <Text style={styles.cardError}>{error}</Text>
+        ) : (
+          <>
+            <View style={styles.continueTop}>
+              <Image source={WHEEL_ART} style={styles.wheelArt} />
+              <View style={styles.continueMeta}>
+                <View style={[styles.levelBadge, { backgroundColor: palette.levelBadgeBg }]}>
+                  <Text style={[styles.levelBadgeText, { color: palette.levelBadgeText }]}>
+                    {t('home.continue.badge')}
+                  </Text>
+                </View>
+                <Text style={[styles.levelTitle, { color: palette.continueText }]}>
+                  {journeyLevel != null
+                    ? t('common.level', { n: journeyLevel })
+                    : t('common.levelFallback')}
+                </Text>
+                <View style={[styles.progressTrack, { backgroundColor: palette.progressTrack }]}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      {
+                        backgroundColor: palette.progressFill,
+                        width: `${Math.round(progress * 100)}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.wordsRow}>
+                  <Search color={palette.continueMuted} size={14} strokeWidth={2.2} />
+                  <Text style={[styles.wordsText, { color: palette.continueMuted }]}>
+                    {t('home.continue.wordsFound', {
+                      found: Math.min(foundCount, wordCount || 0),
+                      total: wordCount || 0,
+                    })}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <HomeContinueButton
+              label={t('home.continue.cta')}
+              disabled={!canPlay}
+              onPress={handleContinue}
+              accessibilityLabel={t('home.continue.cta')}
+              textColor={palette.continueCtaText}
+            />
+          </>
+        )}
+      </LinearGradient>
+      {showGiftIcon ? (
+        <Animated.View style={[styles.giftEdge, { opacity: giftFlicker }]}>
+          <Pressable
+            style={styles.giftIconBtn}
+            onPress={openGift}
+            disabled={giftBusy}
+            accessibilityLabel={t('home.gift.label')}
+            hitSlop={8}
+          >
+            <Gift color="#B45309" size={20} strokeWidth={2.2} />
+          </Pressable>
+        </Animated.View>
+      ) : null}
+    </View>
+  );
+
+  const tutorialLink = (
+    <Pressable
+      style={styles.tutorialLink}
+      onPress={handleTutorial}
+      accessibilityLabel={t('home.a11y.tutorial')}
+      hitSlop={10}
+    >
+      <Text style={[styles.tutorialLinkText, palette.tutorialLink]}>{t('home.tutorial.link')}</Text>
+    </Pressable>
+  );
+
+  const hubBlock = (
+    <View style={styles.bottomBlock}>
+      <View style={styles.chipRow}>
+        <Pressable
+          style={[
+            styles.hubChip,
+            palette.tile,
+            { borderColor: colors.primary },
+            dailyAdBusy && styles.btnDisabled,
+          ]}
+          onPress={openDaily}
+          disabled={dailyAdBusy}
+          accessibilityLabel={t('home.dailyPuzzle.label')}
+        >
+          <Calendar color={colors.primaryGlow} size={16} strokeWidth={2.2} />
+          <Text style={[styles.hubChipText, { color: colors.text }]} numberOfLines={1}>
+            {t('home.dailyPuzzle.label')}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[styles.hubChip, palette.tile, { borderColor: '#E8B15A' }]}
+          onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
+          accessibilityLabel={t('home.shop.label')}
+        >
+          <ShoppingCart color={isDark ? '#FBBF24' : '#B45309'} size={16} strokeWidth={2.2} />
+          <Text style={[styles.hubChipText, { color: colors.text }]} numberOfLines={1}>
+            {t('home.shop.label')}
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.packRow}>
+        {WORD_WHEEL_PACKS.map((pack) => {
+          const owned = ownedPackCodes.includes(pack.code);
+          const progress = packProgress[pack.code] || { cleared: 0, max: pack.maxLevel };
+          const ratio = progress.max > 0 ? progress.cleared / progress.max : 0;
+          const theme = PACK_THEMES[pack.code];
+          const mark = packMarkColor(pack.code, isDark);
+          return (
+            <Pressable
+              key={pack.code}
+              style={[styles.packBtn, palette.tile, { borderColor: theme.glow }]}
+              onPress={() => openPack(pack)}
+              accessibilityLabel={t(pack.nameKey)}
+            >
+              <Image
+                source={PACK_ICONS[pack.code]}
+                style={[styles.packIcon, { tintColor: mark }]}
+                resizeMode="contain"
+              />
+              <Text
+                style={[styles.packName, { color: mark }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
+                {t(pack.nameKey)}
+              </Text>
+              {owned ? (
+                <>
+                  <View style={[styles.packTrack, { backgroundColor: colors.border || 'rgba(13,148,136,0.18)' }]}>
+                    <View
+                      style={[
+                        styles.packFill,
+                        { width: `${Math.round(ratio * 100)}%`, backgroundColor: mark },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[styles.packCount, { color: colors.textMuted }]}>
+                    {progress.cleared} / {progress.max}
+                  </Text>
+                </>
+              ) : (
+                <View style={styles.packLockRow}>
+                  <Lock color={mark} size={12} strokeWidth={2.4} />
+                  <Text style={[styles.packLimit, { color: mark }]}>{pack.maxLevel}</Text>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {guest ? (
+        <View style={[styles.guestCard, palette.tile]}>
+          <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
+            <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
+          </View>
+          <View style={styles.guestBody}>
+            <Text style={[styles.guestTitle, { color: colors.text }]}>{t('home.guest.title')}</Text>
+            <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
+              {t('home.guest.body')}
+            </Text>
+          </View>
+          <Pressable
+            style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
+            onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
+          >
+            <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
+              {t('home.guest.signIn')}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+
   return (
     <GradientBackground variant="home">
       <View style={styles.container}>
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) + 8 }]}>
+        {isWideHome ? (
+          <View style={[styles.wideRow, { paddingTop: topPad }]}>
+            <View style={styles.wideCol}>
+              <View style={styles.wideLeft}>{titleBlock}</View>
+            </View>
+            <View style={styles.wideCol}>
+              <ScrollView
+                style={styles.wideRightScroll}
+                contentContainerStyle={styles.wideMiddleContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {levelBox}
+                {tutorialLink}
+                {hubBlock}
+                <AdBanner width={wideAdWidth} style={styles.wideAd} />
+              </ScrollView>
+            </View>
+            <View style={styles.wideCol}>
+              <View style={styles.wideSettingsRow}>{settingsButton}</View>
+            </View>
+          </View>
+        ) : (
+          <>
+        <View style={[styles.topBar, { paddingTop: topPad }]}>
           <View style={styles.topBarSpacer} />
-          <Pressable
-            style={[styles.settingsBtn, { backgroundColor: palette.settingsBg }]}
-            onPress={() => navigate(SCREENS.SETTINGS, { backScreen: SCREENS.HOME })}
-            accessibilityLabel={t('home.a11y.settings')}
-            hitSlop={8}
-          >
-            <Settings color={palette.settingsIcon} size={20} strokeWidth={1.9} />
-          </Pressable>
+          {settingsButton}
         </View>
 
         <ScrollView
@@ -433,248 +794,39 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           contentContainerStyle={[styles.bodyContent, { paddingBottom: 16 }]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.headerBlock}>
-            <Text
-              style={[styles.titleLine, palette.title]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-            >
-              {t('home.title')}
-            </Text>
-            <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
-          </View>
+          {titleBlock}
 
           <View style={styles.middleBlock}>
-            <View style={styles.levelBoxWrap}>
-              <View style={[styles.continueCard, palette.continueCard]}>
-              {loading ? (
-                <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
-              ) : error ? (
-                <Text style={styles.cardError}>{error}</Text>
-              ) : (
-                <>
-                  <View style={styles.continueTop}>
-                    <Image source={WHEEL_ART} style={styles.wheelArt} />
-                    <View style={styles.continueMeta}>
-                      <View style={[styles.levelBadge, { backgroundColor: palette.levelBadgeBg }]}>
-                        <Text style={[styles.levelBadgeText, { color: palette.levelBadgeText }]}>
-                          {t('home.continue.badge')}
-                        </Text>
-                      </View>
-                      <Text style={[styles.levelTitle, { color: palette.continueText }]}>
-                        {journeyLevel != null
-                          ? t('common.level', { n: journeyLevel })
-                          : t('common.levelFallback')}
-                      </Text>
-                      <View
-                        style={[styles.progressTrack, { backgroundColor: palette.progressTrack }]}
-                      >
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              backgroundColor: palette.progressFill,
-                              width: `${Math.round(progress * 100)}%`,
-                            },
-                          ]}
-                        />
-                      </View>
-                      <View style={styles.wordsRow}>
-                        <Search color={palette.continueMuted} size={14} strokeWidth={2.2} />
-                        <Text style={[styles.wordsText, { color: palette.continueMuted }]}>
-                          {t('home.continue.wordsFound', {
-                            found: Math.min(foundCount, wordCount || 0),
-                            total: wordCount || 0,
-                          })}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <Pressable
-                    style={[
-                      styles.continueBtn,
-                      palette.continueCta,
-                      !canPlay && styles.btnDisabled,
-                    ]}
-                    disabled={!canPlay}
-                    onPress={handleContinue}
-                    accessibilityLabel={t('home.continue.cta')}
-                  >
-                    <Play
-                      color={palette.continueCtaText}
-                      size={17}
-                      strokeWidth={2.4}
-                      fill={palette.continueCtaText}
-                    />
-                    <Text style={[styles.continueBtnText, { color: palette.continueCtaText }]}>
-                      {t('home.continue.cta')}
-                    </Text>
-                  </Pressable>
-                </>
-              )}
-              </View>
-              {showGiftIcon ? (
-                <Animated.View style={[styles.giftEdge, { opacity: giftFlicker }]}>
-                  <Pressable
-                    style={styles.giftIconBtn}
-                    onPress={openGift}
-                    disabled={giftBusy}
-                    accessibilityLabel={t('home.gift.label')}
-                    hitSlop={8}
-                  >
-                    <Gift color="#B45309" size={20} strokeWidth={2.2} />
-                  </Pressable>
-                </Animated.View>
-              ) : null}
-            </View>
-
-            <Pressable
-              style={styles.tutorialLink}
-              onPress={handleTutorial}
-              accessibilityLabel={t('home.a11y.tutorial')}
-              hitSlop={10}
-            >
-              <Text style={[styles.tutorialLinkText, palette.tutorialLink]}>
-                {t('home.tutorial.link')}
-              </Text>
-            </Pressable>
+            {levelBox}
+            {tutorialLink}
           </View>
 
-          <View style={styles.bottomBlock}>
-            <View style={styles.tileRow}>
-              <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
-                <View style={styles.tileHeader}>
-                  <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
-                    <Calendar color={colors.primaryGlow} size={18} strokeWidth={1.9} />
-                  </View>
-                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
-                    {t('home.dailyPuzzle.label')}
-                  </Text>
-                  {dailyOwned ? null : <Lock color={colors.textMuted} size={14} strokeWidth={2.2} />}
-                </View>
-                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-                  {t(dailyOwned ? 'home.dailyPuzzle.subtitle' : 'home.dailyPuzzle.lockedSubtitle')}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.tile, palette.tile]}
-                onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
-              >
-                <View style={styles.tileHeader}>
-                  <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
-                    <ShoppingCart color={colors.text} size={18} strokeWidth={1.9} />
-                  </View>
-                  <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
-                    {t('home.shop.label')}
-                  </Text>
-                  <ChevronRight color={colors.textMuted} size={16} />
-                </View>
-                <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-                  {t('home.shop.subtitle')}
-                </Text>
-              </Pressable>
-            </View>
-
-            <View style={styles.packRow}>
-              {WORD_WHEEL_PACKS.map((pack) => {
-                const owned = ownedPackCodes.includes(pack.code);
-                const progress = packProgress[pack.code] || { cleared: 0, max: pack.maxLevel };
-                const ratio = progress.max > 0 ? progress.cleared / progress.max : 0;
-                const theme = PACK_THEMES[pack.code];
-                const mark = packMarkColor(pack.code, isDark);
-                return (
-                  <Pressable
-                    key={pack.code}
-                    style={[styles.packBtn, palette.tile, { borderColor: theme.glow }]}
-                    onPress={() => openPack(pack)}
-                    accessibilityLabel={t(pack.nameKey)}
-                  >
-                    <Image
-                      source={PACK_ICONS[pack.code]}
-                      style={[styles.packIcon, { tintColor: mark }]}
-                      resizeMode="contain"
-                    />
-                    <Text style={[styles.packName, { color: mark }]} numberOfLines={2}>
-                      {t(pack.nameKey)}
-                    </Text>
-                    {owned ? (
-                      <>
-                        <View style={[styles.packTrack, { backgroundColor: colors.border || 'rgba(13,148,136,0.18)' }]}>
-                          <View
-                            style={[
-                              styles.packFill,
-                              { width: `${Math.round(ratio * 100)}%`, backgroundColor: mark },
-                            ]}
-                          />
-                        </View>
-                        <Text style={[styles.packCount, { color: colors.textMuted }]}>
-                          {progress.cleared} / {progress.max}
-                        </Text>
-                      </>
-                    ) : (
-                      <View style={styles.packLockRow}>
-                        <Lock color={mark} size={12} strokeWidth={2.4} />
-                        <Text style={[styles.packLimit, { color: mark }]}>{pack.maxLevel}</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {guest ? (
-              <View style={[styles.guestCard, palette.tile]}>
-                <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
-                  <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
-                </View>
-                <View style={styles.guestBody}>
-                  <Text style={[styles.guestTitle, { color: colors.text }]}>
-                    {t('home.guest.title')}
-                  </Text>
-                  <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
-                    {t('home.guest.body')}
-                  </Text>
-                </View>
-                <Pressable
-                  style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
-                  onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
-                >
-                  <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
-                    {t('home.guest.signIn')}
-                  </Text>
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
+          {hubBlock}
         </ScrollView>
 
-        {adsRemoved ? null : <AdBanner />}
+        <AdBanner />
+          </>
+        )}
       </View>
 
+      <StarterPackGateModal
+        visible={starterGateVisible}
+        context={starterGateContext}
+        unlockLevel={starterUnlockLevel}
+        onClose={() => setStarterGateVisible(false)}
+        onShop={handleStarterGateShop}
+      />
       <PackPurchaseModal
         visible={!!purchasePack}
         pack={purchasePack}
-        icon={
-          purchasePack?.code && PACK_ICONS[purchasePack.code]
-            ? PACK_ICONS[purchasePack.code]
-            : require('../assets/icons/starter-chest.webp')
-        }
+        icon={purchasePack ? PACK_ICONS[purchasePack.code] : null}
         onClose={() => setPurchasePack(null)}
         onPurchased={(bought) => {
-          if (bought.grants?.daily) setDailyOwned(true);
-          if (bought.grants?.removeAds) setAdsRemoved(true);
-          if (bought.code && bought.code !== 'daily') {
-            setOwnedPackCodes((codes) => (
-              codes.includes(bought.code) ? codes : [...codes, bought.code]
-            ));
-          }
-          if (bought.grants?.daily) navigate(SCREENS.DAILY);
+          setOwnedPackCodes((codes) => (
+            codes.includes(bought.code) ? codes : [...codes, bought.code]
+          ));
           wallet.refresh({ silent: true }).catch(() => {});
         }}
-        onSignIn={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME, requireSignIn: true })}
       />
       <DailyGiftModal
         visible={giftVisible}
@@ -697,6 +849,48 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  wideRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  wideCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  wideLeft: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingBottom: 12,
+  },
+  wideLeftLevel: {
+    marginTop: 28,
+  },
+  wideSettingsRow: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingBottom: 4,
+  },
+  wideRightScroll: {
+    flex: 1,
+  },
+  wideRightContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 8,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  wideMiddleContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+    gap: 14,
+  },
+  wideAd: {
+    paddingHorizontal: 8,
   },
   topBar: {
     flexDirection: 'row',
@@ -755,10 +949,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
   },
+  commentRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  commentInRow: {
+    marginTop: 0,
+    flex: 1,
+  },
+  leaderChip: {
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  leaderChipFill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+  },
+  leaderChipText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
   continueCard: {
     borderRadius: 28,
     borderWidth: 1,
     padding: 20,
+    overflow: 'hidden',
   },
   cardLoader: {
     marginVertical: 36,
@@ -821,12 +1048,29 @@ const styles = StyleSheet.create({
   },
   continueBtn: {
     marginTop: 18,
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#F6D78A',
+    shadowOpacity: 0.55,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  continueBtnFill: {
     minHeight: 52,
     borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    overflow: 'hidden',
+  },
+  continueShine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
   },
   continueBtnText: {
     fontSize: 17,
@@ -846,62 +1090,77 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
+  chipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  hubChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  hubChipText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
   packRow: {
-    marginTop: 10,
+    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'stretch',
-    gap: 8,
+    gap: 6,
   },
   packBtn: {
     flex: 1,
-    borderRadius: 16,
-    borderWidth: 2,
-    paddingHorizontal: 6,
-    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
     alignItems: 'center',
   },
   packIcon: {
-    width: 40,
-    height: 40,
+    width: 26,
+    height: 26,
   },
   packName: {
-    marginTop: 4,
-    fontSize: 12,
-    lineHeight: 15,
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '800',
     textAlign: 'center',
   },
   packLockRow: {
-    marginTop: 2,
+    marginTop: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
   },
   packLimit: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
   packTrack: {
-    marginTop: 8,
+    marginTop: 4,
     alignSelf: 'stretch',
-    height: 6,
-    borderRadius: 3,
+    height: 3,
+    borderRadius: 2,
     overflow: 'hidden',
   },
   packFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   packCount: {
-    marginTop: 4,
-    fontSize: 11,
+    marginTop: 2,
+    fontSize: 10,
     fontWeight: '700',
-  },
-  tileRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 10,
   },
   giftEdge: {
     position: 'absolute',
@@ -919,27 +1178,26 @@ const styles = StyleSheet.create({
   },
   tile: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   tileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+    gap: 6,
   },
   tileIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tileTitle: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   tileSubtitle: {

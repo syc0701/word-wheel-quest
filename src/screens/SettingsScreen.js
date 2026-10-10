@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Shield, Star, Trash2, Trophy } from 'lucide-react-native';
+import { ActivityIndicator, Alert, Linking, Platform, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
+import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Shield, Smartphone, Star, Trash2, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
@@ -16,12 +16,12 @@ import { SCREENS } from '../constants/theme';
 import { LEGAL_LINKS } from '../constants/store';
 import { LEVEL_SCREEN_TYPES } from '../lib/LevelScreenPolicy';
 import { isLoggedIn } from '../lib/auth';
-import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
 import { requestAccountDeletion } from '../lib/userApi';
+import { fetchMyWordWheelStanding } from '../lib/leaderBoardApi';
 import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
-import { verifyPendingIapIfNeeded } from '../lib/pendingIap';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
+import { getDeviceId } from '../lib/deviceId';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEV_INTERMISSION_LINKS = [
@@ -122,14 +122,20 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isWide = width > height;
+  const settingsGap = 16;
+  const wideColWidth = Math.floor((width - 40 - settingsGap * 2) / 3);
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
   const [packEndingPreview, setPackEndingPreview] = useState(null);
   const [scoreStanding, setScoreStanding] = useState(null);
+  const showDeveloperTools = __DEV__ || Boolean(wallet.isDeveloper);
+  const [deviceId, setDeviceId] = useState('');
   const [scoreLoading, setScoreLoading] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const refreshScore = async (isAuthed) => {
     if (!isAuthed) {
@@ -154,6 +160,24 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
       refreshScore(v);
     });
   }, []);
+
+  useEffect(() => {
+    if (!showDeveloperTools) {
+      setDeviceId('');
+      return;
+    }
+    let cancelled = false;
+    getDeviceId()
+      .then((id) => {
+        if (!cancelled) setDeviceId(id || '');
+      })
+      .catch(() => {
+        if (!cancelled) setDeviceId('');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [showDeveloperTools]);
 
   useEffect(() => {
     if (routeParams.signedIn || routeParams.authTick) {
@@ -223,7 +247,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           text: t('settings.account.delete'),
           style: 'destructive',
           onPress: () => {
-            // Nested Alert.alert is unreliable on iOS without a short delay.
             setTimeout(() => {
               Alert.alert(
                 t('settings.account.deleteFinalTitle'),
@@ -254,10 +277,6 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
     setRestoringPurchases(true);
     try {
       await restorePurchases();
-      if (authed) {
-        await verifyPendingIapIfNeeded();
-        await wallet.refresh({ silent: true });
-      }
       Alert.alert(t('shop.alert.restored.title'), t('shop.alert.restored.body'));
     } catch (error) {
       Alert.alert(
@@ -338,27 +357,11 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
     [colors, isRandomScene]
   );
 
-  return (
-    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
-      <ScreenHeader
-        title={t('settings.title')}
-        onBack={() =>
-          navigate(backScreen, {
-            mode: routeParams.mode,
-            date: routeParams.date,
-          })
-        }
-      />
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingBottom: Math.max(insets.bottom, 16) + 40 },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.account')}</Text>
-        <View style={[styles.groupCard, themed.walletCard]}>
+  const accountSection = (
+        <View style={isWide ? styles.wideSection : undefined}>
+        <Text style={[styles.sectionTitle, themed.sectionTitle, isWide && styles.sectionTitleWide]}>{t('settings.section.account')}</Text>
+        <View style={[styles.groupCard, themed.walletCard, isWide && styles.wideCard]}>
           {authed || wallet.loggedIn ? (
             <>
               <View style={styles.accountSection}>
@@ -367,8 +370,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 label={t('settings.wallet.puzzleCoins')}
                 value={wallet.lifetimePoints}
                 loading={wallet.loading}
-                colors={colors}
-              />
+                colors={colors} />
               <BalanceCard
                 label={t('settings.wallet.credits')}
                 value={wallet.creditBalance}
@@ -462,16 +464,20 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           <MenuRow
             icon={RotateCcw}
             label={t('shop.restore')}
-            subtitle={t(Platform.OS === 'ios' ? 'shop.restore.subtitleIos' : 'shop.restore.subtitleAndroid')}
+            subtitle={t(Platform.OS === 'ios' ? 'shop.restore.subtitleIos' : 'shop.restore.subtitle')}
             onPress={handleRestorePurchases}
             colors={colors}
             embedded
             loading={restoringPurchases}
           />
         </View>
+        </View>
+  );
 
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.preferences')}</Text>
-        <View style={[styles.preferencesCard, themed.appearanceCard]}>
+  const preferencesSection = (
+        <View style={isWide ? styles.wideSection : undefined}>
+        <Text style={[styles.sectionTitle, themed.sectionTitle, isWide && styles.sectionTitleWide]}>{t('settings.section.preferences')}</Text>
+        <View style={[styles.preferencesCard, themed.appearanceCard, isWide && styles.wideCard]}>
           <AppearancePicker />
           {isRandomScene ? (
             <Text style={[styles.appearanceHint, themed.appearanceHint]}>
@@ -489,16 +495,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             </>
           ) : null}
         </View>
-
-        {/* Language picker — re-enable when shipping multi-language UI
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.language')}</Text>
-        <View style={[styles.appearanceCard, themed.appearanceCard]}>
-          <LanguagePicker />
         </View>
-        */}
+  );
 
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.feedback')}</Text>
-        <View style={[styles.groupCard, themed.walletCard]}>
+  const feedbackSection = (
+        <View style={isWide ? styles.wideSection : undefined}>
+        <Text style={[styles.sectionTitle, themed.sectionTitle, isWide && styles.sectionTitleWide]}>{t('settings.section.feedback')}</Text>
+        <View style={[styles.groupCard, themed.walletCard, isWide && styles.wideCard]}>
           <View style={styles.feedbackSection}>
             <Text style={[styles.walletHint, themed.walletHint, styles.feedbackDesc]}>
               {t('settings.feedback.rowDesc')}
@@ -512,9 +515,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
         </View>
+        </View>
+  );
 
-        <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.legal')}</Text>
-        <View style={[styles.groupCard, themed.walletCard]}>
+  const legalSection = (
+        <View style={isWide ? styles.wideSection : undefined}>
+        <Text style={[styles.sectionTitle, themed.sectionTitle, isWide && styles.sectionTitleWide]}>{t('settings.section.legal')}</Text>
+        <View style={[styles.groupCard, styles.legalCard, themed.walletCard, isWide && styles.wideCard]}>
           {LEGAL_LINKS.map((link, index) => (
             <View key={link.id}>
               {index > 0 ? (
@@ -536,10 +543,12 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             </View>
           ))}
         </View>
+        </View>
+  );
 
-        {__DEV__ ? (
-          <>
-            <Text style={[styles.sectionTitle, themed.sectionTitle]}>{t('settings.section.developer')}</Text>
+  const developerSection = showDeveloperTools ? (
+        <View style={isWide ? styles.wideSection : undefined}>
+            <Text style={[styles.sectionTitle, themed.sectionTitle, isWide && styles.sectionTitleWide]}>{t('settings.section.developer')}</Text>
             <Text
               style={[
                 styles.devHint,
@@ -557,7 +566,23 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             >
               {t('settings.dev.hint')}
             </Text>
-            <View style={[styles.groupCard, themed.walletCard]}>
+            <View style={[styles.groupCard, themed.walletCard, isWide && styles.wideCard]}>
+              <MenuRow
+                icon={Smartphone}
+                label={t('settings.dev.deviceId')}
+                subtitle={deviceId || t('settings.dev.deviceId.loading')}
+                onPress={async () => {
+                  if (!deviceId) return;
+                  try {
+                    await Share.share({ message: deviceId });
+                  } catch {
+                    Alert.alert(t('settings.dev.deviceId'), deviceId);
+                  }
+                }}
+                colors={colors}
+                embedded
+              />
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
               {DEV_INTERMISSION_LINKS.map((link, index) => (
                 <View key={link.id}>
                   {index > 0 ? (
@@ -601,13 +626,65 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 </View>
               ))}
             </View>
+          </View>
+  ) : null;
+
+  return (
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <ScreenHeader
+        title={t('settings.title')}
+        onBack={() =>
+          navigate(backScreen, {
+            mode: routeParams.mode,
+            date: routeParams.date,
+          })
+        }
+      />
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scroll,
+          // Edge-to-edge Android often reports a small/zero bottom inset; keep a
+          // hard floor so Help & Legal isn’t clipped by the gesture/nav bar.
+          {
+            paddingBottom: isWide
+              ? Math.max(insets.bottom, 16)
+              : Math.max(insets.bottom, 48) + 72,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {isWide ? (
+          <View style={styles.wideColumns}>
+            <View style={[styles.wideColStack, { width: wideColWidth }]}>
+              {accountSection}
+              {legalSection}
+            </View>
+            <View style={[styles.wideColStack, { width: wideColWidth }]}>
+              {preferencesSection}
+              {developerSection}
+            </View>
+            <View style={[styles.wideColStack, { width: wideColWidth }]}>
+              {feedbackSection}
+            </View>
+          </View>
+        ) : (
+          <>
+            {accountSection}
+            {preferencesSection}
+            {feedbackSection}
+            {legalSection}
+            <View style={{ height: Math.max(insets.bottom, 24) }} />
+            {developerSection}
           </>
-        ) : null}
+        )}
       </ScrollView>
 
       <AppFeedbackSheet visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
-      {__DEV__ ? (
+      {showDeveloperTools ? (
         <WordWheelCompleteDialog
           visible={completePreviewVisible}
           durationLabel="0:42"
@@ -617,7 +694,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           onNext={() => setCompletePreviewVisible(false)}
         />
       ) : null}
-      {__DEV__ ? (
+      {showDeveloperTools ? (
         <PackCompletionModal
           visible={!!packEndingPreview}
           packType={packEndingPreview?.packType || 'CLASSIC'}
@@ -634,9 +711,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   scroll: {
     paddingHorizontal: 20,
     paddingBottom: 32,
+    flexGrow: 1,
+  },
+  wideColumns: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+  },
+  wideColStack: {
+    gap: 16,
+  },
+  wideSection: {
+    alignSelf: 'stretch',
+  },
+  wideCard: {
+    marginBottom: 0,
+  },
+  sectionTitleWide: {
+    marginTop: 0,
+  },
+  legalCard: {
+    // Extra bottom pad so Android draws the full rounded border under the last row.
+    marginBottom: 8,
+    paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 12,
@@ -768,7 +871,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginBottom: 4,
     borderWidth: 1,
-    overflow: 'hidden',
   },
   groupDivider: {
     height: StyleSheet.hairlineWidth,

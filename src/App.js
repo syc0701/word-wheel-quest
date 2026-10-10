@@ -20,10 +20,27 @@ import HomeScreen from './screens/HomeScreen';
 import PlayScreen from './screens/PlayScreen';
 import DailyScreen from './screens/DailyScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import LeaderBoardScreen from './screens/LeaderBoardScreen';
 import ShopScreen from './screens/ShopScreen';
 import WebViewScreen from './screens/WebViewScreen';
 import SignInScreen from './screens/SignInScreen';
 import DevIntermissionScreen from './screens/DevIntermissionScreen';
+
+/**
+ * Android Fabric + Reanimated layout animations (entering/exiting) race with
+ * ShadowNode remove and can SIGSEGV in libreanimated / ANR in NodesManager.
+ * Keep Android screen shells as plain Views — no layout animations.
+ */
+const USE_SCREEN_LAYOUT_ANIM = Platform.OS !== 'android';
+const ScreenShell = USE_SCREEN_LAYOUT_ANIM ? Animated.View : View;
+const SCREEN_ENTER = USE_SCREEN_LAYOUT_ANIM
+  ? SlideInRight.duration(350).springify()
+  : undefined;
+const SCREEN_EXIT = USE_SCREEN_LAYOUT_ANIM ? SlideOutLeft.duration(250) : undefined;
+const HOME_ENTER = USE_SCREEN_LAYOUT_ANIM ? FadeIn.duration(400) : undefined;
+const HOME_EXIT = USE_SCREEN_LAYOUT_ANIM ? FadeOut.duration(200) : undefined;
+const layoutAnimProps = (entering, exiting) =>
+  (USE_SCREEN_LAYOUT_ANIM ? { entering, exiting } : {});
 
 function AppShell() {
   const [route, setRoute] = useState({ screen: SCREENS.HOME, params: {} });
@@ -104,65 +121,69 @@ function AppShell() {
       case SCREENS.PLAY:
       case SCREENS.DAILY_PLAY:
         return (
-          <Animated.View
+          <ScreenShell
             key={`play-${params.mode}-${params.date ?? 'journey'}-${params.isOnboarding ? 'onb' : 'std'}-${params.t ?? 0}`}
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <PlayScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.DAILY:
         return (
-          <Animated.View
+          <ScreenShell
             key="daily"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <DailyScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
+        );
+      case SCREENS.LEADERBOARD:
+        return (
+          <ScreenShell
+            key="leaderboard"
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
+            style={opaqueScreenStyle}
+          >
+            <LeaderBoardScreen navigate={navigate} routeParams={params} />
+          </ScreenShell>
         );
       case SCREENS.SETTINGS:
         return (
-          <Animated.View
+          <ScreenShell
             key="settings"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
-            style={opaqueScreenStyle}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
+            style={[opaqueScreenStyle, styles.screenOverflowVisible]}
           >
             <SettingsScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.SHOP:
         return (
-          <Animated.View
+          <ScreenShell
             key="shop"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <ShopScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.SIGN_IN:
         return (
-          <Animated.View
+          <ScreenShell
             key="sign-in"
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <SignInScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.WEBVIEW:
         return (
-          <Animated.View
+          <ScreenShell
             key={`webview-${params?.url ?? 'page'}`}
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <WebViewScreen
@@ -170,31 +191,29 @@ function AppShell() {
               routeParams={params}
               backScreen={params?.backScreen ?? SCREENS.SETTINGS}
             />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.DEV_INTERMISSION:
         if (!__DEV__) break;
         return (
-          <Animated.View
+          <ScreenShell
             key={`dev-intermission-${params?.previewType ?? 'default'}`}
-            entering={SlideInRight.duration(350).springify()}
-            exiting={SlideOutLeft.duration(250)}
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
             style={opaqueScreenStyle}
           >
             <DevIntermissionScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
       case SCREENS.HOME:
       default:
         return (
-          <Animated.View
+          <ScreenShell
             key="home"
-            entering={FadeIn.duration(400)}
-            exiting={FadeOut.duration(200)}
+            {...layoutAnimProps(HOME_ENTER, HOME_EXIT)}
             style={styles.screen}
           >
             <HomeScreen navigate={navigate} routeParams={params} />
-          </Animated.View>
+          </ScreenShell>
         );
     }
   };
@@ -257,5 +276,9 @@ const styles = StyleSheet.create({
   },
   screenScrim: {
     backgroundColor: 'rgba(6, 28, 34, 0.28)',
+  },
+  // Reanimated slide transitions can leave overflow:hidden and clip Settings’ last card.
+  screenOverflowVisible: {
+    overflow: 'visible',
   },
 });

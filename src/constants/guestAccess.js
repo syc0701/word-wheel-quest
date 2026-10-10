@@ -1,14 +1,40 @@
 import { IAP_PACKAGES } from './store';
 
+/**
+ * Journey paywall removed — all Season Journey levels are free.
+ * (Previously gated at level 51 behind Starter Fun Bundle + credits.)
+ */
+export const GUEST_MAX_LEVEL_WITHOUT_STARTER = 1_000_000;
+
+/**
+ * Legacy grandfather constants (unused while journey paywall is off).
+ */
+export const GRANDFATHER_EXCEPTION_MIN_LEVEL = 56;
+export const GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER = 59;
+
+/** First gated level for normal players (unreachable while max free is 1e6). */
+export const GUEST_STARTER_UNLOCK_LEVEL = GUEST_MAX_LEVEL_WITHOUT_STARTER + 1;
+
+/** First gated level for grandfathered players (unused while journey paywall is off). */
+export const GRANDFATHER_STARTER_UNLOCK_LEVEL = GRANDFATHER_MAX_LEVEL_WITHOUT_STARTER + 1;
+
 export const STARTER_PACK_PACKAGE_ID = 'bundle_starter';
+
+export const DAILY_BUNDLE_PACKAGE_ID = 'word_wheel_daily';
+
+export const REMOVE_ADS_PACKAGE_ID = 'word_wheel_remove_ads';
 
 export const STARTER_PACK_PRODUCT_ID =
   IAP_PACKAGES.find((p) => p.packageId === STARTER_PACK_PACKAGE_ID)?.productId
   ?? 'word_wheel_pack_starter';
 
+/** Unused. Daily play is a rewarded ad, or unlimited with Starter / Daily Bundle. */
+export const FREE_DAILY_PLAYS = 0;
+
 /**
  * Letter credits granted by the shop packs. The server writes these.
- * One credit shows one hidden letter. Not used to unlock puzzles.
+ * One credit shows one hidden letter. Not coins.
+ * Starter 150, Classic 50, Master 110.
  */
 export const PACK_LETTER_CREDITS = {
   starter: 150,
@@ -16,4 +42,8 @@ export const PACK_LETTER_CREDITS = {
   master: 110,
 };
 
+/** Starter Fun Bundle letter credits. Same number the server grants. */
 export const STARTER_PACK_PUZZLE_CREDITS = PACK_LETTER_CREDITS.starter;
+
+/** Credits spent to start one gated daily puzzle (after free quota). */
+export const PUZZLE_PLAY_CREDIT_COST = 1;

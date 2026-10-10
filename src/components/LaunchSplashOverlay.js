@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import {
   ImageBackground,
   InteractionManager,
+  Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
@@ -20,7 +22,7 @@ import Animated, {
 import { BG_IMAGE_CATALOG, SPLASH_BG_SOURCE } from '../lib/bgAssets';
 
 const SEA_FALLBACK = '#0A2A4A';
-const SPLASH_BG = SPLASH_BG_SOURCE || BG_IMAGE_CATALOG.wellness_corner;
+const SPLASH_BG = SPLASH_BG_SOURCE || BG_IMAGE_CATALOG.cottage_peonies;
 
 /**
  * Immersive launch: title + animated rope progress over the opening scene photo.
@@ -118,12 +120,16 @@ export default function LaunchSplashOverlay({ onDone }) {
         <View style={styles.scrim} />
 
         <View style={styles.hero}>
-          <Animated.Text
-            entering={FadeInDown.delay(160).duration(420)}
-            style={styles.title}
-          >
-            Word Wheel Quest
-          </Animated.Text>
+          {Platform.OS === 'android' ? (
+            <Text style={styles.title}>Word Wheel Quest</Text>
+          ) : (
+            <Animated.Text
+              entering={FadeInDown.delay(160).duration(420)}
+              style={styles.title}
+            >
+              Word Wheel Quest
+            </Animated.Text>
+          )}
         </View>
 
         <View style={styles.footer}>

@@ -1,10 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * Scene backgrounds for Image appearance (WebP for Play bitmap guidance).
- * Order matters: band 0 is the home scene (wellness corner).
+ * Scene backgrounds for Image appearance.
+ * The cottage is the home screen only. The rest, including the old home photo,
+ * rotate on the play screen every 5 levels.
  */
+export const HOME_BG_ID = 'cottage_peonies';
+
 export const BG_IMAGE_CATALOG = {
+  cottage_peonies: require('../assets/bg_image/261009-cottage-with-lilac-shutters-and-peonies.jpeg'),
   wellness_corner: require('../assets/bg_image/260919-wellness-corner-with-aloe-and-water.jpeg'),
   morning_espresso: require('../assets/bg_image/260820-morning-espresso-and-lavender-view.webp'),
   vermont_autumn: require('../assets/bg_image/260820-vermont-autumn-farmland-at-dusk.webp'),
@@ -18,11 +22,11 @@ export const BG_IMAGE_CATALOG = {
   tropical_island: require('../assets/bg_image/tropical_island.webp'),
 };
 
-/** Explicit order — do not alphabetize (wellness corner must stay first). */
+/** Explicit order — do not alphabetize. Home photo stays first and is excluded from play. */
 export const BG_IMAGE_IDS = Object.keys(BG_IMAGE_CATALOG);
 
 /** First-launch / splash background (same photo as the home screen). */
-export const SPLASH_BG_SOURCE = BG_IMAGE_CATALOG.wellness_corner;
+export const SPLASH_BG_SOURCE = BG_IMAGE_CATALOG[HOME_BG_ID];
 
 /** Scene changes at levels 5, 10, 15, 20, 25, … */
 export const LEVELS_PER_SCENE = 5;
@@ -64,36 +68,29 @@ export function getSceneBandForLevel(level) {
 
 /**
  * Returns `{ id, source, band, level }` for the current journey level band.
- * Cycles through every catalog image in order.
+ * Same rotation as play: every catalog photo except the home image.
  */
 export function resolveSceneBackground(level = 0) {
-  const band = getSceneBandForLevel(level);
-  const id = BG_IMAGE_IDS[band % BG_IMAGE_IDS.length] || BG_IMAGE_IDS[0];
-  return {
-    id,
-    source: BG_IMAGE_CATALOG[id],
-    band,
-    level: Number(level) || 0,
-  };
+  return resolvePlayBackground(level);
 }
 
-/** Home / main hub always uses the wellness-corner scene. */
+/** Home / main hub always uses the cottage scene. */
 export function resolveHomeBackground(level = 0) {
   return {
-    id: 'wellness_corner',
-    source: BG_IMAGE_CATALOG.wellness_corner,
+    id: HOME_BG_ID,
+    source: BG_IMAGE_CATALOG[HOME_BG_ID],
     band: getSceneBandForLevel(level),
     level: Number(level) || 0,
   };
 }
 
 /**
- * Play uses a different image than home — cycles the catalog excluding the
- * wellness corner so the board never shares the main-page photo.
+ * Play cycles the catalog except the home photo, so the board never shares
+ * the main-page image. The previous home photo is the first rotating scene.
  */
 export function resolvePlayBackground(level = 0) {
   const band = getSceneBandForLevel(level);
-  const playIds = BG_IMAGE_IDS.filter((id) => id !== 'wellness_corner');
+  const playIds = BG_IMAGE_IDS.filter((id) => id !== HOME_BG_ID);
   const list = playIds.length ? playIds : BG_IMAGE_IDS;
   const id = list[band % list.length] || list[0];
   return {

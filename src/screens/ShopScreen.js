@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
 import { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { ShoppingBag } from 'lucide-react-native';
 import { GiTwoCoins } from '../components/GiTwoCoins';
 import ScreenHeader from '../components/ScreenHeader';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
-import { SCREENS } from '../constants/theme';
+import { PLAY_MODE, SCREENS } from '../constants/theme';
 import { IAP_PACKAGES, APP_STORE } from '../constants/store';
 import { PACK_ICON_TINT, packMarkColor } from '../constants/packs';
+import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import {
   getDefaultOffering,
   getRevenueCatIdentity,
@@ -18,12 +19,12 @@ import {
   readPurchaseTransactionId,
   rememberRevenueCatIdentityFromPurchase,
 } from '../services/purchases';
-import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
-import { savePendingIap } from '../lib/pendingIap';
-import { markStarterPackPurchased } from '../lib/guestStarterPack';
+import CreditApi from '../lib/creditApi';
 import { grantLocalPackBonus } from '../lib/packBonusCoins';
+import { markStarterPackPurchased } from '../lib/guestStarterPack';
 import { grantPackEntitlement } from '../lib/packEntitlements';
+import { useAudio } from '../context/AudioContext';
 
 const GOLD = '#facc15';
 
@@ -95,7 +96,10 @@ function ProductRow({ name, description, priceLabel, purchasing, onBuy, colors, 
 export default function ShopScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.SETTINGS;
   const { colors, isRandomScene } = useAppearance();
+  const { width, height } = useWindowDimensions();
+  const isWide = width > height;
   const t = useT();
+  const { playSfx } = useAudio();
   const [rcPackages, setRcPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [purchasingId, setPurchasingId] = useState(null);
@@ -154,7 +158,6 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     setPurchasingId(meta.packageId);
     try {
       const purchaseResult = await purchasePackage(rcPackage);
-      const authed = await isLoggedIn();
       const transactionId = readPurchaseTransactionId(purchaseResult);
       const productId = rcPackage.product.identifier;
       const fromPurchase = rememberRevenueCatIdentityFromPurchase(purchaseResult);
@@ -167,37 +170,33 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         packageKey: meta.packageId,
         ...rcIdentity,
       };
+      const verify = await CreditApi.verifyIapPurchase({
+        appCode: APP_STORE.appSiteId,
+        productId,
+        transactionId,
+        rawPayload: storePayload,
+      });
+      if (!(await isLoggedIn()) && meta.bonusCoins) {
+        await grantLocalPackBonus(transactionId, meta.bonusCoins);
+      }
       await grantPackEntitlement(productId);
       if (meta.grants?.classic && meta.grants?.daily) {
-        await markStarterPackPurchased();
-      }
-      if (authed) {
-        const verify = await CreditApi.verifyIapPurchase({
-          appCode: APP_STORE.appSiteId,
-          productId,
-          transactionId,
-          rawPayload: storePayload,
-        });
-        await grantPackEntitlement(productId);
-        if (verify?.creditBalance != null && __DEV__) {
-          console.log('[Shop] credits after verify', verify.creditBalance);
-        }
-      } else {
-        await savePendingIap({
-          productId,
-          transactionId,
-          packageKey: meta.packageId,
-          ...rcIdentity,
-        });
-        if (meta.coinsGrant) {
-          await grantLocalPackBonus(transactionId, meta.coinsGrant);
-        }
-        if (meta.bonusCoins) {
-          await grantLocalPackBonus(transactionId, meta.bonusCoins);
-        }
+        await markStarterPackPurchased({ grantGuestCredits: false });
       }
       const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
-      Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+      if (meta.packageId === STARTER_PACK_PACKAGE_ID) {
+        Alert.alert(
+          t('shop.alert.starterUnlocked.title'),
+          t('shop.alert.starterUnlocked.body'),
+          [{ text: t('common.continue') }]
+        );
+      } else {
+        Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
+      }
+      if (verify?.creditBalance != null && __DEV__) {
+        console.log('[Shop] credits after verify', verify.creditBalance);
+      }
+      playSfx('purchaseWin');
     } catch (error) {
       if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
       Alert.alert(t('shop.alert.purchaseFailed.title'), error.message ?? t('shop.alert.purchaseFailed.body'));
@@ -210,7 +209,13 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
     <View style={styles.container}>
       <ScreenHeader title={t('shop.title')} onBack={() => navigate(backScreen, routeParams)} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <View style={isWide ? styles.wideRow : styles.body}>
+      {isWide ? <View style={styles.wideCol} /> : null}
+      <ScrollView
+        style={isWide ? styles.wideCol : styles.body}
+        contentContainerStyle={[styles.scrollContent, isWide && styles.wideMiddle]}
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={[styles.headline, { color: colors.text }, sceneText]}>
           {t('shop.headline')}
         </Text>
@@ -248,6 +253,8 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
         )}
 
       </ScrollView>
+      {isWide ? <View style={styles.wideCol} /> : null}
+      </View>
     </View>
   );
 }
@@ -257,9 +264,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  body: {
+    flex: 1,
+  },
+  wideRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  wideCol: {
+    flex: 1,
+    minWidth: 0,
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 32,
+  },
+  wideMiddle: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   headline: {
     fontSize: 26,

@@ -1,7 +1,8 @@
 import { AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
-import { AD_REWARD_CREDITS, getCellRewardedAdUnitId, getRewardedAdUnitId } from '../constants/ads';
+import { AD_REWARD_CREDITS, getCellRewardedAdUnitId, getDailyPlayAdUnitId, getRewardedAdUnitId } from '../constants/ads';
 import { initializeMobileAds } from '../lib/ads';
 import CreditApi from '../lib/creditApi';
+import { pauseAmbientForAd, resumeAmbientAfterAd } from '../lib/adAmbientPause';
 import { getDeviceId } from '../lib/deviceId';
 import { soundManager } from '../lib/soundManager';
 
@@ -22,20 +23,23 @@ export function showRewardedCellAd() {
   return showRewardedAd(getCellRewardedAdUnitId(), null);
 }
 
+/** Video required before a daily puzzle. No credit grant. */
+export async function showDailyPlayAd() {
+  await initializeMobileAds();
+  return showRewardedAd(getDailyPlayAdUnitId(), null);
+}
+
 function showRewardedAd(unitId, deviceId) {
   if (rewardedInFlight || Date.now() < rewardedCooldownUntil) {
     if (__DEV__) console.log('[Ad] ignored, a rewarded ad is already open');
     return Promise.resolve(false);
   }
   rewardedInFlight = true;
-  return initializeMobileAds().then(() => new Promise((resolve, reject) => {
-    const requestOptions = {
-      requestNonPersonalizedAdsOnly: false,
-      ...(deviceId
-        ? { serverSideVerificationOptions: { customData: String(deviceId) } }
-        : {}),
-    };
-    if (__DEV__) console.log('[Ad] loading unit', unitId);
+  pauseAmbientForAd();
+  return new Promise((resolve, reject) => {
+    const requestOptions = deviceId
+      ? { serverSideVerificationOptions: { customData: String(deviceId) } }
+      : undefined;
     const ad = RewardedAd.createForAdRequest(unitId, requestOptions);
     let earned = false;
     let settled = false;
@@ -45,7 +49,7 @@ function showRewardedAd(unitId, deviceId) {
       if (settled) return;
       settled = true;
       rewardedInFlight = false;
-      clearTimeout(loadTimer);
+      resumeAmbientAfterAd();
       // The tap that closes the video must not start another one.
       rewardedCooldownUntil = Date.now() + 1500;
       unsubs.forEach((fn) => {
@@ -58,19 +62,11 @@ function showRewardedAd(unitId, deviceId) {
       if (error) reject(error);
       else resolve(ok);
     };
-    const loadTimer = setTimeout(() => {
-      const err = new Error('Ad failed to load: timeout');
-      err.adLoad = true;
-      finish(false, err);
-    }, 25000);
     unsubs.push(ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
       if (shown) return;
       shown = true;
       if (__DEV__) console.log('[Ad] rewarded loaded, showing');
-      ad.show().catch((err) => {
-        err.adLoad = true;
-        finish(false, err);
-      });
+      ad.show().catch((err) => finish(false, err));
     }));
     unsubs.push(
       ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
@@ -86,16 +82,11 @@ function showRewardedAd(unitId, deviceId) {
     );
     unsubs.push(
       ad.addAdEventListener(AdEventType.ERROR, (event) => {
-        const code = event?.code ?? event?.nativeErrorCode;
-        const message = event?.message || 'Ad failed to load';
-        const err = new Error(`Ad failed to load (${code ?? 'unknown'}): ${message}`);
-        err.adLoad = true;
-        console.warn('[Ad] load error', err.message);
-        finish(false, err);
+        finish(false, new Error(event?.message || 'Ad failed to load'));
       })
     );
     ad.load();
-  }));
+  });
 }
 
 /**
@@ -144,16 +135,17 @@ export async function consumeOneLetter(playId, cellKey) {
 }
 
 export async function prepareRewardedAd() {
-  await initializeMobileAds();
   return getDeviceId();
 }
 
 /** Mute BGM/SFX for the video, then restore. Prefer wrapping the whole ad + poll. */
 export async function withAdAudioMuted(work) {
   soundManager.muteForAd();
+  pauseAmbientForAd();
   try {
     return await work();
   } finally {
+    resumeAmbientAfterAd();
     soundManager.unmuteAfterAd();
   }
 }

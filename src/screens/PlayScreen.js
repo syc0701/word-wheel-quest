@@ -23,6 +23,7 @@ import GradientBackground from '../components/GradientBackground';
 import AdBanner from '../components/AdBanner';
 import WordWheelCompleteDialog from '../components/WordWheelCompleteDialog';
 import PackCompletionModal, { packCompletionType } from '../components/PackCompletionModal';
+import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelDictionarySheet from '../components/WordWheelDictionarySheet';
 import ShopOfferButton from '../components/intermission/ShopOfferButton';
 import {
@@ -40,10 +41,6 @@ import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
 import { CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
-import { packByCode } from '../constants/packs';
-import { isLevelClearAdLevel } from '../constants/ads';
-import { hasRemoveAds, hasUnlimitedDaily, savePackLevel } from '../lib/packEntitlements';
-import { showLevelClearAd } from '../services/levelClearAd';
 import { validateBonusWord } from '../lib/dictionary';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
@@ -79,6 +76,19 @@ import {
 } from '../lib/guestCoinsStorage';
 import { describeDailyGift, loadDailyGift } from '../lib/dailyGift';
 import { isLoggedIn } from '../lib/auth';
+import { isLevelClearAdLevel } from '../constants/ads';
+import { packByCode } from '../constants/packs';
+import { REMOVE_ADS_PACKAGE_ID, STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
+import { hasRemoveAds, savePackLevel } from '../lib/packEntitlements';
+import { showLevelClearAd } from '../services/levelClearAd';
+import {
+  guestNeedsStarterToContinue,
+  hasStarterPackAccess,
+  resolveDailyPlayAccess,
+  resolveJourneyPlayAccess,
+  resolveStarterUnlockLevel,
+  settlePuzzlePlayCharge,
+} from '../lib/guestStarterPack';
 import {
   formatWordWheelPlayDuration,
   parseWordWheelCatalog,
@@ -126,24 +136,36 @@ const WHEEL_DOCK_H = 40;
  * board ScrollView shrinks first. The ad may clip off the bottom on short
  * screens — that is intentional.
  */
+/** Wide play screens (Play Games, desktop emulator): grid | wheel+clue+ad. */
+const WIDE_LEFT = 7;
+const WIDE_RIGHT = 5;
+
 function usePlayMetrics(insets, timerEnabled) {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  const rightWidth = isLandscape ? (width * WIDE_RIGHT) / (WIDE_LEFT + WIDE_RIGHT) : width;
+  const leftWidth = isLandscape ? width - rightWidth : width;
 
+  const landscapeWheel = Math.min(rightWidth - 132, height - insets.top - CLUE_STACK_H - 140);
   const wheelSize = isLandscape
-    ? Math.min(260, Math.max(170, height - 220), width * 0.42)
+    ? Math.max(160, Math.round((landscapeWheel * 2) / 3))
     : Math.min(width - 120, Math.max(200, height * 0.28), 260);
 
   // Do not reserve banner height — ad is allowed to clip under the fold.
+  // In landscape the clue sits on the wheel column, so the grid can use that height.
   const verticalChrome =
-    insets.top + CHROME_H + CLUE_STACK_H + (timerEnabled ? TIMER_ROW_H : 0);
+    insets.top + CHROME_H + (isLandscape ? 0 : CLUE_STACK_H) + (timerEnabled ? TIMER_ROW_H : 0);
   // In landscape the wheel sits beside the board, so it costs no height.
   const gridMaxSize = Math.max(
     150,
-    height - verticalChrome - (isLandscape ? 0 : wheelSize + WHEEL_DOCK_H)
+    Math.min(
+      leftWidth - 32,
+      height - verticalChrome - (isLandscape ? 0 : wheelSize + WHEEL_DOCK_H)
+    )
   );
+  const adWidth = Math.max(1, Math.floor(rightWidth - 28));
 
-  return { isLandscape, wheelSize, gridMaxSize };
+  return { isLandscape, wheelSize, gridMaxSize, adWidth, leftWidth, rightWidth };
 }
 
 export default function PlayScreen({ navigate, routeParams = {} }) {
@@ -161,7 +183,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const { timerEnabled } = usePlayTimer();
   const t = useT();
   const insets = useSafeAreaInsets();
-  const { isLandscape, wheelSize, gridMaxSize } = usePlayMetrics(insets, timerEnabled);
+  const { isLandscape, wheelSize, gridMaxSize, adWidth, leftWidth, rightWidth } = usePlayMetrics(
+    insets,
+    timerEnabled
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [puzzle, setPuzzle] = useState(null);
@@ -186,6 +211,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [dictionaryWord, setDictionaryWord] = useState('');
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   const [packEnding, setPackEnding] = useState(null);
+  const [removeAdsOwned, setRemoveAdsOwned] = useState(false);
   const [completionStats, setCompletionStats] = useState(null);
   const [showHeaderNext, setShowHeaderNext] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
@@ -235,6 +261,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [treasureOpen, setTreasureOpen] = useState(false);
   const [shuffleSignal, setShuffleSignal] = useState(0);
   const [reloadKey, setReloadKey] = useState(0);
+  const [hasStarterAccess, setHasStarterAccess] = useState(true);
+  const [starterGateVisible, setStarterGateVisible] = useState(false);
+  const [starterGateContext, setStarterGateContext] = useState('level');
   const [coinsCatalog, setCoinsCatalog] = useState([]);
   const [celebratingCellKeys, setCelebratingCellKeys] = useState(() => new Set());
   const [celebrateOrder, setCelebrateOrder] = useState([]);
@@ -531,6 +560,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const access = await hasStarterPackAccess();
+      if (cancelled) return;
+      setHasStarterAccess(access);
+      if (routeParams.starterUnlockTick && access && !isDaily && !isOnboarding) {
+        setReloadKey((k) => k + 1);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeParams.starterUnlockTick, isDaily, isOnboarding]);
+
   const resetPlayState = useCallback(() => {
     setFoundWords([]);
     setSelectedIndices([]);
@@ -745,12 +789,15 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           }
           return;
         }
-        if (isDaily && !(await hasUnlimitedDaily())) {
-          if (!cancelled) {
-            setError(t('daily.locked.body'));
-            setLoading(false);
+        if (isDaily && !routeParams.adWatched) {
+          const dailyAccess = await resolveDailyPlayAccess();
+          if (dailyAccess !== 'unlocked') {
+            if (!cancelled) {
+              setLoading(false);
+              navigate(SCREENS.DAILY, { date: dailyDate });
+            }
+            return;
           }
-          return;
         }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
@@ -815,6 +862,33 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         if (cancelled) return;
 
         const authed = await isLoggedIn();
+        const starterAccess = await hasStarterPackAccess();
+
+        if (!isDaily && !isOnboarding) {
+          const level = resolveJourneyLevel(data) ?? Number(data?.puzzleLevel);
+          const playerJourneyLevel = level;
+          const journeyAccess = await resolveJourneyPlayAccess(level, {
+            hasStarter: starterAccess,
+            loggedIn: authed,
+            creditBalance: walletRef.current.creditBalance,
+            playerJourneyLevel,
+          });
+          if (journeyAccess === 'starter') {
+            setPuzzle(null);
+            setError(t('play.error.starterRequired'));
+            setStarterGateContext('level');
+            setStarterGateVisible(true);
+            return;
+          }
+          if (journeyAccess === 'no_credits') {
+            setPuzzle(null);
+            setError(t('play.error.noCredits'));
+            setStarterGateContext('credits');
+            setStarterGateVisible(true);
+            return;
+          }
+        }
+        setHasStarterAccess(starterAccess);
 
         completedPuzzleIdRef.current = null;
         completedLevelRef.current = null;
@@ -827,6 +901,30 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         const play = await WordWheelApi.startPlay(data.id);
         if (!cancelled && play && !play.code) {
+          const journeyLevel =
+            resolveJourneyLevel(data) ?? Number(data?.puzzleLevel) ?? null;
+          const charge = await settlePuzzlePlayCharge({
+            isDaily,
+            journeyLevel,
+            puzzleId: data.id,
+            loggedIn: authed,
+            creditBalance: walletRef.current.creditBalance,
+            playerJourneyLevel: journeyLevel,
+          });
+          if (!charge.ok) {
+            setPuzzle(null);
+            setError(
+              charge.access === 'no_credits'
+                ? t('play.error.noCredits')
+                : t('play.error.starterRequired')
+            );
+            setStarterGateContext(charge.access === 'no_credits' ? 'credits' : isDaily ? 'daily' : 'level');
+            setStarterGateVisible(true);
+            return;
+          }
+          if (charge.creditBalance != null) {
+            walletRef.current.refresh({ silent: true }).catch(() => {});
+          }
           setPlaySession(play);
           const startedAt = Date.now();
           levelStartedAtRef.current = startedAt;
@@ -890,7 +988,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, isOnboarding, dailyDate, packCode, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
+  }, [isDaily, isOnboarding, dailyDate, packCode, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, routeParams.adWatched, navigate, t]);
 
   const handleNextPuzzle = useCallback(async () => {
     if (packCode) {
@@ -919,18 +1017,96 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       return;
     }
     const completedLevel = resolveJourneyLevel(puzzle) ?? Number(puzzle?.puzzleLevel) ?? null;
+    const starterAccess = await hasStarterPackAccess();
+    const authed = await isLoggedIn();
+    const nextLevel = (completedLevel ?? 0) + 1;
+    const access = await resolveJourneyPlayAccess(nextLevel, {
+      hasStarter: starterAccess,
+      loggedIn: authed,
+      creditBalance: wallet.creditBalance,
+      playerJourneyLevel: completedLevel,
+    });
+    if (access === 'starter') {
+      setCompletionDialogOpen(false);
+      setShowHeaderNext(false);
+      setStarterGateContext('level');
+      setStarterGateVisible(true);
+      return;
+    }
+    if (access === 'no_credits') {
+      setCompletionDialogOpen(false);
+      setShowHeaderNext(false);
+      setStarterGateContext('credits');
+      setStarterGateVisible(true);
+      return;
+    }
+    setHasStarterAccess(starterAccess);
     completedPuzzleIdRef.current = puzzle?.id || null;
     completedLevelRef.current = completedLevel;
     completedSeasonRef.current = puzzle?.season || DEFAULT_SEASON;
     setCompletionDialogOpen(false);
     setShowHeaderNext(false);
     setReloadKey((k) => k + 1);
-  }, [isDaily, packCode, dailyDate, navigate, puzzle]);
+  }, [isDaily, packCode, dailyDate, navigate, puzzle, wallet.creditBalance]);
 
   const handleCloseCompletionDialog = useCallback(() => {
     setCompletionDialogOpen(false);
     setShowHeaderNext(true);
   }, []);
+
+  const handleRemoveAdsShop = useCallback(() => {
+    setCompletionDialogOpen(false);
+    setShowHeaderNext(false);
+    navigate(SCREENS.SHOP, {
+      backScreen: SCREENS.PLAY,
+      mode: routeParams.mode,
+      date: routeParams.date,
+      packCode,
+      packLevel: packLevelRef.current,
+      packageId: REMOVE_ADS_PACKAGE_ID,
+    });
+  }, [navigate, packCode, routeParams.mode, routeParams.date]);
+
+  const handleCompletionShop = useCallback(() => {
+    setCompletionDialogOpen(false);
+    setShowHeaderNext(false);
+    navigate(SCREENS.SHOP, {
+      backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
+      mode: routeParams.mode,
+      date: routeParams.date,
+      packageId: STARTER_PACK_PACKAGE_ID,
+    });
+  }, [isDaily, navigate, routeParams.mode, routeParams.date]);
+
+  const handleStarterGateShop = useCallback(() => {
+    setStarterGateVisible(false);
+    navigate(SCREENS.SHOP, {
+      backScreen: isDaily ? SCREENS.DAILY_PLAY : SCREENS.PLAY,
+      mode: routeParams.mode,
+      date: routeParams.date,
+      packageId: STARTER_PACK_PACKAGE_ID,
+    });
+  }, [isDaily, navigate, routeParams.mode, routeParams.date]);
+
+  const showStarterOffer = useMemo(
+    () =>
+      !isOnboarding
+      && !isDaily
+      && !hasStarterAccess
+      && guestNeedsStarterToContinue(
+        completionStats?.levelNumber,
+        false,
+        completionStats?.levelNumber
+      ),
+    [isOnboarding, isDaily, hasStarterAccess, completionStats?.levelNumber]
+  );
+
+  const starterUnlockLevel = useMemo(
+    () => resolveStarterUnlockLevel(
+      resolveJourneyLevel(puzzle) ?? completionStats?.levelNumber ?? null
+    ),
+    [puzzle, completionStats?.levelNumber]
+  );
 
   const finishOnboarding = useCallback(async () => {
     if (finishingOnboardingRef.current) return;
@@ -1170,7 +1346,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       const localBase = isDaily
         ? sumWordWheelCoinsForWords(words, coinsCatalog)
         : WORD_WHEEL_JOURNEY_CLEAR_COINS;
-      // Journey clears are a flat 2 coins. Daily still uses the word-length total.
+      // Journey clears are a flat 2 coins. The server total already includes a
+      // milestone bonus; the guest path adds that bonus here.
       const scoreCoins = isDaily
         ? (fromServer > 0 ? fromServer : localBase)
         : WORD_WHEEL_JOURNEY_CLEAR_COINS + milestoneBonus;
@@ -1183,6 +1360,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         milestoneBonus,
       });
       const adsRemoved = await hasRemoveAds();
+      setRemoveAdsOwned(adsRemoved);
       if (!isDaily && !packCode && isLevelClearAdLevel(levelNumber) && !adsRemoved) {
         await showLevelClearAd();
       }
@@ -1617,12 +1795,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       await wallet.refresh({ silent: true });
       startEyeAttention();
     } catch (e) {
-      console.warn('[Ad] reward flow failed', e?.message || e);
-      if (String(e?.message || '').includes('timeout waiting')) {
-        Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
-      } else {
-        Alert.alert(t('play.ad.loadFailed.title'), t('play.ad.loadFailed.body'));
-      }
+      if (__DEV__) console.warn('[Ad] reward flow failed', e);
+      Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
     } finally {
       letterBusyRef.current = false;
       setLetterBusy(false);
@@ -1817,9 +1991,14 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       <View style={[styles.playBody, isLandscape && styles.playBodyLandscape]}>
       <ScrollView
         ref={onboardingScrollRef}
-        style={styles.scrollView}
+        style={[
+          styles.scrollView,
+          isLandscape && styles.scrollViewWide,
+          isLandscape && { width: leftWidth, maxWidth: leftWidth, flex: 0 },
+        ]}
         contentContainerStyle={[
           styles.scroll,
+          isLandscape && styles.scrollLandscape,
           { paddingTop: Math.max(insets.top, 12) + 8 },
         ]}
         showsVerticalScrollIndicator={false}
@@ -1910,7 +2089,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        <View style={styles.playStage}>
+        <View style={isLandscape ? styles.widePlayStage : styles.playStage}>
         <PuzzleGrid
           fill={!isLandscape}
           gridSize={gridSize}
@@ -1939,7 +2118,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           boardHostRef={isOnboarding ? onboardingGridBoardRef : null}
         />
 
-        {clueStrip}
+        {isLandscape ? null : clueStrip}
         {timerRow}
         </View>
       </ScrollView>
@@ -1949,16 +2128,24 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         style={[
           styles.wheelDock,
           isLandscape && styles.wheelDockLandscape,
+          isLandscape && {
+            width: rightWidth,
+            maxWidth: rightWidth,
+            flex: 0,
+            overflow: 'hidden',
+          },
           {
             paddingBottom: isLandscape
-              ? 12
+              ? Math.max(insets.bottom, 8)
               : isOnboarding
                 ? Math.max(insets.bottom, 8)
                 : 4,
           },
         ]}
       >
-        <View style={styles.wheelRow}>
+        <View style={isLandscape ? styles.wheelStack : undefined}>
+        {isLandscape ? clueStrip : null}
+        <View style={[styles.wheelRow, isLandscape && styles.wheelRowLandscape]}>
           <View style={styles.sideTools}>
             <View style={styles.coinBurstWrap}>
               <CoinSparkBurst burstId={coinSparkBurstId} visible={coinSparkVisible} />
@@ -2085,9 +2272,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             </Pressable>
           </View>
         </View>
+        </View>
+        {isLandscape && !isOnboarding && !letterBusy ? (
+          <View style={styles.playAdSlot}>
+            <AdBanner
+              width={adWidth}
+              style={[styles.playAdBanner, { paddingBottom: 0 }]}
+            />
+          </View>
+        ) : null}
       </View>
       </View>
-      {!isOnboarding && !letterBusy ? (
+      {!isLandscape && !isOnboarding && !letterBusy ? (
         <View style={styles.playAdSlot}>
           <AdBanner style={[styles.playAdBanner, { paddingBottom: 0 }]} />
         </View>
@@ -2122,11 +2318,28 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         visible={completionDialogOpen}
         onClose={handleCloseCompletionDialog}
         onNext={handleNextPuzzle}
+        onShop={handleCompletionShop}
+        onRemoveAds={handleRemoveAdsShop}
+        showRemoveAdsOffer={
+          !isDaily
+          && !packCode
+          && !removeAdsOwned
+          && isLevelClearAdLevel(completionStats?.levelNumber)
+        }
         durationLabel={completionStats?.durationLabel}
         scoreCoins={completionStats?.scoreCoins ?? 0}
         hintCoinsSpent={completionStats?.hintCoinsSpent ?? 0}
         levelNumber={completionStats?.levelNumber}
         forceScreenType={completionStats?.screenType}
+        showStarterOffer={showStarterOffer}
+      />
+
+      <StarterPackGateModal
+        visible={starterGateVisible}
+        context={starterGateContext}
+        unlockLevel={starterUnlockLevel}
+        onClose={() => setStarterGateVisible(false)}
+        onShop={handleStarterGateShop}
       />
 
       <Modal
@@ -2325,7 +2538,29 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   playBodyLandscape: {
+    flex: 1,
     flexDirection: 'row',
+    alignItems: 'stretch',
+    width: '100%',
+    minHeight: 0,
+  },
+  scrollViewWide: {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 'auto',
+  },
+  scrollLandscape: {
+    flexGrow: 1,
+  },
+  playStage: {
+    flexGrow: 1,
+    width: '100%',
+    minHeight: 0,
+  },
+  widePlayStage: {
+    flexGrow: 1,
+    width: '100%',
+    justifyContent: 'center',
   },
   playAdSlot: {
     flexGrow: 0,
@@ -2528,11 +2763,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  playStage: {
-    flexGrow: 1,
-    width: '100%',
-    minHeight: 0,
-  },
   wheelDock: {
     paddingHorizontal: 16,
     paddingTop: 0,
@@ -2540,8 +2770,20 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   wheelDockLandscape: {
+    flexGrow: 0,
+    flexShrink: 0,
+    justifyContent: 'space-between',
+    paddingLeft: 8,
+    minHeight: 0,
+  },
+  wheelStack: {
+    flex: 1,
     justifyContent: 'center',
-    paddingLeft: 0,
+    minHeight: 0,
+    gap: 12,
+  },
+  wheelRowLandscape: {
+    justifyContent: 'center',
   },
   centered: {
     flex: 1,
