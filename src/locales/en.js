@@ -22,6 +22,7 @@ export default {
   'home.leaderboard': 'Leaders',
   'home.a11y.leaderboard': 'Open leaderboard',
   'leaderboard.title': 'Leaderboard',
+  'leaderboard.allTime': 'All Time',
   'leaderboard.a11y.back': 'Back',
   'leaderboard.empty': 'No scores yet.',
   'leaderboard.loadFailed': 'Could not load the leaderboard.',
@@ -73,7 +74,7 @@ export default {
   'daily.subtitleWatchAd': 'Watch a short ad, then play.',
   'daily.bundleRequired': 'Past daily puzzles come with the Daily Bundle.',
   'daily.getBundle': 'Get Daily Bundle',
-  'daily.watchAd': 'Watch ad',
+  'daily.watchAd': 'Watch ad and play',
   'daily.adFailed.title': 'Ad not ready',
   'daily.adFailed.body': 'Play starts after the ad finishes.',
   'daily.today': 'Today',
@@ -274,6 +275,7 @@ export default {
   'legal.support': 'Support',
 
   // sign in
+  'signIn.a11y.back': 'Back',
   'signIn.title': 'Sign in to Word Wheel Quest',
   'signIn.legal.prefix': 'By continuing, you agree to our ',
   'signIn.legal.termsLink': 'Terms of Service',

@@ -13,7 +13,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { Eye, EyeOff, Settings } from 'lucide-react-native';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { APP_URLS } from '../constants/store';
 import { SCREENS } from '../constants/theme';
 import { useAppearance } from '../context/AppearanceContext';
@@ -181,13 +181,14 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     <View style={styles.container}>
       <Pressable
         style={[
-          styles.settingsBtn,
-          isRandomScene && styles.settingsBtnOnScene,
+          styles.backBtn,
+          isRandomScene && styles.backBtnOnScene,
         ]}
         onPress={() => navigate(backScreen, routeParams)}
         hitSlop={8}
+        accessibilityLabel={t('signIn.a11y.back')}
       >
-        <Settings color={isRandomScene ? '#0b3d36' : colors.textMuted} size={22} />
+        <ArrowLeft color={isRandomScene ? '#0b3d36' : colors.text} size={22} />
       </Pressable>
 
       <KeyboardAvoidingView
@@ -346,10 +347,10 @@ function createStyles(colors, insets) {
       flexGrow: 1,
       justifyContent: 'center',
     },
-    settingsBtn: {
+    backBtn: {
       position: 'absolute',
       top: top + 8,
-      right: 16,
+      left: 16,
       zIndex: 2,
       width: 44,
       height: 44,
@@ -358,7 +359,7 @@ function createStyles(colors, insets) {
       borderRadius: 12,
       backgroundColor: colors.surface,
     },
-    settingsBtnOnScene: {
+    backBtnOnScene: {
       backgroundColor: 'rgba(255, 255, 255, 0.94)',
     },
     scroll: {

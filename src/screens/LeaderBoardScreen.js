@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Defs, LinearGradient as SvgLinearGradient, Path, Stop } from 'react-native-svg';
 import { ArrowLeft, Calendar, Crown, LogIn, Medal } from 'lucide-react-native';
 import AdBanner from '../components/AdBanner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +34,30 @@ const MEDALS = {
   2: { Icon: Medal, fill: '#F1F5F9', icon: '#334155', glow: '#E2E8F0', border: '#E2E8F0' },
   3: { Icon: Medal, fill: '#F0A05A', icon: '#6B2E0A', glow: '#F0A05A', border: '#F0A05A' },
 };
+
+function AllTimeRibbon({ label }) {
+  return (
+    <View style={styles.ribbonWrap}>
+      <Svg width={228} height={56} viewBox="0 0 228 56">
+        <Defs>
+          <SvgLinearGradient id="allTimeRibbonGold" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor="#FFF6D8" />
+            <Stop offset="0.5" stopColor="#F6D78A" />
+            <Stop offset="1" stopColor="#E8B15A" />
+          </SvgLinearGradient>
+        </Defs>
+        <Path
+          d="M40 14 C86 6 142 6 188 14 L214 20 L196 28 L214 36 L188 42 C142 50 86 50 40 42 L14 36 L32 28 L14 20 Z"
+          fill="url(#allTimeRibbonGold)"
+          stroke="#C9892E"
+          strokeWidth={1.25}
+          strokeLinejoin="round"
+        />
+      </Svg>
+      <Text style={styles.ribbonText}>{label}</Text>
+    </View>
+  );
+}
 
 function RankMark({ rank }) {
   const medal = MEDALS[rank];
@@ -245,6 +270,7 @@ export default function LeaderBoardScreen({ navigate }) {
               </View>
             </Pressable>
           ) : null}
+          <AllTimeRibbon label={t('leaderboard.allTime')} />
           {error ? (
             <Text style={[styles.message, { color: colors.textMuted }]}>{error}</Text>
           ) : rows.length === 0 ? (
@@ -405,6 +431,23 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     fontWeight: '600',
+  },
+  ribbonWrap: {
+    width: 228,
+    height: 56,
+    alignSelf: 'center',
+    marginTop: 2,
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ribbonText: {
+    position: 'absolute',
+    color: '#6B3E08',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
   },
   board: {
     borderRadius: 24,

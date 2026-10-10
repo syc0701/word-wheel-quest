@@ -130,6 +130,7 @@ npm run screenshots:pc        # PC scenes /01–/08 (?device=pc) for all 10 lang
 npm run screenshots:upload    # capture + upload listing / screenshots to Play
 # Optional: SCREENSHOT_DEVICES=tenInch  or  SNAPSHOT_LANGUAGES=en-US,ko-KR
 npm run metadata:upload       # sync text from .github, then upload listing / images
+npm run metadata:changelog    # upload What's new for the current versionCode (open testing)
 ```
 
 ## Backend notes

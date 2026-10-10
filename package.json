@@ -19,6 +19,7 @@
     "clean:all": "npm run clean && rm -rf android/.gradle fastlane/metadata/android/*/images/phoneScreenshots",
     "metadata:sync": "bash scripts/sync-play-store-text.sh",
     "metadata:upload": "npm run metadata:sync && unset BUNDLE_GEMFILE; PATH=\"/opt/homebrew/opt/ruby/bin:$HOME/.gem/ruby/4.0.0/bin:$PATH\" bundle exec fastlane metadata",
+    "metadata:changelog": "npm run metadata:sync && unset BUNDLE_GEMFILE; PATH=\"/opt/homebrew/opt/ruby/bin:$HOME/.gem/ruby/4.0.0/bin:$PATH\" bundle exec fastlane changelog version_code:$(node -p \"require('./app.json').expo.android.versionCode\") track:beta",
     "screenshots": "npx playwright install chromium && node docs/scripts/capture-screenshots.js",
     "screenshots:pc": "npx playwright install chromium && SCREENSHOT_DEVICES=pc node docs/scripts/capture-screenshots.js",
     "screenshots:upload": "npm run screenshots && npm run metadata:upload",
