@@ -22,6 +22,52 @@ import {
   rememberRevenueCatIdentityFromPurchase,
 } from '../services/purchases';
 
+/** Store purchase plus server verify. Does not show UI. */
+export async function purchaseIapPack(pack) {
+  if (!pack || !isPurchasesConfigured()) return { ok: false, reason: 'unavailable' };
+  let rcPackage = null;
+  try {
+    const offering = await getDefaultOffering();
+    rcPackage = offering?.availablePackages?.find((pkg) => pkg.identifier === pack.packageId) || null;
+  } catch {
+    return { ok: false, reason: 'unavailable' };
+  }
+  if (!rcPackage) return { ok: false, reason: 'unavailable' };
+  try {
+    const purchaseResult = await purchasePackage(rcPackage);
+    const transactionId = readPurchaseTransactionId(purchaseResult);
+    const productId = rcPackage.product.identifier;
+    const fromPurchase = rememberRevenueCatIdentityFromPurchase(purchaseResult);
+    const rcIdentity = fromPurchase.revenueCatAppUserId
+      ? fromPurchase
+      : await getRevenueCatIdentity();
+    await CreditApi.verifyIapPurchase({
+      appCode: APP_STORE.appSiteId,
+      productId,
+      transactionId,
+      rawPayload: {
+        platform: 'google',
+        storeProductId: productId,
+        packageKey: pack.packageId,
+        ...rcIdentity,
+      },
+    });
+    if (!(await isLoggedIn()) && pack.bonusCoins) {
+      await grantLocalPackBonus(transactionId, pack.bonusCoins);
+    }
+    await grantPackEntitlement(productId);
+    if (pack.grants?.classic && pack.grants?.daily) {
+      await markStarterPackPurchased({ grantGuestCredits: false });
+    }
+    return { ok: true };
+  } catch (error) {
+    if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+      return { ok: false, reason: 'cancelled' };
+    }
+    return { ok: false, reason: 'failed', message: error?.message };
+  }
+}
+
 export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurchased }) {
   const { colors, isDark } = useAppearance();
   const t = useT();
@@ -98,36 +144,17 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
 
   const handleBuy = async () => {
     if (!pack || buying) return;
-    if (!rcPackage) {
-      Alert.alert(t('shop.alert.productUnavailable.title'), t('shop.alert.productUnavailable.body'));
-      return;
-    }
     setBuying(true);
     try {
-      const purchaseResult = await purchasePackage(rcPackage);
-      const transactionId = readPurchaseTransactionId(purchaseResult);
-      const productId = rcPackage.product.identifier;
-      const fromPurchase = rememberRevenueCatIdentityFromPurchase(purchaseResult);
-      const rcIdentity = fromPurchase.revenueCatAppUserId
-        ? fromPurchase
-        : await getRevenueCatIdentity();
-      await CreditApi.verifyIapPurchase({
-        appCode: APP_STORE.appSiteId,
-        productId,
-        transactionId,
-        rawPayload: {
-          platform: 'google',
-          storeProductId: productId,
-          packageKey: pack.packageId,
-          ...rcIdentity,
-        },
-      });
-      if (!(await isLoggedIn()) && pack.bonusCoins) {
-        await grantLocalPackBonus(transactionId, pack.bonusCoins);
+      const result = await purchaseIapPack(pack);
+      if (result.reason === 'unavailable') {
+        Alert.alert(t('shop.alert.productUnavailable.title'), t('shop.alert.productUnavailable.body'));
+        return;
       }
-      await grantPackEntitlement(productId);
-      if (pack.grants?.classic && pack.grants?.daily) {
-        await markStarterPackPurchased({ grantGuestCredits: false });
+      if (!result.ok) {
+        if (result.reason === 'cancelled') return;
+        Alert.alert(t('shop.alert.purchaseFailed.title'), result.message ?? t('shop.alert.purchaseFailed.body'));
+        return;
       }
       const displayName = pack.nameKey ? t(pack.nameKey) : pack.name;
       onPurchased?.(pack);
@@ -138,9 +165,6 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
         Alert.alert(t('shop.alert.success.title'), t('shop.alert.success.body', { name: displayName }));
       }
       playSfx('purchaseWin');
-    } catch (error) {
-      if (error?.code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return;
-      Alert.alert(t('shop.alert.purchaseFailed.title'), error?.message ?? t('shop.alert.purchaseFailed.body'));
     } finally {
       setBuying(false);
     }
@@ -150,6 +174,9 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
   const name = pack?.nameKey ? t(pack.nameKey) : pack?.name;
   const promoTitle = catalog?.promoTitleKey ? t(catalog.promoTitleKey) : '';
   const promoBody = catalog?.promoBodyKey ? t(catalog.promoBodyKey) : '';
+  const shopBody = promoBody
+    ? ''
+    : (pack?.descriptionKey ? t(pack.descriptionKey) : (pack?.description || ''));
   const bonusCoins = Math.max(0, Math.floor(Number(pack?.bonusCoins) || 0));
   const theme = PACK_THEMES[pack?.code] || PACK_THEMES.classic;
   const mark = packMarkColor(pack?.code, isDark) || theme.icon;
@@ -172,6 +199,8 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
           ) : null}
           {promoBody ? (
             <Text style={[styles.body, { color: colors.textMuted }]}>{promoBody}</Text>
+          ) : shopBody ? (
+            <Text style={[styles.body, { color: colors.textMuted }]}>{shopBody}</Text>
           ) : null}
           {bonusCoins > 0 ? (
             <Text style={[styles.bonus, { color: mark }]}>

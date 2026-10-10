@@ -789,6 +789,16 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           }
           return;
         }
+        if (isDaily && !routeParams.adWatched) {
+          const dailyAccess = await resolveDailyPlayAccess();
+          if (dailyAccess !== 'unlocked') {
+            if (!cancelled) {
+              setLoading(false);
+              navigate(SCREENS.DAILY, { date: dailyDate });
+            }
+            return;
+          }
+        }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
           : packCode
@@ -854,27 +864,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         const authed = await isLoggedIn();
         const starterAccess = await hasStarterPackAccess();
 
-        if (isDaily) {
-          const dailyAccess = await resolveDailyPlayAccess({
-            hasStarter: starterAccess,
-            loggedIn: authed,
-            creditBalance: walletRef.current.creditBalance,
-          });
-          if (dailyAccess === 'starter') {
-            setPuzzle(null);
-            setError(t('play.error.starterRequired'));
-            setStarterGateContext('daily');
-            setStarterGateVisible(true);
-            return;
-          }
-          if (dailyAccess === 'no_credits') {
-            setPuzzle(null);
-            setError(t('play.error.noCredits'));
-            setStarterGateContext('credits');
-            setStarterGateVisible(true);
-            return;
-          }
-        } else if (!isOnboarding) {
+        if (!isDaily && !isOnboarding) {
           const level = resolveJourneyLevel(data) ?? Number(data?.puzzleLevel);
           const playerJourneyLevel = level;
           const journeyAccess = await resolveJourneyPlayAccess(level, {
@@ -998,7 +988,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [isDaily, isOnboarding, dailyDate, packCode, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, t]);
+  }, [isDaily, isOnboarding, dailyDate, packCode, reloadKey, resetPlayState, restoreGuestCoinBalance, seededPuzzle, routeParams.adWatched, navigate, t]);
 
   const handleNextPuzzle = useCallback(async () => {
     if (packCode) {

@@ -19,6 +19,7 @@ import HomeScreen from './screens/HomeScreen';
 import PlayScreen from './screens/PlayScreen';
 import DailyScreen from './screens/DailyScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import LeaderBoardScreen from './screens/LeaderBoardScreen';
 import ShopScreen from './screens/ShopScreen';
 import WebViewScreen from './screens/WebViewScreen';
 import SignInScreen from './screens/SignInScreen';
@@ -125,6 +126,16 @@ function AppShell() {
             style={opaqueScreenStyle}
           >
             <DailyScreen navigate={navigate} routeParams={params} />
+          </ScreenShell>
+        );
+      case SCREENS.LEADERBOARD:
+        return (
+          <ScreenShell
+            key="leaderboard"
+            {...layoutAnimProps(SCREEN_ENTER, SCREEN_EXIT)}
+            style={opaqueScreenStyle}
+          >
+            <LeaderBoardScreen navigate={navigate} routeParams={params} />
           </ScreenShell>
         );
       case SCREENS.SETTINGS:

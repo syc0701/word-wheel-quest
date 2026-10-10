@@ -22,7 +22,7 @@ import Animated, {
 import { BG_IMAGE_CATALOG, SPLASH_BG_SOURCE } from '../lib/bgAssets';
 
 const SEA_FALLBACK = '#0A2A4A';
-const SPLASH_BG = SPLASH_BG_SOURCE || BG_IMAGE_CATALOG.wellness_corner;
+const SPLASH_BG = SPLASH_BG_SOURCE || BG_IMAGE_CATALOG.cottage_peonies;
 
 /**
  * Immersive launch: title + animated rope progress over the opening scene photo.

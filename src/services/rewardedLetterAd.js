@@ -1,5 +1,6 @@
 import { AdEventType, RewardedAd, RewardedAdEventType } from 'react-native-google-mobile-ads';
-import { AD_REWARD_CREDITS, getCellRewardedAdUnitId, getRewardedAdUnitId } from '../constants/ads';
+import { AD_REWARD_CREDITS, getCellRewardedAdUnitId, getDailyPlayAdUnitId, getRewardedAdUnitId } from '../constants/ads';
+import { initializeMobileAds } from '../lib/ads';
 import CreditApi from '../lib/creditApi';
 import { pauseAmbientForAd, resumeAmbientAfterAd } from '../lib/adAmbientPause';
 import { getDeviceId } from '../lib/deviceId';
@@ -20,6 +21,12 @@ export function showRewardedLetterAd(deviceId, { verify = true } = {}) {
 /** Rewarded_One_Hidden_Letter. No customData, so this watch does not grant a credit. */
 export function showRewardedCellAd() {
   return showRewardedAd(getCellRewardedAdUnitId(), null);
+}
+
+/** Video required before a daily puzzle. No credit grant. */
+export async function showDailyPlayAd() {
+  await initializeMobileAds();
+  return showRewardedAd(getDailyPlayAdUnitId(), null);
 }
 
 function showRewardedAd(unitId, deviceId) {

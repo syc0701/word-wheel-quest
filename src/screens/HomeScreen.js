@@ -14,7 +14,6 @@ import {
 } from 'react-native';
 import {
   Calendar,
-  ChevronRight,
   Cloud,
   Gift,
   Lock,
@@ -22,7 +21,9 @@ import {
   Search,
   Settings,
   ShoppingCart,
+  Trophy,
 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AdBanner from '../components/AdBanner';
 import DailyGiftModal from '../components/DailyGiftModal';
 import StarterPackGateModal from '../components/StarterPackGateModal';
@@ -42,9 +43,11 @@ import PackPurchaseModal from '../components/PackPurchaseModal';
 import { loadOwnedPackCodes, loadPackLevel, loadPackProgress, serverOwnsPack } from '../lib/packEntitlements';
 import {
   hasStarterPackAccess,
+  resolveDailyPlayAccess,
   resolveJourneyPlayAccess,
   resolveStarterUnlockLevel,
 } from '../lib/guestStarterPack';
+import { showDailyPlayAd } from '../services/rewardedLetterAd';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
@@ -118,32 +121,30 @@ function useHomePalette() {
         }
       : { color: colors.textMuted };
 
-    // Level card: warm gold / cream (matches home mock).
+    // Level card: deep teal into sea-glass, light text on top.
     const LEVEL_CARD = {
-      cardBg: '#E3C17D',
-      cardBorder: '#CDB069',
-      text: '#3A2A1A',
-      muted: 'rgba(58, 42, 26, 0.72)',
-      badgeBg: 'rgba(58, 42, 26, 0.12)',
-      badgeText: '#3A2A1A',
-      progressTrack: 'rgba(58, 42, 26, 0.18)',
-      progressFill: '#8B6914',
-      ctaBg: '#F8EED8',
+      gradient: ['#0F3D38', '#1A7A6D', '#5EEAD4'],
+      cardBorder: 'rgba(255, 255, 255, 0.28)',
+      text: '#F8FFFC',
+      muted: 'rgba(248, 255, 252, 0.78)',
+      badgeBg: 'rgba(255, 255, 255, 0.16)',
+      badgeText: '#F8FFFC',
+      progressTrack: 'rgba(255, 255, 255, 0.22)',
+      progressFill: '#F8EED8',
       ctaText: '#3A2A1A',
     };
 
     const continueCard = {
-      backgroundColor: LEVEL_CARD.cardBg,
       borderColor: LEVEL_CARD.cardBorder,
-      shadowColor: '#6B4E1F',
-      shadowOpacity: 0.18,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
+      shadowColor: '#042F2C',
+      shadowOpacity: 0.28,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 6,
     };
     const continueText = LEVEL_CARD.text;
     const continueMuted = LEVEL_CARD.muted;
-    const continueCta = { backgroundColor: LEVEL_CARD.ctaBg };
+    const continueGradient = LEVEL_CARD.gradient;
     const continueCtaText = LEVEL_CARD.ctaText;
     const progressTrack = LEVEL_CARD.progressTrack;
     const progressFill = LEVEL_CARD.progressFill;
@@ -171,9 +172,9 @@ function useHomePalette() {
       title,
       comment,
       continueCard,
+      continueGradient,
       continueText,
       continueMuted,
-      continueCta,
       continueCtaText,
       progressTrack,
       progressFill,
@@ -189,6 +190,59 @@ function useHomePalette() {
       signInText: isDark ? colors.primaryGlow : '#1b4d3e',
     };
   }, [colors, isDark, isRandomScene]);
+}
+
+function HomeContinueButton({ label, disabled, onPress, accessibilityLabel, textColor }) {
+  const shine = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shine, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shine, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(700),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shine]);
+
+  const shineX = shine.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-180, 320],
+  });
+
+  return (
+    <Pressable
+      style={[styles.continueBtn, disabled && styles.btnDisabled]}
+      disabled={disabled}
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+    >
+      <LinearGradient
+        colors={['#FFF8EC', '#F6D78A', '#E8B15A']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.continueBtnFill}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.continueShine, { transform: [{ translateX: shineX }, { skewX: '-18deg' }] }]}
+        />
+        <Play color={textColor} size={17} strokeWidth={2.4} fill={textColor} />
+        <Text style={[styles.continueBtnText, { color: textColor }]}>{label}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
 }
 
 export default function HomeScreen({ navigate, routeParams = {} }) {
@@ -412,9 +466,28 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
     logHomePuzzle(puzzle, 'render');
   }, [puzzle]);
 
-  const openDaily = useCallback(() => {
-    navigate(SCREENS.DAILY);
-  }, [navigate]);
+  const [dailyAdBusy, setDailyAdBusy] = useState(false);
+
+  const openDaily = useCallback(async () => {
+    if (dailyAdBusy) return;
+    const access = await resolveDailyPlayAccess();
+    if (access !== 'unlocked') {
+      setDailyAdBusy(true);
+      try {
+        const earned = await showDailyPlayAd();
+        if (!earned) {
+          Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+          return;
+        }
+      } catch {
+        Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+        return;
+      } finally {
+        setDailyAdBusy(false);
+      }
+    }
+    navigate(SCREENS.DAILY, { adWatched: true });
+  }, [dailyAdBusy, navigate, t]);
 
   const [ownedPackCodes, setOwnedPackCodes] = useState([]);
   const [packProgress, setPackProgress] = useState({});
@@ -467,13 +540,37 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       >
         {t('home.title')}
       </Text>
-      <Text style={[styles.comment, palette.comment]}>{t('home.comment')}</Text>
+      <View style={styles.commentRow}>
+        <Text style={[styles.comment, palette.comment, styles.commentInRow]} numberOfLines={1}>
+          {t('home.comment')}
+        </Text>
+        <Pressable
+          onPress={() => navigate(SCREENS.LEADERBOARD)}
+          accessibilityLabel={t('home.a11y.leaderboard')}
+          style={styles.leaderChip}
+        >
+          <LinearGradient
+            colors={['#FDE68A', '#F59E0B', '#B45309']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.leaderChipFill}
+          >
+            <Trophy color="#fff" size={14} strokeWidth={2.4} />
+            <Text style={styles.leaderChipText}>{t('home.leaderboard')}</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
     </View>
   );
 
   const levelBox = (
     <View style={styles.levelBoxWrap}>
-      <View style={[styles.continueCard, palette.continueCard]}>
+      <LinearGradient
+        colors={palette.continueGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.continueCard, palette.continueCard]}
+      >
         {loading ? (
           <ActivityIndicator color={palette.continueText} style={styles.cardLoader} />
         ) : error ? (
@@ -516,25 +613,16 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
               </View>
             </View>
 
-            <Pressable
-              style={[styles.continueBtn, palette.continueCta, !canPlay && styles.btnDisabled]}
+            <HomeContinueButton
+              label={t('home.continue.cta')}
               disabled={!canPlay}
               onPress={handleContinue}
               accessibilityLabel={t('home.continue.cta')}
-            >
-              <Play
-                color={palette.continueCtaText}
-                size={17}
-                strokeWidth={2.4}
-                fill={palette.continueCtaText}
-              />
-              <Text style={[styles.continueBtnText, { color: palette.continueCtaText }]}>
-                {t('home.continue.cta')}
-              </Text>
-            </Pressable>
+              textColor={palette.continueCtaText}
+            />
           </>
         )}
-      </View>
+      </LinearGradient>
       {showGiftIcon ? (
         <Animated.View style={[styles.giftEdge, { opacity: giftFlicker }]}>
           <Pressable
@@ -564,36 +652,32 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 
   const hubBlock = (
     <View style={styles.bottomBlock}>
-      <View style={styles.tileRow}>
-        <Pressable style={[styles.tile, palette.tile]} onPress={openDaily}>
-          <View style={styles.tileHeader}>
-            <View style={[styles.tileIcon, { backgroundColor: palette.dailyIconBg }]}>
-              <Calendar color={colors.primaryGlow} size={18} strokeWidth={1.9} />
-            </View>
-            <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={2}>
-              {t('home.dailyPuzzle.label')}
-            </Text>
-          </View>
-          <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-            {t('home.dailyPuzzle.subtitle')}
+      <View style={styles.chipRow}>
+        <Pressable
+          style={[
+            styles.hubChip,
+            palette.tile,
+            { borderColor: colors.primary },
+            dailyAdBusy && styles.btnDisabled,
+          ]}
+          onPress={openDaily}
+          disabled={dailyAdBusy}
+          accessibilityLabel={t('home.dailyPuzzle.label')}
+        >
+          <Calendar color={colors.primaryGlow} size={16} strokeWidth={2.2} />
+          <Text style={[styles.hubChipText, { color: colors.text }]} numberOfLines={1}>
+            {t('home.dailyPuzzle.label')}
           </Text>
         </Pressable>
 
         <Pressable
-          style={[styles.tile, palette.tile]}
+          style={[styles.hubChip, palette.tile, { borderColor: '#E8B15A' }]}
           onPress={() => navigate(SCREENS.SHOP, { backScreen: SCREENS.HOME })}
+          accessibilityLabel={t('home.shop.label')}
         >
-          <View style={styles.tileHeader}>
-            <View style={[styles.tileIcon, { backgroundColor: palette.shopIconBg }]}>
-              <ShoppingCart color={colors.text} size={18} strokeWidth={1.9} />
-            </View>
-            <Text style={[styles.tileTitle, { color: colors.text }]} numberOfLines={1}>
-              {t('home.shop.label')}
-            </Text>
-            <ChevronRight color={colors.textMuted} size={16} />
-          </View>
-          <Text style={[styles.tileSubtitle, { color: colors.textMuted }]} numberOfLines={2}>
-            {t('home.shop.subtitle')}
+          <ShoppingCart color={isDark ? '#FBBF24' : '#B45309'} size={16} strokeWidth={2.2} />
+          <Text style={[styles.hubChipText, { color: colors.text }]} numberOfLines={1}>
+            {t('home.shop.label')}
           </Text>
         </Pressable>
       </View>
@@ -617,7 +701,12 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
                 style={[styles.packIcon, { tintColor: mark }]}
                 resizeMode="contain"
               />
-              <Text style={[styles.packName, { color: mark }]} numberOfLines={2}>
+              <Text
+                style={[styles.packName, { color: mark }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+              >
                 {t(pack.nameKey)}
               </Text>
               {owned ? (
@@ -860,10 +949,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
   },
+  commentRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  commentInRow: {
+    marginTop: 0,
+    flex: 1,
+  },
+  leaderChip: {
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  leaderChipFill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+  },
+  leaderChipText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
   continueCard: {
     borderRadius: 28,
     borderWidth: 1,
     padding: 20,
+    overflow: 'hidden',
   },
   cardLoader: {
     marginVertical: 36,
@@ -926,12 +1048,29 @@ const styles = StyleSheet.create({
   },
   continueBtn: {
     marginTop: 18,
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#F6D78A',
+    shadowOpacity: 0.55,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  continueBtnFill: {
     minHeight: 52,
     borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    overflow: 'hidden',
+  },
+  continueShine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
   },
   continueBtnText: {
     fontSize: 17,
@@ -951,61 +1090,76 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
-  tileRow: {
+  chipRow: {
     flexDirection: 'row',
-    alignItems: 'stretch',
-    gap: 10,
+    alignItems: 'center',
+    gap: 8,
+  },
+  hubChip: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  hubChipText: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   packRow: {
-    marginTop: 10,
+    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'stretch',
-    gap: 8,
+    gap: 6,
   },
   packBtn: {
     flex: 1,
-    borderRadius: 16,
-    borderWidth: 2,
-    paddingHorizontal: 6,
-    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
     alignItems: 'center',
   },
   packIcon: {
-    width: 40,
-    height: 40,
+    width: 26,
+    height: 26,
   },
   packName: {
-    marginTop: 4,
-    fontSize: 12,
-    lineHeight: 15,
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 14,
     fontWeight: '800',
     textAlign: 'center',
   },
   packLockRow: {
-    marginTop: 2,
+    marginTop: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
   },
   packLimit: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
   packTrack: {
-    marginTop: 8,
+    marginTop: 4,
     alignSelf: 'stretch',
-    height: 6,
-    borderRadius: 3,
+    height: 3,
+    borderRadius: 2,
     overflow: 'hidden',
   },
   packFill: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
   packCount: {
-    marginTop: 4,
-    fontSize: 11,
+    marginTop: 2,
+    fontSize: 10,
     fontWeight: '700',
   },
   giftEdge: {
@@ -1024,27 +1178,26 @@ const styles = StyleSheet.create({
   },
   tile: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   tileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+    gap: 6,
   },
   tileIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tileTitle: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
   },
   tileSubtitle: {

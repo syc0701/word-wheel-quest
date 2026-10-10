@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Animated,
+  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,13 +11,16 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { ArrowLeft, ChevronLeft, ChevronRight, Play } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowLeft, ChevronLeft, ChevronRight, Gift, Play } from 'lucide-react-native';
 import AdBanner from '../components/AdBanner';
+import { purchaseIapPack } from '../components/PackPurchaseModal';
+import { useAudio } from '../context/AudioContext';
 import PuzzleGrid from '../components/PuzzleGrid';
-import StarterPackGateModal from '../components/StarterPackGateModal';
 import WordWheelApi from '../lib/api';
 import { WORD_WHEEL_DAILY_CALENDAR_MIN } from '../constants/api';
-import { DAILY_BUNDLE_PACKAGE_ID, FREE_DAILY_PLAYS, STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
+import { DAILY_BUNDLE_PACKAGE_ID } from '../constants/guestAccess';
+import { IAP_PACKAGES } from '../constants/store';
 import { resolveWordWheelGridSize } from '../lib/constants';
 import {
   buildDisplayGrid,
@@ -30,21 +36,77 @@ import {
   montrealYmdFromDate,
 } from '../lib/montrealCalendar';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
-import { isLoggedIn } from '../lib/auth';
-import {
-  canPlayDailyPuzzle,
-  getFreeDailyPlaysRemaining,
-  hasStarterPackAccess,
-  resolveDailyPlayAccess,
-} from '../lib/guestStarterPack';
+import { resolveDailyPlayAccess } from '../lib/guestStarterPack';
+import { showDailyPlayAd } from '../services/rewardedLetterAd';
 import { useAppearance } from '../context/AppearanceContext';
 import { useT } from '../context/LanguageContext';
-import { hasClassicPack, hasUnlimitedDaily } from '../lib/packEntitlements';
-import useWordWheelWallet from '../hooks/useWordWheelWallet';
+import { hasUnlimitedDaily } from '../lib/packEntitlements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const EMPTY_SET = new Set();
 const EMPTY_MAP = new Map();
+const DAILY_BUNDLE = IAP_PACKAGES.find((pack) => pack.packageId === DAILY_BUNDLE_PACKAGE_ID) || null;
+
+function isDailyBundleRequired(data) {
+  return data?.code === 'FAILURE' && data?.message === 'Pack not owned';
+}
+
+function DailyBundleButton({ label, onPress, busy }) {
+  const shine = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shine, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shine, {
+          toValue: 1,
+          duration: 1600,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(700),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [shine]);
+
+  const shineX = shine.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-180, 320],
+  });
+
+  return (
+    <Pressable
+      style={[styles.bundleBtn, busy && styles.primaryBtnDisabled]}
+      onPress={onPress}
+      disabled={busy}
+      accessibilityLabel={label}
+    >
+      <LinearGradient
+        colors={['#F59E0B', '#D97706', '#92400E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.bundleBtnFill}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.bundleShine, { transform: [{ translateX: shineX }, { skewX: '-18deg' }] }]}
+        />
+        {busy ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Gift color="#fff" size={18} strokeWidth={2.4} />
+        )}
+        <Text style={styles.bundleBtnText}>{label}</Text>
+      </LinearGradient>
+    </Pressable>
+  );
+}
 
 function parseFoundWords(data) {
   const raw = data?.wordsFound ?? data?.foundWords ?? data?.play?.wordsFound ?? '';
@@ -55,10 +117,10 @@ function parseFoundWords(data) {
 export default function DailyScreen({ navigate, routeParams = {} }) {
   const { colors, isRandomScene } = useAppearance();
   const t = useT();
+  const { playSfx } = useAudio();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const isWide = width > height;
-  const wallet = useWordWheelWallet();
   const wideAdWidth = Math.max(1, Math.floor(width / 3 - 40));
   const gridMax = Math.max(160, Math.floor(height - Math.max(insets.top, 12) - 300));
 
@@ -92,21 +154,14 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const [puzzle, setPuzzle] = useState(null);
   const [foundWords, setFoundWords] = useState([]);
   const [hintLetters, setHintLetters] = useState(() => new Map());
-  const [freeDailyLeft, setFreeDailyLeft] = useState(FREE_DAILY_PLAYS);
   const [unlimitedDaily, setUnlimitedDaily] = useState(false);
-  const [ownsClassic, setOwnsClassic] = useState(false);
-  const [starterGateVisible, setStarterGateVisible] = useState(false);
-  const [starterGateContext, setStarterGateContext] = useState('daily');
+  const [adBusy, setAdBusy] = useState(false);
+  const [needsDailyBundle, setNeedsDailyBundle] = useState(false);
+  const [bundleBusy, setBundleBusy] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const refreshDailyAccess = useCallback(async () => {
-    const [left, unlimited, classic] = await Promise.all([
-      getFreeDailyPlaysRemaining(),
-      hasUnlimitedDaily(),
-      hasClassicPack(),
-    ]);
-    setFreeDailyLeft(left);
-    setUnlimitedDaily(unlimited);
-    setOwnsClassic(classic);
+    setUnlimitedDaily(await hasUnlimitedDaily());
   }, []);
 
   useEffect(() => {
@@ -133,11 +188,21 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
       setPuzzle(null);
       setFoundWords([]);
       setHintLetters(new Map());
+      setNeedsDailyBundle(false);
       try {
         const data = await WordWheelApi.fetchDaily(selectedDate);
         if (cancelled) return;
+        if (isDailyBundleRequired(data)) {
+          setNeedsDailyBundle(true);
+          setError(t('daily.bundleRequired'));
+          return;
+        }
         if (data?.code === 'NO_DATA') {
           setError(t('daily.error.noData'));
+          return;
+        }
+        if (data?.code === 'FAILURE' || !data?.id) {
+          setError(data?.message || t('daily.error.loadFailed'));
           return;
         }
         const storedHints = data?.id ? await loadStoredHintLetters(data.id) : new Map();
@@ -154,7 +219,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, t]);
+  }, [reloadKey, selectedDate, t]);
 
   const gridSize = useMemo(() => resolveWordWheelGridSize(puzzle), [puzzle]);
   const wordPositions = useMemo(
@@ -184,46 +249,61 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
   const canPlay = Boolean(puzzle?.id) && !loading;
 
   const handlePlayDaily = useCallback(async () => {
-    if (!canPlay) return;
-    const authed = await isLoggedIn();
-    const hasStarter = await hasStarterPackAccess();
-    const access = await resolveDailyPlayAccess({
-      hasStarter,
-      loggedIn: authed,
-      creditBalance: wallet.creditBalance,
+    if (!canPlay || adBusy) return;
+    const access = await resolveDailyPlayAccess();
+    const alreadyWatched = Boolean(routeParams.adWatched);
+    if (access !== 'unlocked' && !alreadyWatched) {
+      setAdBusy(true);
+      try {
+        const earned = await showDailyPlayAd();
+        if (!earned) {
+          Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+          return;
+        }
+      } catch {
+        Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+        return;
+      } finally {
+        setAdBusy(false);
+      }
+    }
+    navigate(SCREENS.DAILY_PLAY, {
+      mode: PLAY_MODE.DAILY,
+      date: selectedDate,
+      adWatched: true,
     });
-    if (access === 'starter' || access === 'daily') {
-      setStarterGateContext('daily');
-      setStarterGateVisible(true);
-      return;
-    }
-    if (access === 'no_credits') {
-      setStarterGateContext('credits');
-      setStarterGateVisible(true);
-      return;
-    }
-    if (!(await canPlayDailyPuzzle({
-      hasStarter,
-      loggedIn: authed,
-      creditBalance: wallet.creditBalance,
-    }))) {
-      setStarterGateContext('daily');
-      setStarterGateVisible(true);
-      return;
-    }
-    navigate(SCREENS.DAILY_PLAY, { mode: PLAY_MODE.DAILY, date: selectedDate });
-  }, [canPlay, navigate, selectedDate, wallet.creditBalance]);
+  }, [adBusy, canPlay, navigate, routeParams.adWatched, selectedDate, t]);
 
-  const handleStarterGateShop = useCallback(() => {
-    setStarterGateVisible(false);
-    const packageId = ownsClassic && !unlimitedDaily
-      ? DAILY_BUNDLE_PACKAGE_ID
-      : STARTER_PACK_PACKAGE_ID;
-    navigate(SCREENS.SHOP, {
-      backScreen: SCREENS.DAILY,
-      packageId,
-    });
-  }, [navigate, ownsClassic, unlimitedDaily]);
+  const handleBuyDailyBundle = useCallback(async () => {
+    if (bundleBusy || !DAILY_BUNDLE) return;
+    setBundleBusy(true);
+    try {
+      const result = await purchaseIapPack(DAILY_BUNDLE);
+      if (result.reason === 'unavailable') {
+        Alert.alert(t('shop.alert.productUnavailable.title'), t('shop.alert.productUnavailable.body'));
+        return;
+      }
+      if (!result.ok) {
+        if (result.reason !== 'cancelled') {
+          Alert.alert(
+            t('shop.alert.purchaseFailed.title'),
+            result.message ?? t('shop.alert.purchaseFailed.body')
+          );
+        }
+        return;
+      }
+      playSfx('purchaseWin');
+      Alert.alert(
+        t('shop.alert.success.title'),
+        t('shop.alert.success.body', { name: t('shop.pack.daily.name') })
+      );
+      setUnlimitedDaily(true);
+      setNeedsDailyBundle(false);
+      setReloadKey((key) => key + 1);
+    } finally {
+      setBundleBusy(false);
+    }
+  }, [bundleBusy, playSfx, t]);
 
   const showGrid = Boolean(puzzle?.id) && gridSize > 0 && puzzleCells.size > 0;
 
@@ -253,11 +333,7 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
         <Text style={[styles.kicker, { color: colors.textMuted }, sceneText]}>{t('daily.kicker')}</Text>
         <Text style={[styles.title, { color: colors.text }, sceneText]}>{t('daily.title')}</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }, sceneText, isWide && styles.subtitleWide]}>
-          {unlimitedDaily
-            ? t('daily.subtitle')
-            : freeDailyLeft > 0
-              ? t('daily.subtitleFreePlays', { left: freeDailyLeft, total: FREE_DAILY_PLAYS })
-              : t('daily.subtitleLocked')}
+          {unlimitedDaily ? t('daily.subtitle') : t('daily.subtitleWatchAd')}
         </Text>
         </View>
 
@@ -342,18 +418,34 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           )}
         </View>
 
-        <Pressable
-          style={[
-            styles.primaryBtn,
-            { backgroundColor: colors.primary },
-            !canPlay && styles.primaryBtnDisabled,
-          ]}
-          disabled={!canPlay}
-          onPress={handlePlayDaily}
-        >
-          <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
-          <Text style={styles.primaryBtnText}>{puzzleCompleted ? t('daily.replay') : t('common.play')}</Text>
-        </Pressable>
+        {needsDailyBundle ? (
+          <DailyBundleButton
+            label={t('daily.getBundle')}
+            busy={bundleBusy}
+            onPress={handleBuyDailyBundle}
+          />
+        ) : (
+          <Pressable
+            style={[
+              styles.primaryBtn,
+              { backgroundColor: colors.primary },
+              (!canPlay || adBusy) && styles.primaryBtnDisabled,
+            ]}
+            disabled={!canPlay || adBusy}
+            onPress={handlePlayDaily}
+          >
+            {adBusy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Play color="#fff" size={18} strokeWidth={2.4} fill="#fff" />
+            )}
+            <Text style={styles.primaryBtnText}>
+              {unlimitedDaily || routeParams.adWatched
+                ? (puzzleCompleted ? t('daily.replay') : t('common.play'))
+                : t('daily.watchAd')}
+            </Text>
+          </Pressable>
+        )}
         </View>
 
         {isWide ? (
@@ -362,13 +454,6 @@ export default function DailyScreen({ navigate, routeParams = {} }) {
           </View>
         ) : null}
       </ScrollView>
-
-      <StarterPackGateModal
-        visible={starterGateVisible}
-        context={starterGateContext}
-        onClose={() => setStarterGateVisible(false)}
-        onShop={handleStarterGateShop}
-      />
     </View>
   );
 }
@@ -523,6 +608,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
+  },
+  bundleBtn: {
+    marginTop: 4,
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#F59E0B',
+    shadowOpacity: 0.55,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
+  bundleBtnFill: {
+    minHeight: 52,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    overflow: 'hidden',
+  },
+  bundleShine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  bundleBtnText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '800',
   },
   primaryBtn: {
     marginTop: 4,

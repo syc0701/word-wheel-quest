@@ -48,6 +48,12 @@ export function getCellRewardedAdUnitId() {
   return ADMOB_CELL_REWARDED_UNIT_ID;
 }
 
+/** Daily entry video. Debug uses Google's test video so a fill always shows. */
+export function getDailyPlayAdUnitId() {
+  if (__DEV__ || Platform.OS !== 'android') return TestIds.REWARDED;
+  return ADMOB_CELL_REWARDED_UNIT_ID;
+}
+
 /** Dev uses Google's test interstitial. Production waits for a real unit id. */
 export function getLevelInterstitialAdUnitId() {
   if (__DEV__ || Platform.OS !== 'android') return TestIds.INTERSTITIAL;

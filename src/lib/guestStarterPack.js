@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  FREE_DAILY_PLAYS,
   GUEST_MAX_LEVEL_WITHOUT_STARTER,
   PUZZLE_PLAY_CREDIT_COST,
   STARTER_PACK_PACKAGE_ID,
@@ -13,7 +12,6 @@ import { APP_STORE } from '../constants/store';
 import { hasUnlimitedDaily } from './packEntitlements';
 
 const STARTER_PACK_KEY = 'ww.starter_pack';
-const FREE_DAILY_PLAYS_KEY = 'ww.free_daily_plays_used';
 const GUEST_PUZZLE_CREDITS_KEY = 'ww.guest_puzzle_credits';
 
 function isStarterPurchase(record) {
@@ -64,32 +62,6 @@ export async function markStarterPackPurchased({ grantGuestCredits = true } = {}
 
 /** @deprecated */
 export const markGuestStarterPackPurchased = markStarterPackPurchased;
-
-export async function getFreeDailyPlaysUsed() {
-  try {
-    const raw = await AsyncStorage.getItem(FREE_DAILY_PLAYS_KEY);
-    const n = Number(raw);
-    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-export async function getFreeDailyPlaysRemaining() {
-  const used = await getFreeDailyPlaysUsed();
-  return Math.max(0, FREE_DAILY_PLAYS - used);
-}
-
-export async function incrementFreeDailyPlaysUsed() {
-  const used = await getFreeDailyPlaysUsed();
-  const next = Math.min(FREE_DAILY_PLAYS, used + 1);
-  try {
-    await AsyncStorage.setItem(FREE_DAILY_PLAYS_KEY, String(next));
-  } catch {
-    /* ignore */
-  }
-  return next;
-}
 
 export async function getGuestPuzzleCredits() {
   try {
@@ -179,19 +151,18 @@ export async function canPlayJourneyLevel(journeyLevel, opts) {
 }
 
 /**
- * Whether a daily puzzle can be started.
- * First 10 are free. Starter or Daily Bundle then opens unlimited daily.
- * @returns {'free'|'unlocked'|'daily'}
+ * Whether a daily puzzle can start without a rewarded ad.
+ * Starter or Daily Bundle opens unlimited daily. Everyone else watches an ad first.
+ * @returns {'unlocked'|'ad'}
  */
 export async function resolveDailyPlayAccess() {
   if (await hasUnlimitedDaily() || await hasStarterPackLocal()) return 'unlocked';
-  const left = await getFreeDailyPlaysRemaining();
-  return left > 0 ? 'free' : 'daily';
+  return 'ad';
 }
 
 export async function canPlayDailyPuzzle() {
   const access = await resolveDailyPlayAccess();
-  return access === 'free' || access === 'unlocked';
+  return access === 'unlocked';
 }
 
 export async function canStartJourneyLevel(level, {
@@ -206,7 +177,7 @@ export async function canStartJourneyLevel(level, {
   return (await getGuestPuzzleCredits()) >= PUZZLE_PLAY_CREDIT_COST;
 }
 
-/** Charge free daily slot or puzzle credit after a play session starts. */
+/** Charge a puzzle credit after a journey play session starts. Daily is an ad or an unlock. */
 export async function settlePuzzlePlayCharge({
   isDaily,
   journeyLevel,
@@ -216,15 +187,7 @@ export async function settlePuzzlePlayCharge({
   playerJourneyLevel = null,
 }) {
   const hasStarter = await hasStarterPackLocal();
-  if (isDaily) {
-    const access = await resolveDailyPlayAccess();
-    if (access === 'free') {
-      await incrementFreeDailyPlaysUsed();
-      return { ok: true };
-    }
-    if (access === 'unlocked') return { ok: true };
-    return { ok: false, access };
-  }
+  if (isDaily) return { ok: true };
   if (!journeyLevelNeedsCredit(journeyLevel, playerJourneyLevel)) return { ok: true };
   if (!hasStarter) return { ok: false, access: 'starter' };
   if (loggedIn) {

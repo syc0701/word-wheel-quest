@@ -28,8 +28,8 @@ export const STARTER_PACK_PRODUCT_ID =
   IAP_PACKAGES.find((p) => p.packageId === STARTER_PACK_PACKAGE_ID)?.productId
   ?? 'word_wheel_pack_starter';
 
-/** Daily puzzles playable without starter pack or credits. */
-export const FREE_DAILY_PLAYS = 10;
+/** Unused. Daily play is a rewarded ad, or unlimited with Starter / Daily Bundle. */
+export const FREE_DAILY_PLAYS = 0;
 
 /**
  * Letter credits granted by the shop packs. The server writes these.
