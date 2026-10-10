@@ -54,6 +54,7 @@ export const IAP_PACKAGES = [
     priceUsd: '$1.99',
     icon: 'classicSwords',
     purchasable: true,
+    bonusCoins: 100,
     grants: { classic: true },
   },
   {
@@ -66,6 +67,7 @@ export const IAP_PACKAGES = [
     priceUsd: '$2.99',
     icon: 'hardQuestPeak',
     purchasable: true,
+    bonusCoins: 200,
     grants: { hard: true },
   },
   {
@@ -78,6 +80,7 @@ export const IAP_PACKAGES = [
     priceUsd: '$2.99',
     icon: 'masterScroll',
     purchasable: true,
+    bonusCoins: 300,
     grants: { master: true },
   },
   {
@@ -103,6 +106,7 @@ export const IAP_PACKAGES = [
     icon: 'starterChest',
     purchasable: true,
     shopHidden: true,
+    bonusCoins: 100,
     grants: { classic: true, daily: true },
   },
   {

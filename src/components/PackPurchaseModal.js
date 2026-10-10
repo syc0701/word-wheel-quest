@@ -9,7 +9,7 @@ import { PACK_THEMES, packByCode, packMarkColor } from '../constants/packs';
 import { isLoggedIn } from '../lib/auth';
 import CreditApi from '../lib/creditApi';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
-import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
+import { grantLocalPackBonus } from '../lib/packBonusCoins';
 import { grantPackEntitlement } from '../lib/packEntitlements';
 import { savePendingIap } from '../lib/pendingIap';
 import {
@@ -136,7 +136,10 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
           ...rcIdentity,
         });
         if (pack.coinsGrant) {
-          await addGuestPuzzleCoins(pack.coinsGrant).catch(() => {});
+          await grantLocalPackBonus(transactionId, pack.coinsGrant);
+        }
+        if (pack.bonusCoins) {
+          await grantLocalPackBonus(transactionId, pack.bonusCoins);
         }
       }
       onPurchased?.(pack);
@@ -154,6 +157,7 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
   const name = pack?.nameKey ? t(pack.nameKey) : pack?.name;
   const promoTitle = catalog?.promoTitleKey ? t(catalog.promoTitleKey) : '';
   const promoBody = catalog?.promoBodyKey ? t(catalog.promoBodyKey) : '';
+  const bonusCoins = Math.max(0, Math.floor(Number(pack?.bonusCoins) || 0));
   const theme = PACK_THEMES[pack?.code] || PACK_THEMES.classic;
   const mark = packMarkColor(pack?.code, isDark) || theme.icon;
 
@@ -175,6 +179,11 @@ export default function PackPurchaseModal({ visible, pack, icon, onClose, onPurc
           ) : null}
           {promoBody ? (
             <Text style={[styles.body, { color: colors.textMuted }]}>{promoBody}</Text>
+          ) : null}
+          {bonusCoins > 0 ? (
+            <Text style={[styles.bonus, { color: mark }]}>
+              {t('pack.bonusCoins', { n: bonusCoins })}
+            </Text>
           ) : null}
           <View style={styles.ctaWrap}>
             <Animated.View
@@ -242,6 +251,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 15,
     lineHeight: 20,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  bonus: {
+    marginTop: 12,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '800',
     textAlign: 'center',
   },

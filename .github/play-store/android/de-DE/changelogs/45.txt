@@ -1,0 +1,7 @@
+Neu in diesem Update:
+
+- Bestenliste mit Top-Punkten und deinem Rang
+- Mit Anmeldung Name und Punktzahl speichern
+- Das Tagesrätsel startet nach einem kurzen Video
+
+Danke fürs Spielen!

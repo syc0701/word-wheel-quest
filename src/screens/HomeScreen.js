@@ -672,6 +672,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
             ));
           }
           if (bought.grants?.daily) navigate(SCREENS.DAILY);
+          wallet.refresh({ silent: true }).catch(() => {});
         }}
         onSignIn={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME, requireSignIn: true })}
       />

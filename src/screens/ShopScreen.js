@@ -22,7 +22,7 @@ import CreditApi from '../lib/creditApi';
 import { isLoggedIn } from '../lib/auth';
 import { savePendingIap } from '../lib/pendingIap';
 import { markStarterPackPurchased } from '../lib/guestStarterPack';
-import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
+import { grantLocalPackBonus } from '../lib/packBonusCoins';
 import { grantPackEntitlement } from '../lib/packEntitlements';
 
 const GOLD = '#facc15';
@@ -190,7 +190,10 @@ export default function ShopScreen({ navigate, routeParams = {} }) {
           ...rcIdentity,
         });
         if (meta.coinsGrant) {
-          await addGuestPuzzleCoins(meta.coinsGrant).catch(() => {});
+          await grantLocalPackBonus(transactionId, meta.coinsGrant);
+        }
+        if (meta.bonusCoins) {
+          await grantLocalPackBonus(transactionId, meta.bonusCoins);
         }
       }
       const displayName = meta.nameKey ? t(meta.nameKey) : meta.name;
