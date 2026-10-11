@@ -289,11 +289,20 @@ def upload_all_listing_text_metadata!
   end
 end
 
+def app_store_version
+  override = ENV["ASC_APP_VERSION"].to_s.strip
+  return override unless override.empty?
+
+  require "json"
+  app_json = File.expand_path("../../app.json", __dir__)
+  JSON.parse(File.read(app_json))["expo"]["version"]
+end
+
 def deliver_options(skip_screenshots:, skip_metadata: true, include_review_info: true)
   options = {
     api_key: load_asc_api_key,
     app_identifier: "com.puzint.wordwheel.app",
-    app_version: ENV.fetch("ASC_APP_VERSION", "2.0.3"),
+    app_version: app_store_version,
     metadata_path: METADATA_PATH,
     screenshots_path: SCREENSHOTS_PATH,
     skip_binary_upload: true,
