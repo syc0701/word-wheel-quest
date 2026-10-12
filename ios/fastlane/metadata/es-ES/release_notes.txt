@@ -1,0 +1,7 @@
+Novedades de la versión 2.0.5:
+
+- Las monedas aparecen al ganarlas
+- La pista se ilumina cuando te atascas
+- Valora la app tras los niveles hito
+
+¡Gracias por jugar!

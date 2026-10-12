@@ -1,0 +1,7 @@
+Nouveautés de la version 2.0.5 :
+
+- Les pièces s'affichent quand vous en gagnez
+- L'indice s'illumine quand vous êtes bloqué
+- Notez l'app après les niveaux jalons
+
+Merci de jouer !

@@ -36,11 +36,11 @@ yarn-error.*
 .env*.local
 client_secret*.json
 
-# Fastlane secrets & generated screenshots (iOS)
+# Fastlane local contact and generated output (iOS)
 ios/fastlane/asc_review_contact.env
+ios/fastlane/report.xml
 ios/fastlane/screenshots/**/*.png
 ios/fastlane/screenshots/**/*.html
-ios/fastlane/metadata/
 ios/vendor/
 ios/.bundle/
 

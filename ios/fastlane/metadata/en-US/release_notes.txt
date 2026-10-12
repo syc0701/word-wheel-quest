@@ -1,0 +1,7 @@
+What's new in version 2.0.5:
+
+- Coins pop up when you earn them
+- The hint button lights up when you are stuck
+- Rate the app after milestone levels
+
+Thanks for playing!

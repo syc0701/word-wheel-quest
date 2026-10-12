@@ -1,0 +1,7 @@
+Neu in Version 2.0.5:
+
+- Münzen schweben hoch, wenn du sie verdienst
+- Der Hinweis leuchtet, wenn du feststeckst
+- Bewerte die App nach Meilenstein-Leveln
+
+Danke fürs Spielen!

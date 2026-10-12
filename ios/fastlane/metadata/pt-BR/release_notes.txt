@@ -1,0 +1,7 @@
+Novidades da versão 2.0.5:
+
+- As moedas aparecem quando você ganha
+- A dica acende quando você trava
+- Avalie o app depois dos níveis marco
+
+Obrigado por jogar!
