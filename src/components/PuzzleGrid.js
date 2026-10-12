@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated as RnAnimated, Easing as RnEasing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Lightbulb, Play } from 'lucide-react-native';
+import { Play } from 'lucide-react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
+import WordNumberBadge from './WordNumberBadge';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
 import { GRID_CREAM, GRID_TRANSITION_MS } from '../lib/gridTheme';
 
@@ -23,15 +22,55 @@ const MAX_CELL = 96;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 function AdHintBadge({ onPress, busy = false }) {
-  const hintScale = useSharedValue(0.35);
+  const hintScale = useRef(new RnAnimated.Value(0.35)).current;
   const [clicked, setClicked] = useState(false);
   const wasBusy = useRef(false);
 
   useEffect(() => {
-    hintScale.value = withSequence(
-      withSpring(1.38, { damping: 5, stiffness: 260 }),
-      withSpring(1, { damping: 7, stiffness: 180 })
+    hintScale.setValue(0.35);
+    const beat = RnAnimated.loop(
+      RnAnimated.sequence([
+        RnAnimated.timing(hintScale, {
+          toValue: 1.22,
+          duration: 180,
+          easing: RnEasing.out(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.timing(hintScale, {
+          toValue: 1,
+          duration: 180,
+          easing: RnEasing.in(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.delay(90),
+        RnAnimated.timing(hintScale, {
+          toValue: 1.12,
+          duration: 150,
+          easing: RnEasing.out(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.timing(hintScale, {
+          toValue: 1,
+          duration: 180,
+          easing: RnEasing.in(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.delay(620),
+      ])
     );
+    const intro = RnAnimated.spring(hintScale, {
+      toValue: 1,
+      friction: 5,
+      tension: 140,
+      useNativeDriver: true,
+    });
+    intro.start(({ finished }) => {
+      if (finished) beat.start();
+    });
+    return () => {
+      intro.stop();
+      beat.stop();
+    };
   }, [hintScale]);
 
   useEffect(() => {
@@ -39,13 +78,13 @@ function AdHintBadge({ onPress, busy = false }) {
     wasBusy.current = busy;
   }, [busy]);
 
-  const hintStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: hintScale.value }],
-  }));
   const showPressed = clicked || busy;
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.adHintBtn, hintStyle]}>
+    <RnAnimated.View
+      pointerEvents="box-none"
+      style={[styles.adHintBtn, { transform: [{ scale: hintScale }] }]}
+    >
       <Pressable
         style={[styles.adHintHit, showPressed && styles.adHintHitPressed]}
         onPress={() => {
@@ -59,10 +98,9 @@ function AdHintBadge({ onPress, busy = false }) {
         accessibilityState={{ selected: showPressed }}
         accessibilityLabel="Watch an ad to show this letter"
       >
-        <Lightbulb color={showPressed ? '#FDE68A' : '#fff'} size={12} strokeWidth={2.4} />
-        <Play color={showPressed ? '#FDE68A' : '#fff'} size={8} fill={showPressed ? '#FDE68A' : '#fff'} style={styles.adHintPlay} />
+        <Play color={showPressed ? '#FDE68A' : '#fff'} size={14} fill={showPressed ? '#FDE68A' : '#fff'} strokeWidth={2.4} />
       </Pressable>
-    </Animated.View>
+    </RnAnimated.View>
   );
 }
 
@@ -147,28 +185,12 @@ function GridCell({
         style={[styles.cell, StyleSheet.absoluteFill, cellStyle]}
       >
       {wordNumberLabel ? (
-        <View
-          pointerEvents="none"
-          style={[
-            styles.numberAnchor,
-            {
-              width: numberBox,
-              height: numberBox,
-              top: -numberBox / 2,
-              left: -numberBox / 2,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.numberText,
-              { fontSize: numberFontSize, lineHeight: numberFontSize + 1 },
-              wordNumberLabel.length > 2 && styles.numberTextCompact,
-            ]}
-          >
-            {wordNumberLabel}
-          </Text>
-        </View>
+        <WordNumberBadge
+          label={wordNumberLabel}
+          boxSize={numberBox}
+          fontSize={numberFontSize}
+          compact={wordNumberLabel.length > 2}
+        />
       ) : null}
       {isRevealed ? (
         <Animated.Text style={[styles.letter, { fontSize: letterFontSize }, textStyle]}>
@@ -193,6 +215,7 @@ export default function PuzzleGrid({
   revealBurstId = 0,
   maxBoardSize = 0,
   fitWidth = false,
+  bounded = false,
   fill = false,
   onCellPress,
   adHintCells = null,
@@ -377,6 +400,7 @@ export default function PuzzleGrid({
       style={[
         styles.gridWrap,
         fitWidth && styles.gridWrapFitWidth,
+        bounded && styles.gridWrapBounded,
         fill && styles.gridWrapFill,
         fill && maxBoardSize > 0 && { minHeight: maxBoardSize },
       ]}
@@ -452,6 +476,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingVertical: 8,
   },
+  gridWrapBounded: {
+    flexGrow: 1,
+    flexShrink: 1,
+    minHeight: 0,
+    marginTop: 8,
+  },
   gridWrapFill: {
     flex: 1,
     alignSelf: 'stretch',
@@ -484,28 +514,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '900',
   },
-  numberAnchor: {
-    position: 'absolute',
-    zIndex: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: GRID_CREAM.badgeBg,
-    borderWidth: 1,
-    borderColor: GRID_CREAM.badgeBorder,
-  },
-  numberText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: GRID_CREAM.badgeText,
-    includeFontPadding: false,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-  },
-  numberTextCompact: {
-    fontSize: 12,
-    letterSpacing: -0.3,
-  },
   adHintOverlay: {
     position: 'absolute',
     zIndex: 30,
@@ -532,10 +540,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#9A3412',
     borderColor: '#FDE68A',
     transform: [{ scale: 0.88 }],
-  },
-  adHintPlay: {
-    position: 'absolute',
-    right: 2,
-    bottom: 2,
   },
 });

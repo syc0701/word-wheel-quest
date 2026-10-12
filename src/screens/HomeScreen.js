@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  Modal,
   Easing,
   Image,
   Pressable,
@@ -17,6 +18,7 @@ import {
   Cloud,
   Gift,
   Lock,
+  LogIn,
   Play,
   Search,
   Settings,
@@ -31,8 +33,15 @@ import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
 import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
-import { claimDailyGift, describeDailyGift, loadDailyGift, localDateKey } from '../lib/dailyGift';
-import { grantDailyGift } from '../lib/coinApi';
+import {
+  claimDailyGift,
+  describeDailyGift,
+  giftPopupAlreadyOpened,
+  loadDailyGift,
+  localDateKey,
+  markGiftPopupOpened,
+} from '../lib/dailyGift';
+import { grantDailyGift, peekDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
@@ -40,14 +49,14 @@ import { STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { WORD_WHEEL_PACKS, PACK_THEMES, packMarkColor } from '../constants/packs';
 import { IAP_PACKAGES } from '../constants/store';
 import PackPurchaseModal from '../components/PackPurchaseModal';
-import { loadOwnedPackCodes, loadPackLevel, loadPackProgress, serverOwnsPack } from '../lib/packEntitlements';
+import { hasRemoveAds, loadOwnedPackCodes, loadPackLevel, loadPackProgress, serverOwnsPack } from '../lib/packEntitlements';
 import {
   hasStarterPackAccess,
   resolveDailyPlayAccess,
   resolveJourneyPlayAccess,
   resolveStarterUnlockLevel,
 } from '../lib/guestStarterPack';
-import { showDailyPlayAd } from '../services/rewardedLetterAd';
+import { showDailyPlayAd, subscribeRewardedAdOpened } from '../services/rewardedLetterAd';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { hasCompletedOnboarding } from '../lib/onboarding';
 import { APPEARANCE_DARK } from '../lib/appearance';
@@ -186,8 +195,6 @@ function useHomePalette() {
       settingsIcon: colors.text,
       dailyIconBg: isDark ? 'rgba(45, 212, 191, 0.16)' : 'rgba(61, 155, 116, 0.14)',
       shopIconBg: isDark ? 'rgba(251, 191, 36, 0.14)' : 'rgba(234, 179, 148, 0.35)',
-      signInBorder: isDark ? colors.primary : '#1b4d3e',
-      signInText: isDark ? colors.primaryGlow : '#1b4d3e',
     };
   }, [colors, isDark, isRandomScene]);
 }
@@ -259,6 +266,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const [starterGateVisible, setStarterGateVisible] = useState(false);
   const [starterGateContext, setStarterGateContext] = useState('level');
   const [giftVisible, setGiftVisible] = useState(false);
+  const [giftMode, setGiftMode] = useState('info');
   const [giftView, setGiftView] = useState(null);
   const [giftBusy, setGiftBusy] = useState(false);
   const [showGiftIcon, setShowGiftIcon] = useState(false);
@@ -369,15 +377,16 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         setShowGiftIcon(false);
         return;
       }
+      const claimDate = giftView.claimDate || localDateKey();
       const loggedIn = await isLoggedIn();
       if (loggedIn) {
         await grantDailyGift({
           coins: preview.coins,
-          claimDate: localDateKey(),
+          claimDate,
           streak: preview.streak,
         });
       }
-      const result = await claimDailyGift();
+      const result = await claimDailyGift(claimDate);
       if (!loggedIn && !result.already) {
         await addGuestPuzzleCoins(result.coins);
       }
@@ -391,6 +400,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         lifetime: result.lifetime,
       });
       setShowGiftIcon(false);
+      setGiftMode('info');
       setGiftVisible(true);
     } catch (e) {
       Alert.alert(t('gift.claim.failed.title'), e?.message || t('gift.claim.failed.body'));
@@ -398,6 +408,42 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       setGiftBusy(false);
     }
   }, [giftBusy, giftView, t, wallet]);
+
+  useEffect(() => {
+    if (!routeParams.openDailyGift) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const record = await loadDailyGift();
+        const loggedIn = await isLoggedIn();
+        let day = localDateKey();
+        if (loggedIn) {
+          const status = await peekDailyGift();
+          if (cancelled) return;
+          if (!status.available || status.alreadyClaimed) return;
+          if (status.today) day = status.today;
+        }
+        if (cancelled) return;
+        const preview = describeDailyGift(record);
+        if (
+          preview.claimed
+          || giftPopupAlreadyOpened(record, day)
+          || giftPopupAlreadyOpened(record, localDateKey())
+        ) {
+          return;
+        }
+        setGiftView({ ...preview, claimDate: day });
+        setGiftMode('claim');
+        setGiftVisible(true);
+        await markGiftPopupOpened(day);
+      } catch {
+        /* Status failed: leave the gift popup closed. */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeParams.openDailyGift, routeParams.giftPromptId]);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
   const starterUnlockLevel = useMemo(
@@ -414,33 +460,54 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const canPlay = Boolean(puzzle) && !loading && !error;
 
   const handleContinue = useCallback(async () => {
-    if (!canPlay) return;
-    const level = journeyLevel;
-    const authed = await isLoggedIn();
-    const hasStarter = await hasStarterPackAccess();
-    const access = await resolveJourneyPlayAccess(level, {
-      hasStarter,
-      loggedIn: authed,
-      creditBalance: wallet.creditBalance,
-      playerJourneyLevel: level,
-    });
-    if (access === 'starter') {
-      setStarterGateContext('level');
-      setStarterGateVisible(true);
-      return;
+    if (!canPlay || continueLock.current) return;
+    continueLock.current = true;
+    setContinueBusy(true);
+    try {
+      const level = journeyLevel;
+      const authed = await isLoggedIn();
+      const hasStarter = await hasStarterPackAccess();
+      const access = await resolveJourneyPlayAccess(level, {
+        hasStarter,
+        loggedIn: authed,
+        creditBalance: wallet.creditBalance,
+        playerJourneyLevel: level,
+      });
+      if (access === 'starter') {
+        setStarterGateContext('level');
+        setStarterGateVisible(true);
+        return;
+      }
+      if (access === 'no_credits') {
+        setStarterGateContext('credits');
+        setStarterGateVisible(true);
+        return;
+      }
+      const completed = await hasCompletedOnboarding();
+      if (completed && !(await hasRemoveAds())) {
+        let earned = false;
+        try {
+          earned = await showDailyPlayAd();
+        } catch {
+          earned = false;
+        }
+        if (!earned) {
+          setAdNotReady(true);
+          return;
+        }
+        setAdNotReady(false);
+      }
+      navigate(SCREENS.PLAY, {
+        mode: PLAY_MODE.JOURNEY,
+        puzzle,
+        isOnboarding: !completed,
+        adWatched: true,
+      });
+    } finally {
+      continueLock.current = false;
+      setContinueBusy(false);
     }
-    if (access === 'no_credits') {
-      setStarterGateContext('credits');
-      setStarterGateVisible(true);
-      return;
-    }
-    const completed = await hasCompletedOnboarding();
-    navigate(SCREENS.PLAY, {
-      mode: PLAY_MODE.JOURNEY,
-      puzzle,
-      isOnboarding: !completed,
-    });
-  }, [canPlay, journeyLevel, navigate, puzzle, wallet.creditBalance]);
+  }, [canPlay, journeyLevel, navigate, puzzle, t, wallet.creditBalance]);
 
   const handleStarterGateShop = useCallback(() => {
     setStarterGateVisible(false);
@@ -467,6 +534,11 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   }, [puzzle]);
 
   const [dailyAdBusy, setDailyAdBusy] = useState(false);
+  const [continueBusy, setContinueBusy] = useState(false);
+  const [adNotReady, setAdNotReady] = useState(false);
+  const continueLock = useRef(false);
+
+  useEffect(() => subscribeRewardedAdOpened(() => setAdNotReady(false)), []);
 
   const openDaily = useCallback(async () => {
     if (dailyAdBusy) return;
@@ -476,11 +548,12 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       try {
         const earned = await showDailyPlayAd();
         if (!earned) {
-          Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+          setAdNotReady(true);
           return;
         }
+        setAdNotReady(false);
       } catch {
-        Alert.alert(t('daily.adFailed.title'), t('daily.adFailed.body'));
+        setAdNotReady(true);
         return;
       } finally {
         setDailyAdBusy(false);
@@ -615,7 +688,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 
             <HomeContinueButton
               label={t('home.continue.cta')}
-              disabled={!canPlay}
+              disabled={!canPlay || continueBusy}
               onPress={handleContinue}
               accessibilityLabel={t('home.continue.cta')}
               textColor={palette.continueCtaText}
@@ -735,23 +808,25 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       </View>
 
       {guest ? (
-        <View style={[styles.guestCard, palette.tile]}>
-          <View style={[styles.guestIcon, { backgroundColor: palette.dailyIconBg }]}>
-            <Cloud color={colors.primaryGlow} size={22} strokeWidth={1.8} />
-          </View>
-          <View style={styles.guestBody}>
-            <Text style={[styles.guestTitle, { color: colors.text }]}>{t('home.guest.title')}</Text>
-            <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
-              {t('home.guest.body')}
-            </Text>
-          </View>
+        <View style={[styles.guestCard, palette.tile, { borderColor: colors.primary }]}>
+          <Cloud color={colors.primaryGlow} size={16} strokeWidth={2.2} />
+          <Text style={[styles.guestTitle, { color: colors.text }]} numberOfLines={1}>
+            {t('home.guest.title')}
+          </Text>
           <Pressable
-            style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
+            style={styles.signInBtn}
             onPress={() => navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.HOME })}
+            accessibilityLabel={t('home.guest.signIn')}
           >
-            <Text style={[styles.signInBtnText, { color: palette.signInText }]}>
-              {t('home.guest.signIn')}
-            </Text>
+            <LinearGradient
+              colors={['#FFF8EC', '#F6D78A', '#E8B15A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.signInBtnFill}
+            >
+              <LogIn color="#3A2A1A" size={14} strokeWidth={2.6} />
+              <Text style={styles.signInBtnText}>{t('home.guest.signIn')}</Text>
+            </LinearGradient>
           </Pressable>
         </View>
       ) : null}
@@ -809,6 +884,22 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         )}
       </View>
 
+      <Modal
+        visible={adNotReady}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAdNotReady(false)}
+      >
+        <Pressable style={styles.adNoticeBackdrop} onPress={() => setAdNotReady(false)}>
+          <Pressable style={styles.adNoticeCard} onPress={() => {}}>
+            <Text style={styles.adNoticeTitle}>{t('daily.adFailed.title')}</Text>
+            <Text style={styles.adNoticeBody}>{t('daily.adFailed.body')}</Text>
+            <Pressable style={styles.adNoticeOk} onPress={() => setAdNotReady(false)}>
+              <Text style={styles.adNoticeOkText}>{t('play.alert.notEnoughCoins.ok')}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
       <StarterPackGateModal
         visible={starterGateVisible}
         context={starterGateContext}
@@ -830,15 +921,15 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       />
       <DailyGiftModal
         visible={giftVisible}
-        mode="info"
+        mode={giftMode}
         coins={giftView?.coins ?? 0}
         streak={giftView?.streak ?? 0}
         streakDays={giftView?.streak ?? 0}
         isStreak={(giftView?.streak ?? 0) >= 2}
         lifetime={giftView?.lifetime ?? 0}
-        claimed
-        busy={false}
-        onClaim={() => {}}
+        claimed={giftMode !== 'claim'}
+        busy={giftBusy}
+        onClaim={openGift}
         onClose={() => setGiftVisible(false)}
       />
     </GradientBackground>
@@ -846,6 +937,44 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
 }
 
 const styles = StyleSheet.create({
+  adNoticeBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(8, 18, 28, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
+  },
+  adNoticeCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#FFF8EE',
+    borderRadius: 18,
+    paddingHorizontal: 22,
+    paddingTop: 22,
+    paddingBottom: 16,
+  },
+  adNoticeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#3A2A16',
+    marginBottom: 8,
+  },
+  adNoticeBody: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#5C4630',
+  },
+  adNoticeOk: {
+    alignSelf: 'flex-end',
+    marginTop: 16,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  adNoticeOkText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#8A5A12',
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -1111,7 +1240,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   packRow: {
-    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: 6,
@@ -1205,42 +1333,38 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   guestCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-  },
-  guestIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  guestBody: {
-    flex: 1,
-    minWidth: 0,
+    gap: 6,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   guestTitle: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 13,
     fontWeight: '800',
   },
-  guestBodyText: {
-    marginTop: 3,
-    fontSize: 12,
-    lineHeight: 17,
-  },
   signInBtn: {
-    borderWidth: 1.5,
-    borderRadius: 12,
+    borderRadius: 999,
+    overflow: 'hidden',
+    shadowColor: '#E8B15A',
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  signInBtnFill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 12,
-    paddingVertical: 9,
-    backgroundColor: 'transparent',
+    paddingVertical: 6,
   },
   signInBtnText: {
-    fontSize: 13,
+    color: '#3A2A1A',
+    fontSize: 12,
     fontWeight: '800',
   },
 });

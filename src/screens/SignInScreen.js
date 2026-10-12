@@ -96,7 +96,7 @@ export default function SignInScreen({ navigate, routeParams = {} }) {
     await verifyPendingIapIfNeeded();
     navigate(backScreen, {
       ...routeParams,
-      backScreen: routeParams.returnBackScreen ?? routeParams.backScreen ?? SCREENS.PLAY,
+      backScreen: routeParams.returnBackScreen || SCREENS.HOME,
       signedIn: true,
       authTick: Date.now(),
       requireSignIn: undefined,

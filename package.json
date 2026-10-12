@@ -47,6 +47,7 @@
     "expo-notifications": "~0.31.4",
     "expo-splash-screen": "^0.30.10",
     "expo-status-bar": "~2.2.3",
+    "expo-store-review": "~8.1.5",
     "expo-tracking-transparency": "~5.2.4",
     "lucide-react-native": "1.22.0",
     "play-integrity": "file:./modules/play-integrity",

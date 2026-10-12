@@ -133,6 +133,7 @@ export default function DailyGiftModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
+        <Pressable style={styles.sheet} onPress={() => {}}>
         <View style={styles.iconStage}>
           <GiftConfetti play={visible} burstId={burstId} />
           <Animated.View style={[styles.giftBadge, { transform: [{ scale: iconScale }] }]}>
@@ -170,12 +171,17 @@ export default function DailyGiftModal({
             </Text>
           </>
         )}
+        </Pressable>
       </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  sheet: {
+    alignItems: 'center',
+    width: '100%',
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.62)',

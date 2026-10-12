@@ -464,11 +464,20 @@ export default {
   'bonusWord.ok': 'Nice!',
 
   // treasure chest (bonus words found)
+  'complete.rateApp': "Love it?",
+  'play.credit.sheet.how': "You have {n} hints. With a hint, tap the eye on the clue to reveal a letter.",
+  'play.letter.noCredit.title': "No credit",
+  'play.letter.noCredit.body': "You don't have a credit.",
+  'play.letter.noCredit.how': "When you have a credit, this eye reveals a letter.",
+  'play.letter.noCredit.cta': "Need a Hint",
+  'settings.dev.coinGain': "Coin +2",
+  'settings.dev.coinGain.subtitle': "Preview the coin float",
+  'settings.dev.coinGain.replay': "Replay",
+  'settings.dev.rateApp': "Rate prompt",
+  'settings.dev.rateApp.subtitle': "Preview the love-it button",
   'treasureChest.title': 'Treasure Finds',
-  'treasureChest.subtitle':
-    'Real words you found that are not on this puzzle. Each new word earns +{n} coin once.',
-  'treasureChest.empty':
-    'No bonus words yet. Spell a real word that is not on the grid to stash it here.',
+  'treasureChest.subtitle': 'Each new word earns +{n} coin.',
+  'treasureChest.empty': 'No bonus words yet.',
   'treasureChest.giftBadge': '+{n}',
   'treasureChest.close': 'Close',
   'treasureChest.openDictionary': 'Look up {word}',

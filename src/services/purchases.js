@@ -168,6 +168,48 @@ export async function restorePurchases() {
   return info;
 }
 
+
+const REMOVE_ADS_IDS = ['word_wheel_remove_ads', 'word_wheel_quest_remove_ads'];
+
+/** True when the store account owns the product, false when it does not, null when the store cannot answer. */
+export async function customerOwnsProduct(productId) {
+  if (!productId) return null;
+  try {
+    if (!configured) {
+      await Promise.race([
+        configurePurchases(),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
+    }
+    if (!isPurchasesConfigured()) return null;
+    const info = await Promise.race([
+      Purchases.getCustomerInfo(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1200)),
+    ]);
+    const wanted = new Set([String(productId)]);
+    if (REMOVE_ADS_IDS.includes(String(productId))) {
+      REMOVE_ADS_IDS.forEach((id) => wanted.add(id));
+    }
+    const matches = (id) => wanted.has(String(id || ''));
+    const ids = Array.isArray(info?.allPurchasedProductIdentifiers)
+      ? info.allPurchasedProductIdentifiers
+      : [];
+    if (ids.some(matches)) return true;
+    const transactions = Array.isArray(info?.nonSubscriptionTransactions)
+      ? info.nonSubscriptionTransactions
+      : [];
+    if (transactions.some((tx) => matches(tx?.productIdentifier || tx?.productId))) return true;
+    const active = info?.entitlements?.active;
+    if (active && typeof active === 'object') {
+      const owned = Object.values(active).some((entitlement) => matches(entitlement?.productIdentifier));
+      if (owned) return true;
+    }
+    return false;
+  } catch {
+    return null;
+  }
+}
+
 const EMPTY_IDENTITY = { revenueCatAppUserId: '', revenueCatOriginalAppUserId: '' };
 
 let cachedIdentity = EMPTY_IDENTITY;

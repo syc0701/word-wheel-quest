@@ -34,8 +34,8 @@ export default function TreasureBonusWordsModal({
           onPress={(e) => e.stopPropagation?.()}
         >
           <View style={styles.header}>
-            <View style={[styles.iconRing, { backgroundColor: colors.surfaceLight, borderColor: colors.primary }]}>
-              <PiTreasureChest size={26} color="#facc15" />
+            <View style={styles.iconRing}>
+              <PiTreasureChest size={40} />
             </View>
             <Pressable
               style={[styles.closeBtn, { backgroundColor: colors.surfaceLight }]}
@@ -137,10 +137,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   iconRing: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     borderWidth: 2,
+    borderColor: '#F59E0B',
+    backgroundColor: '#FEF3C7',
     alignItems: 'center',
     justifyContent: 'center',
   },

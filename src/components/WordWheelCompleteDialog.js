@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Star } from 'lucide-react-native';
 import { useT } from '../context/LanguageContext';
 import {
   LEVEL_SCREEN_TYPES,
@@ -11,6 +12,7 @@ import WordMasterCard from './intermission/WordMasterCard';
 import LevelCompleteCard from './intermission/LevelCompleteCard';
 import StreaksSparksCard from './intermission/StreaksSparksCard';
 import BrainPowerCard from './intermission/BrainPowerCard';
+import ShopOfferButton from './intermission/ShopOfferButton';
 import { INTERMISSION } from './intermission/intermissionTheme';
 
 
@@ -46,6 +48,8 @@ export default function WordWheelCompleteDialog({
   hintCoinsSpent = 0,
   levelNumber,
   forceScreenType,
+  showRateApp = false,
+  onRateApp,
 }) {
   const t = useT();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
@@ -86,9 +90,14 @@ export default function WordWheelCompleteDialog({
     onClose?.();
   }, [clearAutoTimer, onClose]);
 
+  const handleRateApp = useCallback(() => {
+    clearAutoTimer();
+    onRateApp?.();
+  }, [clearAutoTimer, onRateApp]);
+
   useEffect(() => {
     clearAutoTimer();
-    if (!visible) return undefined;
+    if (!visible || showRateApp) return undefined;
     const advance = onNext || onClose;
     if (!advance) return undefined;
     autoTimerRef.current = setTimeout(() => {
@@ -96,7 +105,7 @@ export default function WordWheelCompleteDialog({
       advance();
     }, COMPLETE_DIALOG_AUTO_MS);
     return clearAutoTimer;
-  }, [visible, onNext, onClose, clearAutoTimer]);
+  }, [visible, onNext, onClose, clearAutoTimer, showRateApp]);
 
   const level = Number(levelNumber) || 0;
   const streakBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.STREAK_SPARKS];
@@ -173,6 +182,15 @@ export default function WordWheelCompleteDialog({
             }
           >
             {body}
+            {showRateApp && typeof onRateApp === 'function' ? (
+              <ShopOfferButton
+                icon={Star}
+                prominent
+                label={t('complete.rateApp')}
+                onPress={handleRateApp}
+                accessibilityLabel={t('complete.rateApp')}
+              />
+            ) : null}
           </IntermissionCardShell>
         </View>
       </View>

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IAP_PACKAGES } from '../constants/store';
 import { WORD_WHEEL_PACKS, packByCode } from '../constants/packs';
 import WordWheelApi from './api';
+import { customerOwnsProduct } from '../services/purchases';
 
 const STORAGE_KEY = 'ww.pack_entitlements';
 const LEVEL_PREFIX = 'ww.pack_level.';
@@ -13,6 +14,8 @@ const EMPTY = {
   daily: false,
   removeAds: false,
 };
+
+let removeAdsKnown = null;
 
 const PRODUCT_ALIASES = {
   word_wheel_daily: 'word_wheel_quest_daily',
@@ -119,6 +122,7 @@ export async function grantPackEntitlement(productOrPackageId) {
   } catch {
     /* ignore */
   }
+  if (next.removeAds) removeAdsKnown = true;
   return next;
 }
 
@@ -129,7 +133,20 @@ export async function hasUnlimitedDaily() {
 
 export async function hasRemoveAds() {
   const owned = await loadPackEntitlements();
-  return owned.removeAds;
+  if (owned.removeAds) {
+    removeAdsKnown = true;
+    return true;
+  }
+  if (removeAdsKnown != null) return removeAdsKnown;
+  const fromStore = await customerOwnsProduct('word_wheel_quest_remove_ads');
+  if (fromStore == null) return false;
+  if (fromStore) {
+    await grantPackEntitlement('word_wheel_remove_ads');
+    removeAdsKnown = true;
+    return true;
+  }
+  removeAdsKnown = false;
+  return false;
 }
 
 export async function hasClassicPack() {

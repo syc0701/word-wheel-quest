@@ -1,23 +1,34 @@
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 /**
- * RN-compatible PiTreasureChest (from react-icons / Phosphor).
- * react-icons itself targets web SVG; this uses the same path with react-native-svg.
+ * A simple chest: dark body, gold lid, light latch.
+ * The old single-color glyph turned into a blob at small sizes.
  */
-export function PiTreasureChest({ size = 18, color = '#facc15', style }) {
+export function PiTreasureChest({ size = 18, style }) {
   return (
     <Svg
       width={size}
       height={size}
-      viewBox="0 0 256 256"
+      viewBox="0 0 64 64"
       style={style}
       accessibilityRole="image"
       accessibilityLabel="treasure chest"
     >
       <Path
-        fill={color}
-        d="M184,40H72A56.06,56.06,0,0,0,16,96v96a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V96A56.06,56.06,0,0,0,184,40Zm40,56v8H192V56.8A40.07,40.07,0,0,1,224,96Zm-88,40H120V104h16Zm-24,16h32a8,8,0,0,0,8-8V120h24v72H80V120h24v24A8,8,0,0,0,112,152Zm40-48V96a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v8H80V56h96v48ZM64,56.8V104H32V96A40.07,40.07,0,0,1,64,56.8ZM32,120H64v72H32Zm192,72H192V120h32v72Z"
+        fill="#92400E"
+        d="M10 32h44v18a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V32z"
       />
+      <Path
+        fill="#F5C542"
+        d="M10 32v-6C10 14 19 6 32 6s22 8 22 20v6H10z"
+      />
+      <Path fill="#78350F" d="M10 28h44v8H10z" />
+      <Path
+        fill="#FFF7D6"
+        d="M27 30h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H27a2 2 0 0 1-2-2V32a2 2 0 0 1 2-2z"
+      />
+      <Circle cx="32" cy="36" r="2.4" fill="#78350F" />
+      <Path fill="#78350F" d="M31 37h2v5h-2z" />
     </Svg>
   );
 }
