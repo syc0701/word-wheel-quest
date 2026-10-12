@@ -102,6 +102,12 @@ import { buildWheelTiles, lettersForWheel, shuffleWheelTiles } from '../lib/whee
 import { resolvePackPlayBackground } from '../lib/bgAssets';
 import { resolveJourneyLevel } from '../lib/puzzleLevel';
 import { LevelScreenPolicy } from '../lib/LevelScreenPolicy';
+import {
+  isAppReviewEligible,
+  isAppReviewMilestone,
+  recordAppReviewPrompt,
+  requestNativeReview,
+} from '../lib/appReview';
 import { formatShortDisplayDate } from '../lib/montrealCalendar';
 import { DEFAULT_SEASON } from '../constants/api';
 import { PLAY_MODE, SCREENS } from '../constants/theme';
@@ -210,6 +216,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [dictionaryOpen, setDictionaryOpen] = useState(false);
   const [dictionaryWord, setDictionaryWord] = useState('');
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [showRateApp, setShowRateApp] = useState(false);
   const [packEnding, setPackEnding] = useState(null);
   const [removeAdsOwned, setRemoveAdsOwned] = useState(false);
   const [completionStats, setCompletionStats] = useState(null);
@@ -1051,7 +1058,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
 
   const handleCloseCompletionDialog = useCallback(() => {
     setCompletionDialogOpen(false);
+    setShowRateApp(false);
     setShowHeaderNext(true);
+  }, []);
+
+  const handleRateApp = useCallback(async () => {
+    setShowRateApp(false);
+    try {
+      await recordAppReviewPrompt();
+    } catch {
+      /* Still open the review dialog. The next milestone can try the save again. */
+    }
+    await requestNativeReview();
   }, []);
 
   const handleRemoveAdsShop = useCallback(() => {
@@ -1359,6 +1377,15 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         screenType,
         milestoneBonus,
       });
+      let offerReview = false;
+      if (!isDaily && !packCode && isAppReviewMilestone(levelNumber)) {
+        try {
+          offerReview = await isAppReviewEligible();
+        } catch {
+          offerReview = false;
+        }
+      }
+      setShowRateApp(offerReview);
       const adsRemoved = await hasRemoveAds();
       setRemoveAdsOwned(adsRemoved);
       if (!isDaily && !packCode && isLevelClearAdLevel(levelNumber) && !adsRemoved) {
@@ -2332,6 +2359,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         levelNumber={completionStats?.levelNumber}
         forceScreenType={completionStats?.screenType}
         showStarterOffer={showStarterOffer}
+        showRateApp={showRateApp}
+        onRateApp={handleRateApp}
       />
 
       <StarterPackGateModal

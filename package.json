@@ -40,6 +40,7 @@
     "expo-notifications": "~0.31.4",
     "expo-splash-screen": "^0.30.10",
     "expo-status-bar": "~2.2.3",
+    "expo-store-review": "~8.1.5",
     "lucide-react-native": "1.22.0",
     "play-integrity": "file:./modules/play-integrity",
     "react": "19.0.0",

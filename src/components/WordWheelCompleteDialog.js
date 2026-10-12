@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Star } from 'lucide-react-native';
 import { useT } from '../context/LanguageContext';
 import {
   LEVEL_SCREEN_TYPES,
@@ -53,6 +54,8 @@ export default function WordWheelCompleteDialog({
   showStarterOffer = false,
   showRemoveAdsOffer = false,
   onRemoveAds,
+  showRateApp = false,
+  onRateApp,
 }) {
   const t = useT();
   const [titleKey, setTitleKey] = useState(COMPLIMENT_KEYS[0]);
@@ -101,9 +104,14 @@ export default function WordWheelCompleteDialog({
     onShop?.();
   }, [clearAutoTimer, onShop]);
 
+  const handleRateApp = useCallback(() => {
+    clearAutoTimer();
+    onRateApp?.();
+  }, [clearAutoTimer, onRateApp]);
+
   useEffect(() => {
     clearAutoTimer();
-    if (!visible || guestUpsell) return undefined;
+    if (!visible || guestUpsell || showRateApp) return undefined;
     const advance = onNext || onClose;
     if (!advance) return undefined;
     autoTimerRef.current = setTimeout(() => {
@@ -111,7 +119,7 @@ export default function WordWheelCompleteDialog({
       advance();
     }, COMPLETE_DIALOG_AUTO_MS);
     return clearAutoTimer;
-  }, [visible, onNext, onClose, clearAutoTimer, guestUpsell]);
+  }, [visible, onNext, onClose, clearAutoTimer, guestUpsell, showRateApp]);
 
   const level = Number(levelNumber) || 0;
   const streakBonus = MILESTONE_BONUS_COINS[LEVEL_SCREEN_TYPES.STREAK_SPARKS];
@@ -199,6 +207,15 @@ export default function WordWheelCompleteDialog({
             }
           >
             {body}
+            {showRateApp && typeof onRateApp === 'function' ? (
+              <ShopOfferButton
+                icon={Star}
+                prominent
+                label={t('complete.rateApp')}
+                onPress={handleRateApp}
+                accessibilityLabel={t('complete.rateApp')}
+              />
+            ) : null}
             {showRemoveAdsOffer && typeof onRemoveAds === 'function' ? (
               <ShopOfferButton
                 label={t('complete.removeAds')}

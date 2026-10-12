@@ -31,8 +31,15 @@ import GradientBackground from '../components/GradientBackground';
 import WordWheelApi from '../lib/api';
 import { isLoggedIn } from '../lib/auth';
 import { addGuestPuzzleCoins } from '../lib/guestCoinsStorage';
-import { claimDailyGift, describeDailyGift, loadDailyGift, localDateKey } from '../lib/dailyGift';
-import { grantDailyGift } from '../lib/coinApi';
+import {
+  claimDailyGift,
+  describeDailyGift,
+  giftPopupAlreadyOpened,
+  loadDailyGift,
+  localDateKey,
+  markGiftPopupOpened,
+} from '../lib/dailyGift';
+import { grantDailyGift, peekDailyGift } from '../lib/coinApi';
 import { parseWords } from '../lib/gridReveal';
 import { resolveJourneyLevel, resolvePuzzleWordCount } from '../lib/puzzleLevel';
 import { SCREENS, PLAY_MODE } from '../constants/theme';
@@ -259,6 +266,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
   const [starterGateVisible, setStarterGateVisible] = useState(false);
   const [starterGateContext, setStarterGateContext] = useState('level');
   const [giftVisible, setGiftVisible] = useState(false);
+  const [giftMode, setGiftMode] = useState('info');
   const [giftView, setGiftView] = useState(null);
   const [giftBusy, setGiftBusy] = useState(false);
   const [showGiftIcon, setShowGiftIcon] = useState(false);
@@ -369,15 +377,16 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         setShowGiftIcon(false);
         return;
       }
+      const claimDate = giftView.claimDate || localDateKey();
       const loggedIn = await isLoggedIn();
       if (loggedIn) {
         await grantDailyGift({
           coins: preview.coins,
-          claimDate: localDateKey(),
+          claimDate,
           streak: preview.streak,
         });
       }
-      const result = await claimDailyGift();
+      const result = await claimDailyGift(claimDate);
       if (!loggedIn && !result.already) {
         await addGuestPuzzleCoins(result.coins);
       }
@@ -391,6 +400,7 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
         lifetime: result.lifetime,
       });
       setShowGiftIcon(false);
+      setGiftMode('info');
       setGiftVisible(true);
     } catch (e) {
       Alert.alert(t('gift.claim.failed.title'), e?.message || t('gift.claim.failed.body'));
@@ -398,6 +408,42 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       setGiftBusy(false);
     }
   }, [giftBusy, giftView, t, wallet]);
+
+  useEffect(() => {
+    if (!routeParams.openDailyGift) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const record = await loadDailyGift();
+        const loggedIn = await isLoggedIn();
+        let day = localDateKey();
+        if (loggedIn) {
+          const status = await peekDailyGift();
+          if (cancelled) return;
+          if (!status.available || status.alreadyClaimed) return;
+          if (status.today) day = status.today;
+        }
+        if (cancelled) return;
+        const preview = describeDailyGift(record);
+        if (
+          preview.claimed
+          || giftPopupAlreadyOpened(record, day)
+          || giftPopupAlreadyOpened(record, localDateKey())
+        ) {
+          return;
+        }
+        setGiftView({ ...preview, claimDate: day });
+        setGiftMode('claim');
+        setGiftVisible(true);
+        await markGiftPopupOpened(day);
+      } catch {
+        /* Status failed: leave the gift popup closed. */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeParams.openDailyGift, routeParams.giftPromptId]);
 
   const journeyLevel = useMemo(() => resolveJourneyLevel(puzzle), [puzzle]);
   const starterUnlockLevel = useMemo(
@@ -741,9 +787,6 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
           </View>
           <View style={styles.guestBody}>
             <Text style={[styles.guestTitle, { color: colors.text }]}>{t('home.guest.title')}</Text>
-            <Text style={[styles.guestBodyText, { color: colors.textMuted }]}>
-              {t('home.guest.body')}
-            </Text>
           </View>
           <Pressable
             style={[styles.signInBtn, { borderColor: palette.signInBorder }]}
@@ -830,15 +873,15 @@ export default function HomeScreen({ navigate, routeParams = {} }) {
       />
       <DailyGiftModal
         visible={giftVisible}
-        mode="info"
+        mode={giftMode}
         coins={giftView?.coins ?? 0}
         streak={giftView?.streak ?? 0}
         streakDays={giftView?.streak ?? 0}
         isStreak={(giftView?.streak ?? 0) >= 2}
         lifetime={giftView?.lifetime ?? 0}
-        claimed
-        busy={false}
-        onClaim={() => {}}
+        claimed={giftMode !== 'claim'}
+        busy={giftBusy}
+        onClaim={openGift}
         onClose={() => setGiftVisible(false)}
       />
     </GradientBackground>
@@ -1226,11 +1269,6 @@ const styles = StyleSheet.create({
   guestTitle: {
     fontSize: 16,
     fontWeight: '800',
-  },
-  guestBodyText: {
-    marginTop: 3,
-    fontSize: 12,
-    lineHeight: 17,
   },
   signInBtn: {
     borderWidth: 1.5,

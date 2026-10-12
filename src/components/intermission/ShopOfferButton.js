@@ -4,6 +4,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Gift } from 'lucide-react-native';
 import Animated, {
   Easing,
+  Extrapolation,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -13,32 +15,82 @@ import Animated, {
 } from 'react-native-reanimated';
 import { INTERMISSION } from './intermissionTheme';
 
+function PulseRing({ delay }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withDelay(
+      delay,
+      withRepeat(
+        withTiming(1, { duration: 1500, easing: Easing.out(Easing.quad) }),
+        -1,
+        false
+      )
+    );
+  }, [delay, progress]);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.12, 1], [0, 0.85, 0], Extrapolation.CLAMP),
+    transform: [{ scale: interpolate(progress.value, [0, 1], [0.92, 1.28]) }],
+  }));
+
+  return <Animated.View pointerEvents="none" style={[styles.pulseRing, style]} />;
+}
+
 /**
  * Gold shop CTA for guest upsell on level complete.
  */
-export default function ShopOfferButton({ label, onPress, accessibilityLabel }) {
+export default function ShopOfferButton({
+  label,
+  onPress,
+  accessibilityLabel,
+  icon: Icon = Gift,
+  prominent = false,
+}) {
   const shineX = useSharedValue(-120);
   const pressScale = useSharedValue(1);
   const glow = useSharedValue(0.65);
+  const beat = useSharedValue(1);
+  const iconPop = useSharedValue(0);
 
   useEffect(() => {
     shineX.value = withDelay(
       200,
       withRepeat(
-        withTiming(280, { duration: 1800, easing: Easing.inOut(Easing.quad) }),
+        withTiming(280, { duration: prominent ? 1100 : 1800, easing: Easing.inOut(Easing.quad) }),
         -1,
         false
       )
     );
     glow.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 1200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.55, { duration: 1200, easing: Easing.inOut(Easing.sin) })
+        withTiming(1, { duration: prominent ? 700 : 1200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.45, { duration: prominent ? 700 : 1200, easing: Easing.inOut(Easing.sin) })
       ),
       -1,
       false
     );
-  }, [shineX, glow]);
+    if (!prominent) return undefined;
+    beat.value = withRepeat(
+      withSequence(
+        withTiming(1.045, { duration: 280, easing: Easing.out(Easing.quad) }),
+        withTiming(1, { duration: 420, easing: Easing.inOut(Easing.sin) }),
+        withDelay(360, withTiming(1, { duration: 0 }))
+      ),
+      -1,
+      false
+    );
+    iconPop.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 260, easing: Easing.out(Easing.back(2)) }),
+        withTiming(0, { duration: 340, easing: Easing.inOut(Easing.quad) }),
+        withDelay(700, withTiming(0, { duration: 0 }))
+      ),
+      -1,
+      false
+    );
+    return undefined;
+  }, [shineX, glow, beat, iconPop, prominent]);
 
   const shineStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: shineX.value }, { skewX: '-18deg' }],
@@ -50,12 +102,30 @@ export default function ShopOfferButton({ label, onPress, accessibilityLabel }) 
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glow.value,
-    transform: [{ scale: 0.92 + glow.value * 0.12 }],
+    transform: [{ scale: 0.92 + glow.value * (prominent ? 0.2 : 0.12) }],
+  }));
+
+  const beatStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: beat.value }],
+  }));
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: interpolate(iconPop.value, [0, 1], [1, 1.28]) },
+      { rotate: `${interpolate(iconPop.value, [0, 1], [0, -14])}deg` },
+    ],
   }));
 
   return (
-    <Animated.View style={[styles.wrap, pressStyle]}>
-      <Animated.View style={[styles.glowRing, glowStyle]} />
+    <Animated.View style={[styles.wrap, prominent && styles.wrapProminent, pressStyle]}>
+      {prominent ? (
+        <>
+          <PulseRing delay={0} />
+          <PulseRing delay={700} />
+        </>
+      ) : null}
+      <Animated.View pointerEvents="none" style={[styles.glowRing, prominent && styles.glowRingProminent, glowStyle]} />
+      <Animated.View style={[styles.fullWidth, prominent ? beatStyle : undefined]}>
       <Pressable
         onPress={onPress}
         onPressIn={() => {
@@ -73,17 +143,22 @@ export default function ShopOfferButton({ label, onPress, accessibilityLabel }) 
             colors={['#fde68a', '#f59e0b', '#d97706']}
             start={{ x: 0.1, y: 0 }}
             end={{ x: 0.9, y: 1 }}
-            style={styles.oval}
+            style={[styles.oval, prominent && styles.ovalProminent]}
           >
             <View style={styles.pearlHighlight} />
-            <Animated.View style={[styles.shine, shineStyle]} />
+            <Animated.View pointerEvents="none" style={[styles.shine, shineStyle]} />
             <View style={styles.row}>
-              <Gift color="#422006" size={22} strokeWidth={2.2} />
-              <Text style={styles.label}>{label}</Text>
+              <Animated.View style={prominent ? iconStyle : undefined}>
+                <Icon color="#422006" size={prominent ? 26 : 22} strokeWidth={2.4} />
+              </Animated.View>
+              <Text style={[styles.label, prominent && styles.labelProminent]}>
+                {prominent ? String(label).toUpperCase() : label}
+              </Text>
             </View>
           </LinearGradient>
         </View>
       </Pressable>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -92,7 +167,22 @@ const styles = StyleSheet.create({
   wrap: {
     marginTop: 6,
     width: '100%',
-    alignItems: 'center',
+    alignSelf: 'stretch',
+    alignItems: 'stretch',
+  },
+  wrapProminent: {
+    marginTop: 14,
+    marginBottom: 4,
+  },
+  pulseRing: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    top: 6,
+    bottom: 2,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 214, 90, 0.95)',
   },
   glowRing: {
     position: 'absolute',
@@ -103,8 +193,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(251, 191, 36, 0.42)',
   },
+  glowRingProminent: {
+    left: '4%',
+    right: '4%',
+    backgroundColor: 'rgba(251, 191, 36, 0.62)',
+  },
+  fullWidth: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
   pressable: {
     width: '100%',
+    alignSelf: 'stretch',
   },
   rim: {
     borderRadius: 999,
@@ -115,6 +215,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 8,
+  },
+  ovalProminent: {
+    minHeight: 54,
   },
   oval: {
     minHeight: 52,
@@ -158,5 +261,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
     flexShrink: 1,
+  },
+  labelProminent: {
+    fontFamily: INTERMISSION.displayBold,
+    fontSize: 16,
+    letterSpacing: 1.2,
   },
 });

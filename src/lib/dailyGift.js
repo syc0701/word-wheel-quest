@@ -19,7 +19,14 @@ function previousDateKey(key) {
 }
 
 function emptyRecord() {
-  return { lastClaimDate: '', streak: 0, todayCoins: 0, lifetime: 0, iconShownDate: '' };
+  return {
+    lastClaimDate: '',
+    streak: 0,
+    todayCoins: 0,
+    lifetime: 0,
+    iconShownDate: '',
+    popupOpenedDate: '',
+  };
 }
 
 function coinsForStreak(streak) {
@@ -37,6 +44,7 @@ export async function loadDailyGift() {
       todayCoins: Math.max(0, Math.floor(Number(parsed.todayCoins) || 0)),
       lifetime: Math.max(0, Math.floor(Number(parsed.lifetime) || 0)),
       iconShownDate: typeof parsed.iconShownDate === 'string' ? parsed.iconShownDate : '',
+      popupOpenedDate: typeof parsed.popupOpenedDate === 'string' ? parsed.popupOpenedDate : '',
     };
   } catch {
     return emptyRecord();
@@ -74,6 +82,7 @@ export async function claimDailyGift(today = localDateKey()) {
     todayCoins: preview.coins,
     lifetime: record.lifetime + preview.coins,
     iconShownDate: record.iconShownDate || today,
+    popupOpenedDate: record.popupOpenedDate || today,
   };
   await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   return {
@@ -83,6 +92,20 @@ export async function claimDailyGift(today = localDateKey()) {
     streak: next.streak,
     lifetime: next.lifetime,
   };
+}
+
+/** True when today's gift popup was already shown or claimed. */
+export function giftPopupAlreadyOpened(record, today = localDateKey()) {
+  return record.lastClaimDate === today || record.popupOpenedDate === today;
+}
+
+/** Remember that the gift popup was shown, so a later reminder stays closed. */
+export async function markGiftPopupOpened(today = localDateKey()) {
+  const record = await loadDailyGift();
+  if (record.popupOpenedDate === today) return record;
+  const next = { ...record, popupOpenedDate: today };
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  return next;
 }
 
 /** The home gift icon is shown once per local day. */

@@ -1,5 +1,5 @@
 import { APP_STORE } from '../constants/store';
-import { apiPost } from './http';
+import { apiGet, apiPost } from './http';
 import { resolveWordWheelQuestCoins } from './userApi';
 
 /**
@@ -19,6 +19,24 @@ import { resolveWordWheelQuestCoins } from './userApi';
  * Writes puzzleCoins[word_wheel_quest] on the account coin table.
  * Returns the new balance for this app, plus alreadyClaimed.
  */
+/**
+ * Whether today's Montreal gift is still unclaimed. Does not award coins.
+ * GET /home/wordwheel/daily-gift
+ */
+export async function peekDailyGift() {
+  const data = await apiGet('/home/wordwheel/daily-gift');
+  if (data?.code === 'FAILURE') {
+    throw new Error(data.message || 'Failed to check daily gift');
+  }
+  return {
+    today: typeof data?.today === 'string' ? data.today : '',
+    available: Boolean(data?.available),
+    alreadyClaimed: Boolean(data?.alreadyClaimed),
+    grant: Math.max(0, Math.floor(Number(data?.grant) || 0)),
+    wordWheelCoins: Math.max(0, Math.floor(Number(data?.wordWheelCoins) || 0)),
+  };
+}
+
 export async function grantDailyGift({
   appCode = APP_STORE.appSiteId,
   coins,

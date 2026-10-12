@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { isLoggedIn } from '../lib/auth';
+import { giftPopupAlreadyOpened, loadDailyGift } from '../lib/dailyGift';
 import { getDeviceId } from '../lib/deviceId';
 import { apiDelete, apiDeletePublic, apiGet, apiPost, apiPostPublic, apiPut } from '../lib/http';
 import { APP_STORE } from '../constants/store';
@@ -18,6 +19,7 @@ let listenersAttached = false;
 let navigateHandler = null;
 let notificationHandlerReady = false;
 let androidChannelReady = false;
+const handledNotificationIds = new Set();
 
 function ensureNotificationHandler() {
   if (notificationHandlerReady) return;
@@ -148,8 +150,38 @@ async function unregisterTokenFromBackend(deviceToken) {
   }
 }
 
-function handleNotificationData(data) {
+function notificationIdentity(notification) {
+  return notification?.request?.identifier || '';
+}
+
+function handleNotificationData(data, notificationId, { foreground = false } = {}) {
   if (!data || typeof data !== 'object' || !navigateHandler) {
+    return;
+  }
+  const type = typeof data.type === 'string' ? data.type.trim() : '';
+  if (type === 'daily_gift') {
+    if (notificationId) {
+      if (handledNotificationIds.has(notificationId)) return;
+      handledNotificationIds.add(notificationId);
+    }
+    const appCode = typeof data.appCode === 'string' ? data.appCode.trim() : '';
+    if (appCode && appCode !== APP_CODE) return;
+    const openGift = () => {
+      navigateHandler(SCREENS.HOME, {
+        openDailyGift: true,
+        giftPromptId: Date.now(),
+      });
+    };
+    if (!foreground) {
+      openGift();
+      return;
+    }
+    loadDailyGift()
+      .then((record) => {
+        if (giftPopupAlreadyOpened(record)) return;
+        openGift();
+      })
+      .catch(() => {});
     return;
   }
   const tplId =
@@ -171,8 +203,15 @@ function attachListeners() {
   listenersAttached = true;
   ensureNotificationHandler();
 
+  Notifications.addNotificationReceivedListener((notification) => {
+    const data = notification?.request?.content?.data;
+    if (data?.type !== 'daily_gift') return;
+    handleNotificationData(data, notificationIdentity(notification), { foreground: true });
+  });
+
   Notifications.addNotificationResponseReceivedListener((response) => {
-    handleNotificationData(response?.notification?.request?.content?.data);
+    const notification = response?.notification;
+    handleNotificationData(notification?.request?.content?.data, notificationIdentity(notification));
   });
 }
 
@@ -180,8 +219,9 @@ function attachListeners() {
 async function consumeLastNotificationResponse() {
   try {
     const response = await Notifications.getLastNotificationResponseAsync();
+    const notification = response?.notification;
     if (response) {
-      handleNotificationData(response?.notification?.request?.content?.data);
+      handleNotificationData(notification?.request?.content?.data, notificationIdentity(notification));
     }
   } catch (e) {
     if (__DEV__) {

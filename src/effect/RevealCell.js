@@ -10,6 +10,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import WordNumberBadge from '../components/WordNumberBadge';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
 import { GRID_CREAM, GRID_TRANSITION_MS } from '../lib/gridTheme';
 
@@ -167,28 +168,12 @@ export default function RevealCell({
         style={[styles.cell, { width: size, height: size }, cellStyle]}
       >
         {wordNumberLabel ? (
-          <View
-            pointerEvents="none"
-            style={[
-              styles.numberAnchor,
-              {
-                width: numberBox,
-                height: numberBox,
-                top: -numberBox / 2,
-                left: -numberBox / 2,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.numberText,
-                { fontSize: numberFontSize, lineHeight: numberFontSize + 1 },
-                wordNumberLabel.length > 2 && styles.numberTextCompact,
-              ]}
-            >
-              {wordNumberLabel}
-            </Text>
-          </View>
+          <WordNumberBadge
+            label={wordNumberLabel}
+            boxSize={numberBox}
+            fontSize={numberFontSize}
+            compact={wordNumberLabel.length > 2}
+          />
         ) : null}
         {letter ? <Text style={[styles.letter, { color: textColor }]}>{letter}</Text> : null}
       </AnimatedPressable>
@@ -217,27 +202,5 @@ const styles = StyleSheet.create({
   letter: {
     fontSize: 17,
     fontWeight: '900',
-  },
-  numberAnchor: {
-    position: 'absolute',
-    zIndex: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 5,
-    backgroundColor: GRID_CREAM.badgeBg,
-    borderWidth: 1,
-    borderColor: GRID_CREAM.badgeBorder,
-  },
-  numberText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: GRID_CREAM.badgeText,
-    includeFontPadding: false,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-  },
-  numberTextCompact: {
-    fontSize: 12,
-    letterSpacing: -0.3,
   },
 });

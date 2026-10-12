@@ -21,6 +21,7 @@ import { signOutAll } from '../services/cognitoAuth';
 import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { getDeviceId } from '../lib/deviceId';
+import { requestNativeReview } from '../lib/appReview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEV_INTERMISSION_LINKS = [
@@ -118,7 +119,7 @@ function BalanceCard({ label, value, loading, suffix = '', colors }) {
 export default function SettingsScreen({ navigate, routeParams = {} }) {
   const backScreen = routeParams.backScreen ?? SCREENS.PLAY;
   const wallet = useWordWheelWallet();
-  const { colors, isRandomScene } = useAppearance();
+  const { colors, isDark, isRandomScene } = useAppearance();
   const t = useT();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -127,6 +128,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const wideColWidth = Math.floor((width - 40 - settingsGap * 2) / 3);
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
+  const [ratePreviewVisible, setRatePreviewVisible] = useState(false);
   const [packEndingPreview, setPackEndingPreview] = useState(null);
   const [scoreStanding, setScoreStanding] = useState(null);
   const showDeveloperTools = __DEV__ || Boolean(wallet.isDeveloper);
@@ -267,6 +269,22 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
         backgroundColor: colors.surface,
         borderColor: colors.surfaceLight,
       },
+      devDeviceCard: {
+        backgroundColor: colors.surface,
+        borderColor: colors.surfaceLight,
+      },
+      devLevelCard: {
+        backgroundColor: isDark ? '#123F4A' : isRandomScene ? '#E7F4F8' : '#E4F3F6',
+        borderColor: isDark ? '#1C6274' : '#B7D7E2',
+      },
+      devPackCard: {
+        backgroundColor: isDark ? '#3A2E18' : isRandomScene ? '#F8F1E4' : '#F6EFE2',
+        borderColor: isDark ? '#6A5430' : '#E4D2B0',
+      },
+      devRateCard: {
+        backgroundColor: isDark ? '#3A2044' : isRandomScene ? '#F6E8F4' : '#F3E6F1',
+        borderColor: isDark ? '#6A3A78' : '#E0C0DC',
+      },
       appearanceHint: isRandomScene
         ? {
             color: '#0b3d36',
@@ -280,7 +298,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           }
         : { color: colors.textMuted },
     }),
-    [colors, isRandomScene]
+    [colors, isDark, isRandomScene]
   );
 
 
@@ -482,7 +500,7 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
             >
               {t('settings.dev.hint')}
             </Text>
-            <View style={[styles.groupCard, themed.walletCard, isWide && styles.wideCard]}>
+            <View style={[styles.groupCard, styles.devGroup, themed.devDeviceCard, isWide && styles.wideCard]}>
               <MenuRow
                 icon={Smartphone}
                 label={t('settings.dev.deviceId')}
@@ -498,7 +516,8 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
                 embedded
               />
-              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+            </View>
+            <View style={[styles.groupCard, styles.devGroup, themed.devLevelCard, isWide && styles.wideCard]}>
               {DEV_INTERMISSION_LINKS.map((link, index) => (
                 <View key={link.id}>
                   {index > 0 ? (
@@ -528,9 +547,13 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
                 embedded
               />
-              {PACK_ENDING_PREVIEWS.map((preview) => (
+            </View>
+            <View style={[styles.groupCard, styles.devGroup, themed.devPackCard, isWide && styles.wideCard]}>
+              {PACK_ENDING_PREVIEWS.map((preview, index) => (
                 <View key={preview.packType}>
-                  <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+                  {index > 0 ? (
+                    <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+                  ) : null}
                   <MenuRow
                     icon={preview.icon}
                     label={t(preview.labelKey)}
@@ -541,6 +564,16 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                   />
                 </View>
               ))}
+            </View>
+            <View style={[styles.groupCard, styles.devGroup, themed.devRateCard, isWide && styles.wideCard]}>
+              <MenuRow
+                icon={Star}
+                label={t('settings.dev.rateApp')}
+                subtitle={t('settings.dev.rateApp.subtitle')}
+                onPress={() => setRatePreviewVisible(true)}
+                colors={colors}
+                embedded
+              />
             </View>
           </View>
   ) : null;
@@ -608,6 +641,20 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           hintCoinsSpent={2}
           onClose={() => setCompletePreviewVisible(false)}
           onNext={() => setCompletePreviewVisible(false)}
+        />
+      ) : null}
+      {showDeveloperTools ? (
+        <WordWheelCompleteDialog
+          visible={ratePreviewVisible}
+          levelNumber={5}
+          scoreCoins={2}
+          hintCoinsSpent={0}
+          showRateApp
+          onRateApp={() => {
+            requestNativeReview();
+          }}
+          onClose={() => setRatePreviewVisible(false)}
+          onNext={() => setRatePreviewVisible(false)}
         />
       ) : null}
       {showDeveloperTools ? (
@@ -780,6 +827,9 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
+  },
+  devGroup: {
+    marginBottom: 10,
   },
   groupCard: {
     borderRadius: 14,

@@ -10,10 +10,6 @@ export const GRID_CREAM = {
   selectedBorderWidth: 2,
   selectedText: '#1A1A1A',
 
-  badgeBg: '#FFFFFF',
-  badgeBorder: '#D4A373',
-  badgeText: '#333333',
-
   /** Hint-revealed cells stay warm but distinct from selection. */
   hintBg: '#FFF0D6',
   hintBorder: '#E8A855',
@@ -31,3 +27,39 @@ export const GRID_CREAM = {
 };
 
 export const GRID_TRANSITION_MS = 180;
+
+/** Light and Image: warm chips on the cream board. */
+const BADGE_LIGHT = {
+  odd: {
+    colors: ['#6B3E12', '#C47A32'],
+    text: '#FFF6E4',
+    border: '#4A280C',
+  },
+  even: {
+    colors: ['#FFF8EE', '#F0C56A'],
+    text: '#3D2412',
+    border: '#C9892E',
+  },
+};
+
+/** Dark: cool chips so odd and even still swap, on the ocean board. */
+const BADGE_DARK = {
+  odd: {
+    colors: ['#083344', '#0E7490'],
+    text: '#ECFEFF',
+    border: '#155E75',
+  },
+  even: {
+    colors: ['#ECFEFF', '#67E8F9'],
+    text: '#083344',
+    border: '#A5F3FC',
+  },
+};
+
+/** Odd word numbers share one pair; even numbers use the swapped pair. */
+export function wordNumberBadgeTone(label, isDark = false) {
+  const match = String(label ?? '').match(/\d+/);
+  const n = match ? Number(match[0]) : 1;
+  const palette = isDark ? BADGE_DARK : BADGE_LIGHT;
+  return n % 2 === 1 ? palette.odd : palette.even;
+}
