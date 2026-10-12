@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
-import { ChevronRight, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Shield, Smartphone, Star, Trophy } from 'lucide-react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View, Pressable } from 'react-native';
+import { ChevronRight, Coins, Crown, FileText, Flame, LogIn, LogOut, MessageSquare, PartyPopper, RotateCcw, Shield, Smartphone, Star, Trophy } from 'lucide-react-native';
 import AppearancePicker from '../components/AppearancePicker';
 import AppFeedbackSheet from '../components/AppFeedbackSheet';
 import AudioSettingsCard from '../components/AudioSettingsCard';
@@ -22,6 +22,7 @@ import { restorePurchases } from '../services/purchases';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import { getDeviceId } from '../lib/deviceId';
 import { requestNativeReview } from '../lib/appReview';
+import { CoinGainFloat } from '../effect';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DEV_INTERMISSION_LINKS = [
@@ -117,7 +118,10 @@ function BalanceCard({ label, value, loading, suffix = '', colors }) {
 }
 
 export default function SettingsScreen({ navigate, routeParams = {} }) {
-  const backScreen = routeParams.backScreen ?? SCREENS.PLAY;
+  const backScreen =
+    routeParams.backScreen && routeParams.backScreen !== SCREENS.PLAY && routeParams.backScreen !== SCREENS.DAILY_PLAY
+      ? routeParams.backScreen
+      : SCREENS.HOME;
   const wallet = useWordWheelWallet();
   const { colors, isDark, isRandomScene } = useAppearance();
   const t = useT();
@@ -129,6 +133,8 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   const [authed, setAuthed] = useState(false);
   const [completePreviewVisible, setCompletePreviewVisible] = useState(false);
   const [ratePreviewVisible, setRatePreviewVisible] = useState(false);
+  const [coinPreviewVisible, setCoinPreviewVisible] = useState(false);
+  const [coinPreviewBurst, setCoinPreviewBurst] = useState(0);
   const [packEndingPreview, setPackEndingPreview] = useState(null);
   const [scoreStanding, setScoreStanding] = useState(null);
   const showDeveloperTools = __DEV__ || Boolean(wallet.isDeveloper);
@@ -198,7 +204,10 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
   };
 
   const handleSignIn = () => {
-    navigate(SCREENS.SIGN_IN, { backScreen: SCREENS.SETTINGS });
+    navigate(SCREENS.SIGN_IN, {
+      backScreen: SCREENS.SETTINGS,
+      returnBackScreen: backScreen,
+    });
   };
 
   const handleRestorePurchases = async () => {
@@ -547,6 +556,18 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
                 colors={colors}
                 embedded
               />
+              <View style={[styles.groupDivider, { backgroundColor: colors.surfaceLight }]} />
+              <MenuRow
+                icon={Coins}
+                label={t('settings.dev.coinGain')}
+                subtitle={t('settings.dev.coinGain.subtitle')}
+                onPress={() => {
+                  setCoinPreviewBurst((id) => id + 1);
+                  setCoinPreviewVisible(true);
+                }}
+                colors={colors}
+                embedded
+              />
             </View>
             <View style={[styles.groupCard, styles.devGroup, themed.devPackCard, isWide && styles.wideCard]}>
               {PACK_ENDING_PREVIEWS.map((preview, index) => (
@@ -642,6 +663,34 @@ export default function SettingsScreen({ navigate, routeParams = {} }) {
           onClose={() => setCompletePreviewVisible(false)}
           onNext={() => setCompletePreviewVisible(false)}
         />
+      ) : null}
+      {showDeveloperTools ? (
+        <Modal
+          visible={coinPreviewVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCoinPreviewVisible(false)}
+        >
+          <Pressable style={styles.coinPreviewBackdrop} onPress={() => setCoinPreviewVisible(false)}>
+            <Pressable style={styles.coinPreviewCard} onPress={() => {}}>
+              <View style={styles.coinPreviewStage}>
+                <View style={styles.coinPreviewFloat}>
+                  <CoinGainFloat amount={2} burstId={coinPreviewBurst} />
+                </View>
+                <View style={styles.coinPreviewRow}>
+                  <Coins size={22} color="#facc15" />
+                  <Text style={styles.coinPreviewCount}>12</Text>
+                </View>
+              </View>
+              <Pressable
+                style={styles.coinPreviewReplay}
+                onPress={() => setCoinPreviewBurst((id) => id + 1)}
+              >
+                <Text style={styles.coinPreviewReplayText}>{t('settings.dev.coinGain.replay')}</Text>
+              </Pressable>
+            </Pressable>
+          </Pressable>
+        </Modal>
       ) : null}
       {showDeveloperTools ? (
         <WordWheelCompleteDialog
@@ -837,6 +886,58 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginBottom: 4,
     borderWidth: 1,
+  },
+  coinPreviewBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(8, 18, 28, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 28,
+  },
+  coinPreviewCard: {
+    width: '100%',
+    maxWidth: 280,
+    backgroundColor: '#123044',
+    borderRadius: 18,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    alignItems: 'center',
+  },
+  coinPreviewStage: {
+    width: '100%',
+    height: 150,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    overflow: 'visible',
+  },
+  coinPreviewFloat: {
+    width: 88,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'visible',
+  },
+  coinPreviewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    marginBottom: 18,
+  },
+  coinPreviewCount: {
+    color: '#facc15',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  coinPreviewReplay: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  coinPreviewReplayText: {
+    color: '#FFF8EE',
+    fontSize: 16,
+    fontWeight: '700',
   },
   groupDivider: {
     height: StyleSheet.hairlineWidth,

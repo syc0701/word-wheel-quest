@@ -20,6 +20,7 @@ let navigateHandler = null;
 let notificationHandlerReady = false;
 let androidChannelReady = false;
 const handledNotificationIds = new Set();
+let lastNotificationConsumed = false;
 
 function ensureNotificationHandler() {
   if (notificationHandlerReady) return;
@@ -184,6 +185,10 @@ function handleNotificationData(data, notificationId, { foreground = false } = {
       .catch(() => {});
     return;
   }
+  if (notificationId) {
+    if (handledNotificationIds.has(notificationId)) return;
+    handledNotificationIds.add(notificationId);
+  }
   const tplId =
     (typeof data.tplId === 'string' && data.tplId.trim()) ||
     (typeof data.wordWheelTplId === 'string' && data.wordWheelTplId.trim()) ||
@@ -217,6 +222,8 @@ function attachListeners() {
 
 /** Handle a tap that launched the app from a killed state. */
 async function consumeLastNotificationResponse() {
+  if (lastNotificationConsumed) return;
+  lastNotificationConsumed = true;
   try {
     const response = await Notifications.getLastNotificationResponseAsync();
     const notification = response?.notification;
@@ -227,6 +234,12 @@ async function consumeLastNotificationResponse() {
     if (__DEV__) {
       console.warn('[Push] getLastNotificationResponseAsync failed', e?.message || e);
     }
+  }
+  try {
+    // Sign-in syncs push again. Leaving the last tap stored would open Play on its own.
+    Notifications.clearLastNotificationResponse();
+  } catch {
+    /* ignore */
   }
 }
 

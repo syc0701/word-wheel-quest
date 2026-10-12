@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated as RnAnimated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated as RnAnimated, Easing as RnEasing, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   interpolateColor,
@@ -7,7 +7,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { Lightbulb, Play } from 'lucide-react-native';
+import { Play } from 'lucide-react-native';
 import { RevealCell, WordRevealBurst } from '../effect';
 import WordNumberBadge from './WordNumberBadge';
 import { formatCellWordNumberLabel } from '../lib/gridReveal';
@@ -28,20 +28,49 @@ function AdHintBadge({ onPress, busy = false }) {
 
   useEffect(() => {
     hintScale.setValue(0.35);
-    RnAnimated.sequence([
-      RnAnimated.spring(hintScale, {
-        toValue: 1.38,
-        friction: 4,
-        tension: 160,
-        useNativeDriver: true,
-      }),
-      RnAnimated.spring(hintScale, {
-        toValue: 1,
-        friction: 5,
-        tension: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    const beat = RnAnimated.loop(
+      RnAnimated.sequence([
+        RnAnimated.timing(hintScale, {
+          toValue: 1.22,
+          duration: 180,
+          easing: RnEasing.out(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.timing(hintScale, {
+          toValue: 1,
+          duration: 180,
+          easing: RnEasing.in(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.delay(90),
+        RnAnimated.timing(hintScale, {
+          toValue: 1.12,
+          duration: 150,
+          easing: RnEasing.out(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.timing(hintScale, {
+          toValue: 1,
+          duration: 180,
+          easing: RnEasing.in(RnEasing.quad),
+          useNativeDriver: true,
+        }),
+        RnAnimated.delay(620),
+      ])
+    );
+    const intro = RnAnimated.spring(hintScale, {
+      toValue: 1,
+      friction: 5,
+      tension: 140,
+      useNativeDriver: true,
+    });
+    intro.start(({ finished }) => {
+      if (finished) beat.start();
+    });
+    return () => {
+      intro.stop();
+      beat.stop();
+    };
   }, [hintScale]);
 
   useEffect(() => {
@@ -69,8 +98,7 @@ function AdHintBadge({ onPress, busy = false }) {
         accessibilityState={{ selected: showPressed }}
         accessibilityLabel="Watch an ad to show this letter"
       >
-        <Lightbulb color={showPressed ? '#FDE68A' : '#fff'} size={12} strokeWidth={2.4} />
-        <Play color={showPressed ? '#FDE68A' : '#fff'} size={8} fill={showPressed ? '#FDE68A' : '#fff'} style={styles.adHintPlay} />
+        <Play color={showPressed ? '#FDE68A' : '#fff'} size={14} fill={showPressed ? '#FDE68A' : '#fff'} strokeWidth={2.4} />
       </Pressable>
     </RnAnimated.View>
   );
@@ -512,10 +540,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#9A3412',
     borderColor: '#FDE68A',
     transform: [{ scale: 0.88 }],
-  },
-  adHintPlay: {
-    position: 'absolute',
-    right: 2,
-    bottom: 2,
   },
 });

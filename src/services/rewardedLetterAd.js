@@ -10,8 +10,25 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let rewardedInFlight = false;
+let rewardedInFlight = null;
 let rewardedCooldownUntil = 0;
+const rewardedOpenedListeners = new Set();
+
+/** Fires when the rewarded video becomes visible, so a "not ready" notice can close. */
+export function subscribeRewardedAdOpened(listener) {
+  rewardedOpenedListeners.add(listener);
+  return () => rewardedOpenedListeners.delete(listener);
+}
+
+function notifyRewardedAdOpened() {
+  rewardedOpenedListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      /* ignore */
+    }
+  });
+}
 
 /** Google SSV needs the install device id in customData so Lambda can credit the wallet. */
 export function showRewardedLetterAd(deviceId, { verify = true } = {}) {
@@ -30,13 +47,13 @@ export async function showDailyPlayAd() {
 }
 
 function showRewardedAd(unitId, deviceId) {
-  if (rewardedInFlight || Date.now() < rewardedCooldownUntil) {
-    if (__DEV__) console.log('[Ad] ignored, a rewarded ad is already open');
+  if (rewardedInFlight) return rewardedInFlight;
+  if (Date.now() < rewardedCooldownUntil) {
+    if (__DEV__) console.log('[Ad] ignored, a rewarded ad just closed');
     return Promise.resolve(false);
   }
-  rewardedInFlight = true;
   pauseAmbientForAd();
-  return new Promise((resolve, reject) => {
+  rewardedInFlight = new Promise((resolve) => {
     const requestOptions = deviceId
       ? { serverSideVerificationOptions: { customData: String(deviceId) } }
       : undefined;
@@ -44,14 +61,24 @@ function showRewardedAd(unitId, deviceId) {
     let earned = false;
     let settled = false;
     let shown = false;
+    let opened = false;
+    let failTimer = null;
     const unsubs = [];
-    const finish = (ok, error) => {
-      if (settled) return;
-      settled = true;
-      rewardedInFlight = false;
-      resumeAmbientAfterAd();
-      // The tap that closes the video must not start another one.
-      rewardedCooldownUntil = Date.now() + 1500;
+    const clearFail = () => {
+      if (failTimer) clearTimeout(failTimer);
+      failTimer = null;
+    };
+    // A load error or an early close often arrives before the video is on screen.
+    // Wait briefly so a following load/open can still show the ad.
+    const scheduleFail = (ms) => {
+      if (settled || opened) return;
+      clearFail();
+      failTimer = setTimeout(() => {
+        failTimer = null;
+        if (!settled && !opened) finish(false);
+      }, ms);
+    };
+    const dropListeners = () => {
       unsubs.forEach((fn) => {
         try {
           fn();
@@ -59,14 +86,46 @@ function showRewardedAd(unitId, deviceId) {
           /* ignore */
         }
       });
-      if (error) reject(error);
-      else resolve(ok);
+    };
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      clearFail();
+      rewardedInFlight = null;
+      resumeAmbientAfterAd();
+      // The tap that closes the video must not start another one.
+      rewardedCooldownUntil = Date.now() + 1500;
+      if (!ok && !opened) {
+        // The video can still open after a premature failure. Close the notice then.
+        const stopLate = ad.addAdEventListener(AdEventType.OPENED, () => {
+          opened = true;
+          notifyRewardedAdOpened();
+          try {
+            stopLate();
+          } catch {
+            /* ignore */
+          }
+          dropListeners();
+        });
+        setTimeout(() => {
+          try {
+            stopLate();
+          } catch {
+            /* ignore */
+          }
+          dropListeners();
+        }, 20000);
+      } else {
+        dropListeners();
+      }
+      resolve(Boolean(ok));
     };
     unsubs.push(ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
-      if (shown) return;
+      if (shown || settled) return;
       shown = true;
+      clearFail();
       if (__DEV__) console.log('[Ad] rewarded loaded, showing');
-      ad.show().catch((err) => finish(false, err));
+      ad.show().catch(() => scheduleFail(2500));
     }));
     unsubs.push(
       ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
@@ -75,18 +134,33 @@ function showRewardedAd(unitId, deviceId) {
       })
     );
     unsubs.push(
-      ad.addAdEventListener(AdEventType.CLOSED, () => {
-        if (__DEV__) console.log('[Ad] closed earned=', earned);
-        finish(earned);
+      ad.addAdEventListener(AdEventType.OPENED, () => {
+        opened = true;
+        clearFail();
+        if (__DEV__) console.log('[Ad] rewarded opened');
+        notifyRewardedAdOpened();
       })
     );
     unsubs.push(
-      ad.addAdEventListener(AdEventType.ERROR, (event) => {
-        finish(false, new Error(event?.message || 'Ad failed to load'));
+      ad.addAdEventListener(AdEventType.CLOSED, () => {
+        if (__DEV__) console.log('[Ad] closed earned=', earned, 'opened=', opened);
+        if (!opened) {
+          scheduleFail(2000);
+          return;
+        }
+        // The reward event can arrive just after close on the JS bridge.
+        setTimeout(() => finish(earned), 400);
+      })
+    );
+    unsubs.push(
+      ad.addAdEventListener(AdEventType.ERROR, () => {
+        if (opened || shown) return;
+        scheduleFail(1500);
       })
     );
     ad.load();
   });
+  return rewardedInFlight;
 }
 
 /**

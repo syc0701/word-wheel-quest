@@ -123,6 +123,7 @@ export default function SwipeableClueStrip({
   cardRef,
   onCardLayout,
   showSwipeHints = false,
+  caption = '',
 }) {
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(1);
@@ -270,11 +271,33 @@ export default function SwipeableClueStrip({
         ) : null}
         {overlay ? <View style={styles.overlaySlot}>{overlay}</View> : null}
       </View>
+      {caption ? (
+        <View style={styles.devChip}>
+          <Text style={styles.devChipText} numberOfLines={1}>
+            {caption}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  devChip: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    marginLeft: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: '#3F2A1A',
+  },
+  devChipText: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    color: '#FFF8EE',
+  },
   clueBoxWrap: {
     marginTop: 8,
     marginBottom: 4,

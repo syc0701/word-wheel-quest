@@ -38,7 +38,7 @@ import {
 import CreditApi from '../lib/creditApi';
 // import BonusWordModal from '../components/BonusWordModal';
 import TreasureBonusWordsModal from '../components/TreasureBonusWordsModal';
-import { CoinSparkBurst } from '../effect';
+import { CoinGainFloat, CoinSparkBurst } from '../effect';
 import useWordWheelWallet from '../hooks/useWordWheelWallet';
 import WordWheelApi from '../lib/api';
 import { validateBonusWord } from '../lib/dictionary';
@@ -80,7 +80,6 @@ import { isLevelClearAdLevel } from '../constants/ads';
 import { packByCode } from '../constants/packs';
 import { REMOVE_ADS_PACKAGE_ID, STARTER_PACK_PACKAGE_ID } from '../constants/guestAccess';
 import { hasRemoveAds, savePackLevel } from '../lib/packEntitlements';
-import { showLevelClearAd } from '../services/levelClearAd';
 import {
   guestNeedsStarterToContinue,
   hasStarterPackAccess,
@@ -210,6 +209,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const letterBusyRef = useRef(false);
   const adGuardUntilRef = useRef(0);
   const [creditSheetOpen, setCreditSheetOpen] = useState(false);
+  const [noCreditOpen, setNoCreditOpen] = useState(false);
   const [coinsAlertOpen, setCoinsAlertOpen] = useState(false);
   const [playSessionCoins, setPlaySessionCoins] = useState(0);
   const [todayGiftCoins, setTodayGiftCoins] = useState(0);
@@ -229,8 +229,19 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const [tutorialCredits, setTutorialCredits] = useState(0);
   const [failCount, setFailCount] = useState(0);
   const failCountRef = useRef(0);
-  // After a letter is shown, keep the hint-plus-ad icon hidden until this many misses.
+  const [hintMissCount, setHintMissCount] = useState(0);
+  const adHideUntilRef = useRef(3);
+  // Kept in step with a full reset. The icon itself follows miss counts 3 through 6.
   const [adHideUntil, setAdHideUntil] = useState(3);
+  const resetFailStreak = useCallback(() => {
+    failCountRef.current = 0;
+    adHideUntilRef.current = 3;
+    setFailCount(0);
+    setAdHideUntil(3);
+  }, []);
+  const resetHintNudge = useCallback(() => {
+    setHintMissCount(0);
+  }, []);
   // After a cell ad, the next icon starts on the next empty cell of that word.
   const [cellAdCursor, setCellAdCursor] = useState({});
   const [onboardingSuccessVisible, setOnboardingSuccessVisible] = useState(false);
@@ -255,6 +266,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     pendingGift: 0,
   });
   const coinPulse = useRef(new Animated.Value(1)).current;
+  const hintBulbScale = useRef(new Animated.Value(1)).current;
   const [eyeAttention, setEyeAttention] = useState(false);
   const eyeFlicker = useRef(new Animated.Value(1)).current;
   const creditFlicker = useRef(new Animated.Value(1)).current;
@@ -263,7 +275,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   const eyeAttentionTimer = useRef(null);
   const [coinSparkBurstId, setCoinSparkBurstId] = useState(0);
   const [coinSparkVisible, setCoinSparkVisible] = useState(false);
+  const [coinGain, setCoinGain] = useState(0);
+  const [coinGainId, setCoinGainId] = useState(0);
   const coinSparkClearRef = useRef(null);
+  const pendingCoinGainRef = useRef(0);
+  const coinGainAfterLoadRef = useRef(false);
   const [bonusWordsFound, setBonusWordsFound] = useState([]);
   const [treasureOpen, setTreasureOpen] = useState(false);
   const [shuffleSignal, setShuffleSignal] = useState(0);
@@ -388,7 +404,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     if (isOnboarding) {
       return onboardingStep === TUTORIAL_STEP.CELL_AD ? new Set(['3,4']) : new Set();
     }
-    if (failCount < adHideUntil) return new Set();
+    // Misses 3–6 show one cell. After 6 the count returns to 0.
+    if (failCount < 3 || failCount > 6) return new Set();
     const hiddenOf = (word) => (
       (wordPositions[word] || []).filter((p) => !displayGrid[p.row]?.[p.col])
     );
@@ -403,14 +420,12 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     const startIndex = cellAdCursor[tracked]?.startIndex || 0;
     const hidden = hiddenOf(tracked);
     if (hidden.length < 2) return new Set();
-    const hop = startIndex + Math.floor((failCount - adHideUntil) / 3);
-    const cell = hidden[hop % hidden.length];
+    const cell = hidden[startIndex % hidden.length];
     return new Set([`${cell.row},${cell.col}`]);
   }, [
     isOnboarding,
     onboardingStep,
     failCount,
-    adHideUntil,
     selectedWord,
     foundWords,
     unfoundClues,
@@ -435,12 +450,18 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     },
     [unfoundClues, clueIndex, isOnboarding, onboardingStep, onboardingSuccessVisible, playSfx]
   );
-  const clueWord = selectedNorm || activeClue?.word || unfoundClues[0]?.word || targetWords[0] || '';
-  const clueBody = selectedClue || activeClue?.clue || clueWord;
+  const puzzleSolved = targetWords.length > 0 && foundWords.length >= targetWords.length;
+  const clueWord = puzzleSolved
+    ? ''
+    : (selectedNorm || activeClue?.word || unfoundClues[0]?.word || '');
+  const clueBody = puzzleSolved ? '' : (selectedClue || activeClue?.clue || clueWord);
   const clueStripText = clueWord
     ? `${selectedWordNumber != null ? `${selectedWordNumber}. ` : ''}${clueBody}`
     : '';
   const clueStripPlaceholder = !clueWord;
+  const developerClue = (__DEV__ || wallet.isDeveloper) && clueWord
+    ? `DEVELOPER: ${String(clueWord).toUpperCase()}`
+    : '';
 
   const hintOnlyCells = useMemo(() => {
     const keys = new Set();
@@ -494,6 +515,38 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     && !isOnboarding
     && hintCandidates.length > 0
     && totalHintCoinsAvailable >= WORD_WHEEL_HINT_COST;
+  const hintNudge =
+    !isOnboarding
+    && !puzzleComplete
+    && hintMissCount >= 5
+    && lifetimeCoinsRemaining >= WORD_WHEEL_HINT_COST
+    && hintCandidates.length > 0;
+
+  useEffect(() => {
+    if (!hintNudge) {
+      hintBulbScale.setValue(1);
+      return undefined;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(hintBulbScale, {
+          toValue: 1.22,
+          duration: 280,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(hintBulbScale, {
+          toValue: 1,
+          duration: 280,
+          easing: Easing.in(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.delay(480),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [hintNudge, hintBulbScale]);
 
   useEffect(() => {
     if (!__DEV__ || loading) return;
@@ -610,6 +663,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     setTreasureOpen(false);
     setFailCount(0);
     failCountRef.current = 0;
+    setHintMissCount(0);
     setAdHideUntil(3);
     setCellAdCursor({});
   }, []);
@@ -626,7 +680,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     return stored;
   }, []);
 
-  const pulseCoinBalance = useCallback(() => {
+  const pulseCoinBalance = useCallback(({ spark = true } = {}) => {
     coinPulse.stopAnimation((current = 1) => {
       coinPulse.setValue(typeof current === 'number' ? current : 1);
       Animated.sequence([
@@ -645,6 +699,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       ]).start();
     });
 
+    if (!spark) return;
     if (coinSparkClearRef.current) clearTimeout(coinSparkClearRef.current);
     setCoinSparkVisible(true);
     setCoinSparkBurstId((id) => id + 1);
@@ -779,6 +834,21 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
   }, []);
 
   useEffect(() => {
+    if (loading) {
+      coinGainAfterLoadRef.current = pendingCoinGainRef.current > 0;
+      return;
+    }
+    if (!coinGainAfterLoadRef.current) return;
+    coinGainAfterLoadRef.current = false;
+    const gain = pendingCoinGainRef.current;
+    pendingCoinGainRef.current = 0;
+    if (!gain) return;
+    setCoinGain(gain);
+    setCoinGainId((id) => id + 1);
+    pulseCoinBalance({ spark: false });
+  }, [loading, pulseCoinBalance]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -805,6 +875,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             }
             return;
           }
+        }
+        if (!isDaily && !packCode && !routeParams.adWatched && !(await hasRemoveAds())) {
+          if (!cancelled) {
+            setLoading(false);
+            navigate(SCREENS.HOME);
+          }
+          return;
         }
         let data = isDaily
           ? await WordWheelApi.fetchDaily(dailyDate)
@@ -1014,6 +1091,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       }
       packLevelRef.current = next;
       completedPuzzleIdRef.current = puzzle?.id || null;
+      pendingCoinGainRef.current = Math.max(0, Number(completionStats?.scoreCoins) || 0);
       setReloadKey((k) => k + 1);
       return;
     }
@@ -1051,10 +1129,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     completedPuzzleIdRef.current = puzzle?.id || null;
     completedLevelRef.current = completedLevel;
     completedSeasonRef.current = puzzle?.season || DEFAULT_SEASON;
+    pendingCoinGainRef.current = Math.max(0, Number(completionStats?.scoreCoins) || 0);
     setCompletionDialogOpen(false);
     setShowHeaderNext(false);
     setReloadKey((k) => k + 1);
-  }, [isDaily, packCode, dailyDate, navigate, puzzle, wallet.creditBalance]);
+  }, [isDaily, packCode, dailyDate, navigate, puzzle, wallet.creditBalance, completionStats?.scoreCoins]);
 
   const handleCloseCompletionDialog = useCallback(() => {
     setCompletionDialogOpen(false);
@@ -1135,6 +1214,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       mode: PLAY_MODE.JOURNEY,
       puzzle: routeParams.puzzle,
       isOnboarding: false,
+      adWatched: true,
       t: Date.now(),
     });
   }, [navigate, routeParams.puzzle, playSfx]);
@@ -1388,9 +1468,6 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       setShowRateApp(offerReview);
       const adsRemoved = await hasRemoveAds();
       setRemoveAdsOwned(adsRemoved);
-      if (!isDaily && !packCode && isLevelClearAdLevel(levelNumber) && !adsRemoved) {
-        await showLevelClearAd();
-      }
       setTimeout(() => setCompletionDialogOpen(true), 900);
       wallet.refresh({ silent: true }).catch(() => {});
     },
@@ -1413,6 +1490,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       if (!next.includes(w)) next.push(w);
     });
     if (next.length === foundWords.length) return;
+    resetFailStreak();
+    resetHintNudge();
     setFoundWords(next);
     newly.forEach((w) => {
       playSfx('correct');
@@ -1430,16 +1509,35 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     openCompletionIfNeeded,
     playSfx,
     triggerWordRevealEffect,
+    resetFailStreak,
+    resetHintNudge,
   ]);
 
   const noteWordMiss = useCallback(() => {
     if (isOnboarding) return;
-    setFailCount((count) => count + 1);
+    // 1–2 hidden, 3–6 shown on one cell. Reaching 6 starts the count over.
+    setFailCount((count) => {
+      const next = count >= 6 ? 1 : count + 1;
+      failCountRef.current = next;
+      return next;
+    });
+    setHintMissCount((count) => count + 1);
   }, [isOnboarding]);
 
   useEffect(() => {
     failCountRef.current = failCount;
   }, [failCount]);
+
+  // The sixth miss still shows the icon, then the count returns to 0.
+  useEffect(() => {
+    if (failCount !== 6) return undefined;
+    const timer = setTimeout(() => resetFailStreak(), 600);
+    return () => clearTimeout(timer);
+  }, [failCount, resetFailStreak]);
+
+  useEffect(() => {
+    adHideUntilRef.current = adHideUntil;
+  }, [adHideUntil]);
 
   const submitWord = useCallback(
     async (wordRaw) => {
@@ -1472,7 +1570,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             playSfx('wrong');
             return false;
           }
-          setFailCount((count) => Math.max(0, count - 1));
+          resetFailStreak();
+          resetHintNudge();
 
           setBonusWordsFound((prev) => {
             const next = prev.includes(word) ? prev : [...prev, word];
@@ -1504,6 +1603,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       }
 
       playSfx('correct');
+      resetFailStreak();
+      resetHintNudge();
       let next = [...foundWords, word];
       // Crossings can finish other words — treat them as found too.
       const cascaded = findWordsCompletedByReveal(next, wordPositions, hintedCellKeys);
@@ -1547,6 +1648,8 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       onboardingStep,
       onboardingSuccessVisible,
       noteWordMiss,
+      resetFailStreak,
+      resetHintNudge,
     ]
   );
 
@@ -1652,6 +1755,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           setPlaySessionCoins(await spendGuestPuzzleCoins(WORD_WHEEL_HINT_COST));
         }
         setHintCoinsSpent((prev) => prev + WORD_WHEEL_HINT_COST);
+        resetHintNudge();
       } else {
         showNotEnoughCoinsAlert();
         return;
@@ -1708,6 +1812,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
     openCompletionIfNeeded,
     playSfx,
     showNotEnoughCoinsAlert,
+    resetHintNudge,
     t,
     measureOnboardingFocus,
   ]);
@@ -1723,13 +1828,13 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       return nextHints;
     });
     if (picks[0]?.word) setSelectedWord(picks[0].word);
-    // A shown letter is not a miss. Keep the icon down until three new tries.
-    setAdHideUntil(failCountRef.current + 3);
+    // A shown letter is not a miss. The next icon needs three new tries.
+    resetFailStreak();
     triggerCellRevealEffect(
       picks.map((pick) => pick.key).filter(Boolean),
       'new'
     );
-  }, [triggerCellRevealEffect]);
+  }, [triggerCellRevealEffect, resetFailStreak]);
 
   const handleShowOneLetter = useCallback(async () => {
     if (puzzleComplete || letterBusyRef.current) return;
@@ -1760,7 +1865,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
       return;
     }
     if ((wallet.creditBalance ?? 0) < 1) {
-      setCreditSheetOpen(true);
+      setNoCreditOpen(true);
       return;
     }
     const word = normalizeWord(selectedWord);
@@ -1881,7 +1986,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         ...prev,
         [word]: { startIndex },
       }));
-      setAdHideUntil(failCount + 3);
+      resetFailStreak();
     } catch (e) {
       if (__DEV__) console.warn('[Ad] cell reveal failed', e);
       Alert.alert(t('play.ad.failed.title'), t('play.ad.failed.body'));
@@ -1953,9 +2058,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         }
         prevA11y={t('play.clue.prev')}
         nextA11y={t('play.clue.next')}
-        active={Boolean(wheelPreview)}
+        caption={developerClue}
+        active={Boolean(wheelPreview) && !puzzleSolved}
         overlay={
-          wheelPreview ? (
+          wheelPreview && !puzzleSolved ? (
             <View style={styles.wordOverlay}>
               <ClueLetterRow word={wheelPreview} />
             </View>
@@ -1963,8 +2069,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         }
       />
       {!puzzleComplete && (
-        (isOnboarding && onboardingStep === TUTORIAL_STEP.EYE && tutorialCredits > 0)
-        || (!isOnboarding && (wallet.creditBalance ?? 0) > 0)
+        isOnboarding
+          ? onboardingStep === TUTORIAL_STEP.EYE && tutorialCredits > 0
+          : true
       ) ? (
         <Animated.View
           pointerEvents="box-none"
@@ -1981,7 +2088,10 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
           ) : null}
           <Pressable
             ref={isOnboarding ? onboardingEyeRef : undefined}
-            style={styles.eyeHit}
+            style={[
+              styles.eyeHit,
+              (wallet.creditBalance ?? 0) < 1 && !isOnboarding && styles.eyeHitDisabled,
+            ]}
             onPress={handleShowOneLetter}
             disabled={letterBusy}
             hitSlop={8}
@@ -1991,7 +2101,11 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             {letterBusy ? (
               <ActivityIndicator color="#3F2A1A" size="small" />
             ) : (
-              <Eye color={eyeAttention ? '#C2410C' : '#3F2A1A'} size={18} strokeWidth={2.4} />
+              <Eye
+                color={eyeAttention ? '#C2410C' : '#3F2A1A'}
+                size={18}
+                strokeWidth={2.4}
+              />
             )}
           </Pressable>
         </Animated.View>
@@ -2175,6 +2289,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
         <View style={[styles.wheelRow, isLandscape && styles.wheelRowLandscape]}>
           <View style={styles.sideTools}>
             <View style={styles.coinBurstWrap}>
+              <CoinGainFloat amount={coinGain} burstId={coinGainId} />
               <CoinSparkBurst burstId={coinSparkBurstId} visible={coinSparkVisible} />
               <Animated.View style={[styles.coinRow, { transform: [{ scale: coinPulse }] }]}>
                 <GiTwoCoins size={18} color="#facc15" />
@@ -2219,7 +2334,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 {hintPending ? (
                   <ActivityIndicator color={ww.toolIcon} size="small" />
                 ) : (
-                  <Lightbulb color={ww.toolIcon} size={18} />
+                  <Animated.View style={{ transform: [{ scale: hintBulbScale }] }}>
+                    <Lightbulb color={hintNudge ? '#facc15' : ww.toolIcon} size={18} />
+                  </Animated.View>
                 )}
               </Pressable>
             </View>
@@ -2234,7 +2351,7 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
               }}
               accessibilityLabel={t('play.a11y.treasureChest')}
             >
-              <PiTreasureChest size={18} color={ww.toolIcon} />
+              <PiTreasureChest size={22} />
             </Pressable>
           </View>
 
@@ -2401,15 +2518,9 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
                 <X size={20} color={isDark ? colors.text : '#0f172a'} />
               </Pressable>
             </View>
-            <View style={styles.sheetBalanceRow}>
-              <Sparkles size={18} color="#f59e0b" />
-              <Text style={[styles.sheetCount, { color: isDark ? colors.textMuted : '#334155' }]}>
-                {t('play.credit.sheet.balance', { n: wallet.creditBalance ?? 0 })}
-              </Text>
-            </View>
-            <View style={styles.bestValueChip}>
-              <Text style={styles.bestValueText}>{t('play.credit.sheet.bestValue')}</Text>
-            </View>
+            <Text style={[styles.sheetHintHowText, { color: isDark ? colors.textMuted : '#6B5344' }]}>
+              {t('play.credit.sheet.how', { n: wallet.creditBalance ?? 0 })}
+            </Text>
             <ShopOfferButton
               label={t('play.credit.sheet.buyStarter')}
               accessibilityLabel={t('play.credit.sheet.buyStarter')}
@@ -2433,6 +2544,59 @@ export default function PlayScreen({ navigate, routeParams = {} }) {
             >
               <Text style={[styles.sheetSecondaryText, { color: isDark ? colors.text : '#0f172a' }]}>
                 {t('play.credit.sheet.watchAd')}
+              </Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={noCreditOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNoCreditOpen(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setNoCreditOpen(false)}>
+          <Pressable
+            style={[
+              styles.sheetCard,
+              styles.coinsAlertCard,
+              {
+                backgroundColor: isDark ? colors.surface : '#FFF8EE',
+                borderColor: isDark ? colors.primary : '#E8943A',
+              },
+            ]}
+            onPress={() => {}}
+          >
+            <View style={styles.noCreditIcon}>
+              <Eye color="#C2410C" size={32} strokeWidth={2.2} />
+            </View>
+            <Text style={[styles.sheetTitle, { color: isDark ? colors.text : '#3A2A1A' }]}>
+              {t('play.letter.noCredit.title')}
+            </Text>
+            <Text style={[styles.coinsAlertBody, { color: isDark ? colors.textMuted : '#6B5344' }]}>
+              {t('play.letter.noCredit.body')}
+            </Text>
+            <Text style={[styles.noCreditHow, { color: isDark ? colors.text : '#3A2A1A' }]}>
+              {t('play.letter.noCredit.how')}
+            </Text>
+            <Pressable
+              style={styles.coinsAlertCta}
+              onPress={() => {
+                setNoCreditOpen(false);
+                setCreditSheetOpen(true);
+                playSfx('click');
+              }}
+            >
+              <Text style={styles.coinsAlertCtaText}>{t('play.letter.noCredit.cta')}</Text>
+            </Pressable>
+            <Pressable
+              style={styles.coinsAlertDismiss}
+              onPress={() => setNoCreditOpen(false)}
+              hitSlop={8}
+            >
+              <Text style={[styles.coinsAlertDismissText, { color: isDark ? colors.textMuted : '#6B5344' }]}>
+                {t('play.alert.notEnoughCoins.ok')}
               </Text>
             </Pressable>
           </Pressable>
@@ -2634,6 +2798,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 5,
   },
+  eyeHitDisabled: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: '#C4B5A5',
+  },
   eyeAttentionRing: {
     position: 'absolute',
     top: -8,
@@ -2711,28 +2879,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
-  sheetBalanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  sheetCount: {
-    fontSize: 16,
+  sheetHintHowText: {
+    fontSize: 15,
+    lineHeight: 22,
     textAlign: 'center',
-  },
-  bestValueChip: {
-    alignSelf: 'center',
-    backgroundColor: '#F5C542',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: -4,
-  },
-  bestValueText: {
-    color: '#3A2A1A',
-    fontSize: 11,
-    fontWeight: '800',
   },
   sheetSecondary: {
     borderRadius: 12,
@@ -2749,6 +2899,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     paddingTop: 28,
+  },
+  noCreditIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FDE6C8',
+    borderWidth: 1.5,
+    borderColor: '#E8943A',
+    marginBottom: 4,
+  },
+  noCreditHow: {
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   coinsAlertIcon: {
     width: 72,

@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { IAP_PACKAGES } from '../constants/store';
+import { REMOVE_ADS_PACKAGE_ID } from '../constants/guestAccess';
 import { WORD_WHEEL_PACKS, packByCode } from '../constants/packs';
+import { customerOwnsProduct } from '../services/purchases';
 import WordWheelApi from './api';
 
 const STORAGE_KEY = 'ww.pack_entitlements';
@@ -55,6 +57,8 @@ export async function loadOwnedPackCodes() {
   return owned;
 }
 
+let removeAdsKnown = null;
+
 export async function grantPackEntitlement(productOrPackageId) {
   const grants = grantsForId(productOrPackageId);
   if (!grants) return loadPackEntitlements();
@@ -63,6 +67,7 @@ export async function grantPackEntitlement(productOrPackageId) {
     daily: current.daily || Boolean(grants.daily),
     removeAds: current.removeAds || Boolean(grants.removeAds),
   };
+  if (next.removeAds) removeAdsKnown = true;
   try {
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   } catch {
@@ -78,7 +83,19 @@ export async function hasUnlimitedDaily() {
 
 export async function hasRemoveAds() {
   const owned = await loadPackEntitlements();
-  return owned.removeAds;
+  if (owned.removeAds) {
+    removeAdsKnown = true;
+    return true;
+  }
+  if (removeAdsKnown != null) return removeAdsKnown;
+  const fromStore = await customerOwnsProduct(REMOVE_ADS_PACKAGE_ID);
+  if (fromStore == null) return false;
+  if (fromStore) {
+    await grantPackEntitlement(REMOVE_ADS_PACKAGE_ID);
+    return true;
+  }
+  removeAdsKnown = false;
+  return false;
 }
 
 export async function hasClassicPack() {

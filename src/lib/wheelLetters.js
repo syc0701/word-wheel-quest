@@ -23,13 +23,25 @@ export function wheelLettersFromWords(targetWords) {
   return tiles;
 }
 
+function sameLetterMultiset(left, right) {
+  if (left.length !== right.length) return false;
+  const a = [...left].map((ch) => ch.toUpperCase()).sort().join('');
+  const b = [...right].map((ch) => ch.toUpperCase()).sort().join('');
+  return a === b;
+}
+
 export function lettersForWheel(targetWords, lettersGrid, details) {
-  const fromDetails = details?.characters;
-  if (Array.isArray(fromDetails) && fromDetails.length > 0) {
-    return fromDetails.map((cell) => (cell || '').trim().toUpperCase()).filter(Boolean);
+  const fromWords = targetWords?.length > 0 ? wheelLettersFromWords(targetWords) : [];
+  const fromDetails = Array.isArray(details?.characters)
+    ? details.characters.map((cell) => (cell || '').trim().toUpperCase()).filter(Boolean)
+    : [];
+  // Saved wheel letters can belong to an earlier level after a progress reset.
+  // Use them only when they still spell the words on this grid.
+  if (fromDetails.length > 0 && (fromWords.length === 0 || sameLetterMultiset(fromDetails, fromWords))) {
+    return fromDetails;
   }
-  if (targetWords?.length > 0) {
-    return wheelLettersFromWords(targetWords);
+  if (fromWords.length > 0) {
+    return fromWords;
   }
   const fromGrid = new Set();
   if (Array.isArray(lettersGrid)) {

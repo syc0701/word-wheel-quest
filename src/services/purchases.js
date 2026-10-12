@@ -157,6 +157,48 @@ export async function restorePurchases() {
   return Purchases.restorePurchases();
 }
 
+/**
+ * True when this Google account has purchased the product.
+ * null when the store could not be checked.
+ */
+export async function customerOwnsProduct(productId) {
+  if (!productId || Platform.OS !== 'android') return null;
+  try {
+    if (!configured) {
+      await Promise.race([
+        configurePurchases(),
+        new Promise((resolve) => setTimeout(resolve, 800)),
+      ]);
+    }
+    if (!configured || storeUnavailable) return null;
+    const info = await Promise.race([
+      Purchases.getCustomerInfo(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1200)),
+    ]);
+    const wanted = String(productId);
+    const ids = Array.isArray(info?.allPurchasedProductIdentifiers)
+      ? info.allPurchasedProductIdentifiers
+      : [];
+    if (ids.some((id) => String(id) === wanted)) return true;
+    const transactions = Array.isArray(info?.nonSubscriptionTransactions)
+      ? info.nonSubscriptionTransactions
+      : [];
+    if (transactions.some((tx) => String(tx?.productIdentifier || tx?.productId || '') === wanted)) {
+      return true;
+    }
+    const active = info?.entitlements?.active;
+    if (active && typeof active === 'object') {
+      const owned = Object.values(active).some(
+        (entitlement) => String(entitlement?.productIdentifier || '') === wanted
+      );
+      if (owned) return true;
+    }
+    return false;
+  } catch {
+    return null;
+  }
+}
+
 const EMPTY_IDENTITY = { revenueCatAppUserId: '', revenueCatOriginalAppUserId: '' };
 
 let cachedIdentity = EMPTY_IDENTITY;

@@ -23,7 +23,7 @@ import { WORD_WHEEL_BONUS_WORD_GIFT } from '../lib/points';
 const LETTER_STAGGER_MS = 140;
 const LETTER_ENTER_MS = 280;
 
-function BreathingTreasure({ color }) {
+function BreathingTreasure() {
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ function BreathingTreasure({ color }) {
   return (
     <Animated.View style={style}>
       <View style={[styles.iconRing, { backgroundColor: 'rgba(250, 204, 21, 0.14)', borderColor: '#eab308' }]}>
-        <PiTreasureChest size={34} color={color} />
+        <PiTreasureChest size={34} />
       </View>
     </Animated.View>
   );
@@ -169,7 +169,7 @@ export default function BonusWordModal({
         >
           {visible ? (
             <View key={`bonus-${label}-${openId}`} style={styles.cardInner}>
-              <BreathingTreasure color="#ca8a04" />
+              <BreathingTreasure />
 
               <Animated.Text
                 entering={FadeInUp.duration(420).delay(80)}

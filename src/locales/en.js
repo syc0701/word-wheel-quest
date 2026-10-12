@@ -98,9 +98,14 @@ export default {
   'play.letter.needWord.body': 'Choose a word first. The eye shows its first hidden letter.',
   'play.letter.failed.title': 'Could not reveal a letter',
   'play.letter.failed.body': 'Try again in a moment.',
+  'play.letter.noCredit.title': 'No credit',
+  'play.letter.noCredit.body': "You don't have a credit.",
+  'play.letter.noCredit.how': 'When you have a credit, this eye reveals a letter.',
+  'play.letter.noCredit.cta': 'Need a Hint',
   'play.credit.chip': 'Letter credits',
   'play.credit.sheet.title': 'Need a Hint?',
   'play.credit.sheet.balance': 'You have {n} hints',
+  'play.credit.sheet.how': 'You have {n} hints. With a hint, tap the eye on the clue to reveal a letter.',
   'play.credit.sheet.buyStarter': 'Buy Starter Pack (150 credits)',
   'play.credit.sheet.bestValue': 'Best value',
   'play.credit.sheet.watchAd': 'Watch ad (+1 credit)',
@@ -213,6 +218,9 @@ export default {
   'settings.dev.streaksSparks.subtitle': 'Levels 100, 200… · +10 coins',
   'settings.dev.brainPower': 'Brain Power',
   'settings.dev.brainPower.subtitle': 'Levels 10, 20… · +5 coins',
+  'settings.dev.coinGain': 'Coin +2',
+  'settings.dev.coinGain.subtitle': 'Next puzzle · +2 and confetti',
+  'settings.dev.coinGain.replay': 'Replay',
   'settings.dev.completeDialog': 'Level Complete Dialog',
   'settings.dev.completeDialog.subtitle': 'Good job · time · Close / Next',
   'settings.dev.rateApp': 'Rate app',
@@ -468,10 +476,8 @@ export default {
 
   // treasure chest (bonus words found)
   'treasureChest.title': 'Treasure Finds',
-  'treasureChest.subtitle':
-    'Real words you found that are not on this puzzle. Each new word earns +{n} coin once.',
-  'treasureChest.empty':
-    'No bonus words yet. Spell a real word that is not on the grid to stash it here.',
+  'treasureChest.subtitle': 'Each new word earns +{n} coin.',
+  'treasureChest.empty': 'No bonus words yet.',
   'treasureChest.giftBadge': '+{n}',
   'treasureChest.close': 'Close',
   'treasureChest.openDictionary': 'Look up {word}',
