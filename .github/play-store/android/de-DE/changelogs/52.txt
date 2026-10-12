@@ -1,0 +1,8 @@
+Neu in diesem Update:
+
+- Die Glühbirne leuchtet gold nach ein paar Fehlversuchen, wenn du Münzen hast
+- Das Auge am Hinweis zeigt einen Buchstaben, wenn du ein Guthaben hast
+- Klarere Schatztruhe und kürzere Schatzliste
+- Anmelden ist auf dem Startbildschirm leichter zu sehen
+
+Danke fürs Spielen!

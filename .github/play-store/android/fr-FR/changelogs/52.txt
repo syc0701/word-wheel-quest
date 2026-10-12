@@ -1,0 +1,8 @@
+Nouveautés de cette mise à jour :
+
+- L'ampoule devient dorée après quelques erreurs si vous avez des pièces
+- L'œil sur l'indice révèle une lettre quand vous avez un crédit
+- Coffre au trésor plus lisible et liste plus courte
+- La connexion est plus visible sur l'accueil
+
+Merci de jouer !

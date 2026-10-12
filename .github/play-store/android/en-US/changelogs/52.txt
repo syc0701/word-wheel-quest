@@ -1,0 +1,8 @@
+What's new in this update:
+
+- Hint bulb glows gold after a few misses when you have coins
+- The eye on the clue reveals a letter when you have a credit
+- Clearer treasure chest and a shorter treasure list
+- Sign In stands out on the home screen
+
+Thanks for playing!
